@@ -1,0 +1,55 @@
+import testlib -> *;
+
+function maybeThrowError(val) {
+    if (val) {
+        throw new Exception('error');
+    }
+}
+
+function runTryTest(a, b, c, buf) {
+
+    buf.add('A');
+    maybeThrowError(a == 1);
+    buf.add('B');
+    try {
+        maybeThrowError(a == 2);
+        buf.add('C');
+        maybeThrowError(a == 3);
+        buf.add('D');
+        maybeThrowError(a == 4);
+    } catch (e) {
+        maybeThrowError(b == 5);
+        buf.add('E');
+        maybeThrowError(b == 6);
+    } finally {
+        buf.add('F');
+        maybeThrowError(c == 7);
+        buf.add('G');
+        maybeThrowError(c == 8);
+        buf.add('H');
+    }
+    buf.add('I');
+}
+
+function doTest(a, b, c) {
+    buf = [a, b, c, ': '];
+    try {
+        runTryTest(a, b, c, buf);
+    } catch (e) {
+        buf.add(' UNCAUGHT');
+    }
+    return buf.join('');
+}
+
+function main(args) {
+
+    assertStrEqual(doTest(0, 0, 0), '000: ABCDFGHI');
+    assertStrEqual(doTest(1, 0, 0), '100: A UNCAUGHT');
+    assertStrEqual(doTest(2, 0, 0), '200: ABEFGHI');
+
+    // assertStrEqual(doTest(3, 0, 0), '300: ABCFGHI');
+    // assertStrEqual(doTest(4, 0, 0), '400: ABCDFGHI');
+    // assertStrEqual(doTest(3, 5, 0), '400: ABCDFGHI UNCAUGHT');
+
+    print("ALL DONE");
+}

@@ -1,0 +1,7 @@
+function getNext(n) {
+    if (n % 2 == 1) {
+        return n * 3 + 1;
+    }
+
+    return n >> 1;
+}

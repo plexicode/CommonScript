@@ -1,0 +1,15 @@
+listImpl1 = (ListImpl) fp.ctx.internalValue;
+sz = listImpl1.length;
+intArray1 = new Array<int>(sz);
+for (i = 0; i < sz; i += 1) {
+    left = listImpl1.items[i];
+    if (left.type != Type.INTEGER) {
+        return ThrowErrorImpl(
+            task,
+            ExceptionTypeId.INVALID_ARGUMENT,
+            "Only lists of integers can be converted to byte buffers.");
+    }
+    intArray1[i] = 255 & (int) left.internalValue;
+}
+output = new Value(Type.BYTEBUF, intArray1);
+intArray1 = null;

@@ -1,0 +1,9 @@
+valueStackSize -= 2;
+
+output = VALUE_FALSE;
+if (Sort_getNextCmp(
+    valueStack[valueStackSize], 
+    valueStack[valueStackSize + 1])) {
+
+    output = VALUE_TRUE;
+}

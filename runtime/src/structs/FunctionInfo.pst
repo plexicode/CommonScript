@@ -1,0 +1,7 @@
+struct FunctionInfo {
+    int argcMin;
+    int argcMax;
+    int pc;
+    ClassInfo classParent;
+    string name;
+}

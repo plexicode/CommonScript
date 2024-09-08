@@ -1,0 +1,177 @@
+struct SortState {
+    SortNode output;
+    Value leftCmp;
+    Value rightCmp;
+    bool isDone;
+    SortTask taskQueue;
+    Value copyBackBuffer;
+}
+
+struct SortNode {
+    Value value;
+    Value outputValue;
+    SortNode next;
+}
+
+struct SortTask {
+    bool isMerged;
+    SortNode left;
+    SortNode right;
+    SortNode mergedHead;
+    SortNode mergedTail;
+    SortTask feedsTo;
+    bool feedsToLeft;
+    SortTask next;
+}
+
+Value Sort_start(Value valueList, Value mirrorList) {
+
+    if (mirrorList.type == Type.NULL) {
+        mirrorList = valueList;
+    }
+    ListImpl values = (ListImpl) valueList.internalValue;
+    int sz = values.length;
+
+    Array<Value> items = values.items;
+    Array<Value> mirror = Core.ForceParens((ListImpl) mirrorList.internalValue).items;
+    
+    SortState o = new SortState(
+        null,
+        null,
+        null,
+        values.length < 2, // isDone
+        null,
+        mirrorList);
+
+    if (o.isDone) {
+        if (items.Size() == 1) {
+            o.output = new SortNode(items[0], mirror[0], null);
+        }
+    } else {
+        List<SortTask> tasks = new List<SortTask>();
+        Sort_buildTaskList(0, sz, items, mirror, tasks);
+        for (int i = 1; i < tasks.Size(); i += 1) {
+            tasks[i - 1].next = tasks[i];
+        }
+        o.taskQueue = tasks[0];
+    }
+
+    return new Value(Type.NATIVE_HANDLE, o);
+}
+
+SortTask Sort_buildTaskList(int start, int length, Array<Value> items, Array<Value> output, List<SortTask> tasks) {
+    if (length == 1) {
+        SortNode node = new SortNode(items[start], output[start], null);
+        SortTask task = new SortTask(true, null, null, node, node, null, false, null);
+        tasks.Add(task);
+        return task;
+    }
+
+    if (length == 2) {
+        SortNode left = new SortNode(items[start], output[start], null);
+        SortNode right = new SortNode(items[start + 1], output[start + 1], null);
+        SortTask task2 = new SortTask(false, left, right, null, null, null, false, null);
+        tasks.Add(task2);
+        return task2;
+    }
+
+    int half = length >> 1;
+    SortTask leftTask = Sort_buildTaskList(start, half, items, output, tasks);
+    SortTask rightTask = Sort_buildTaskList(start + half, length - half, items, output, tasks);
+    SortTask taskMerge = new SortTask(false, null, null, null, null, null, false, null);
+    leftTask.feedsTo = taskMerge;
+    leftTask.feedsToLeft = true;
+    rightTask.feedsTo = taskMerge;
+    tasks.Add(taskMerge);
+    return taskMerge;
+}
+
+// return true if the pair is set and sorting is not complete
+bool Sort_getNextCmp(Value sortStateValue, Value pairValue) {
+    Array<Value> pair = Core.ForceParens((ListImpl) pairValue.internalValue).items;
+    SortState o = (SortState) sortStateValue.internalValue;
+    SortTask task = o.taskQueue;
+    bool keepRunning = true;
+    while (keepRunning) {
+        if (task.isMerged) {
+            if (task.feedsTo == null) {
+                // you are done. 
+                o.output = task.mergedHead;
+                keepRunning = false;
+                return false;
+            }
+
+            if (task.feedsToLeft) {
+                task.feedsTo.left = task.mergedHead;
+            } else {
+                task.feedsTo.right = task.mergedHead;
+            }
+            task = task.next;
+            o.taskQueue = task;
+            keepRunning = task != null;
+        } else {
+            if (task.left != null && task.right != null) {
+                pair[0] = task.left.value;
+                pair[1] = task.right.value;
+                return true;
+            }
+
+            if (task.left == null && task.right == null) {
+                task.isMerged = true;
+            } else {
+                SortNode mergeWinner = null;
+                if (task.left == null) {
+                    mergeWinner = task.right;
+                    task.right = mergeWinner.next;
+                    mergeWinner.next = null;
+                } else {
+                    mergeWinner = task.left;
+                    task.left = mergeWinner.next;
+                    mergeWinner.next = null;
+                }
+
+                if (task.mergedHead == null) {
+                    task.mergedHead = mergeWinner;
+                    task.mergedTail = mergeWinner;
+                } else {
+                    task.mergedTail.next = mergeWinner;
+                    task.mergedTail = mergeWinner;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+Value Sort_proceedWithCmpResult(Value stateVal, bool isSwap) {
+    SortState state = (SortState) stateVal.internalValue;
+    SortTask task = state.taskQueue;
+    SortNode winner = null;
+    if (isSwap) {
+        winner = task.right;
+        task.right = winner.next;
+    } else {
+        winner = task.left;
+        task.left = winner.next;
+    }
+    winner.next = null;
+    if (task.mergedHead == null) {
+        task.mergedHead = winner;
+    } else {
+        task.mergedTail.next = winner;
+    }
+    task.mergedTail = winner;
+    return stateVal;
+}
+
+Value Sort_end(SortState state) {
+    // This linked list and array will have the same size.
+    Value arr = state.copyBackBuffer;
+    Array<Value> items = Core.ForceParens((ListImpl) arr.internalValue).items;
+    SortNode walker = state.output;
+    for (int i = 0; walker != null; i += 1) {
+        items[i] = walker.outputValue;
+        walker = walker.next;
+    }   
+    return arr;
+}

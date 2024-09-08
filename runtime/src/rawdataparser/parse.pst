@@ -1,0 +1,97 @@
+
+string ParseRawData(Array<int> rawBytes, ExecutionContext ec) {
+    RawDataParser rdp = new RawDataParser(rawBytes, 0, rawBytes.Size(), 0);
+    if (ParseRaw_popFixedLenString(rdp, 4) != "PXCS") return null;
+    if (ParseRaw_popSingleByte(rdp, -1) != 0) return null;
+
+    Array<int> versionData = ParseRaw_popBytes(rdp, 3);
+    if (versionData == null) return null;
+    int majorVersion = versionData[0];
+    int minorVersion = versionData[1];
+    int patchVersion = versionData[2];
+
+    string flavor = ParseRaw_popLenString(rdp);
+    string flavorVersion = ParseRaw_popLenString(rdp);
+    if (flavor == null || flavorVersion == null) return null;
+
+    RawData_Metadata mtd = null;
+    Array<string> stringById = null;
+    Array<Token> tokensById = null;
+    RawData_Entities ent = null;
+    List<ByteCodeRow> byteCodeAcc = new List<ByteCodeRow>();
+
+    while (rdp.index < rdp.length) {
+        string chunkType = ParseRaw_popFixedLenString(rdp, 3);
+        if (chunkType == null) return null;
+        if (chunkType == "MTD") {
+            if (mtd != null) return null;
+            mtd = ParseRaw_parseMetadata(rdp);
+            if (mtd == null) return null;
+        } else if (chunkType == "TOK") {
+            if (tokensById != null) return null;
+            tokensById = ParseRaw_parseTokenData(rdp);
+            if (tokensById == null) return null;
+        } else if (chunkType == "STR") {
+            if (stringById != null) return null;
+            stringById = ParseRaw_parseStringData(rdp);
+            if (stringById == null) return null;
+        } else if (chunkType == "ENT") {
+            if (ent != null) return null;
+            ent = ParseRaw_parseEntityData(rdp, byteCodeAcc, ec.globalValues);
+            if (ent == null) return null;
+        } else {
+            return null;
+        }
+    }
+
+    if (mtd == null || stringById == null || ent == null) return null;
+
+    ec.functions = Core.ListToArray(ent.functionsById);
+    ec.enums = Core.ListToArray(ent.enumsById);
+    ec.classes = Core.ListToArray(ent.classesById);
+    ec.byteCode = Core.ListToArray(byteCodeAcc);
+    ec.tokensById = tokensById;
+    ec.stringsById = stringById;
+
+    ec.significantFunctions["main"] = mtd.mainFunctionId;
+    for (int i = 1; i <= mtd.builtinCount; i += 1) {
+        string fnName = ec.functions[i].name;
+        if (fnName == "map" || 
+            fnName == "filter" || 
+            fnName == "reduce" || 
+            fnName == "thrw" || 
+            fnName == "sort" || 
+            fnName == "sortK") {
+            ec.significantFunctions[fnName] = i;
+        }
+    }
+
+    generateTryDescriptors(ec);
+
+    return "OK";
+}
+
+void generateTryDescriptors(ExecutionContext ec) {
+    Array<ByteCodeRow> bc = ec.byteCode;
+    int sz = bc.Size();
+    ec.tryDescriptors = new Array<TryDescriptor>(sz);
+    for (int i = 0; i < sz; i += 1) {
+        ec.tryDescriptors[i] = null; // OP_TRY_INFO always points to previous rows.
+        ByteCodeRow row = bc[i];
+        if (row.op == OP_TRY_INFO) {
+            int pcTry = i + row.args[0];
+            int pcRouter = pcTry + row.args[1];
+            int pcFinally = pcRouter + row.args[2];
+            int pcEnd = pcFinally + row.args[3];
+            TryDescriptor td = new TryDescriptor(pcTry, pcRouter, pcFinally, pcEnd);
+            
+            // Do not include the OP_TRY_FINALLY_END as part of the tryDescriptors. 
+            // This allows the op_try_finally_end to point to a wrapping try/block
+            pcEnd -= 1; 
+            
+            for (int j = pcTry; j < pcEnd; j += 1) {
+                ec.tryDescriptors[j] = td;
+            }
+        }
+    }
+}

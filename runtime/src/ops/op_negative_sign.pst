@@ -1,0 +1,25 @@
+value = valueStack[valueStackSize - 1];
+switch (value.type) {
+    case Type.INTEGER:
+        i = -(int) value.internalValue;
+        if (i < INT_CACHE_RANGE && -i > INT_CACHE_RANGE) {
+            if (i < 0) value = globalValues.posIntegers[i];
+            else value = globalValues.posIntegers[i];
+        } else {
+            value = new Value(Type.INTEGER, i);
+        }
+        break;
+
+    case Type.FLOAT:
+        float1 = (double) value.internalValue;
+        if (float1 != 0) {
+            value = new Value(Type.FLOAT, -float1);
+        }
+        break;
+    default:
+        errorId = ExceptionTypeId.INVALID_ARGUMENT;
+        errorMsg = "Cannot apply a negative sign to this type.";
+        @import("macros/throw.pst");
+}
+
+valueStack[valueStackSize - 1] = value;

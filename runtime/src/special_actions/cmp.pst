@@ -1,0 +1,45 @@
+valueStackSize -= 2;
+left = valueStack[valueStackSize];
+right = valueStack[valueStackSize + 1];
+leftType = left.type;
+rightType = right.type;
+if (leftType != rightType) {
+    if (leftType == Type.INTEGER && rightType == Type.FLOAT) {
+        float1 = (int) left.internalValue - (double) right.internalValue;
+    } else if (leftType == Type.FLOAT && rightType == Type.INTEGER) {
+        float1 = (double) left.internalValue - (int) right.internalValue;
+    } else {
+        float1 = 0.0 + leftType - rightType; // sort by type id, just because.
+    }
+} else if (leftType == Type.INTEGER) {
+    float1 = 0.0 + (int) left.internalValue - (int) right.internalValue;
+} else if (leftType == Type.FLOAT) {
+    float1 = (double) left.internalValue - (double) right.internalValue;
+} else if (leftType == Type.STRING) {
+    stringImpl1 = (StringImpl) left.internalValue;
+    stringImpl2 = (StringImpl) right.internalValue;
+    if (stringImpl1.isBuilder) stringFlatten(stringImpl1);
+    if (stringImpl2.isBuilder) stringFlatten(stringImpl2);
+    sz = stringImpl1.length;
+    int2 = stringImpl2.length;
+    if (int2 < sz) sz = int2;
+    int3 = 0;
+    for (i = 0; i < sz; i += 1) {
+        int1 = stringImpl1.uChars[i];
+        int2 = stringImpl2.uChars[i];
+        if (int1 != int2) {
+            int3 = int1 - int2;
+            i += sz;
+        }
+    }
+    if (int3 == 0) {
+        int3 = stringImpl2.length - stringImpl1.length;
+    }
+    float1 = 0.0 + int3;
+} else {
+    float1 = 0.0;
+}
+
+if (float1 == 0) output = globalValues.intZero;
+else if (float1 < 0) output = globalValues.negIntegers[1];
+else output = globalValues.intOne;

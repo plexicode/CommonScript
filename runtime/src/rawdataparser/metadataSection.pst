@@ -1,0 +1,8 @@
+
+RawData_Metadata ParseRaw_parseMetadata(RawDataParser rdp) {
+    if (!ParseRaw_popInt(rdp)) return null;
+    int mainFn = rdp.intOut;
+    if (!ParseRaw_popInt(rdp)) return null;
+    int builtinCount = rdp.intOut;
+    return new RawData_Metadata(mainFn, builtinCount);
+}

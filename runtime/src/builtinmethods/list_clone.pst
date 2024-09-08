@@ -1,0 +1,2 @@
+listImpl1 = (ListImpl) fp.ctx.internalValue;
+output = buildList(ec, listImpl1.items, true, listImpl1.length);

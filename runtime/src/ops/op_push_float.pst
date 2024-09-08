@@ -1,0 +1,15 @@
+
+if (row.args.Size() == 1) {
+    i = row.firstArg;
+    if (i >= 0 && i <= 4) {
+        value = globalValues.floatsBy4x[i];
+    } else {
+        value = buildFloat(i * 0.25);
+    }
+} else {
+    value = buildFloat(Core.ParseFloatUnsafe(row.stringArg));
+}
+
+row.valueCache = value;
+row.op = OP_PUSH_VALUE;
+pc -= 1;

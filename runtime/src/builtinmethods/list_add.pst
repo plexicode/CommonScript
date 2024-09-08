@@ -1,0 +1,7 @@
+
+// inlined since it's probably common.
+listImpl1 = (ListImpl) fp.ctx.internalValue;
+if (listImpl1.length == listImpl1.capacity) List_expandCapacity(listImpl1);
+output = globalValues.nullValue;
+listImpl1.items[listImpl1.length] = args[0];
+listImpl1.length += 1;

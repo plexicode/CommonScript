@@ -1,0 +1,7 @@
+
+value = ec.classes[row.firstArg].ctor;
+fp = FunctionPointer_cloneWithNewType((FunctionPointer) value.internalValue, FunctionPointerType.BASE_CONSTRUCTOR);
+
+row.valueCache = new Value(Type.FUNCTION, fp);
+row.op = OP_PUSH_VALUE;
+pc -= 1;

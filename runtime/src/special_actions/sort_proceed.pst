@@ -1,0 +1,4 @@
+valueStackSize -= 2;
+value = valueStack[valueStackSize];
+bool1 = (bool) valueStack[valueStackSize + 1].internalValue; // is cmp result greater than 0?
+output = Sort_proceedWithCmpResult(value, bool1);

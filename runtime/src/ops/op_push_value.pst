@@ -1,0 +1,5 @@
+// OP_PUSH_VALUE
+
+@import("macros/ensurevaluestackcapacity.pst");
+valueStack[valueStackSize] = row.valueCache;
+valueStackSize += 1;

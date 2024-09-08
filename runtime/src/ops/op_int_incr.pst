@@ -1,0 +1,8 @@
+i = valueStackSize - 1;
+value = valueStack[i];
+if (value.type != Type.INTEGER) {
+    errorId = ExceptionTypeId.TYPE;
+    errorMsg = "Cannot increment/decrement non-integer";
+    @import("macros/throw.pst");
+}
+valueStack[i] = buildInteger(globalValues, row.firstArg + (int) value.internalValue);

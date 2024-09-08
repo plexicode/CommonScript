@@ -1,0 +1,24 @@
+value = args[0];
+if (value.type != Type.INTEGER) {
+    errorId = ExceptionTypeId.INVALID_ARGUMENT;
+    errorMsg = "list.remove() requires a valid index integer.";
+    @import("macros/throw.pst");
+}
+
+listImpl1 = (ListImpl) fp.ctx.internalValue;
+j = (int) value.internalValue;
+sz = listImpl1.length;
+if (j < 0) j += sz;
+if (j >= sz || j < 0) {
+    errorId = ExceptionTypeId.OUT_OF_RANGE;
+    errorMsg = "list.remove() was given an index out of range.";
+    @import("macros/throw.pst");
+}
+valueArr = listImpl1.items;
+output = valueArr[j];
+for (i = j + 1; i < sz; i += 1) {
+    valueArr[i - 1] = valueArr[i];
+}
+sz -= 1;
+listImpl1.length = sz;
+listImpl1.items[sz] = null;

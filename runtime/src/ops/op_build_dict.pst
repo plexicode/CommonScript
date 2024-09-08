@@ -1,0 +1,41 @@
+sz = row.firstArg;
+int1 = Type.NULL;
+if (sz == 0) {
+    @import("macros/ensurevaluestackcapacity.pst");
+    int2 = 0;
+    keys = null;
+    values = null;
+} else {
+    int2 = sz;
+    keys = new Array<Value>(sz);
+    values = new Array<Value>(sz);
+    valueStackSize -= sz * 2;
+    j = valueStackSize;
+    for (i = 0; i < sz; i += 1) {
+        keys[i] = valueStack[j];
+        values[i] = valueStack[j + 1];
+        j += 2;
+    }
+    int1 = keys[0].type;
+}
+dictImpl1 = new DictImpl(ec.nextRefId, int1, sz, int2, keys, values, null, null);
+ec.nextRefId += 1;
+if (dictImpl1.keyType == Type.INTEGER) {
+    dictImpl1.intKeyLookup = new Dictionary<int, int>();
+    for (i = 0; i < sz; i += 1) {
+        dictImpl1.intKeyLookup[(int) keys[i].internalValue] = i;
+    }
+} else if (dictImpl1.keyType == Type.STRING) {
+    dictImpl1.strKeyLookup = new Dictionary<string, int>();
+    for (i = 0; i < sz; i += 1) {
+        value = keys[i];
+        stringImpl1 = (StringImpl) value.internalValue;
+        if (stringImpl1.isBuilder) stringFlatten(stringImpl1);
+        dictImpl1.strKeyLookup[(string) stringImpl1.nativeStr] = i;
+    }
+}
+
+valueStack[valueStackSize] = new Value(Type.DICTIONARY, dictImpl1);
+valueStackSize += 1;
+keys = null;
+values = null;

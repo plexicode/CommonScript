@@ -1,0 +1,5 @@
+struct Token {
+    string filename;
+    int line;
+    int col;
+}

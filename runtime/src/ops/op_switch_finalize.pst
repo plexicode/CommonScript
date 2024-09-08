@@ -1,0 +1,16 @@
+/*
+    args[0] - offset to original OP_SWITCH_BUILD (this is the DIRECT offset, not a pc - 1 offset). You must subtract 1 from the PC.
+
+    This will rewrite the op at the destination to OP_SWITCH_INT or OP_SWITCH_STRING.
+*/
+pc -= row.args[0];
+row = byteCode[pc];
+if (switchIntLookup != null) {
+    ec.switchIntLookupsByPc[pc] = switchIntLookup;
+    row.op = OP_SWITCH_INT;
+} else {
+    ec.switchStrLookupsByPc[pc] = switchStrLookup;
+    row.op = OP_SWITCH_STRING;
+}
+pc -= 1;
+

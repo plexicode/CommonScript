@@ -1,0 +1,26 @@
+import testlib -> *;
+
+function main(args) {
+
+    // TODO: default arg values 
+    // TODO: nested in each other 
+    // TODO: lambdas as default args
+    // TODO: lambdas in non-basic-function (constructors, field values, etc)
+    // TODO: lambda with multiple statements
+    // TODO: lambdas that throw
+
+    //*
+    fn1 = () => "hello";
+    fn2 = x => "hello" + x;
+    fn3 = (x) => "hello" + x;
+    fn4 = (a, b) => "hello" + a + " " + b;
+
+    assertStrEqual(fn1(), "hello");
+    assertStrEqual(fn2(2), "hello2");
+    assertStrEqual(fn3(3), "hello3");
+    assertStrEqual(fn4(4, 5), "hello4 5");
+
+    //*/
+
+    print("ALL DONE");
+}

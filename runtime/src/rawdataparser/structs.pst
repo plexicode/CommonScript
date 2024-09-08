@@ -1,0 +1,17 @@
+struct RawDataParser {
+    Array<int> rawBytes;
+    int index;
+    int length;
+    int intOut;
+}
+
+struct RawData_Metadata {
+    int mainFunctionId;
+    int builtinCount;
+}
+
+struct RawData_Entities {
+    List<FunctionInfo> functionsById;
+    List<EnumInfo> enumsById;
+    List<ClassInfo> classesById;
+}

@@ -1,0 +1,70 @@
+// TODO: make two versions that are optimized for array-first languages and expandable-list-first languages
+
+struct ListImpl {
+    int id;
+    int length;
+    int capacity;
+    Array<Value> items;
+}
+
+void List_expandCapacity(ListImpl o) {
+    int oldCapacity = o.capacity;
+    int newCapacity = oldCapacity * 2;
+    if (newCapacity < 4) newCapacity = 4;
+    Array<Value> newItems = new Array<Value>(newCapacity);
+    Array<Value> oldItems = o.items;
+    for (int i = 0; i < oldCapacity; i += 1) {
+        newItems[i] = oldItems[i];
+    }
+    o.capacity = newCapacity;
+    o.items = newItems;
+}
+
+void List_add(ListImpl o, Value v) {
+    if (o.capacity == o.length) List_expandCapacity(o);
+    o.items[o.length] = v;
+    o.length += 1;
+}
+
+Value List_pop(ListImpl o, Value v) {
+    if (o.length == 0) return null;
+    o.length -= 1;
+    return o.items[o.length];
+}
+
+Value List_get(ListImpl o, int index) {
+    if (index < 0) index += o.length;
+    if (index < 0 || index >= o.length) return null;
+    return o.items[index];
+}
+
+bool List_set(ListImpl o, int index, Value v) {
+    if (index < 0) index += o.length;
+    if (index < 0 || index >= o.length) return false;
+    o.items[index] = v;
+    return true;
+}
+
+bool List_removeAt(ListImpl o, int index) {
+    if (index < 0) index += o.length;
+    if (index < 0 || index >= o.length) return false;
+    o.length -= 1;
+    while (index < o.length) {
+        o.items[index] = o.items[index + 1];
+        index += 1;
+    }
+    return true;
+}
+
+Value List_join(GlobalValues g, Value v, string sep) {
+    ListImpl o = (ListImpl) v.internalValue;
+    if (o.length == 0) return g.emptyString;
+    List<string> output = new List<string>();
+    output.Add(valueToHumanString(o.items[0]));
+    int sz = o.length;
+    for (int i = 1; i < sz; i += 1) {
+        output.Add(valueToHumanString(o.items[i]));
+    }
+    string val = output.Join(sep);
+    return buildString(g, val, false);
+}

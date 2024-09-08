@@ -1,0 +1,93 @@
+Value stringUtil_trim(Value str, bool front, bool back) {
+    StringImpl strimpl = (StringImpl) str.internalValue;
+    int start = 0;
+    int length = strimpl.length;
+    if (length == 0) return str;
+    if (strimpl.isBuilder) stringFlatten(strimpl);
+
+    int c = 0;
+    Array<int> uchars = strimpl.uChars;
+    while (back && length > 0) {
+        c = uchars[length - 1];
+        switch (c) {
+            case 9:
+            case 10:
+            case 13:
+            case 32:
+                length -= 1;
+                break;
+            default:
+                back = false;
+                break;
+        }
+    }
+
+    while (front && length > 0) {
+        c = uchars[start];
+        switch (c) {
+            case 9:
+            case 10:
+            case 13:
+            case 32:
+                length -= 1;
+                start += 1;
+                break;
+            default:
+                front = false;
+                break;
+        }
+    }
+
+    if (length == strimpl.length) return str;
+
+    Array<int> newChars = new Array<int>(length);
+    for (int i = 0; i < length; i += 1) {
+        newChars[i] = uchars[i + start];
+    }
+    StringImpl o = new StringImpl(length, false, newChars, strimpl.nativeStr.SubString(start, length), null, null);
+    return new Value(Type.STRING, o);
+}
+
+Value stringUtil_changeCase(Value orig, bool isUpper) {
+    bool changes = false;
+    StringImpl si = (StringImpl) orig.internalValue;
+    if (si.isBuilder) stringFlatten(si);
+    string s = si.nativeStr;
+    string s2 = null;
+    if (isUpper) {
+        s2 = s.ToUpper();
+    } else {
+        s2 = s.ToLower();
+    }
+    if (s2 == s) return orig;
+    return new Value(Type.STRING, buildAsciiStringImpl(s2));
+}
+
+Value createStringFromUnicodeArray(GlobalValues g, Array<int> buffer, bool copyBuffer) {
+    Array<int> uchars = buffer;
+    int sz = buffer.Size();
+    if (sz < 2) {
+        if (sz == 0) return g.emptyString;
+        string singleChar = Core.CharToString(Core.Chr(buffer[0]));
+        return buildString(g, singleChar, true);
+    }
+
+    if (copyBuffer) {
+        uchars = new Array<int>(sz);
+        for (int i = 0; i < sz; i += 1) {
+            uchars[i] = buffer[i];
+        }
+    }
+    
+    // TODO: this is WRONG and needs to be part of the proper unicode/surrogate pair rework 
+    List<string> sb = new List<string>();
+    for (int j = 0; j < sz; j += 1) {
+        sb.Add(Core.CharToString(Core.Chr(uchars[j])));
+    }
+    string finalString = sb.Join("");
+    if (g.commonStrings.Contains(finalString)) return g.commonStrings[finalString];
+
+    return new Value(
+        Type.STRING, 
+        new StringImpl(sz, false, uchars, finalString, null, null));
+}

@@ -1,0 +1,32 @@
+import testlib -> *;
+
+function main(args) {
+
+    assertStrEqual(new Foo().greet(), "I am Foo #1");
+    assertStrEqual(new Foo().greet(), "I am Foo #2");
+
+    assertStrEqual(Foo.howManyFoos(), "There are 2 foo(s)");
+
+    print("ALL DONE");
+}
+
+class Foo {
+    @static field population;
+    field id;
+
+    @static constructor() {
+        Foo.population = 0;
+    }
+
+    constructor() {
+        this.id = ++Foo.population;
+    }
+
+    function greet() {
+        return "I am Foo #" + this.id;
+    }
+
+    @static function howManyFoos() {
+        return "There are " + Foo.population + " foo(s)";
+    }
+}

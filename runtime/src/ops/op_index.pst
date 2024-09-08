@@ -1,0 +1,113 @@
+
+valueStackSize -= 1;
+left = valueStack[valueStackSize - 1];
+right = valueStack[valueStackSize];
+
+switch (left.type * Type.MAX + right.type) {
+    case Type.STRING * Type.MAX + Type.INTEGER:
+        stringImpl1 = (StringImpl) left.internalValue;
+        if (stringImpl1.isBuilder) stringFlatten(stringImpl1);
+        sz = stringImpl1.length;
+        i = (int) right.internalValue;
+        bool1 = false;
+        if (i < 0) {
+            i += sz;
+            if (i < 0) bool1 = true;
+        } else if (i >= sz) {
+            bool1 = true;
+        }
+
+        if (bool1) {
+            errorId = ExceptionTypeId.OUT_OF_RANGE;
+            errorMsg = "String index out of range.";
+            @import("macros/throw.pst");
+        }
+
+        // TODO: cache single character strings
+        intArray1 = new Array<int>(1);
+        intArray1[0] = stringImpl1.uChars[i];
+        str1 = stringImpl1.nativeStr.SubString(i, 1);
+        valueStack[valueStackSize - 1] = new Value(Type.STRING, new StringImpl(1, false, intArray1, str1, null, null));
+        break;
+
+    case Type.LIST * Type.MAX + Type.INTEGER:
+        listImpl1 = (ListImpl) left.internalValue;
+        i = (int) right.internalValue;
+        sz = listImpl1.length;
+        bool1 = false;
+        if (i < 0) {
+            i += sz;
+            if (i < 0) bool1 = true;
+        } else if (i >= sz) {
+            bool1 = true;
+        }
+
+        if (bool1) {
+            errorId = ExceptionTypeId.OUT_OF_RANGE;
+            errorMsg = "List index out of range.";
+            @import("macros/throw.pst");
+        }
+
+        valueStack[valueStackSize - 1] = listImpl1.items[i];
+        break;
+
+    case Type.DICTIONARY * Type.MAX + Type.INTEGER:
+        dictImpl1 = (DictImpl) left.internalValue;
+        i = (int) right.internalValue;
+
+        if (dictImpl1.keyType == Type.INTEGER) {
+            if (dictImpl1.intKeyLookup.Contains(i)) {
+                bool1 = false;
+                valueStack[valueStackSize - 1] = dictImpl1.values[dictImpl1.intKeyLookup[i]];
+            } else {
+                bool1 = true;
+            }
+        } else {
+            bool1 = true;
+        }
+
+        if (bool1) {
+            errorId = ExceptionTypeId.KEY_NOT_FOUND;
+            errorMsg = "Dictionary does not have that key";
+            @import("macros/throw.pst");
+        }
+
+        break;
+
+    case Type.DICTIONARY * Type.MAX + Type.STRING:
+        dictImpl1 = (DictImpl) left.internalValue;
+        stringImpl1 = (StringImpl) right.internalValue;
+        if (stringImpl1.isBuilder) stringFlatten(stringImpl1);
+        str1 = stringImpl1.nativeStr;
+
+        if (dictImpl1.keyType == Type.STRING) {
+            if (dictImpl1.strKeyLookup.Contains(str1)) {
+                bool1 = false;
+                valueStack[valueStackSize - 1] = dictImpl1.values[dictImpl1.strKeyLookup[str1]];
+            } else {
+                bool1 = true;
+            }
+        } else {
+            bool1 = true;
+        }
+
+        if (bool1) {
+            errorId = ExceptionTypeId.KEY_NOT_FOUND;
+            errorMsg = "Dictionary does not have that key";
+            @import("macros/throw.pst");
+        }
+
+        break;
+
+    default:
+        @import("macros/saveframe.pst");
+
+        switch (left.type) {
+            case Type.STRING: errorMsg = "Strings must be indexed with an integer."; break;
+            case Type.LIST: errorMsg = "Lists must be indexed with an integer."; break;
+            default: errorMsg = "Cannot index into this type"; break;
+        }
+        
+        errorId = ExceptionTypeId.INVALID_ARGUMENT;
+        @import("macros/throw.pst");
+}

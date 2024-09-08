@@ -1,0 +1,3 @@
+@import("macros/ensurevaluestackcapacity.pst");
+valueStack[valueStackSize] = frame.context;
+valueStackSize += 1;

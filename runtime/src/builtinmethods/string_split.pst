@@ -1,0 +1,15 @@
+
+value1 = args[0];
+if (value1.type != Type.STRING) {
+    return ThrowErrorImpl(
+        task,
+        ExceptionTypeId.INVALID_ARGUMENT,
+        "string.split(sep) requires a string separator");
+}
+
+str1 = valueToHumanString(value1);
+valueArr = stringUtil_split(globalValues, fp.ctx, str1);
+sz = valueArr.Size();
+output = new Value(Type.LIST, new ListImpl(ec.nextRefId, sz, sz, valueArr));
+valueArr = null;
+ec.nextRefId += 1;

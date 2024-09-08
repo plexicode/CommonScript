@@ -1,0 +1,3 @@
+frame.pc = pc;
+frame.valueStackSize = valueStackSize;
+task.stack = frame;

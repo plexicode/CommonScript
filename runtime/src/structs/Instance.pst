@@ -1,0 +1,5 @@
+struct Instance {
+    int id;
+    ClassInfo classDef;
+    Array<Value> members;
+}

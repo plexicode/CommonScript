@@ -1,0 +1,5 @@
+if (valueStack[valueStackSize - 1].type != Type.STRING) {
+    errorId = ExceptionTypeId.TYPE;
+    errorMsg = "Expected a string here.";
+    @import("macros/throw.pst");
+}

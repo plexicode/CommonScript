@@ -1,0 +1,8 @@
+
+// Compares the stringified-value of each value and prints an error if they don't match.
+@public 
+function assertStrEqual(a, b) {
+    if (a + '' != b + '') {
+        print("ERR: " + a + " is not the same as " + b + "!");
+    }
+}

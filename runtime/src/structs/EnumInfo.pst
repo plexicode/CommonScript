@@ -1,0 +1,5 @@
+struct EnumInfo {
+    int enumId;
+    Array<string> names;
+    Array<int> values;
+}

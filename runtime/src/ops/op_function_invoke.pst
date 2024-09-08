@@ -1,0 +1,135 @@
+argc = row.firstArg;
+args = new Array<Value>(argc);
+
+for (i = argc - 1; i >= 0; i -= 1) {
+    valueStackSize -= 1;
+    args[i] = valueStack[valueStackSize];
+}
+
+valueStackSize -= 1;
+value = valueStack[valueStackSize];
+
+if (value.type != Type.FUNCTION) {
+    errorId = ExceptionTypeId.INVOCATION;
+    errorMsg = "This is not a function";
+    @import("macros/throw.pst");
+}
+
+fp = (FunctionPointer) value.internalValue;
+if (argc < fp.argcMin || argc > fp.argcMax) {
+    errorId = ExceptionTypeId.INVOCATION;
+    errorMsg = "Incorrect number of arguments.";
+    @import("macros/throw.pst");
+}
+
+doInvoke = false;
+
+switch (fp.funcType) {
+    case FunctionPointerType.REGULAR:
+    case FunctionPointerType.INSTANCE_METHOD:
+    case FunctionPointerType.STATIC_METHOD:
+        doInvoke = true;
+        value = fp.ctx; // null when regular method.
+        overrideReturnValueWithContext = false;
+        break;
+
+    case FunctionPointerType.CONSTRUCTOR:
+        classDef = fp.func.classParent;
+
+        valueArr = classDef.initialValues;
+        sz = valueArr.Size();
+        values = new Array<Value>(sz);
+
+        for (i = 0; i < sz; i += 1) {
+            values[i] = valueArr[i];
+        }
+        instance1 = new Instance(ec.nextRefId, classDef, values);
+        ec.nextRefId += 1;
+        value = new Value(Type.INSTANCE, instance1);
+        doInvoke = true;
+        overrideReturnValueWithContext = true;
+        break;
+
+    case FunctionPointerType.BASE_CONSTRUCTOR:
+        doInvoke = true;
+        value = frame.context;
+        overrideReturnValueWithContext = false; // deterministic behavior but honestly doesn't matter.
+        break;
+
+    case FunctionPointerType.PRIMITIVE_METHOD:
+
+        // this is not expensive and allows the error code to be more compact.
+        @import("macros/saveframe.pst");
+
+        switch (fp.pcOrId) {
+            case PrimitiveMethods.BYTEBUF_TO_BASE_64: @import("builtinmethods/bytebuf_to_base_64.pst"); break;
+
+            case PrimitiveMethods.DICT_KEYS: @import("builtinmethods/dict_keys.pst"); break;
+            case PrimitiveMethods.DICT_VALUES: @import("builtinmethods/dict_values.pst"); break;
+
+            case PrimitiveMethods.LIST_ADD: @import("builtinmethods/list_add.pst"); break;
+            case PrimitiveMethods.LIST_CLEAR: @import("builtinmethods/list_clear.pst"); break;
+            case PrimitiveMethods.LIST_CLONE: @import("builtinmethods/list_clone.pst"); break;
+            case PrimitiveMethods.LIST_FILTER: @import("builtinmethods/list_filter.pst"); break;
+            case PrimitiveMethods.LIST_FIND: @import("builtinmethods/list_find.pst"); break;
+            case PrimitiveMethods.LIST_FIND_REVERSE: @import("builtinmethods/list_find_reverse.pst"); break;
+            case PrimitiveMethods.LIST_JOIN: @import("builtinmethods/list_join.pst"); break;
+            case PrimitiveMethods.LIST_MAP: @import("builtinmethods/list_map.pst"); break;
+            case PrimitiveMethods.LIST_POP: @import("builtinmethods/list_pop.pst"); break;
+            case PrimitiveMethods.LIST_REDUCE: @import("builtinmethods/list_reduce.pst"); break;
+            case PrimitiveMethods.LIST_REVERSE: @import("builtinmethods/list_reverse.pst"); break;
+            case PrimitiveMethods.LIST_REMOVE: @import("builtinmethods/list_remove.pst"); break;
+            case PrimitiveMethods.LIST_SORT: @import("builtinmethods/list_sort.pst"); break;
+            case PrimitiveMethods.LIST_SORT_BY_KEY: @import("builtinmethods/list_sort_by_key.pst"); break;
+            case PrimitiveMethods.LIST_TO_BYTES: @import("builtinmethods/list_to_bytes.pst"); break;
+
+            case PrimitiveMethods.STRING_GET_CODE_POINT: @import("builtinmethods/string_get_code_point.pst"); break;
+            case PrimitiveMethods.STRING_LOWER: @import("builtinmethods/string_lower.pst"); break;
+            case PrimitiveMethods.STRING_SPLIT: @import("builtinmethods/string_split.pst"); break;
+            case PrimitiveMethods.STRING_TO_UNICODE_POINTS: @import("builtinmethods/string_to_unicode_points.pst"); break;
+            case PrimitiveMethods.STRING_TRIM: @import("builtinmethods/string_trim.pst"); break;
+            case PrimitiveMethods.STRING_UPPER: @import("builtinmethods/string_upper.pst"); break;
+
+            default:
+                // This is an ACTUAL crash because the function pointer value
+                // should never have materialized if the type + method name combination
+                // didn't exist to begin with.
+                @import("macros/saveframe.pst");
+                return ExRes_HardCrash(task, "Corrupted method pointer.");
+        }
+        valueStack[valueStackSize] = output;
+        valueStackSize += 1;
+        break;
+
+    default:
+        @import("macros/saveframe.pst");
+        return ExRes_HardCrash(task, "support for this function pointer type is not done yet.");
+}
+
+
+if (doInvoke) {
+    @import("macros/saveframe.pst");
+    fn = fp.func;
+    nextFrame = task.framePool;
+    if (nextFrame != null) {
+        task.framePool = nextFrame.previous;
+    } else {
+        nextFrame = new StackFrame(null, 0, null, 0, 0, 0, null, null, false, null, false);
+    }
+    nextFrame.previous = frame;
+    nextFrame.pc = fn.pc - 1;
+    nextFrame.args = args;
+    nextFrame.argc = argc;
+    nextFrame.valueStackSize = valueStackSize;
+    nextFrame.valueStackBaseSize = valueStackSize;
+    nextFrame.locals = new Dictionary<string, Value>();
+    nextFrame.context = value;
+    nextFrame.useContextAsReturnValue = overrideReturnValueWithContext;
+    nextFrame.bubblingValue = null;
+    // no need to set bubblingValueUncaught since it's only read when bubblingValue is set.
+
+    frame = nextFrame;
+    task.stack = frame;
+    pc = frame.pc;
+    locals = frame.locals;
+}

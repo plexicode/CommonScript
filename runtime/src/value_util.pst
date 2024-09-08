@@ -1,0 +1,221 @@
+
+Value buildFunctionFromInfo(FunctionInfo fn) {
+    FunctionPointer fp = new FunctionPointer(
+        FunctionPointerType.REGULAR,
+        fn.argcMin,
+        fn.argcMax,
+        fn.pc,
+        fn,
+        null
+    );
+    return new Value(Type.FUNCTION, fp);
+}
+
+Value buildFloat(double v) {
+    return new Value(Type.FLOAT, v);
+}
+
+Array<Value> valueArrayIncreaseCapacity(Array<Value> oldArr) {
+    int oldCapacity = oldArr.Size();
+    int newCapacity = oldCapacity * 2;
+    if (newCapacity < 8) newCapacity = 8;
+    Array<Value> newArr = new Array<Value>(newCapacity);
+    for (int i = 0; i < oldCapacity; i += 1) {
+        newArr[i] = oldArr[i];
+    }
+    return newArr;
+}
+
+Value buildString(GlobalValues g, string rawValue, bool isCommon) {
+    if (g.commonStrings.Contains(rawValue)) {
+        return g.commonStrings[rawValue];
+    }
+
+    // TODO: add system-provided implementations of converting strings to
+    // unicode code point sequences. Until that time, just pretend that the
+    // utf8 byte values are also the unicode values. This is fine for ASCII for
+    // now. I was going to write out a UTF-8 parser here, but that is silly.
+    Array<int> charValues = rawValue.ToUtf8Bytes();
+
+    StringImpl s = new StringImpl(
+        charValues.Size(),
+        false, // literal value, not a builder
+        charValues, // unicode characters (this is WRONG for non-ASCII, but limited by Pastel right now)
+        rawValue,
+        null,
+        null);
+
+    Value v = new Value(Type.STRING, s);
+    if (isCommon) {
+        g.commonStrings[rawValue] = v;
+    }
+    return v;
+}
+
+StringImpl buildAsciiStringImpl(string rawValue) {
+    return new StringImpl(rawValue.Size(), false, rawValue.ToUtf8Bytes(), rawValue, null, null);
+}
+
+string valueToHumanString(Value value) {
+    switch (value.type) {
+        case Type.NULL: return "null";
+        case Type.BOOLEAN:
+            bool b = (bool)value.internalValue;
+            if (b) return "true";
+            return "false";
+        case Type.INTEGER: return Core.IntToString((int)value.internalValue);
+        case Type.FLOAT:
+            string floatStr = Core.FloatToString((double) value.internalValue);
+            if (!floatStr.Contains(".")) floatStr = floatStr + ".0";
+            return floatStr;
+        case Type.STRING:
+            StringImpl strImpl = (StringImpl) value.internalValue;
+            if (strImpl.isBuilder) stringFlatten(strImpl);
+            return strImpl.nativeStr;
+        case Type.INSTANCE:
+            Instance inst = (Instance) value.internalValue;
+            return Core.StringConcatAll("Instance<", inst.classDef.name, ":", Core.IntToString(inst.id), ">");
+        default:
+            break;
+    }
+    return "TODO: to string for type: " + Core.IntToString(value.type);
+}
+
+Value buildInteger(GlobalValues g, int value) {
+    if (value < 0) {
+        if (value > -INT_CACHE_RANGE) {
+            return g.negIntegers[-value];
+        }
+    } else if (value < INT_CACHE_RANGE) {
+        return g.posIntegers[value];
+    }
+    return new Value(Type.INTEGER, value);
+}
+
+StringImpl convertToStringImpl(GlobalValues g, Value v) {
+    switch (v.type) {
+        case Type.NULL: return (StringImpl) buildString(g, "null", true).internalValue;
+        case Type.BOOLEAN:
+            if ((bool) v.internalValue) return (StringImpl) buildString(g, "true", true).internalValue;
+            return (StringImpl) buildString(g, "false", true).internalValue;
+        case Type.INTEGER:
+            int n = (int) v.internalValue;
+            if (n < 20 && n > -20) return (StringImpl) buildString(g, Core.IntToString(n), true).internalValue;
+            return buildAsciiStringImpl(Core.IntToString(n));
+        case Type.FLOAT:
+            return (StringImpl) buildString(g, valueToHumanString(v), false).internalValue;
+        case Type.STRING:
+            return (StringImpl) v.internalValue;
+        default:
+            break;
+    }
+    return buildAsciiStringImpl("TODO: string for this type");
+}
+
+void stringFlatten(StringImpl s) {
+    Array<int> ucharsBuilder = new Array<int>(s.length);
+    int ucharOffset = 0;
+    List<string> strBuilder = new List<string>();
+    List<StringImpl> q = new List<StringImpl>();
+    q.Add(s);
+    StringImpl current = null;
+    int i = 0;
+    int currentLen = 0;
+    Array<int> currentUChars = null;
+    while (q.Size() > 0) {
+        current = q.Pop();
+        if (current.isBuilder) {
+            q.Add(current.right);
+            q.Add(current.left);
+        } else {
+            currentUChars = current.uChars;
+            currentLen = current.length;
+            for (i = 0; i < currentLen; i += 1) {
+                ucharsBuilder[i + ucharOffset] = currentUChars[i];
+            }
+            ucharOffset += currentLen;
+            strBuilder.Add(current.nativeStr);
+        }
+    }
+    s.isBuilder = false;
+    s.left = null;
+    s.right = null;
+    s.nativeStr = strBuilder.Join("");
+    s.uChars = ucharsBuilder;
+}
+
+Array<Value> stringUtil_split(GlobalValues g, Value str, string sep) {
+    StringImpl si = (StringImpl) str.internalValue;
+    if (si.isBuilder) stringFlatten(si);
+    Array<string> values = si.nativeStr.Split(sep);
+    int sz = values.Size();
+    Array<Value> o = new Array<Value>(sz);
+    for (int i = 0; i < sz; i += 1) {
+        o[i] = buildString(g, values[i], false);
+    }
+    return o;
+}
+
+Value buildList(ExecutionContext ec, Array<Value> values, bool copyValues, int lengthOrNegativeOne) {
+    int id = ec.nextRefId;
+    ec.nextRefId += 1;
+    int size = lengthOrNegativeOne;
+    if (size == -1) size = values.Size();
+    if (copyValues) {
+        Array<Value> buf = new Array<Value>(size);
+        for (int i = 0; i < size; i += 1) {
+            buf[i] = values[i];
+        }
+        values = buf;
+    }
+    return new Value(Type.LIST, new ListImpl(id, size, size, values));
+}
+
+bool isValueEqual(Value a, Value b) {
+    if (a.type != b.type) {
+        if (a.type == Type.INTEGER) {
+            if (b.type == Type.FLOAT) {
+                return 0.0 + (int) a.internalValue == (double) b.internalValue;
+            }
+        } else if (a.type == Type.FLOAT) {
+            if (b.type == Type.INTEGER) {
+                return (double) a.internalValue == 0.0 + (int) b.internalValue;
+            }
+        }
+        return false;
+    }
+
+    switch (a.type) {
+        case Type.NULL: return true;
+        case Type.BOOLEAN:
+            return (bool) a.internalValue == (bool) b.internalValue;
+        case Type.INTEGER:
+            return (int) a.internalValue == (int) b.internalValue;
+        case Type.FLOAT:
+            return (double) a.internalValue == (double) b.internalValue;
+        case Type.STRING:
+            StringImpl s1 = (StringImpl) a.internalValue;
+            StringImpl s2 = (StringImpl) b.internalValue;
+            if (s1 == s2) return true; // identical reference
+            int sLen = s1.length;
+            if (sLen != s2.length) return false;
+            if (s1.isBuilder) stringFlatten(s1);
+            if (s2.isBuilder) stringFlatten(s2);
+            if (sLen == 0) return true;
+            if (s1.uChars[0] != s2.uChars[0]) return false;
+            sLen -= 1;
+            if (s1.uChars[sLen] != s2.uChars[sLen]) return false;
+            for (int i = 1; i < sLen; i += 1) {
+                if (s1.uChars[i] != s2.uChars[i]) return false;
+            }
+            return true;
+        case Type.LIST:
+            return Core.ForceParens((ListImpl) a.internalValue).id == Core.ForceParens((ListImpl) b.internalValue).id;
+        case Type.DICTIONARY:
+            return Core.ForceParens((DictImpl) a.internalValue).id == Core.ForceParens((DictImpl) b.internalValue).id;
+        case Type.INSTANCE:
+            return Core.ForceParens((Instance) a.internalValue).id == Core.ForceParens((Instance) b.internalValue).id;
+        default:
+            return a.internalValue == b.internalValue;
+    }
+}

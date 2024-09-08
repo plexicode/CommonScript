@@ -1,0 +1,28 @@
+struct DictImpl {
+    int id;
+    int keyType;
+    int size;
+    int capacity;
+    Array<Value> keys;
+    Array<Value> values;
+    Dictionary<int, int> intKeyLookup;
+    Dictionary<string, int> strKeyLookup;
+}
+
+void DictImpl_ensureCapacity(DictImpl dict) {
+    int size = dict.size;
+    if (size < dict.capacity) return;
+    int newCapacity = dict.capacity * 2;
+    if (newCapacity < 4) newCapacity = 4;
+    Array<Value> newKeys = new Array<Value>(newCapacity);
+    Array<Value> newValues = new Array<Value>(newCapacity);
+    Array<Value> oldKeys = dict.keys;
+    Array<Value> oldValues = dict.values;
+    for (int i = 0; i < size; i += 1) {
+        newKeys[i] = oldKeys[i];
+        newValues[i] = oldValues[i];
+    }
+    dict.keys = newKeys;
+    dict.values = newValues;
+    dict.capacity = newCapacity;
+}

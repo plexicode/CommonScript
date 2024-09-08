@@ -1,0 +1,29 @@
+import testlib -> *;
+
+function addBang(v) { return v + "!"; }
+
+function identity(v) { return v; }
+
+function toStr(x) { return '' + x; }
+
+function main(args) {
+
+    arr = [2, 4, 6, 8, 10];
+    buf = arr.map(addBang);
+    assertStrEqual(buf.join(' '), '2! 4! 6! 8! 10!');
+
+    arr = [0, 1, true, false, null, 'true', 'troo'];
+    buf = arr.filter(identity).map(toStr);
+    assertStrEqual(buf.join(' '), 'true');
+
+    arr = [1, 2, 3, 4, 5];
+    result = arr.reduce(sum);
+    assertStrEqual(result, '15');
+
+    result = arr.reduce(sum, 10000);
+    assertStrEqual(result, '10015');
+
+    print("ALL DONE");
+}
+
+function sum(a, b) { return a + b; }

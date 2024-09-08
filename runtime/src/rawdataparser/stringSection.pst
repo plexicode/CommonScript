@@ -1,0 +1,13 @@
+
+Array<string> ParseRaw_parseStringData(RawDataParser rdp) {
+    if (!ParseRaw_popInt(rdp)) return null;
+    int count = rdp.intOut;
+    Array<string> output = new Array<string>(count + 1);
+    output[0] = null;
+    for (int i = 0; i < count; i += 1) {
+        string s = ParseRaw_popLenString(rdp);
+        if (s == null) return null;
+        output[i + 1] = s;
+    }
+    return output;
+}

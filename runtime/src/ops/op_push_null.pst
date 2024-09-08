@@ -1,0 +1,4 @@
+
+row.valueCache = globalValues.nullValue;
+row.op = OP_PUSH_VALUE;
+pc -= 1;

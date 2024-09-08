@@ -1,0 +1,33 @@
+struct ByteCodeRow {
+    int op;
+    Array<int> args;
+    int firstArg;
+    int secondArg;
+    int stringId;
+    string stringArg;
+    int tokenId;
+    Token token;
+    Value valueCache;
+    bool boolArg;
+    bool boolArg2;
+}
+
+ByteCodeRow new_ByteCodeRow(int op, Array<int> args, int stringId, int tokenId) {
+    int arg1 = 0;
+    int arg2 = 0;
+    if (args.Size() > 0) arg1 = args[0];
+    if (args.Size() > 1) arg2 = args[1];
+    return new ByteCodeRow(
+        op,
+        args,
+        arg1,
+        arg2,
+        stringId,
+        null,
+        tokenId,
+        null,
+        null,
+        false,
+        false
+    );
+}

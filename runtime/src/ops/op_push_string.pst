@@ -1,0 +1,4 @@
+
+row.valueCache = buildString(globalValues, row.stringArg, true);
+row.op = OP_PUSH_VALUE;
+pc -= 1;

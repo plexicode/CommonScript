@@ -1,0 +1,99 @@
+object PUBLIC_initializeExecutionContext(
+    Array<int> rawBytes,
+    Dictionary<string, Func<object, object, Array<object>>> extensions,
+    object appCtx) {
+
+    return new_ExecutionContext(rawBytes, extensions, appCtx);
+}
+
+string PUBLIC_getExecutionContextError(object ecObj) {
+    ExecutionContext ec = (ExecutionContext) ecObj;
+    return ec.errMsg;
+}
+
+object PUBLIC_startMainTask(object ecObj, Array<string> args) {
+    ExecutionTask mainTask = createMainTask((ExecutionContext) ecObj, args);
+    return RunInterpreter(mainTask);
+}
+
+int PUBLIC_getTaskResultStatus(object resObj) {
+    ExecutionResult result = (ExecutionResult) resObj;
+    return result.type;
+}
+
+int PUBLIC_getTaskResultSleepAmount(object resObj) {
+    ExecutionResult result = (ExecutionResult) resObj;
+    return result.sleepMillis;
+}
+
+Array<string> PUBLIC_getTaskResultError(object resObj, bool includeStackTrace) {
+    ExecutionResult result = (ExecutionResult) resObj;
+    List<string> o = new List<string>();
+    if (result.type != ExecutionResultType.HARD_CRASH) return null;
+
+    o.Add(result.errorMessage);
+    List<string> tr = result.stackTrace;
+    if (tr != null) {
+        for (int i = 0; i < tr.Size(); i += 1) {
+            o.Add(tr[i]);
+        }
+    }
+    return Core.ListToArray(o);
+}
+
+string PUBLIC_valueToString(object valueObj) {
+    return valueToHumanString((Value) valueObj);
+}
+
+object PUBLIC_wrapNativeHandle(object val) {
+    return new Value(Type.NATIVE_HANDLE, val);
+}
+
+GlobalValues getGlobalsFromTask(object taskObj) {
+    return Core.ForceParens((ExecutionTask) taskObj).execCtx.globalValues;
+}
+
+Value PUBLIC_wrapBoolean(object taskObj, bool val) {
+    GlobalValues g = getGlobalsFromTask(taskObj);
+    if (val) return g.trueValue;
+    return g.falseValue;
+}
+
+Value PUBLIC_wrapInteger(object taskObj, int val) {
+    GlobalValues g = getGlobalsFromTask(taskObj);
+    return buildInteger(g, val);
+}
+
+Value PUBLIC_wrapString(object taskObj, string val, bool isCommon) {
+    GlobalValues g = getGlobalsFromTask(taskObj);
+    return buildString(g, val, isCommon);
+}
+
+int PUBLIC_unwrapInteger(object val) {
+    return (int) Core.ForceParens((Value) val).internalValue;
+}
+
+object PUBLIC_unwrapNativeHandle(object val) {
+    return Core.ForceParens((Value) val).internalValue;
+}
+
+void PUBLIC_listValueAdd(object listObj, object wrappedValue) {
+    ListImpl list = (ListImpl) Core.ForceParens((Value) listObj).internalValue;
+    List_add(list, (Value) wrappedValue);
+}
+
+void PUBLIC_requestTaskSuspension(object taskObj, bool withSleep, int sleepMillis) {
+    ExecutionTask task = (ExecutionTask) taskObj;
+    task.suspendRequested = true;
+    if (sleepMillis < 0) sleepMillis = 0;
+    if (withSleep) {
+        task.sleepMillis = sleepMillis;
+    } else {
+        task.sleepMillis = -1;
+    }
+}
+
+object PUBLIC_getApplicationContextFromTask(object taskObj) {
+    ExecutionTask task = (ExecutionTask) taskObj;
+    return task.execCtx.appCtx;
+}

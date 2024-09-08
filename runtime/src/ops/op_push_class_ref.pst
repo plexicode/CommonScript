@@ -1,0 +1,33 @@
+classDef = ec.classes[row.firstArg];
+if (classDef.staticInitialized) {
+    row.valueCache = classDef.classRef;
+    row.op = OP_PUSH_VALUE;
+    pc -= 1;
+} else {
+    classDef.staticInitialized = true;
+    if (classDef.staticCtorFuncId > 0) {
+        // Do not subtract 1 from the pc. 
+        // The static constructor has use-context-as-return-value-override which 
+        // will push the class reference upon return, so you don't want to run 
+        // this instruction again the first time you encounter the static constructor.
+        @import("macros/saveframe.pst");
+        pc = ec.functions[classDef.staticCtorFuncId].pc - 1;
+        frame = new StackFrame(
+            frame,
+            pc,
+            new Array<Value>(0),
+            0,
+            valueStackSize,
+            valueStackSize,
+            new Dictionary<string, Value>(),
+            classDef.classRef,
+            true,
+            null,
+            false
+        );
+        locals = frame.locals;
+        task.stack = frame;
+    } else {
+        pc -= 1;
+    }
+}

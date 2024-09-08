@@ -1,0 +1,28 @@
+
+Array<Token> ParseRaw_parseTokenData(RawDataParser rdp) {
+    if (!ParseRaw_popInt(rdp)) return null;
+    int tokenCount = rdp.intOut;
+    if (!ParseRaw_popInt(rdp)) return null;
+    int fileCount = rdp.intOut;
+    List<string> fileNames = new List<string>();
+    while (fileCount > 0) {
+        fileCount -= 1;
+        string fileName = ParseRaw_popLenString(rdp);
+        if (fileName == null) return null;
+        fileNames.Add(fileName);
+    }
+    List<Token> output = new List<Token>();
+    output.Add(null);
+    while (tokenCount > 0) {
+        tokenCount -= 1;
+        if (!ParseRaw_popInt(rdp)) return null;
+        int fileId = rdp.intOut;
+        if (!ParseRaw_popInt(rdp)) return null;
+        int line = rdp.intOut;
+        if (!ParseRaw_popInt(rdp)) return null;
+        int col = rdp.intOut;
+        if (fileId < 0 || fileId >= fileNames.Size()) return null;
+        output.Add(new Token(fileNames[fileId], line, col));
+    }
+    return Core.ListToArray(output);
+}

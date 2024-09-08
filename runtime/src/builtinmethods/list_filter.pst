@@ -1,0 +1,8 @@
+
+value16[0] = fp.ctx;
+value16[1] = args[0];
+args = value16;
+argc += 1;
+fp = (FunctionPointer) ec.functionsAsValues[ec.significantFunctions["filter"]].internalValue;
+doInvoke = true;
+overrideReturnValueWithContext = false;

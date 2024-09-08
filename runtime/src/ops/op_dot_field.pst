@@ -1,0 +1,179 @@
+i = valueStackSize - 1;
+value = valueStack[i];
+
+int3 = -1;
+j = row.stringId;
+name = row.stringArg;
+
+// TODO: there is room for further optimization.
+// Because the name lookup's first key is the stringId and that's fixed to the
+// row, you can cache the first lookup to the ByteCodeRow entity itself.
+// Additionally, this should not be churning out new instances of the function
+// pointer each time but should use a pool.
+// Ideally the name lookup should only contain the argcmin/max and the method ID
+// and a pointer to Value-wrapped FunctionPointer linked list instance pool
+// where the context value serves as the next link in the list.
+// Once a function pointer is invoked, it's returned back to the pool.
+
+switch (value.type) {
+
+    case Type.BYTEBUF:
+        if (j == LENGTH_ID) {
+            sz = Core.ForceParens((Array<int>) value.internalValue).Size();
+            if (sz < INT_CACHE_RANGE) {
+                output = globalValues.posIntegers[sz];
+            } else {
+                output = buildInteger(globalValues, sz);
+            }
+        } else {
+            fp = primitiveMethodLookup[j][Type.BYTEBUF];
+            if (fp == null) {
+                output = null;
+            } else {
+                output = new Value(
+                    Type.FUNCTION,
+                    new FunctionPointer(
+                        FunctionPointerType.PRIMITIVE_METHOD,
+                        fp.argcMin,
+                        fp.argcMax,
+                        fp.pcOrId,
+                        null,
+                        value
+                    )
+                );
+            }
+        }
+        break;
+
+    case Type.STRING:
+
+        if (j == LENGTH_ID) {
+            sz = Core.ForceParens((StringImpl) value.internalValue).length;
+            if (sz < INT_CACHE_RANGE) {
+                output = globalValues.posIntegers[sz];
+            } else {
+                output = buildInteger(globalValues, sz);
+            }
+        } else {
+            fp = primitiveMethodLookup[j][Type.STRING];
+            if (fp == null) {
+                output = null;
+            } else {
+                output = new Value(
+                    Type.FUNCTION,
+                    new FunctionPointer(
+                        FunctionPointerType.PRIMITIVE_METHOD,
+                        fp.argcMin,
+                        fp.argcMax,
+                        fp.pcOrId,
+                        null,
+                        value
+                    )
+                );
+            }
+        }
+
+        break;
+
+    case Type.LIST:
+        if (j == LENGTH_ID) {
+            sz = Core.ForceParens((ListImpl) value.internalValue).length;
+            if (sz < INT_CACHE_RANGE) {
+                output = globalValues.posIntegers[sz];
+            } else {
+                output = buildInteger(globalValues, sz);
+            }
+        } else {
+            fp = primitiveMethodLookup[j][Type.LIST];
+            if (fp == null) {
+                output = null;
+            } else {
+                output = new Value(
+                    Type.FUNCTION,
+                    new FunctionPointer(
+                        FunctionPointerType.PRIMITIVE_METHOD,
+                        fp.argcMin,
+                        fp.argcMax,
+                        fp.pcOrId,
+                        null,
+                        value
+                    )
+                );
+            }
+        }
+        break;
+
+    case Type.DICTIONARY:
+        fp = primitiveMethodLookup[j][Type.DICTIONARY];
+        if (fp == null) {
+            output = null;
+        } else {
+            output = new Value(
+                Type.FUNCTION,
+                new FunctionPointer(
+                    FunctionPointerType.PRIMITIVE_METHOD,
+                    fp.argcMin,
+                    fp.argcMax,
+                    fp.pcOrId,
+                    null,
+                    value
+                )
+            );
+        }
+
+        break;
+
+    case Type.INSTANCE:
+        instance1 = (Instance) value.internalValue;
+        if (!instance1.classDef.nameToOffset.Contains(name)) {
+            errorId = ExceptionTypeId.FIELD_NOT_FOUND;
+            errorMsg = "Instance does not contain that field.";
+            @import("macros/throw.pst");
+        }
+        int1 = instance1.classDef.nameToOffset[name];
+        output = instance1.members[int1];
+        if (output == null) {
+            str2FuncDef = instance1.classDef.methods;
+            fn = str2FuncDef[name]; // blind lookup is safe
+            fp = new FunctionPointer(
+                FunctionPointerType.INSTANCE_METHOD,
+                fn.argcMin,
+                fn.argcMax,
+                fn.pc,
+                fn,
+                value);
+            output = new Value(Type.FUNCTION, fp);
+            instance1.members[int1] = output;
+        }
+        break;
+
+    case Type.CLASS:
+
+        // TODO: all fields should be initialized to null by the metadata loader and the static constructor.
+        str2Val = Core.ForceParens((ClassInfo) value.internalValue).staticMembers;
+        if (!str2Val.Contains(name)) {
+            @import("macros/saveframe.pst");
+            return ExRes_HardCrash(task, "TODO: all static fields need to be initialized. This should eventually not happen.");
+        }
+        output = str2Val[name];
+        break;
+
+    default:
+        output = null;
+        break;
+}
+
+if (output == null) {
+    errorId = ExceptionTypeId.FIELD_NOT_FOUND;
+    errorMsg = Core.StringConcatAll("Field not found: .", row.stringArg);
+    if (value.type == Type.NULL) {
+        errorId = ExceptionTypeId.NULL_REFERENCE;
+        errorMsg = "Cannot access fields on null.";
+        if (byteCode[pc - 1].op == OP_FUNCTION_INVOKE) {
+            errorMsg = "The function returned null and the field could not be accessed.";
+        }
+    }
+    @import("macros/throw.pst");
+}
+
+valueStack[i] = output;

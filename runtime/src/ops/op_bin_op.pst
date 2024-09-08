@@ -1,0 +1,46 @@
+
+if (opMap == null) {
+    // TODO: this is kind of silly. Just use a shared integer mapping between this and the compiler.
+    // The ops will not change and if anything new shows up, it will be at the end.
+    opMap = new Dictionary<string, int>();
+    opMap["+"] = BinaryOp.ADD;
+    opMap["-"] = BinaryOp.SUBTRACT;
+    opMap["*"] = BinaryOp.MULTIPLY;
+    opMap["/"] = BinaryOp.DIVIDE;
+    opMap["%"] = BinaryOp.MODULO;
+    opMap["&&"] = BinaryOp.BOOLEAN_AND;
+    opMap["||"] = BinaryOp.BOOLEAN_OR;
+    opMap["=="] = BinaryOp.EQUAL;
+    opMap["!="] = BinaryOp.NOT_EQUAL;
+    opMap[">"] = BinaryOp.GREATER_THAN;
+    opMap["<"] = BinaryOp.LESS_THAN;
+    opMap[">="] = BinaryOp.GREATER_THAN_OR_EQUAL;
+    opMap["<="] = BinaryOp.LESS_THAN_OR_EQUAL;
+    opMap["&"] = BinaryOp.BIT_AND;
+    opMap["|"] = BinaryOp.BIT_OR;
+    opMap["^"] = BinaryOp.BIT_XOR;
+    opMap["<<"] = BinaryOp.BIT_SHIFT_LEFT;
+    opMap[">>"] = BinaryOp.BIT_SHIFT_RIGHT;
+    opMap[">>>"] = BinaryOp.BIT_SHIFT_RIGHT_SIGN_EXT;
+}
+
+str1 = row.stringArg;
+if (str1 == "+") {
+    row.op = OP_BIN_OP_ADD;
+} else if (str1 == "==" || str1 == "!=") {
+    row.boolArg = str1 == "!="; // invert result
+    row.op = OP_BIN_OP_EQUAL;
+} else if (str1 == "<" || str1 == ">" || str1 == "<=" || str1 == ">=") {
+    row.boolArg = str1 == "<" || str1 == "<=";
+    row.boolArg2 = str1 == "<=" || str1 == ">=";
+    row.firstArg = opMap[str1];
+    row.op = OP_BIN_OP_COMPARE;
+} else if (str1 == "&" || str1 == "|" || str1 == "^" || str1 == "<<" || str1 == ">>" || str1 == ">>>") {
+    row.firstArg = opMap[str1];
+    row.op = OP_BIN_OP_BIT_MATH;
+} else {
+    row.firstArg = opMap[str1];
+    row.op = OP_BIN_OP_MATH;
+}
+
+pc -= 1;

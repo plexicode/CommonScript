@@ -1,0 +1,7 @@
+// all argcmin/max are checked before invocation
+if (row.firstArg < frame.argc) {
+    @import("macros/ensurevaluestackcapacity.pst");
+    valueStack[valueStackSize] = frame.args[row.firstArg];
+    valueStackSize += 1;
+    pc += row.secondArg;
+}

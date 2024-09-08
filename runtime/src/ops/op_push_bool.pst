@@ -1,0 +1,5 @@
+
+row.valueCache = globalValues.falseValue;
+if (row.firstArg == 1) row.valueCache = globalValues.trueValue;
+row.op = OP_PUSH_VALUE;
+pc -= 1;

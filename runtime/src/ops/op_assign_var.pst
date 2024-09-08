@@ -1,0 +1,2 @@
+valueStackSize -= 1;
+locals[row.stringArg] = valueStack[valueStackSize];

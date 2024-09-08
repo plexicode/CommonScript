@@ -1,0 +1,20 @@
+
+@public
+class GrandParent {
+
+    field name = null;
+    field value;
+
+    constructor(value) {
+        this.name = 'grandparent';
+        this.value = value;
+    }
+
+    function overriddenMethod() {
+        return this.fromGrandParent();
+    }
+
+    function fromGrandParent() {
+        return "I'm the grandparent";
+    }
+}

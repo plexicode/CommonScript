@@ -1,0 +1,2 @@
+
+output = stringUtil_trim(fp.ctx, true, true);

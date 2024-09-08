@@ -1,0 +1,13 @@
+sz = row.firstArg;
+args = new Array<Value>(sz);
+valueStackSize -= sz;
+for (i = 0; i < sz; i += 1) {
+    args[i] = valueStack[valueStackSize + i];
+}
+if (sz == 0) {
+    @import("macros/ensurevaluestackcapacity.pst");
+}
+valueStack[valueStackSize] = new Value(Type.LIST, new ListImpl(ec.nextRefId, sz, sz, args));
+valueStackSize += 1;
+ec.nextRefId += 1;
+args = null;

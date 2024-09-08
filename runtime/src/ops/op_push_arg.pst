@@ -1,0 +1,5 @@
+// all argcmin/max are checked before invocation 
+
+@import("macros/ensurevaluestackcapacity.pst");
+valueStack[valueStackSize] = frame.args[row.firstArg];
+valueStackSize += 1;

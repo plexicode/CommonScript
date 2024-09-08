@@ -1,0 +1,8 @@
+// ABC --> BCA
+
+i = valueStackSize - 3;
+
+value = valueStack[i];
+valueStack[i] = valueStack[i + 1];
+valueStack[i + 1] = valueStack[i + 2];
+valueStack[i + 2] = value;

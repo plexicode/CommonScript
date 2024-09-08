@@ -1,0 +1,34 @@
+{
+  "source": "./index.pst",
+  "targets": [
+    {
+      "name": "csharp",
+      "language": "c#",
+      "imports": [
+        "System.Collections.Generic"
+      ],
+      "output": {
+        "namespace": "CommonScript.Runtime.Internal",
+        "structs-path": "../../dotnetharness/CommonScriptRuntime/runtimegen",
+        "functions-path": "../../dotnetharness/CommonScriptRuntime/runtimegen/GEN_FunctionWrapper.cs",
+        "functions-wrapper-class": "FunctionWrapper"
+      }
+    },
+    {
+      "name": "go",
+      "language": "go",
+      "output": {
+        "namespace": "gen",
+        "functions-path": "native-go/genpastel.go",
+        "structs-path": "native-go"
+      }
+    },
+    {
+      "name": "javascript",
+      "language": "javascript",
+      "output": {
+        "functions-path": "web_raw/gen.js"
+      }
+    }
+  ]
+}

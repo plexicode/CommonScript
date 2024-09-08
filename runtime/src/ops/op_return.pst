@@ -1,0 +1,26 @@
+if (ec.tryDescriptors[pc] != null) {
+    @import("macros/saveframe.pst");
+    return ExRes_HardCrash(task, "TODO: returns from within try/catch/finally blocks");
+}
+
+
+// no need to POP the value off the value stack. Just leave it there.
+if (frame.useContextAsReturnValue) {
+    // unless this is a constructor, in which case swap it out with the frame context. 
+    valueStack[valueStackSize - 1] = frame.context;
+}
+
+// NOTE: there is return-like code in OP_TRY_FINALLY_END for bubbling exceptions that needs 
+// to be updated as well when popping stack frames is changed.
+
+nextFrame = frame.previous;
+frame.previous = task.framePool;
+task.framePool = frame;
+frame.context = null;
+frame = nextFrame;
+task.stack = frame;
+if (frame == null) {
+    return ExRes_Done(task);
+}
+locals = frame.locals;
+pc = frame.pc;

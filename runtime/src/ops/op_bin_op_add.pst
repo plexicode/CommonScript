@@ -1,0 +1,44 @@
+valueStackSize -= 2;
+left = valueStack[valueStackSize];
+right = valueStack[valueStackSize + 1];
+
+switch (Core.ForceParens(left.type << 5) | right.type) {
+    case (Type.INTEGER << 5) | Type.INTEGER:
+        i = (int)left.internalValue + (int)right.internalValue;
+        // inlined here for speed.
+        if (i < INT_CACHE_RANGE && i >= INT_CACHE_RANGE) {
+            if (i < 0) value = globalValues.negIntegers[-i];
+            else value = globalValues.posIntegers[i];
+        } else {
+            value = new Value(Type.INTEGER, i);
+        }
+        break;
+
+    case (Type.FLOAT << 5) | Type.FLOAT:
+        value = new Value(Type.FLOAT, (double) left.internalValue + (double) right.internalValue);
+        break;
+
+    case (Type.FLOAT << 5) | Type.INTEGER:
+        value = new Value(Type.FLOAT, (double) left.internalValue + (int) right.internalValue);
+        break;
+
+    case (Type.INTEGER << 5) | Type.FLOAT:
+        value = new Value(Type.FLOAT, (int) left.internalValue + (double) right.internalValue);
+        break;
+
+    default:
+        if (left.type == Type.STRING || right.type == Type.STRING) {
+            stringImpl1 = convertToStringImpl(globalValues, left);
+            stringImpl2 = convertToStringImpl(globalValues, right);
+            stringImpl1 = new StringImpl(stringImpl1.length + stringImpl2.length, true, null, null, stringImpl1, stringImpl2);
+            value = new Value(Type.STRING, stringImpl1);
+        } else {
+            errorId = ExceptionTypeId.INVALID_ARGUMENT;
+            errorMsg = "Unsupported addition operation between types.";
+            @import("macros/throw.pst");
+        }
+        break;
+}
+
+valueStack[valueStackSize] = value;
+valueStackSize += 1;

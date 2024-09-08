@@ -1,0 +1,71 @@
+int ParseRaw_popSingleByte(RawDataParser rdp, int fallback) {
+    if (rdp.index >= rdp.length) return fallback;
+    int val = rdp.rawBytes[rdp.index];
+    rdp.index += 1;
+    return val;
+}
+
+Array<int> ParseRaw_popBytes(RawDataParser rdp, int byteCount) {
+    if (rdp.index + byteCount > rdp.length) return null;
+    Array<int> output = new Array<int>(byteCount);
+    for (int i = 0; i < byteCount; i += 1) {
+        output[i] = rdp.rawBytes[i + rdp.index];
+    }
+
+    rdp.index += byteCount;
+    return output;
+}
+
+bool ParseRaw_popInt(RawDataParser rdp) {
+    if (rdp.index >= rdp.length) return false;
+    int b = rdp.rawBytes[rdp.index];
+    if (b < 128) {
+        rdp.intOut = b;
+        rdp.index += 1;
+        return true;
+    }
+    if (b == 0xC0) {
+        rdp.intOut =-2147483647;
+        rdp.index += 1;
+        return true;
+    }
+
+    if (b == 0xE0) {
+        // TODO: long support
+        rdp.index += 1;
+        return false;
+    }
+
+    int sign = 1;
+    if (Core.ForceParens(b & 0x10) != 0) sign = -1;
+
+    int byteCount = b & 0xF;
+
+    int output = 0;
+    rdp.index += 1;
+    for (int i = 0; i < byteCount; i += 1) {
+        output = output << 8;
+        output += rdp.rawBytes[rdp.index];
+        rdp.index += 1;
+    }
+
+    rdp.intOut = output * sign;
+    return true;
+}
+
+string ParseRaw_popFixedLenString(RawDataParser rdp, int expectedSize) {
+    if (rdp.index + expectedSize > rdp.length) return null;
+    Array<int> strBytes = new Array<int>(expectedSize);
+    for (int i = 0; i < expectedSize; i += 1) {
+        strBytes[i] = rdp.rawBytes[rdp.index + i] & 0xFF;
+    }
+    rdp.index += expectedSize;
+
+    string value = Core.Utf8BytesToString(strBytes);
+    return value;
+}
+
+string ParseRaw_popLenString(RawDataParser rdp) {
+    if (!ParseRaw_popInt(rdp)) return null;
+    return ParseRaw_popFixedLenString(rdp, rdp.intOut);
+}

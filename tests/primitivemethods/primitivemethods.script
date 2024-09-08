@@ -1,0 +1,135 @@
+import testlib -> *;
+
+function main(args) {
+    stringTests();
+    listTests();
+}
+
+function stringTests() {
+
+    s = 'Hello, World!';
+    assertStrEqual(s.upper(), 'HELLO, WORLD!');
+    assertStrEqual(s.lower(), 'hello, world!');
+    assertStrEqual(s.split('l').join('|'), 'He||o, Wor|d!');
+
+    s = 'ABC\n';
+    assertStrEqual(s.getCodePoint(0), 65);
+    assertStrEqual(s.getCodePoint(1), 66);
+    assertStrEqual(s.getCodePoint(2), 67);
+    assertStrEqual(s.getCodePoint(-1), 10);
+    assertStrEqual(s.toUnicodePoints().join(' '), '65 66 67 10');
+
+    /*
+    // TODO: implement this (and the others, of course)
+    assertStrEqual(s.find('x'), -1);
+    assertStrEqual(s.find('l'), 2);
+    assertStrEqual(s.find('ll'), 2);
+    assertStrEqual(s.find('l', 4), 10);
+    assertStrEqual(s.find('l', 4, 8), -1);
+    //*/
+}
+
+function listTests() {
+    items = [];
+    assertStrEqual(items.length, 0);
+    items.add(1);
+    items.add(2);
+    assertStrEqual(items.join('|'), '1|2');
+    cloned = items.clone();
+    items.clear();
+    assertStrEqual(items.length, 0);
+    assertStrEqual(items.join(', '), '');
+    assertStrEqual(cloned.join(', '), '1, 2');
+
+    items = [1, 2, 3];
+    assertStrEqual(items.pop(), 3);
+    assertStrEqual(items.join('|'), '1|2');
+    assertStrEqual(items.pop(), 2);
+    assertStrEqual(items.join('|'), '1');
+    assertStrEqual(items.pop(), 1);
+    assertStrEqual(items.join('|'), '');
+
+    err = null;
+    try {
+        items.pop();
+    } catch (e) {
+        err = e.message;
+    }
+    assertStrEqual(err, 'Cannot pop from an empty list.');
+
+    items = [7, 2, 1, 8, 6, 3, 4, 5];
+    items.sort();
+    assertStrEqual(items.join(' '), '1 2 3 4 5 6 7 8');
+
+    items = [7, 2, 1, 8, 6, 3, 4, 5];
+    items.sort(funnySort);
+    assertStrEqual(items.join(' '), '2 4 6 8 1 3 5 7');
+
+    food = 'milk eggs bananas coffee apricots cheese tea bread pizzarolls(TM)';
+    items = food.split(' ');
+    items.sort();
+    assertStrEqual(items.join(' '), 'apricots bananas bread cheese coffee eggs milk pizzarolls(TM) tea');
+
+    items = food.split(' ');
+    // also tests stable sort with strings of the same length.
+    items.sortByKey(getLength);
+    assertStrEqual(items.join(' '), 'tea milk eggs bread coffee cheese bananas apricots pizzarolls(TM)');
+
+    items = [2, 4, 6, 8];
+    items.reverse();
+    assertStrEqual(items.join(' '), '8 6 4 2');
+
+    items = [1, 2, 3, 4, 5];
+    t = items.remove(2);
+    assertStrEqual(t, 3);
+    assertStrEqual(items.join(' '), '1 2 4 5');
+    assertStrEqual(items.remove(-1), 5);
+    assertStrEqual(items.join(' '), '1 2 4');
+    assertStrEqual(items.length, 3);
+
+    ptr1 = [];
+    ptr2 = {};
+    items = ['a', 'b', 'cat', true, false, null, ptr1, ptr2, 3.25, 7, -1, 0];
+    assertStrEqual(items.find('a'), 0);
+    assertStrEqual(items.find('cat'), 2);
+    assertStrEqual(items.find('dog'), -1);
+    assertStrEqual(items.find(true), 3);
+    assertStrEqual(items.find(false), 4);
+    assertStrEqual(items.find(null), 5);
+    assertStrEqual(items.find(ptr1), 6);
+    assertStrEqual(items.find(ptr2), 7);
+    assertStrEqual(items.find([]), -1);
+    assertStrEqual(items.find({}), -1);
+    assertStrEqual(items.find(3.25), 8);
+    assertStrEqual(items.find(7), 9);
+    assertStrEqual(items.find(-1), 10);
+    assertStrEqual(items.find(0), 11);
+    assertStrEqual(items.find(4), -1);
+
+    assertStrEqual(items.find(ptr1, 3), 6);
+    assertStrEqual(items.find(ptr1, 6), 6);
+    assertStrEqual(items.find(ptr1, 7), -1);
+
+    assertStrEqual(items.find(ptr1, 0, 7), 6);
+    assertStrEqual(items.find(ptr1, 0, 6), -1);
+    assertStrEqual(items.find(ptr1, 3, 7), 6);
+    assertStrEqual(items.find(ptr1, 6, 7), 6);
+    assertStrEqual(items.find(ptr1, 6, 6), -1);
+
+    assertStrEqual(items.findReverse(ptr1, -1, 5), 6);
+    assertStrEqual(items.findReverse(ptr1, -1, 6), -1);
+    assertStrEqual(items.findReverse(ptr1, -2, 5), 6);
+    assertStrEqual(items.findReverse(ptr1, 6, 5), 6);
+    assertStrEqual(items.findReverse(ptr1, 5, 5), -1);
+
+    print("ALL DONE");
+}
+
+function getLength(x) { return x.length; }
+
+function funnySort(a, b) {
+    isLeftEven = a % 2 == 0;
+    isRightEven = b % 2 == 0;
+    if (isLeftEven != isRightEven) return isLeftEven ? -1 : 1;
+    return a - b;
+}

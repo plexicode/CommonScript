@@ -1,0 +1,13 @@
+i = valueStackSize - 1;
+value = valueStack[i];
+if (value.type != Type.BOOLEAN) {
+    errorId = ExceptionTypeId.TYPE;
+    errorMsg = "Only a boolean can be used here.";
+    @import("macros/throw.pst");
+}
+
+if ((bool) value.internalValue) {
+    valueStack[i] = VALUE_FALSE;
+} else {
+    valueStack[i] = VALUE_TRUE;
+}

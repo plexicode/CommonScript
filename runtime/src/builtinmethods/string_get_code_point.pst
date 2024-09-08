@@ -1,0 +1,17 @@
+
+value1 = args[0];
+if (value1.type != Type.INTEGER) {
+    return ThrowErrorImpl(
+        task,
+        ExceptionTypeId.INVALID_ARGUMENT,
+        "string.getCodePoint() requires an integer index ");
+}
+i = (int) value1.internalValue;
+stringImpl1 = (StringImpl) fp.ctx.internalValue;
+sz = stringImpl1.length;
+if (i < 0) i += sz;
+if (i < 0 || i >= sz) {
+    return ThrowErrorImpl(task, ExceptionTypeId.OUT_OF_RANGE, "Index out of range.");
+}
+if (stringImpl1.isBuilder) stringFlatten(stringImpl1);
+output = buildInteger(globalValues, stringImpl1.uChars[i]);

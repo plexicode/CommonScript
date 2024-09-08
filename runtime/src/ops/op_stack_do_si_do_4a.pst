@@ -1,0 +1,9 @@
+// value stack: a, b, c, d --> c, d, a, b
+i = valueStackSize - 4;
+j = i + 2;
+value = valueStack[i];
+valueStack[i] = valueStack[j];
+valueStack[j] = value;
+value = valueStack[i + 1];
+valueStack[i + 1] = valueStack[j + 1];
+valueStack[j + 1] = value;

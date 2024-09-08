@@ -1,0 +1,179 @@
+/*
+    root[start:end:step]
+    slice mask: 
+        1: start is present 
+        2: end is present 
+        4: step is present 
+    
+    components are unpacked as follows:
+        root -> value 
+        start -> int1 
+        end -> int2
+        step -> int3  
+        
+        start present? -> bool1
+        end present? -> bool2 
+        is string? -> bool3
+
+        if step isn't present, 1 is assigned to int3  
+
+    Each expression, if present, is already ensured to be an integer. 
+*/
+
+
+i = row.firstArg;
+valueStackSize -= 1;
+
+if (Core.ForceParens(i & 4) > 0) {
+    int3 = (int) valueStack[valueStackSize].internalValue;
+    if (int3 == 0) {
+        errorId = ExceptionTypeId.INVALID_ARGUMENT;
+        errorMsg = "Cannot use 0 as a step distance for a slice.";
+        @import("macros/throw.pst");
+    }
+    valueStackSize -= 1;
+} else {
+    int3 = 1;
+}
+
+if (Core.ForceParens(i & 2) > 0) {
+    int2 = (int) valueStack[valueStackSize].internalValue;
+    valueStackSize -= 1;
+    bool2 = true;
+} else {
+    bool2 = false;
+}
+
+if (Core.ForceParens(i & 1) > 0) {
+    int1 = (int) valueStack[valueStackSize].internalValue;
+    valueStackSize -= 1;
+    bool1 = true;
+} else {
+    bool1 = false;
+}
+
+value = valueStack[valueStackSize];
+
+if (value.type == Type.STRING) {
+    bool3 = true;
+    stringImpl1 = (StringImpl) value.internalValue;
+    if (stringImpl1.isBuilder) stringFlatten(stringImpl1);
+    sz = stringImpl1.length;
+} else if (value.type == Type.LIST) {
+    bool3 = false;
+    listImpl1 = (ListImpl) value.internalValue;
+    sz = listImpl1.length;
+} else {
+    errorId = ExceptionTypeId.INVALID_ARGUMENT;
+    errorMsg = "Slicing can only be performed on strings or lists.";
+    @import("macros/throw.pst");
+}
+
+if (bool1) {
+    if (int1 < 0) int1 += sz;
+    if (int1 < 0 || int1 >= sz) {
+        errorId = ExceptionTypeId.OUT_OF_RANGE;
+        errorMsg = "Start index is out of range.";
+        @import("macros/throw.pst");
+    }
+}
+if (bool2 && int2 < 0) int2 += sz;
+
+// calculate actual range with non-zero indexes
+// leftType -> actual start index (inclusive)
+// rightType -> actual end index (exclusive)
+
+if (bool1) {
+    if (bool2) {
+        if (int3 > 0) {
+            // items[a:b:+c]
+            if (int1 <= int2) {
+                leftType = int1;
+                rightType = int2;
+                if (rightType > sz) rightType = sz;
+            } else {
+                // empty
+                leftType = 0;
+                rightType = 0;
+            }
+        } else {
+            // items[a:b:-c]
+            if (int1 <= int2) {
+                leftType = 0;
+                rightType = 0;
+            } else {
+                leftType = int1;
+                rightType = int2;
+                if (rightType < -1) rightType = -1;
+            }
+        }
+    } else {
+        if (int3 > 0) {
+            // items[a::+c]
+            leftType = int1;
+            rightType = sz;
+        } else {
+            // items[a::-c]
+            leftType = int1;
+            rightType = -1;
+        }
+    }
+} else {
+    if (bool2) {
+        // actual start to end marker 
+        if (int3 > 0) {
+            // items[:b:+c]
+            leftType = 0;
+            rightType = int2;
+            if (rightType > sz) rightType = sz;
+        } else {
+            // items[:b:-c]
+            leftType = sz - 1;
+            rightType = int2;
+            if (rightType < -1) rightType = -1;
+        }
+    } else {
+        if (int3 > 0) {
+            // items[::+c]
+            leftType = 0;
+            rightType = sz;
+        } else {
+            // items[::-c]
+            leftType = sz - 1;
+            rightType = -1;
+        }
+    }
+}
+
+if (bool3) { // string 
+    intList = new List<int>();
+    intArray1 = stringImpl1.uChars;
+    if (int3 > 0) {
+        for (i = leftType; i < rightType; i += int3) {
+            intList.Add(intArray1[i]);
+        }
+    } else {
+        for (i = leftType; i > rightType;i += int3) {
+            intList.Add(intArray1[i]);
+        }
+    }
+    // TODO: Core.ListToArrayOnlyIfTypedLanguage()
+    output = createStringFromUnicodeArray(globalValues, Core.ListToArray(intList), false);
+} else {
+    valueList = new List<Value>();
+    valueArr = listImpl1.items;
+    if (int3 > 0) {
+        for (i = leftType; i < rightType; i += int3) {
+            valueList.Add(valueArr[i]);
+        }
+    } else {
+        for (i = leftType; i > rightType; i += int3) {
+            valueList.Add(valueArr[i]);
+        }
+    }
+    sz = valueList.Size();
+    output = new Value(Type.LIST, new ListImpl(ec.nextRefId, sz, sz, Core.ListToArray(valueList)));
+}
+
+valueStack[valueStackSize] = output;
+valueStackSize += 1;

@@ -1,0 +1,6 @@
+i = valueStack[valueStackSize - 1].type;
+if (i != Type.INTEGER && i != Type.STRING) {
+    errorId = ExceptionTypeId.TYPE;
+    errorMsg = "Expected an integer or string here.";
+    @import("macros/throw.pst");
+}

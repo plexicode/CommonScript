@@ -1,0 +1,4 @@
+
+@import("macros/ensurevaluestackcapacity.pst");
+valueStack[valueStackSize] = valueStack[valueStackSize - 1];
+valueStackSize += 1;

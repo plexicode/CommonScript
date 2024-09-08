@@ -1,0 +1,38 @@
+
+struct ExecutionResult {
+    int type;
+    ExecutionTask task;
+    int sleepMillis;
+    string errorMessage;
+    List<string> stackTrace;
+}
+ExecutionResult new_ExecutionResult(int type, ExecutionTask task) {
+    return new ExecutionResult(type, task, 0, null, null);
+}
+
+ExecutionResult ExRes_HardCrash(ExecutionTask task, string message) {
+    int isDebug = IS_DEBUG;
+    ExecutionResult res = new_ExecutionResult(ExecutionResultType.HARD_CRASH, task);
+    res.errorMessage = message;
+    if (isDebug == 1) {
+        Array<object> failArgs = new Array<object>(1);
+        failArgs[0] = message;
+        object ignore = Core.ExtensibleCallbackInvoke("hardCrash", failArgs);
+    }
+    return res;
+}
+
+ExecutionResult ExRes_Done(ExecutionTask task) {
+    return new_ExecutionResult(ExecutionResultType.DONE, task);
+}
+
+ExecutionResult ExRes_Suspend(ExecutionTask task, bool useSleep, int sleepMillis) {
+    ExecutionResult res = new_ExecutionResult(ExecutionResultType.SUSPEND, task);
+    if (useSleep) {
+        res.type = ExecutionResultType.SLEEP;
+        res.sleepMillis = sleepMillis;
+    } else {
+        res.sleepMillis = -1;
+    }
+    return res;
+}

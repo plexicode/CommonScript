@@ -1,0 +1,38 @@
+valueStackSize -= 1;
+value = valueStack[valueStackSize];
+
+bool1 = false; // is Exception
+
+if (value.type == Type.INSTANCE) {
+    instance1 = (Instance) value.internalValue;
+    // TODO: check if instance1 is an instance of builtin Exception.
+    int1 = 0;
+    for (i = 1; i < ec.classes.Size() && int1 == 0; i += 1) {
+        if (ec.classes[i].name == "Exception") {
+            int1 = i;
+        }
+    }
+
+    classDef = instance1.classDef;
+    while (classDef != null) {
+        if (classDef.id == int1) {
+            bool1 = true;
+        }
+        classDef = classDef.parent;
+    }
+}
+
+if (!bool1) {
+    errorId = ExceptionTypeId.INVALID_ARGUMENT;
+    errorMsg = "Only Exception instances can be thrown.";
+    @import("macros/throw.pst");
+}
+
+@import("macros/saveframe.pst");
+instance1.members[instance1.classDef.nameToOffset["trace"]] = generateStackTrace(task);
+if (bubbleException(task, value)) {
+    return ExRes_HardCrash(task, getExceptionMessage(value, true));
+}
+frame = task.stack;
+pc = frame.pc;
+locals = frame.locals;

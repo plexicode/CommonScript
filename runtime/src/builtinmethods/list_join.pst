@@ -1,0 +1,16 @@
+
+str1 = "";
+if (argc == 1) {
+    value1 = args[0];
+    if (value1.type != Type.STRING) {
+        return ThrowErrorImpl(
+            task,
+            ExceptionTypeId.INVALID_ARGUMENT,
+            "list.join(sep) requires a string");
+    }
+    stringImpl1 = (StringImpl) value1.internalValue;
+    if (stringImpl1.isBuilder) stringFlatten(stringImpl1);
+    str1 = stringImpl1.nativeStr;
+}
+
+output = List_join(globalValues, fp.ctx, str1);

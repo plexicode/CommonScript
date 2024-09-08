@@ -1,0 +1,6 @@
+value = valueStack[valueStackSize - 1];
+if (value.type == Type.NULL) {
+    valueStackSize -= 1;
+} else {
+    pc += row.firstArg;
+}

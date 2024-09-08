@@ -1,0 +1,4 @@
+
+row.valueCache = buildInteger(globalValues, row.firstArg);
+row.op = OP_PUSH_VALUE;
+pc -= 1;

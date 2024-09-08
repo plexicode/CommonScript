@@ -1,0 +1,15 @@
+if (frame.bubblingValue != null) {
+    value = frame.bubblingValue;
+    if (frame.bubblingValueUncaught) {
+        @import("macros/saveframe.pst");
+        task.stack = frame;
+        if (bubbleException(task, value)) {
+            return ExRes_HardCrash(task, getExceptionMessage(value, true));
+        }
+        frame = task.stack;
+        pc = frame.pc;
+        locals = frame.locals;
+    } else {
+        // a return override. Just treat it as a return.
+    }
+}

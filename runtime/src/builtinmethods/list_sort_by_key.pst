@@ -1,0 +1,8 @@
+
+value16[0] = fp.ctx;
+value16[1] = args[0];
+argc += 1;
+args = value16;
+fp = (FunctionPointer) ec.functionsAsValues[ec.significantFunctions["sortK"]].internalValue;
+doInvoke = true;
+overrideReturnValueWithContext = false;

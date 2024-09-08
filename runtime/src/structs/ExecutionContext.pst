@@ -1,0 +1,97 @@
+struct ExecutionContext {
+    string errMsg;
+    GlobalValues globalValues;
+    Dictionary<string, Func<object, object, Array<object>>> extensions;
+    Dictionary<string, int> significantFunctions;
+    Array<FunctionInfo> functions;
+    Array<Value> functionsAsValues;
+    Array<ClassInfo> classes;
+    Array<Value> classRefValues;
+    Array<EnumInfo> enums;
+    Array<ByteCodeRow> byteCode;
+    Array<TryDescriptor> tryDescriptors;
+    Array<Token> tokensById;
+    Array<string> stringsById;
+    Array<Dictionary<int, int>> switchIntLookupsByPc;
+    Array<Dictionary<string, int>> switchStrLookupsByPc;
+    NameLookup nameLookup;
+    int nextTaskId;
+    int nextRefId;
+    Dictionary<int, ExecutionTask> tasks;
+    object appCtx;
+}
+
+ExecutionContext new_ExecutionContext(
+    Array<int> rawBytes,
+    Dictionary<string, Func<object, object, Array<object>>> extensions,
+    object appCtx
+) {
+    ExecutionContext ec = new ExecutionContext(
+        null,
+        new_GlobalValues(),
+        extensions,
+        new Dictionary<string, int>(),
+        null, // functions
+        null, // functionsAsValues
+        null, // classes,
+        null, // class ref values,
+        null, // enums
+        null, // byteCode
+        null, // tryDescriptors
+        null, // tokensById
+        null, // stringsById
+        null, // switchIntLookupsByPc
+        null, // switchStrLookupsByPc
+        null, // NameLookup
+        1, // nextTaskId
+        1, // nextRefId
+        new Dictionary<int, ExecutionTask>(), // tasks
+        appCtx
+    );
+
+    string err = ParseRawData(rawBytes, ec);
+
+    if (err == null) {
+        ec.errMsg = "CORRUPT_EXECUTABLE";
+    } else if (err != "OK") {
+        ec.errMsg = err;
+    } else {
+        // everything is fine
+
+        int i = 0;
+
+        ec.functionsAsValues = new Array<Value>(ec.functions.Size());
+        for (i = 1; i < ec.functions.Size(); i += 1) {
+            ec.functionsAsValues[i] = buildFunctionFromInfo(ec.functions[i]);
+        }
+
+        ec.classRefValues = new Array<Value>(ec.classes.Size());
+        for (i = 1; i < ec.classes.Size(); i += 1) {
+            ec.classRefValues[i] = new Value(Type.CLASS, ec.classes[i]);
+        }
+
+        ec.switchIntLookupsByPc = new Array<Dictionary<int, int>>(ec.byteCode.Size());
+        ec.switchStrLookupsByPc = new Array<Dictionary<string, int>>(ec.byteCode.Size());
+    }
+
+    generateNameLookup(ec);
+
+    return ec;
+}
+
+void finalizeExecutionContext(ExecutionContext ec) {
+    Array<ByteCodeRow> byteCode = ec.byteCode;
+    int length = ec.byteCode.Size();
+    ByteCodeRow row = null;
+    for (int i = 0; i < length; i += 1) {
+        row = byteCode[i];
+        if (row.stringId != 0) {
+            // TODO: add these to common strings
+            row.stringArg = ec.stringsById[row.stringId];
+        }
+
+        if (row.tokenId != 0) {
+            row.token = ec.tokensById[row.tokenId];
+        }
+    }
+}

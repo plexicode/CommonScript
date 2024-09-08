@@ -1,0 +1,2 @@
+valueStackSize -= 1;
+output = Sort_end((SortState) valueStack[valueStackSize].internalValue);

@@ -1,0 +1,148 @@
+valueStackSize -= 2;
+left = valueStack[valueStackSize];
+right = valueStack[valueStackSize + 1];
+
+switch (Core.ForceParens(left.type * BinaryOp.MAX + row.firstArg) * Type.MAX + right.type) {
+
+    case (Type.INTEGER * BinaryOp.MAX + BinaryOp.SUBTRACT) * Type.MAX + Type.INTEGER:
+        int1 = (int) left.internalValue;
+        int2 = (int) right.internalValue;
+        value = buildInteger(globalValues, int1 - int2);
+        break;
+
+    case (Type.INTEGER * BinaryOp.MAX + BinaryOp.MULTIPLY) * Type.MAX + Type.INTEGER:
+        int1 = (int) left.internalValue;
+        int2 = (int) right.internalValue;
+        value = buildInteger(globalValues, int1 * int2);
+        break;
+
+    case (Type.FLOAT * BinaryOp.MAX + BinaryOp.MULTIPLY) * Type.MAX + Type.INTEGER:
+        value = new Value(Type.FLOAT, (double) left.internalValue * (int) right.internalValue);
+        break;
+
+    case (Type.INTEGER * BinaryOp.MAX + BinaryOp.MULTIPLY) * Type.MAX + Type.FLOAT:
+        value = new Value(Type.FLOAT, (int) left.internalValue * (double) right.internalValue);
+        break;
+
+    case (Type.FLOAT * BinaryOp.MAX + BinaryOp.MULTIPLY) * Type.MAX + Type.FLOAT:
+        value = new Value(Type.FLOAT, (double) left.internalValue * (double) right.internalValue);
+        break;
+
+
+    case (Type.INTEGER * BinaryOp.MAX + BinaryOp.DIVIDE) * Type.MAX + Type.INTEGER:
+        int1 = (int) left.internalValue;
+        int2 = (int) right.internalValue;
+        if (int2 == 0) {
+            errorId = ExceptionTypeId.ZERO_DIVISOR;
+            errorMsg = "Cannot divide by zero";
+            @import("macros/throw.pst");
+        }
+        value = buildInteger(globalValues, Core.IntegerDivision(int1, int2));
+        break;
+
+    case (Type.FLOAT * BinaryOp.MAX + BinaryOp.DIVIDE) * Type.MAX + Type.INTEGER:
+        float1 = (double) left.internalValue;
+        if (float1 == 0) {
+            errorId = ExceptionTypeId.ZERO_DIVISOR;
+            errorMsg = "Cannot divide by zero";
+            @import("macros/throw.pst");
+        }
+        value = new Value(Type.FLOAT, Core.FloatDivision(float1, (int) right.internalValue));
+        break;
+
+    case (Type.INTEGER * BinaryOp.MAX + BinaryOp.DIVIDE) * Type.MAX + Type.FLOAT:
+        int1 = (int) left.internalValue;
+        if (int1 == 0) {
+            errorId = ExceptionTypeId.ZERO_DIVISOR;
+            errorMsg = "Cannot divide by zero";
+            @import("macros/throw.pst");
+        }
+        value = new Value(Type.FLOAT, Core.FloatDivision(int1, (double) right.internalValue));
+        break;
+
+    case (Type.FLOAT * BinaryOp.MAX + BinaryOp.DIVIDE) * Type.MAX + Type.FLOAT:
+        float1 = (double) left.internalValue;
+        if (float1 == 0) {
+            errorId = ExceptionTypeId.ZERO_DIVISOR;
+            errorMsg = "Cannot divide by zero";
+            @import("macros/throw.pst");
+        }
+        value = new Value(Type.FLOAT, Core.FloatDivision(float1, (double) right.internalValue));
+        break;
+
+    case (Type.INTEGER * BinaryOp.MAX + BinaryOp.MODULO) * Type.MAX + Type.INTEGER:
+        int1 = (int) left.internalValue;
+        int2 = (int) right.internalValue;
+        if (int2 <= 0) {
+            errorId = ExceptionTypeId.ZERO_DIVISOR;
+            errorMsg = "Modulo only applicable to positive divisors.";
+            @import("macros/throw.pst");
+        }
+        int1 = int1 % int2;
+        if (int1 < 0) int1 += int2;
+        value = buildInteger(globalValues, int1);
+        break;
+
+    case (Type.FLOAT * BinaryOp.MAX + BinaryOp.MODULO) * Type.MAX + Type.FLOAT:
+    case (Type.FLOAT * BinaryOp.MAX + BinaryOp.MODULO) * Type.MAX + Type.INTEGER:
+    case (Type.INTEGER * BinaryOp.MAX + BinaryOp.MODULO) * Type.MAX + Type.FLOAT:
+        if (left.type == Type.INTEGER) float1 = 0.0 + (int) left.internalValue;
+        else float1 = (double) left.internalValue;
+        if (right.type == Type.INTEGER) float2 = 0.0 + (int) right.internalValue;
+        else float2 = (double) right.internalValue;
+        if (float2 <= 0) {
+            errorId = ExceptionTypeId.ZERO_DIVISOR;
+            errorMsg = "Modulo only applicable to positive divisors.";
+            @import("macros/throw.pst");
+        }
+        float1 = float1 % float2;
+        if (float1 < 0) float1 += float2;
+        value = new Value(Type.FLOAT, float1);
+        break;
+
+    case (Type.FLOAT * BinaryOp.MAX + BinaryOp.SUBTRACT) * Type.MAX + Type.FLOAT:
+        value = new Value(Type.FLOAT, (double) left.internalValue - (double) right.internalValue);
+        break;
+    case (Type.INTEGER * BinaryOp.MAX + BinaryOp.SUBTRACT) * Type.MAX + Type.FLOAT:
+        value = new Value(Type.FLOAT, (int) left.internalValue - (double) right.internalValue);
+        break;
+    case (Type.FLOAT * BinaryOp.MAX + BinaryOp.SUBTRACT) * Type.MAX + Type.INTEGER:
+        value = new Value(Type.FLOAT, (double) left.internalValue - (int) right.internalValue);
+        break;
+
+    case (Type.STRING * BinaryOp.MAX + BinaryOp.MULTIPLY) * Type.MAX + Type.INTEGER:
+    case (Type.INTEGER * BinaryOp.MAX + BinaryOp.MULTIPLY) * Type.MAX + Type.STRING:
+        if (left.type == Type.STRING) {
+            value2 = left;
+            stringImpl1 = (StringImpl) left.internalValue;
+            sz = (int) right.internalValue;
+        } else {
+            value2 = right;
+            stringImpl1 = (StringImpl) right.internalValue;
+            sz = (int) left.internalValue;
+        }
+        if (sz == 0) value = globalValues.emptyString;
+        else if (sz == 1) value = value2;
+        else {
+            stringImpl2 = stringImpl1;
+            for (i = 1; i < sz; i += 1) {
+                stringImpl2 = new StringImpl(
+                    stringImpl1.length + stringImpl2.length, 
+                    true, 
+                    null, 
+                    null, 
+                    stringImpl1,
+                    stringImpl2);
+            }
+            value = new Value(Type.STRING, stringImpl2);
+        }
+        break;
+
+    default:
+        errorId = ExceptionTypeId.INVALID_ARGUMENT;
+        errorMsg = "Math operator not defined for these types";
+        @import("macros/throw.pst");
+}
+
+valueStack[valueStackSize] = value;
+valueStackSize += 1;

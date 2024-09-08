@@ -1,0 +1,63 @@
+struct ClassInfo {
+    int id;
+    int parentId;
+    ClassInfo parent;
+    string name;
+    Value ctor;
+    int staticCtorFuncId;
+    bool staticInitialized;
+    Dictionary<string, FunctionInfo> methods;
+    Dictionary<string, int> nameToOffset;
+    Array<string> nameByOffset;
+    Array<Value> initialValues;
+    List<string> newMembersInOffsetOrder;
+    List<int> newMemberInfoFlags;
+    Value classRef;
+
+    // TODO: compile these to explicit integer offsets and use arrays instead.
+    Dictionary<string, Value> staticMembers; 
+    Dictionary<string, bool> staticMemberIsMutable;
+}
+
+ClassInfo createClassInfo(
+    int id,
+    int parentId,
+    string name,
+    FunctionInfo ctor,
+    List<string> newFields,
+    List<int> newMemberInfoFlags,
+    int cctorIdOrZero) {
+
+    Value ctorVal = new Value(
+        Type.FUNCTION,
+        new FunctionPointer(
+            FunctionPointerType.CONSTRUCTOR,
+            ctor.argcMin,
+            ctor.argcMax,
+            ctor.pc,
+            ctor,
+            null));
+
+    int fieldCount = newFields.Size();
+    ClassInfo info = new ClassInfo(
+        id,
+        parentId,
+        null, // parent
+        name,
+        ctorVal,
+        cctorIdOrZero, // static ctor
+        false,  // staticInitialized
+        new Dictionary<string, FunctionInfo>(),
+        new Dictionary<string, int>(), // nameToOffset
+        new Array<string>(fieldCount), // nameByOffset
+        new Array<Value>(fieldCount), // initialValues
+        newFields,
+        newMemberInfoFlags,
+        null,
+        new Dictionary<string, Value>(), // static members by name.
+        new Dictionary<string, bool>() // is static field mutable?
+    );
+
+    info.classRef = new Value(Type.CLASS, info);
+    return info;
+}

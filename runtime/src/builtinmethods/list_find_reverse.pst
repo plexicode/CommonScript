@@ -1,0 +1,50 @@
+
+listImpl1 = (ListImpl) fp.ctx.internalValue;
+sz = listImpl1.length;
+
+int2 = sz - 1;
+int3 = -1;
+if (argc > 1) {
+    value = args[1];
+    if (value.type != Type.INTEGER) {
+        errorId = ExceptionTypeId.INVALID_ARGUMENT;
+        errorMsg = "starting index must be an integer.";
+        @import("macros/throw.pst");
+    }
+    int2 = (int) value.internalValue;
+    if (int2 < 0) int2 += sz;
+    if (int2 < 0 || int2 >= sz) {
+        errorId = ExceptionTypeId.OUT_OF_RANGE;
+        errorMsg = "starting index out of range.";
+        @import("macros/throw.pst");
+    }
+}
+
+if (argc == 3) {
+    value = args[2];
+    if (value.type != Type.INTEGER) {
+        errorId = ExceptionTypeId.INVALID_ARGUMENT;
+        errorMsg = "end index must be an integer.";
+        @import("macros/throw.pst");
+    }
+    int3 = (int) value.internalValue;
+    if (int3 < -1) int3 += sz;
+    if (int3 < -1 || int3 > sz - 1) {
+        errorId = ExceptionTypeId.OUT_OF_RANGE;
+        errorMsg = "end index out of range.";
+        @import("macros/throw.pst");
+    }
+}
+
+valueArr = listImpl1.items;
+left = args[0];
+leftType = left.type;
+object1 = left.internalValue;
+bool1 = false;
+output = globalValues.negIntegers[1];
+for (i = int2; i > int3; i -= 1) {
+    if (isValueEqual(left, valueArr[i])) {
+        output = buildInteger(globalValues, i);
+        i -= int3;
+    }
+}

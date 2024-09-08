@@ -1,0 +1,12 @@
+value = frame.bubblingValue;
+frame.bubblingValueUncaught = exceptionCatcherRouteException(value, row.args, intBuffer16);
+pc += intBuffer16[0];
+
+if (!frame.bubblingValueUncaught) {
+    @import("macros/ensurevaluestackcapacity.pst");
+    valueStack[valueStackSize] = value;
+    valueStackSize += 1;
+    
+    // if caught, then no longer bubbling 
+    frame.bubblingValue = null; 
+}

@@ -1,0 +1,5 @@
+valueStackSize -= 1;
+value = valueStack[valueStackSize];
+if (!(bool) value.internalValue) {
+    pc += row.firstArg;
+}

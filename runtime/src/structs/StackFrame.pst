@@ -1,0 +1,16 @@
+struct StackFrame {
+    StackFrame previous;
+    int pc;
+
+    // TODO: these are basic naive implementations that can be highly optimized.
+    // But for now, I just want this to work.
+    Array<Value> args;
+    int argc;
+    int valueStackSize;
+    int valueStackBaseSize;
+    Dictionary<string, Value> locals;
+    Value context; // result of 'this' keyword
+    bool useContextAsReturnValue; // true for constructors
+    Value bubblingValue; // set to a value when an exception is bubbling or a return occurs in a try 
+    bool bubblingValueUncaught; // set to true when the bubbling value is an uncaught exception.
+}

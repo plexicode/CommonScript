@@ -1,0 +1,6 @@
+struct TryDescriptor {
+    int tryPc; 
+    int routerPc;
+    int finallyPc;
+    int finallyEnd;
+}

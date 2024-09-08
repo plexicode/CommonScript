@@ -1,0 +1,45 @@
+struct GlobalValues {
+    Value nullValue;
+    Value trueValue;
+    Value falseValue;
+    Array<Value> posIntegers;
+    Array<Value> negIntegers;
+    Value emptyString;
+    Dictionary<string, Value> commonStrings;
+    Value intZero;
+    Value intOne;
+    Array<Value> floatsBy4x;
+}
+
+GlobalValues new_GlobalValues() {
+    GlobalValues g = new GlobalValues(
+        new Value(Type.NULL, null),
+        new Value(Type.BOOLEAN, true),
+        new Value(Type.BOOLEAN, false),
+        null, 
+        null,
+        null,
+        new Dictionary<string, Value>(),
+        null, 
+        null,
+        new Array<Value>(5)
+    );
+
+    g.posIntegers = new Array<Value>(INT_CACHE_RANGE);
+    g.negIntegers = new Array<Value>(INT_CACHE_RANGE);
+    for (int i = 0; i < INT_CACHE_RANGE; i += 1) {
+        g.posIntegers[i] = new Value(Type.INTEGER, i);
+        g.negIntegers[i] = new Value(Type.INTEGER, -i);
+    }
+    g.intZero = g.posIntegers[0];
+    g.intOne = g.posIntegers[1];
+    g.negIntegers[0] = g.intZero;
+
+    g.emptyString = buildString(g, "", true);
+
+    for (int j = 0; j < 5; j += 1) {
+        g.floatsBy4x[j] = new Value(Type.FLOAT, j * 0.25);
+    }
+
+    return g;
+}

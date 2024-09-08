@@ -1,0 +1,484 @@
+import testlib -> *;
+
+function identity(v) { return v; }
+
+function main(args) {
+    opTests();
+    booleanLogicTest();
+    comparisonTests();
+    stringMethodTests();
+    listMethodTests();
+    someOopTests();
+    dictionaryTests();
+    indexingTests();
+    syntaxTest();
+    optionalArgTest();
+    breakContinueTest();
+    unixTimeTest();
+    byteBufTest();
+    inlineIncrementTest();
+}
+
+function opTests() {
+    a = 3;
+    b = 5;
+
+    assertStrEqual(a + b, 8);
+    assertStrEqual(3 + 5, 8);
+    assertStrEqual(a - b, -2);
+    assertStrEqual(3 - 5, -2);
+    assertStrEqual(a * b, 15);
+    assertStrEqual(3 * 5, 15);
+    assertStrEqual(a / b, 0);
+    assertStrEqual(3 / 5, 0);
+    assertStrEqual((10 + a) / b, 2);
+    assertStrEqual((10 + 3) / 5, 2);
+    assertStrEqual(a % b, 3);
+    assertStrEqual(3 % 5, 3);
+    assertStrEqual(b % a, 2);
+    assertStrEqual(5 % 3, 2);
+    assertStrEqual(a & b, 1);
+    assertStrEqual(3 & 5, 1);
+    assertStrEqual(a | b, 7);
+    assertStrEqual(3 | 5, 7);
+    assertStrEqual(a ^ b, 6);
+    assertStrEqual(3 ^ 5, 6);
+    assertStrEqual(b >> 1, 2);
+    assertStrEqual(5 >> 1, 2);
+    assertStrEqual(a << b, 96);
+    assertStrEqual(3 << 5, 96);
+
+    assertStrEqual(3 * '*', '***');
+    assertStrEqual(a * '*', '***');
+    assertStrEqual('*' * b, '*****');
+    assertStrEqual(0 * '*', '');
+
+    // constant string multiplications less than size 12 are flattened at compile time
+    assertStrEqual(15 * '*', '***************');
+
+    pairings = [
+        [true, false],
+        [false, true],
+        [true, true],
+    ];
+    for (i = 0; i < pairings.length; i++) {
+        a = pairings[i][0] ? 3.0 : 3;
+        b = pairings[i][1] ? 5.0 : 5;
+        assertStrEqual(a + b, '8.0');
+        assertStrEqual(a - b, '-2.0');
+        assertStrEqual(a * b, '15.0');
+        assertStrEqual(a / b, '0.6');
+        assertStrEqual(a % b, '3.0');
+        assertStrEqual((10 + a) / b, '2.6');
+        assertStrEqual(b % a, '2.0');
+    }
+
+    // compile time inline-constant resolution
+    assertStrEqual(3 + 5.0, '8.0');
+    assertStrEqual(3 - 5.0, '-2.0');
+    assertStrEqual(3 * 5.0, '15.0');
+    assertStrEqual(3 / 5.0, '0.6');
+    assertStrEqual((10 + 3) / 5.0, '2.6');
+    assertStrEqual(3 % 5.0, '3.0');
+    assertStrEqual(5.0 % 3, '2.0');
+
+    assertStrEqual(3.0 + 5, '8.0');
+    assertStrEqual(3.0 - 5, '-2.0');
+    assertStrEqual(3.0 * 5, '15.0');
+    assertStrEqual(3.0 / 5, '0.6');
+    assertStrEqual((10 + 3.0) / 5, '2.6');
+    assertStrEqual(3.0 % 5, '3.0');
+    assertStrEqual(5 % 3.0, '2.0');
+
+    assertStrEqual(3.0 + 5.0, '8.0');
+    assertStrEqual(3.0 - 5.0, '-2.0');
+    assertStrEqual(3.0 * 5.0, '15.0');
+    assertStrEqual(3.0 / 5.0, '0.6');
+    assertStrEqual((10.0 + 3.0) / 5, '2.6');
+    assertStrEqual(3.0 % 5.0, '3.0');
+    assertStrEqual(5.0 % 3.0, '2.0');
+
+    a = 3;
+    assertStrEqual(~3, -4);
+    assertStrEqual(~a, -4);
+
+    assertStrEqual(-a, '-3');
+    assertStrEqual(-3, '-3');
+
+    a = true;
+    b = false;
+    assertStrEqual(!a, false);
+    assertStrEqual(!b, true);
+}
+
+function stringMethodTests() {
+    msg = "  Hello World?  ";
+    assertStrEqual(msg.trim(), 'Hello World?');
+    assertStrEqual(msg.upper(), '  HELLO WORLD?  ');
+    assertStrEqual(msg.lower(), '  hello world?  ');
+    assertStrEqual(msg.split('o').join('|'), '  Hell| W|rld?  ');
+}
+
+function listMethodTests() {
+    items = [1, 2, 3];
+    assertStrEqual(items.join(', '), '1, 2, 3');
+    items.add(4);
+    assertStrEqual(items.join(', '), '1, 2, 3, 4');
+    assertStrEqual(items[3], '4');
+    assertStrEqual(items[-3], '2');
+}
+
+function someOopTests() {
+    foo = new Foo(42);
+
+    assertStrEqual(foo.getValue(), '42');
+    assertStrEqual(foo.value, '42');
+
+    foo.value = 43;
+    assertStrEqual(foo.value, 43);
+    foo.value += 3;
+    assertStrEqual(foo.value, 46);
+}
+
+function dictionaryTests() {
+    items = {
+        'a': 1,
+        'b': 2,
+    };
+    items2 = {};
+    items3 = { 'c': 3 };
+
+    keys = items.keys();
+    stuff = '';
+    for (i = 0; i < keys.length; i = i + 1) {
+        stuff += keys[i];
+    }
+    assertStrEqual(stuff, 'ab');
+
+    values = items.values();
+    stuff = '';
+    for (i = 0; i < values.length; i = i + 1) {
+        stuff += values[i];
+    }
+    assertStrEqual(stuff, '12');
+
+    items2['d'] = 'The letter D';
+    items3['c'] = "The letter C";
+
+    assertStrEqual(items['a'] + '|' + items['b'] + '|' + items3['c'] + '|' + items2['d'], '1|2|The letter C|The letter D');
+
+    items['a'] = 42;
+    assertStrEqual(items['a'], 42);
+    items['a'] += 2;
+    assertStrEqual(items['a'], 44);
+}
+
+function indexingTests() {
+    stuff = '';
+    for (ptr = [0]; ptr[0] < 10; ptr[0]++) {
+        stuff += ptr[0];
+    }
+    assertStrEqual(stuff, '0123456789');
+
+    print("ALL DONE");
+}
+
+function comparisonTests() {
+    // function pointer comparisons
+    assertStrEqual(identity == main, false);
+    assertStrEqual(identity(main) == main, true);
+}
+
+function syntaxTest() {
+    a = 1;
+    buf = '';
+    while (a < 10) {
+        buf = buf + a;
+        a += 2;
+    }
+    assertStrEqual(buf, '13579');
+
+    b = 1;
+    buf = '';
+    do {
+        buf += b;
+        b += 2;
+    } while (b < 10);
+    assertStrEqual(buf, '13579');
+
+    assertStrEqual(switchRunnerInt3Default(1), '|1|');
+    assertStrEqual(switchRunnerInt3Default(2), '|2');
+    assertStrEqual(switchRunnerInt3Default(3), '|3|');
+    assertStrEqual(switchRunnerInt3Default(4), '|3|');
+    assertStrEqual(switchRunnerInt3Default(99), '|default|');
+
+    assertStrEqual(switchRunnerStr3Default('a'), '|1|');
+    assertStrEqual(switchRunnerStr3Default('bb'), '|2|');
+    assertStrEqual(switchRunnerStr3Default('ccc'), '|3|');
+    assertStrEqual(switchRunnerStr3Default('dddd'), '|3|');
+    assertStrEqual(switchRunnerStr3Default('nope'), '|default|');
+
+    assertStrEqual(switchDefaultOnly(2), '|x|');
+    assertStrEqual(switchDefaultOnly(-100), '|x|');
+    assertStrEqual(switchDefaultOnly('foo'), '|x|');
+    assertStrEqual(switchDefaultOnly(''), '|x|');
+
+    assertStrEqual(identity(true) ? 'a' : 'b', 'a');
+    assertStrEqual(identity(false) ? 'a' : 'b', 'b');
+    assertStrEqual(true ? 'a' : 'b', 'a');
+    assertStrEqual(false ? 'a' : 'b', 'b');
+    assertStrEqual(ternaryRunner(2), 'pos-even');
+    assertStrEqual(ternaryRunner(3), 'pos-odd');
+    assertStrEqual(ternaryRunner(-2), 'neg-even');
+    assertStrEqual(ternaryRunner(-3), 'neg-odd');
+
+    assertStrEqual(nullCoalRunner(1, null), 1);
+    assertStrEqual(nullCoalRunner(null, 2), 2);
+    assertStrEqual(nullCoalRunner(null, null), null);
+    assertStrEqual(nullCoalRunner(3, 4), 3);
+}
+
+function nullCoalRunner(a, b) {
+    return a ?? b;
+}
+
+function ternaryRunner(cond) {
+    return  cond % 2 == 0
+        ? cond > 0
+            ? 'pos-even'
+            : 'neg-even'
+        : cond > 0
+            ? 'pos-odd'
+            : 'neg-odd';
+
+}
+
+function switchDefaultOnly(cond) {
+    buf = '|';
+    switch (cond) {
+        default:
+            buf += 'x';
+            break;
+    }
+    return buf + '|';
+}
+
+function switchRunnerInt3Default(cond) {
+    buf = '|';
+    switch (cond) {
+        case 1:
+            buf += 1;
+            break;
+        case 2:
+            buf += 2;
+            return buf;
+        case 3:
+        case 4:
+            buf += 3;
+            break;
+        default:
+            buf += 'default';
+            break;
+    }
+    return buf + '|';
+}
+
+function switchRunnerStr3Default(cond) {
+    buf = '|';
+    switch (cond) {
+        case 'a':
+            buf += 1;
+            break;
+        case 'bb':
+            buf += 2;
+            break;
+        case 'ccc':
+        case 'dddd':
+            buf += 3;
+            break;
+        default:
+            buf += 'default';
+            break;
+    }
+    return buf + '|';
+}
+
+function booleanLogicTest() {
+    assertStrEqual(doBoolLogicTest(0, 0, '&&'), 'false 1');
+    assertStrEqual(doBoolLogicTest(0, 1, '&&'), 'false 1');
+    assertStrEqual(doBoolLogicTest(1, 0, '&&'), 'false 1, 2');
+    assertStrEqual(doBoolLogicTest(1, 1, '&&'), 'true 1, 2');
+
+    assertStrEqual(doBoolLogicTest(0, 0, '||'), 'false 3, 4');
+    assertStrEqual(doBoolLogicTest(0, 1, '||'), 'true 3, 4');
+    assertStrEqual(doBoolLogicTest(1, 0, '||'), 'true 3');
+    assertStrEqual(doBoolLogicTest(1, 1, '||'), 'true 3');
+
+    buf = [];
+    a = 1;
+    b = 0;
+    c = 1;
+    if (boolLogicTracer(a, 'a', buf) > 0 &&
+        boolLogicTracer(b, 'b', buf) > 0 &&
+        boolLogicTracer(c, 'c', buf) > 0) {
+
+        buf.add('d');
+    }
+    assertStrEqual(buf.join(''), 'ab');
+
+    buf = [];
+    a = 1;
+    b = 0;
+    c = 1;
+    if (boolLogicTracer(a, 'a', buf) > 0 ||
+        boolLogicTracer(b, 'b', buf) > 0 ||
+        boolLogicTracer(c, 'c', buf) > 0) {
+
+        buf.add('d');
+    }
+    assertStrEqual(buf.join(''), 'ad');
+}
+
+function boolLogicTracer(value, logValue, tracer) {
+    tracer.add(logValue);
+    return value;
+}
+
+function doBoolLogicTest(a, b, op) {
+    buf = [];
+
+    if (op == '&&') {
+        result = boolLogicTracer(a, 1, buf) > 0 && boolLogicTracer(b, 2, buf) > 0;
+    } else {
+        result = boolLogicTracer(a, 3, buf) > 0 || boolLogicTracer(b, 4, buf) > 0;
+    }
+
+    return result + ' ' + buf.join(', ');
+}
+
+function optArg0_3(a = 1, b = 2, c = 3) {
+    return [a, b, c].join('|');
+}
+
+function optArg1_2(a, b = 2, c = 3) {
+    return [a, b, c].join('|');
+}
+
+function optArg2_1(a, b, c = 3) {
+    return [a, b, c].join('|');
+}
+
+function optionalArgTest() {
+    assertStrEqual(optArg0_3(), '1|2|3');
+    assertStrEqual(optArg0_3('x'), 'x|2|3');
+    assertStrEqual(optArg0_3('x', 'y'), 'x|y|3');
+    assertStrEqual(optArg0_3('x', 'y', 'z'), 'x|y|z');
+
+    assertStrEqual(optArg1_2('x'), 'x|2|3');
+    assertStrEqual(optArg1_2('x', 'y'), 'x|y|3');
+    assertStrEqual(optArg1_2('x', 'y', 'z'), 'x|y|z');
+
+    assertStrEqual(optArg2_1('x', 'y'), 'x|y|3');
+    assertStrEqual(optArg2_1('x', 'y', 'z'), 'x|y|z');
+}
+
+class Foo {
+    field value;
+    constructor(val) {
+        this.value = val;
+    }
+    function getValue() {
+        return this.value;
+    }
+}
+
+function breakContinueTest() {
+    buf = '';
+    for (i = 0; i < 10; i++) {
+        buf += i;
+        if (i == 4) break;
+    }
+    buf += '.';
+    assertStrEqual(buf, '01234.');
+
+    buf = '';
+    for (i = 0; i < 10; i++) {
+        if (i == 3) continue;
+        if (i == 5) break;
+        buf += i;
+    }
+    buf += '.';
+    assertStrEqual(buf, '0124.');
+
+    buf = '';
+    i = 0;
+    while (i < 10) {
+        i++;
+        if (i == 3) continue;
+        if (i == 5) break;
+        buf += i;
+    }
+    buf += '.';
+    assertStrEqual(buf, '124.');
+
+    buf = '';
+    i = 0;
+    do {
+        i++;
+        if (i == 3) continue;
+        if (i == 5) break;
+        buf += i;
+    } while (i < 10);
+    buf += '.';
+    assertStrEqual(buf, '124.');
+}
+
+function unixTimeTest() {
+    recently = 1700000000;
+    t = getUnixTime();
+    assertStrEqual(t > recently, true);
+    assertStrEqual((t + '').split('.').length, 1);
+
+    t = getUnixTimeFloat();
+    assertStrEqual(t > recently, true);
+    assertStrEqual((t + '').split('.').length, 2);
+}
+
+function byteBufTest() {
+    nums = [1, 2, 3, 300];
+    bytes = nums.toBytes();
+    assertStrEqual(bytes.length, 4);
+    b64 = bytes.toBase64();
+    assertStrEqual(b64, 'AQIDLA==');
+}
+
+function inlineIncrementTest() {
+    // variable
+    x = 2;
+    assertStrEqual(x++, 2);
+    assertStrEqual(x, 3);
+    assertStrEqual(++x, 4);
+    assertStrEqual(x, 4);
+
+    // -- on a variable
+    // this is sufficient to test -- since its a shared codepath as ++ other than a single offset.
+    x = 2;
+    assertStrEqual(x--, 2);
+    assertStrEqual(x, 1);
+    assertStrEqual(--x, 0);
+    assertStrEqual(x, 0);
+
+    // index
+    arr = [2];
+    assertStrEqual(arr[0]++, 2);
+    assertStrEqual(arr[0], 3);
+    assertStrEqual(++arr[0], 4);
+    assertStrEqual(arr[0], 4);
+
+    // dot
+    foo = new Foo(2);
+    assertStrEqual(foo.value++, 2);
+    assertStrEqual(foo.value, 3);
+    assertStrEqual(++foo.value, 4);
+    assertStrEqual(foo.value, 4);
+}

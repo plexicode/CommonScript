@@ -1,0 +1,136 @@
+const int IS_DEBUG = 1;
+
+enum Type {
+    UNKNOWN = 0,
+
+    NULL = 1,
+    BOOLEAN = 2,
+    INTEGER = 3,
+    FLOAT = 4,
+    STRING = 5,
+    ENUM = 6,
+    BIG_INT = 7,
+    BYTEBUF = 8,
+    LIST = 9,
+    DICTIONARY = 10,
+    FUNCTION = 11,
+    INSTANCE = 12,
+    CLASS = 13,
+    NATIVE_HANDLE = 14,
+    GENERATOR = 15,
+
+    MAX = 16,
+}
+
+enum BinaryOp {
+    UNKNOWN = 0,
+
+    ADD = 1,
+    SUBTRACT = 2,
+    MULTIPLY = 3,
+    DIVIDE = 4,
+    MODULO = 5,
+    BOOLEAN_AND = 6,
+    BOOLEAN_OR = 7,
+    EQUAL = 8,
+    NOT_EQUAL = 9,
+    GREATER_THAN = 10,
+    LESS_THAN = 11,
+    GREATER_THAN_OR_EQUAL = 12,
+    LESS_THAN_OR_EQUAL = 13,
+    BIT_AND = 14,
+    BIT_OR = 15,
+    BIT_XOR = 16,
+    BIT_SHIFT_LEFT = 17,
+    BIT_SHIFT_RIGHT = 18,
+    BIT_SHIFT_RIGHT_SIGN_EXT = 19,
+
+    MAX = 20,
+}
+
+enum ExecutionResultType {
+    DONE = 1,
+    HARD_CRASH = 2,
+    SUSPEND = 3,
+    SLEEP = 4,
+
+    THROW_REINVOKE  = 5,
+}
+
+// These must be kept in sync with the ID's in the thrw function in builtins.
+enum ExceptionTypeId {
+    EXCEPTION = 0,
+    FATAL = 1,
+    STACK_OVERFLOW = 2,
+    FIELD_NOT_FOUND = 3,
+    INVALID_ARGUMENT = 4,
+    INVOCATION = 5,
+    KEY_NOT_FOUND = 6,
+    NULL_REFERENCE = 7,
+    OUT_OF_RANGE = 8,
+    TYPE = 9,
+    ZERO_DIVISOR = 10,
+    IMMUTABLE_DATA = 11,
+}
+
+enum FunctionPointerType {
+    REGULAR = 1,
+    INSTANCE_METHOD = 2,
+    STATIC_METHOD = 3,
+    PRIMITIVE_METHOD = 4,
+    CONSTRUCTOR = 5,
+    BASE_CONSTRUCTOR = 6,
+}
+
+const int INT_CACHE_RANGE = 1200;
+
+enum PrimitiveMethods {
+
+    DICT_CLEAR = 1,
+    DICT_CLONE = 2,
+    DICT_CONTAINS = 3,
+    DICT_GET = 4,
+    DICT_KEYS = 5,
+    DICT_MAP_KVP = 6,
+    DICT_MERGE = 7,
+    DICT_REMOVE = 8,
+    DICT_VALUES = 9,
+
+    LIST_ADD = 10,
+    LIST_CLEAR = 11,
+    LIST_CLONE = 12,
+    LIST_DEQUEUE = 13,
+    LIST_FILTER = 14,
+    LIST_FIND = 15,
+    LIST_FIND_REVERSE = 16,
+    LIST_JOIN = 17,
+    LIST_MAP = 18,
+    LIST_POP = 19,
+    LIST_SORT = 20,
+    LIST_SORT_BY_KEY = 39,
+    LIST_REDUCE = 21,
+    LIST_REMOVE = 22,
+    LIST_REVERSE = 23,
+    LIST_TO_BYTES = 24,
+    LIST_TO_DICTIONARY = 25,
+
+    STRING_ENDS_WITH = 26,
+    STRING_FIND = 27,
+    STRING_FIND_REVERSE = 28,
+    STRING_GET_CODE_POINT = 29,
+    STRING_LOWER = 30,
+    STRING_REPLACE = 31,
+    STRING_SPLIT = 32,
+    STRING_STARTS_WITH = 33,
+    STRING_TO_BYTES = 34,
+    STRING_TO_CHARS = 35,
+    STRING_TO_UNICODE_POINTS = 36,
+    STRING_TRIM = 37,
+    STRING_UPPER = 38,
+
+    // TODO: move these up and re-number once byte buffers are implemented
+    BYTEBUF_TO_BASE_64 = 40,
+    BYTEBUF_GET_INT_BE = 41,
+    BYTEBUF_GET_INT_LE = 42,
+    BYTEBUF_TO_STRING = 43,
+}

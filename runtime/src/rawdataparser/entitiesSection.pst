@@ -1,0 +1,278 @@
+
+RawData_Entities ParseRaw_parseEntityData(RawDataParser rdp, List<ByteCodeRow> byteCodeOut, GlobalValues globalValues) {
+    if (!ParseRaw_popInt(rdp)) return null;
+    int fnCount = rdp.intOut;
+    if (!ParseRaw_popInt(rdp)) return null;
+    int enumCount = rdp.intOut;
+    if (!ParseRaw_popInt(rdp)) return null;
+    int classCount = rdp.intOut;
+
+    List<FunctionInfo> functions = ParseRaw_entitiesSection_parseFunctions(rdp, fnCount, byteCodeOut);
+    if (functions == null) return null;
+
+    List<EnumInfo> enums = ParseRaw_entitiesSection_parseEnums(rdp, enumCount);
+    if (enums == null) return null;
+
+    List<ClassInfo> classes = ParseRaw_entitiesSection_parseClasses(rdp, classCount, functions, globalValues);
+    if (classes == null) return null;
+
+    bool ok = ParseRaw_entitiesSection_classMemberResolver(classes, globalValues);
+    if (!ok) return null;
+
+    return new RawData_Entities(functions, enums, classes);
+}
+
+List<FunctionInfo> ParseRaw_entitiesSection_parseFunctions(
+    RawDataParser rdp,
+    int fnCount,
+    List<ByteCodeRow> byteCodeOut) {
+
+    List<FunctionInfo> functions = new List<FunctionInfo>();
+    functions.Add(null);
+    for (int i = 0; i < fnCount; i += 1) {
+        if (!ParseRaw_popInt(rdp)) return null;
+        int argcMin = rdp.intOut;
+        if (!ParseRaw_popInt(rdp)) return null;
+        int argcMax = rdp.intOut;
+        if (argcMax < argcMin) return null;
+        string fnName = ParseRaw_popLenString(rdp);
+        if (fnName == null) return null;
+        if (!ParseRaw_popInt(rdp)) return null;
+        int codeLen = rdp.intOut;
+        Array<ByteCodeRow> byteCode = ParseRaw_popByteCodeRows(rdp, codeLen);
+        if (byteCode == null) return null;
+        int pc = byteCodeOut.Size();
+        FunctionInfo fn = new FunctionInfo(argcMin, argcMax, pc, null, fnName);
+        for (int j = 0; j < codeLen; j += 1) {
+            byteCodeOut.Add(byteCode[j]);
+        }
+        functions.Add(fn);
+    }
+    return functions;
+}
+
+List<EnumInfo> ParseRaw_entitiesSection_parseEnums(
+    RawDataParser rdp,
+    int enumCount) {
+
+    List<EnumInfo> enums = new List<EnumInfo>();
+    enums.Add(null);
+    for (int i = 0; i < enumCount; i += 1) {
+        if (!ParseRaw_popInt(rdp)) return null;
+        int memberCount = rdp.intOut;
+        int id = i + 1;
+        Array<int> enumValues = new Array<int>(memberCount);
+        Array<string> enumNames = new Array<string>(memberCount);
+
+        for (int j = 0; j < memberCount; j++) {
+            string enumName = ParseRaw_popLenString(rdp);
+            if (enumName == null || !ParseRaw_popInt(rdp)) return null;
+            enumNames[j] = enumName;
+            enumValues[j] = rdp.intOut;
+        }
+        enums.Add(new EnumInfo(id, enumNames, enumValues));
+    }
+
+    return enums;
+}
+
+/*
+    Parse the class information. The information included here only consists of
+    NEW definitions for this class. Inherited definitions are not included here
+    and are instead added in the 2nd pass.
+
+    Additionally, the associated function definition of the methods here
+    will have their class definition pointers set.
+
+    [simple name]
+    [parent class ID]
+    [ctor ID]
+    [cctor ID]
+    [field count]
+    [method count]
+    [static field count]
+    [static method count]
+
+    followed by n fields:
+        [name]
+        [info flag] <----- TODO: WHAT IS THIS?
+
+    followed by n methods:
+        [name]
+        [function ID]
+
+*/
+List<ClassInfo> ParseRaw_entitiesSection_parseClasses(
+    RawDataParser rdp,
+    int classCount,
+    List<FunctionInfo> functions,
+    GlobalValues globalValues) {
+
+    int id = 0;
+    int i = 0;
+    int j = 0;
+
+    List<ClassInfo> classes = new List<ClassInfo>();
+    classes.Add(null);
+    ClassInfo cd = null;
+    for (id = 1; id <= classCount; id += 1) {
+        string className = ParseRaw_popLenString(rdp);
+        if (className == null) return null;
+        if (!ParseRaw_popInt(rdp)) return null;
+        int parentId = rdp.intOut;
+        if (!ParseRaw_popInt(rdp)) return null;
+        int ctorId = rdp.intOut;
+        if (ctorId >= functions.Size() || ctorId < 1) return null;
+        if (!ParseRaw_popInt(rdp)) return null;
+        int cctorId = rdp.intOut;
+        if (cctorId >= functions.Size() || cctorId < 0) return null; // can be 0 if not present.
+        if (!ParseRaw_popInt(rdp)) return null;
+        int fieldCount = rdp.intOut;
+        if (!ParseRaw_popInt(rdp)) return null;
+        int methodCount = rdp.intOut;
+        if (!ParseRaw_popInt(rdp)) return null;
+        int staticFieldCount = rdp.intOut;
+        if (!ParseRaw_popInt(rdp)) return null;
+        int staticMethodCount = rdp.intOut;
+
+        List<string> newMembersByOffset = new List<string>();
+        List<int> newMemberInfo = new List<int>();
+        for (j = 0; j < fieldCount; j += 1) {
+            string memberName = ParseRaw_popLenString(rdp);
+            if (memberName == null) return null;
+            if (!ParseRaw_popInt(rdp)) return null;
+            newMemberInfo.Add(rdp.intOut);
+            newMembersByOffset.Add(memberName);
+        }
+
+        cd = createClassInfo(id, parentId, className, functions[ctorId], newMembersByOffset, newMemberInfo, cctorId);
+        functions[ctorId].classParent = cd;
+
+        for (j = 0; j < methodCount; j += 1) {
+            string methodName = ParseRaw_popLenString(rdp);
+            if (methodName == null) return null;
+            if (!ParseRaw_popInt(rdp)) return null;
+            int methodFuncId = rdp.intOut;
+            cd.methods[methodName] = functions[methodFuncId];
+        }
+
+        for (j = 0; j < staticFieldCount; j += 1) {
+            string stFieldName = ParseRaw_popLenString(rdp);
+            cd.staticMembers[stFieldName] = globalValues.nullValue;
+            cd.staticMemberIsMutable[stFieldName] = true;
+        }
+
+        for (j = 0; j < staticMethodCount; j += 1) {
+            string stMethodName = ParseRaw_popLenString(rdp);
+            if (!ParseRaw_popInt(rdp)) return null;
+            int staticMethodFuncId = rdp.intOut;
+            FunctionInfo staticMethodInfo = functions[staticMethodFuncId];
+            cd.methods[stMethodName] = staticMethodInfo;
+            cd.staticMembers[stMethodName] = new Value(Type.FUNCTION, new FunctionPointer(
+                FunctionPointerType.STATIC_METHOD,
+                staticMethodInfo.argcMin,
+                staticMethodInfo.argcMax,
+                staticMethodInfo.pc,
+                staticMethodInfo,
+                cd.classRef
+            ));
+            cd.staticMemberIsMutable[stMethodName] = false;
+        }
+
+        classes.Add(cd);
+    }
+
+    return classes;
+}
+
+/*
+    At this point we will check each class' parent and create a flattened list
+    of members. The serialized order of the classes is guaranteed to be such
+    that parents come first of their extending classes.
+
+    We populate the initial values array for fields.
+*/
+bool ParseRaw_entitiesSection_classMemberResolver(
+    List<ClassInfo> classes,
+    GlobalValues globalValues) {
+
+    int j = 0;
+
+    for (int id = 1; id < classes.Size(); id += 1) {
+        ClassInfo cd = classes[id];
+
+        // parent ID is 0 when missing, which has a null in the first slot,
+        // so no additional check necessary.
+        cd.parent = classes[cd.parentId];
+
+        // calculate how many field counts there are for the current class,
+        // parent, and combined.
+        int newFieldCount = cd.newMembersInOffsetOrder.Size();
+        int parentFieldCount = 0;
+        if (cd.parent != null) parentFieldCount = cd.parent.nameByOffset.Size();
+        int fieldCount = newFieldCount + parentFieldCount;
+
+        // Do the flattening of all fields into the lookup.
+        Array<string> nameByOffset = new Array<string>(fieldCount);
+        int flatOffset = 0;
+        while (flatOffset < parentFieldCount) {
+            nameByOffset[flatOffset] = cd.parent.nameByOffset[flatOffset];
+            flatOffset += 1;
+        }
+        int localOffset = 0;
+        while (flatOffset < fieldCount) {
+            nameByOffset[flatOffset] = cd.newMembersInOffsetOrder[localOffset];
+            flatOffset += 1;
+            localOffset += 1;
+        }
+
+        cd.nameByOffset = nameByOffset;
+        cd.nameToOffset = new Dictionary<string, int>();
+        cd.initialValues = new Array<Value>(fieldCount);
+
+        // Do additional resolution for each member...
+        for (int i = 0; i < fieldCount; i += 1) {
+
+            // Build a reverse lookup of names to their offsets.
+            string memberName = nameByOffset[i];
+            cd.nameToOffset[memberName] = i;
+
+            localOffset = i - parentFieldCount;
+
+            // If this is a parent field...
+            // (i.e. we're still before where the locally defined fields are and the offset is negative)
+            if (localOffset < 0) {
+                // Copy the initial value for this field from the parent.
+                cd.initialValues[i] = cd.parent.initialValues[i];
+
+                // If this is a parent method that doesn't have an overriding
+                // definition in the current class, then we should add this to
+                // this class' lookup.
+                if (cd.parent.methods.Contains(memberName) && !cd.methods.Contains(memberName)) {
+                    cd.methods[memberName] = cd.parent.methods[memberName];
+                }
+
+            } else {
+                // check the info flag for this local field...
+                int memberInfoFlag = cd.newMemberInfoFlags[localOffset];
+                bool isMethod = Core.ForceParens(memberInfoFlag & 1) != 0;
+
+                if (isMethod) {
+                    // If it's a method, set the initial value to a hard system
+                    // null. This is a flag to perform lazy initialization later.
+                    cd.initialValues[i] = null;
+                } else {
+                    // If it's a field, let's just set it to a VM null. This
+                    // will be overwritten by the constructor at runtime.
+                    // TODO: For some primitive values, info about the initial
+                    // value should be placed in the memberInfoFlag and exempt
+                    // from the constructor runtime to speed things up,
+                    // especially in classes with lots of simple fields.
+                    cd.initialValues[i] = globalValues.nullValue;
+                }
+            }
+        }
+    }
+
+    return true;
+}

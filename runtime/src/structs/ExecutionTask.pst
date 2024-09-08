@@ -1,0 +1,69 @@
+struct ExecutionTask {
+    int taskId;
+    ExecutionContext execCtx;
+    StackFrame stack;
+    bool suspendRequested;
+    int sleepMillis;
+    Array<Value> valueStack;
+    StackFrame framePool;
+}
+
+ExecutionTask createNewTask(ExecutionContext ec, Value fpValue, Array<Value> args) {
+    if (fpValue.type != Type.FUNCTION) return null;
+    FunctionPointer fp = (FunctionPointer) fpValue.internalValue;
+    int pc = 0;
+    int argc = args.Size();
+    int argcMax = argc;
+    switch (fp.funcType) {
+        case FunctionPointerType.REGULAR:
+            pc = fp.pcOrId;
+            if (argc < fp.argcMin || argc > fp.argcMax) {
+                // Invalid argument count
+                return null;
+            }
+            argcMax = fp.argcMax;
+
+            break;
+        default:
+            // TODO: support others
+            return null;
+    }
+    
+    Array<Value> argsClone = new Array<Value>(argc);
+    for (int i = 0; i < argc; i += 1) {
+        argsClone[i] = args[i];
+    }
+
+    StackFrame frame = new StackFrame(
+        null, 
+        pc, 
+        argsClone,
+        argc,
+        0,
+        0,
+        new Dictionary<string, Value>(),
+        null,
+        false,
+        null,
+        false
+    );
+
+    ExecutionTask task = new ExecutionTask(ec.nextTaskId, ec, frame, false, 0, new Array<Value>(1), null);
+    ec.nextTaskId += 1;
+    ec.tasks[task.taskId] = task;
+    return task;
+}
+
+ExecutionTask createMainTask(ExecutionContext ec, Array<string> cliArgs) {
+    if (ec.nextTaskId != 1) return null;
+
+    finalizeExecutionContext(ec);
+
+    Value mainFn = ec.functionsAsValues[ec.significantFunctions["main"]];
+    
+    // TODO: convert this into a list of string values
+    Value args = ec.globalValues.nullValue; 
+    Array<Value> argList = new Array<Value>(1);
+
+    return createNewTask(ec, mainFn, argList);
+}

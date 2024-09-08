@@ -1,0 +1,2 @@
+
+output = buildString(globalValues, buildBase64String((Array<int>) fp.ctx.internalValue), false);

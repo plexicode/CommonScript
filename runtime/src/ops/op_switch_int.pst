@@ -1,0 +1,13 @@
+/*
+    args[0] - jump offset for default
+
+*/
+valueStackSize -= 1;
+value = valueStack[valueStackSize];
+i = (int) value.internalValue;
+switchIntLookup = ec.switchIntLookupsByPc[pc];
+if (switchIntLookup.Contains(i)) {
+    pc += switchIntLookup[i];
+} else {
+    pc += row.firstArg;
+}

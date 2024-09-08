@@ -1,0 +1,19 @@
+
+struct FunctionPointer {
+    int funcType;
+    int argcMin;
+    int argcMax;
+    int pcOrId; // or relevant ID
+    FunctionInfo func;
+    Value ctx;
+}
+
+FunctionPointer FunctionPointer_cloneWithNewType(FunctionPointer old, int newType) {
+    return new FunctionPointer(
+        newType, 
+        old.argcMin, 
+        old.argcMax, 
+        old.pcOrId, 
+        old.func, 
+        old.ctx);
+}

@@ -1,0 +1,54 @@
+valueStackSize -= 2;
+left = valueStack[valueStackSize];
+right = valueStack[valueStackSize + 1];
+
+switch (left.type * Type.MAX + right.type) {
+    case Type.INTEGER * Type.MAX + Type.INTEGER:
+        int1 = (int) left.internalValue;
+        int2 = (int) right.internalValue;
+        bool1 = int1 == int2;
+        bool2 = int1 < int2;
+        break;
+    case Type.INTEGER * Type.MAX + Type.FLOAT:
+        int1 = (int) left.internalValue;
+        float2 = (double) right.internalValue;
+        bool1 = int1 == float2;
+        bool2 = int1 < float2;
+        break;
+    case Type.FLOAT * Type.MAX + Type.INTEGER:
+        float1 = (double) left.internalValue;
+        int2 = (int) right.internalValue;
+        bool1 = float1 == int2;
+        bool2 = float1 < int2;
+        break;
+    case Type.FLOAT * Type.MAX + Type.FLOAT:
+        float1 = (double) left.internalValue;
+        float2 = (double) right.internalValue;
+        bool1 = float1 == float2;
+        bool2 = float1 < float2;
+        break;
+    default:
+        errorId = ExceptionTypeId.INVALID_ARGUMENT;
+        errorMsg = "Comparisons are only applicable for numeric types.";
+        @import("macros/throw.pst");
+}
+
+value = VALUE_FALSE;
+switch (row.firstArg) {
+    case BinaryOp.LESS_THAN:
+        if (bool2) value = VALUE_TRUE;
+        break;
+    case BinaryOp.LESS_THAN_OR_EQUAL:
+        if (bool2 || bool1) value = VALUE_TRUE;
+        break;
+    case BinaryOp.GREATER_THAN:
+        if (!bool2 && !bool1) value = VALUE_TRUE;
+        break;
+    case BinaryOp.GREATER_THAN_OR_EQUAL:
+        if (!bool2) value = VALUE_TRUE;
+        break;
+    default: break;
+}
+
+valueStack[valueStackSize] = value;
+valueStackSize += 1;

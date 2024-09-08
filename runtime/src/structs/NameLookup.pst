@@ -1,0 +1,108 @@
+struct NameLookup {
+    int lengthId;
+    Array<Array<FunctionPointer>> primitiveMethodsByTypeByNameId;
+}
+
+void generateNameLookup(ExecutionContext ec) {
+    NameLookup lookup = new NameLookup(0, null);
+
+    Dictionary<string, int> stringsToId = new Dictionary<string, int>();
+    int i = 1;
+    int sz = ec.stringsById.Size();
+    while (i < sz) {
+        stringsToId[ec.stringsById[i]] = i;
+        i += 1;
+    }
+
+    if (stringsToId.Contains("length")) lookup.lengthId = stringsToId["length"];
+
+    Array<FunctionPointer> deadArray = new Array<FunctionPointer>(Type.MAX);
+
+    Array<Array<FunctionPointer>> fpMap = new Array<Array<FunctionPointer>>(sz);
+    lookup.primitiveMethodsByTypeByNameId = fpMap;
+
+    injectNameLookup(fpMap, PrimitiveMethods.BYTEBUF_GET_INT_BE, Type.BYTEBUF, tryGetNameId(stringsToId, "getIntBE"), 0, 2);
+    injectNameLookup(fpMap, PrimitiveMethods.BYTEBUF_GET_INT_LE, Type.BYTEBUF, tryGetNameId(stringsToId, "getIntLE"), 0, 2);
+    injectNameLookup(fpMap, PrimitiveMethods.BYTEBUF_TO_BASE_64, Type.BYTEBUF, tryGetNameId(stringsToId, "toBase64"), 0, 0);
+    injectNameLookup(fpMap, PrimitiveMethods.BYTEBUF_TO_STRING, Type.BYTEBUF, tryGetNameId(stringsToId, "toString"), 0, 0);
+
+    injectNameLookup(fpMap, PrimitiveMethods.DICT_CLEAR, Type.DICTIONARY, tryGetNameId(stringsToId, "clear"), 0, 0);
+    injectNameLookup(fpMap, PrimitiveMethods.DICT_CLONE, Type.DICTIONARY, tryGetNameId(stringsToId, "clone"), 0, 0);
+    injectNameLookup(fpMap, PrimitiveMethods.DICT_CONTAINS, Type.DICTIONARY, tryGetNameId(stringsToId, "contains"), 1, 1);
+    injectNameLookup(fpMap, PrimitiveMethods.DICT_GET, Type.DICTIONARY, tryGetNameId(stringsToId, "get"), 1, 2);
+    injectNameLookup(fpMap, PrimitiveMethods.DICT_KEYS, Type.DICTIONARY, tryGetNameId(stringsToId, "keys"), 0, 0);
+    injectNameLookup(fpMap, PrimitiveMethods.DICT_MAP_KVP, Type.DICTIONARY, tryGetNameId(stringsToId, "mapKvp"), 1, 1);
+    injectNameLookup(fpMap, PrimitiveMethods.DICT_MERGE, Type.DICTIONARY, tryGetNameId(stringsToId, "merge"), 1, 2);
+    injectNameLookup(fpMap, PrimitiveMethods.DICT_REMOVE, Type.DICTIONARY, tryGetNameId(stringsToId, "remove"), 1, 1);
+    injectNameLookup(fpMap, PrimitiveMethods.DICT_VALUES, Type.DICTIONARY, tryGetNameId(stringsToId, "values"), 0, 0);
+
+    injectNameLookup(fpMap, PrimitiveMethods.LIST_ADD, Type.LIST, tryGetNameId(stringsToId, "add"), 1, 1);
+    injectNameLookup(fpMap, PrimitiveMethods.LIST_CLEAR, Type.LIST, tryGetNameId(stringsToId, "clear"), 0, 0);
+    injectNameLookup(fpMap, PrimitiveMethods.LIST_CLONE, Type.LIST, tryGetNameId(stringsToId, "clone"), 0, 0);
+    // injectNameLookup(fpMap, PrimitiveMethods.LIST_DEQUEUE, Type.LIST, tryGetNameId(stringsToId, "dequeue"), 0, 0);
+    injectNameLookup(fpMap, PrimitiveMethods.LIST_FILTER, Type.LIST, tryGetNameId(stringsToId, "filter"), 1, 1);
+    injectNameLookup(fpMap, PrimitiveMethods.LIST_FIND, Type.LIST, tryGetNameId(stringsToId, "find"), 1, 3);
+    injectNameLookup(fpMap, PrimitiveMethods.LIST_FIND_REVERSE, Type.LIST, tryGetNameId(stringsToId, "findReverse"), 1, 3);
+    injectNameLookup(fpMap, PrimitiveMethods.LIST_JOIN, Type.LIST, tryGetNameId(stringsToId, "join"), 0, 1);
+    injectNameLookup(fpMap, PrimitiveMethods.LIST_MAP, Type.LIST, tryGetNameId(stringsToId, "map"), 1, 1);
+    injectNameLookup(fpMap, PrimitiveMethods.LIST_POP, Type.LIST, tryGetNameId(stringsToId, "pop"), 0, 0);
+    injectNameLookup(fpMap, PrimitiveMethods.LIST_REDUCE, Type.LIST, tryGetNameId(stringsToId, "reduce"), 1, 2);
+    injectNameLookup(fpMap, PrimitiveMethods.LIST_REMOVE, Type.LIST, tryGetNameId(stringsToId, "remove"), 1, 1);
+    injectNameLookup(fpMap, PrimitiveMethods.LIST_REVERSE, Type.LIST, tryGetNameId(stringsToId, "reverse"), 0, 0);
+    injectNameLookup(fpMap, PrimitiveMethods.LIST_SORT, Type.LIST, tryGetNameId(stringsToId, "sort"), 0, 1);
+    injectNameLookup(fpMap, PrimitiveMethods.LIST_SORT_BY_KEY, Type.LIST, tryGetNameId(stringsToId, "sortByKey"), 1, 1);
+    injectNameLookup(fpMap, PrimitiveMethods.LIST_TO_BYTES, Type.LIST, tryGetNameId(stringsToId, "toBytes"), 0, 0);
+    // injectNameLookup(fpMap, PrimitiveMethods.LIST_TO_DICTIONARY, Type.LIST, tryGetNameId(stringsToId, "toDictionary"), 0, 1);
+
+    injectNameLookup(fpMap, PrimitiveMethods.STRING_ENDS_WITH, Type.STRING, tryGetNameId(stringsToId, "endsWith"), 1, 1);
+    injectNameLookup(fpMap, PrimitiveMethods.STRING_FIND, Type.STRING, tryGetNameId(stringsToId, "find"), 1, 3);
+    injectNameLookup(fpMap, PrimitiveMethods.STRING_FIND_REVERSE, Type.STRING, tryGetNameId(stringsToId, "findReverse"), 1, 3);
+    injectNameLookup(fpMap, PrimitiveMethods.STRING_GET_CODE_POINT, Type.STRING, tryGetNameId(stringsToId, "getCodePoint"), 1, 1);
+    injectNameLookup(fpMap, PrimitiveMethods.STRING_LOWER, Type.STRING, tryGetNameId(stringsToId, "lower"), 0, 0);
+    injectNameLookup(fpMap, PrimitiveMethods.STRING_REPLACE, Type.STRING, tryGetNameId(stringsToId, "replace"), 2, 3);
+    injectNameLookup(fpMap, PrimitiveMethods.STRING_SPLIT, Type.STRING, tryGetNameId(stringsToId, "split"), 1, 1);
+    injectNameLookup(fpMap, PrimitiveMethods.STRING_STARTS_WITH, Type.STRING, tryGetNameId(stringsToId, "startsWith"), 1, 1);
+    injectNameLookup(fpMap, PrimitiveMethods.STRING_TO_BYTES, Type.STRING, tryGetNameId(stringsToId, "toBytes"), 0, 1);
+    injectNameLookup(fpMap, PrimitiveMethods.STRING_TO_CHARS, Type.STRING, tryGetNameId(stringsToId, "toChars"), 0, 0);
+    injectNameLookup(fpMap, PrimitiveMethods.STRING_TO_UNICODE_POINTS, Type.STRING, tryGetNameId(stringsToId, "toUnicodePoints"), 0, 0);
+    injectNameLookup(fpMap, PrimitiveMethods.STRING_TRIM, Type.STRING, tryGetNameId(stringsToId, "trim"), 0, 0);
+    injectNameLookup(fpMap, PrimitiveMethods.STRING_UPPER, Type.STRING, tryGetNameId(stringsToId, "upper"), 0, 0);
+
+    // fill the rest of the unallocated names with a pointer to our array of nulls.
+    // Since this will never be updated in the future, it's okay to use the same reference for all of them.
+    for (i = 0; i < sz; i += 1) {
+        if (fpMap[i] == null) fpMap[i] = deadArray;
+    }
+
+    ec.nameLookup = lookup;
+}
+
+int tryGetNameId(Dictionary<string, int> names, string s) {
+    if (names.Contains(s)) return names[s];
+    return -1;
+}
+
+void injectNameLookup(
+    Array<Array<FunctionPointer>> lookup,
+    int primitiveMethodId,
+    int typeId,
+    int nameId,
+    int argcMin,
+    int argcMax) {
+
+    if (nameId == -1) return;
+
+    FunctionPointer fp = new FunctionPointer(
+        FunctionPointerType.PRIMITIVE_METHOD,
+        argcMin,
+        argcMax,
+        primitiveMethodId,
+        null,
+        null);
+
+    if (lookup[nameId] == null) {
+        lookup[nameId] = new Array<FunctionPointer>(Type.MAX);
+    }
+
+    lookup[nameId][typeId] = fp;
+}

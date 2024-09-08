@@ -1,0 +1,11 @@
+listImpl1 = (ListImpl) fp.ctx.internalValue;
+sz = listImpl1.length - 1;
+if (sz == -1) {
+    errorId = ExceptionTypeId.OUT_OF_RANGE;
+    errorMsg = "Cannot pop from an empty list.";
+    @import("macros/throw.pst");
+}
+
+output = listImpl1.items[sz];
+listImpl1.items[sz] = null;
+listImpl1.length = sz;

@@ -1,0 +1,141 @@
+
+// A bubbling exception. Keep unwinding the stack until you find a
+// catch, finally, or reach the end.
+// It's okay to not save the frames back into the frame pool and toss them to GC since performance
+// is not a consideration during exception firing.
+bool bubbleException(ExecutionTask task, Value exceptionValue) {
+    StackFrame frame = task.stack;
+    ExecutionContext ec = task.execCtx;
+    bool keepGoing = true;
+    while (keepGoing) {
+        if (frame == null) {
+            // You have reached the end.
+            task.stack = null;
+            return true;
+        }
+
+        int pc = frame.pc;
+        TryDescriptor td = ec.tryDescriptors[pc];
+        if (td != null) {
+            // You bubbled up somewhere into a try/catch/finally block.
+            keepGoing = false; // stop looping
+
+            if (pc < td.routerPc) { // bubbled into the try.
+                frame.pc = td.routerPc - 1; // jump to the router.
+                frame.bubblingValue = exceptionValue;
+                // bubblingValueUncaught is NOT set because the next op is OP_TRY_CATCH_ROUTER and will figure that out for itself.
+            } else if (pc >= td.finallyPc) { // bubbled into the finally.
+                // jump to the OP_TRY_FINALLY_END and try again. Its try descriptor should be the wrapped try/block if there is one.
+                frame.pc = td.finallyEnd - 1;
+                frame.bubblingValue = exceptionValue;
+                frame.bubblingValueUncaught = true;
+            } else {
+                // you bubbled into a catch.
+                // The exception is uncaught but the finally needs to run.
+                frame.pc = td.finallyPc;
+                frame.bubblingValue = exceptionValue;
+                frame.bubblingValueUncaught = true;
+            }
+        } else {
+            frame = frame.previous;
+        }
+    }
+    task.stack = frame;
+    frame.valueStackSize = frame.valueStackBaseSize;
+    return false;
+}
+
+/*
+    output buffer: out[0] -> the pc to jump to
+    return value: true if uncaught and is jumping to the finally
+
+    args[0] -> the jump offset if not caught
+
+    args[offset + 0] -> the jump offset for this catch group
+    args[offset + 1] -> a class ID for this group
+    args[offset + 2] -> another class ID for this group
+    args[offset + n] -> etc.
+    args[offset + n + 1] -> 0 to indicate end of this group. Omitted for last
+*/
+bool exceptionCatcherRouteException(Value exceptionInstance, Array<int> args, Array<int> outBuffer) {
+    Instance inst = (Instance) exceptionInstance.internalValue;
+    int exClassId = inst.classDef.id;
+
+    int groupStartIndex = 1;
+    while (groupStartIndex < args.Size()) {
+
+        int groupJumpPc = args[groupStartIndex];
+        int totalExceptionsChecked = 0;
+        for (int i = groupStartIndex + 1; i < args.Size(); i += 1) {
+            groupStartIndex = i + 1;
+            if (args[i] == 0) {
+                i += args.Size(); // break
+            } else {
+                totalExceptionsChecked += 1;
+                // TODO: check if exception inherits from this rather than exact matching.
+                if (args[i] == exClassId) {
+                    // we have a match.
+                    outBuffer[0] = groupJumpPc;
+                    return false;
+                }
+            }
+        }
+        if (totalExceptionsChecked == 0) {
+            // this is the default catch.
+            outBuffer[0] = groupJumpPc;
+            return false;
+        }
+    }
+    outBuffer[0] = args[0]; // finally PC
+    return true; // uncaught
+}
+
+string getExceptionMessage(Value exceptionInstance, bool includeStackTrace) {
+    Instance inst = (Instance) exceptionInstance.internalValue;
+    Value msgField = inst.members[inst.classDef.nameToOffset["message"]];
+    List<string> lines = new List<string>();
+    lines.Add(valueToHumanString(msgField));
+    if (includeStackTrace) {
+
+        Value stackTrace = inst.members[inst.classDef.nameToOffset["trace"]];
+        if (stackTrace.type == Type.LIST) {
+            ListImpl trace = (ListImpl) stackTrace.internalValue;
+            lines.Add("Stack trace:");
+            for (int i = 0; i < trace.length; i += 1) {
+                lines.Add("  at " + valueToHumanString(trace.items[i]));
+            }
+        } else {
+            lines.Add("(no stack trace available)");
+        }
+    }
+    return lines.Join("\n");
+}
+
+Value generateStackTrace(ExecutionTask task) {
+    StackFrame frame = task.stack;
+    ExecutionContext ec = task.execCtx;
+    List<string> trace = new List<string>();
+    while (frame != null) {
+        Token invokeToken = ec.byteCode[frame.pc].token;
+        if (invokeToken != null) {
+            string info = Core.StringConcatAll(
+                invokeToken.filename,
+                " Line ",
+                Core.IntToString(invokeToken.line),
+                " Col ",
+                Core.IntToString(invokeToken.col));
+            trace.Add(info);
+        } else {
+            trace.Add(Core.StringConcatAll("PC:", Core.IntToString(frame.pc)));
+        }
+        frame = frame.previous;
+    }
+
+    int sz = trace.Size();
+    Array<Value> traceArr = new Array<Value>(sz);
+    for (int i = 0; i < sz; i += 1) {
+        traceArr[i] = buildString(ec.globalValues, trace[i], false);
+    }
+
+    return buildList(ec, traceArr, false, traceArr.Size());
+}

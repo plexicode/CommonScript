@@ -1,0 +1,8 @@
+listImpl1 = (ListImpl) fp.ctx.internalValue;
+sz = listImpl1.length;
+valueArr = listImpl1.items;
+for (i = 0; i < sz; i += 1) {
+    valueArr[i] = null;
+}
+listImpl1.length = 0;
+output = VALUE_NULL;

@@ -1,0 +1,92 @@
+import dep -> depLib;
+import testlib -> *;
+
+function main(args) {
+    test();
+    print("ALL DONE");
+}
+
+function test() {
+
+    child = new Child(5);
+    things = [
+        child,
+        new Parent(5),
+        new depLib.GrandParent(5)
+    ];
+
+    assertStrEqual(child.initTest, 42);
+
+    assertStrEqual(things[0].name + '|' + things[0].value, "child|30");
+    assertStrEqual(things[1].name + '|' + things[1].value, "parent|15");
+    assertStrEqual(things[2].name + '|' + things[2].value, "grandparent|5");
+
+    assertStrEqual(child.fromParent(), "I'm the parent");
+    assertStrEqual(child.fromGrandParent(), "I'm the grandparent");
+
+    assertStrEqual(things[0].overriddenMethod(), "I'm the child");
+    assertStrEqual(things[1].overriddenMethod(), "I'm the parent");
+    assertStrEqual(things[0].overriddenMethod(), "I'm the child");
+    assertStrEqual(things[2].overriddenMethod(), "I'm the grandparent");
+
+    assertStrEqual(new FooChild().x, 'x');
+    assertStrEqual(new FooChild().y, 'y');
+    assertStrEqual(new FooChild().z, 4);
+
+    assertStrEqual(new DefaultCtorTest().thing, 'yes');
+    assertStrEqual(new DefaultCtorExtend().thing2, 'yes2');
+}
+
+class Parent : depLib.GrandParent {
+    constructor(value) : base(value * 3) {
+        this.name = "parent";
+    }
+
+    function overriddenMethod() {
+        return this.fromParent();
+    }
+
+    function fromParent() {
+        return "I'm the parent";
+    }
+}
+
+class Child : Parent {
+
+    field initTest = 42;
+
+    constructor(value) : base(value * 2) {
+        this.name = 'child';
+    }
+
+    function overriddenMethod() {
+        return this.fromChild();
+    }
+
+    function fromChild() {
+        return "I'm the child";
+    }
+}
+
+function fooChildHelper(n) {
+    return n + 1;
+}
+class FooChild : FooParent {
+    field x = 'x';
+    field z = fooChildHelper(3);
+}
+
+class FooParent {
+    field y;
+    constructor() {
+        this.y = 'y';
+    }
+}
+
+class DefaultCtorTest {
+    field thing = 'yes';
+}
+
+class DefaultCtorExtend : DefaultCtorTest {
+    field thing2 = 'yes2';
+}

@@ -1,0 +1,15 @@
+
+stringImpl1 = (StringImpl) fp.ctx.internalValue;
+sz = stringImpl1.length;
+valueArr = new Array<Value>(sz);
+intArray1 = stringImpl1.uChars;
+for (i = 0; i < sz; i += 1) {
+    j = intArray1[i];
+    if (j < INT_CACHE_RANGE) {
+        valueArr[i] = globalValues.posIntegers[j];
+    } else {
+        valueArr[i] = buildInteger(globalValues, j);
+    }
+}
+
+output = buildList(ec, valueArr, true, -1);

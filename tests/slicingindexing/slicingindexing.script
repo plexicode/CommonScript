@@ -1,0 +1,32 @@
+import testlib -> *;
+
+function main(args) {
+
+    itemses = [
+        '0123456789',
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    ];
+
+    for (i = 0; i < itemses.length; i++) {
+        items = itemses[i];
+        isList = i == 1;
+        // TODO: I need to make sure the whole matrix of possibilities is here
+        sliceAssert(items[:3], '012', isList);
+        sliceAssert(items[-3:], '789', isList);
+        sliceAssert(items[1:-1], '12345678', isList);
+        sliceAssert(items[::2], '02468', isList);
+        sliceAssert(items[::-1], '9876543210', isList);
+        sliceAssert(items[2:8:3], '25', isList);
+        sliceAssert(items[2:9:3], '258', isList);
+        sliceAssert(items[8:1:-2], '8642', isList);
+        sliceAssert(items[8:2:-2], '864', isList);
+        sliceAssert(items[8:1:2], '', isList);
+        sliceAssert(items[-5:2:], '', isList);
+    }
+
+    print("ALL DONE");
+}
+
+function sliceAssert(items, expected, isList) {
+    assertStrEqual(isList ? items.join("") : items, expected);
+}

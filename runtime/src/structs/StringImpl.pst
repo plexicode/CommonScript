@@ -1,0 +1,8 @@
+struct StringImpl {
+    int length;
+    bool isBuilder;
+    Array<int> uChars;
+    string nativeStr;
+    StringImpl left;
+    StringImpl right;
+}

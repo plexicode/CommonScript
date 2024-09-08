@@ -1,0 +1,7 @@
+i = valueStackSize - 1;
+value = valueStack[i];
+
+// type guaranteed by OP_ENSURE_INT
+int1 = Core.ForceParens(-(int) value.internalValue) - 1;
+
+valueStack[i] = buildInteger(globalValues, int1);

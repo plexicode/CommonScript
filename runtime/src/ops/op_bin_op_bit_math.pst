@@ -1,0 +1,44 @@
+valueStackSize -= 2;
+left = valueStack[valueStackSize];
+right = valueStack[valueStackSize + 1];
+
+if (left.type != Type.INTEGER || right.type != Type.INTEGER) {  
+    errorId = ExceptionTypeId.TYPE;
+    errorMsg = "Expected integers for this operator.";
+    @import("macros/throw.pst");
+}
+
+int1 = (int) left.internalValue;
+int2 = (int) right.internalValue;
+
+switch (row.firstArg) {
+    case BinaryOp.BIT_AND:
+        int3 = int1 & int2;
+        break;
+
+    case BinaryOp.BIT_OR:
+        int3 = int1 | int2;
+        break;
+
+    case BinaryOp.BIT_XOR:
+        int3 = int1 ^ int2;
+        break;
+
+    case BinaryOp.BIT_SHIFT_LEFT:
+        int3 = int1 << int2;
+        break;
+
+    case BinaryOp.BIT_SHIFT_RIGHT:
+        int3 = int1 >> int2;
+        break;
+
+    default:
+        return ExRes_HardCrash(task, "Op not implemented yet");
+}
+
+if (int1 == int3) value = left;
+else if (int2 == int3) value = right;
+else value = buildInteger(globalValues, int3);
+
+valueStack[valueStackSize] = value;
+valueStackSize += 1;

@@ -1,0 +1,219 @@
+Array<Value> increaseValueStackCapacity(ExecutionTask task) {
+    task.valueStack = valueArrayIncreaseCapacity(task.valueStack);
+    return task.valueStack;
+}
+
+ExecutionResult ThrowErrorImpl(ExecutionTask task, int errId, string msg) {
+
+    StackFrame frame = task.stack;
+    if (frame.valueStackSize + 5 < task.valueStack.Size()) increaseValueStackCapacity(task);
+
+    ExecutionContext ec = task.execCtx;
+    GlobalValues g = ec.globalValues;
+    FunctionInfo throwFunc = ec.functions[ec.significantFunctions["thrw"]];
+    Array<Value> args = new Array<Value>(2);
+    args[0] = buildInteger(g, errId);
+    args[1] = buildString(g, msg, false);
+    task.stack = new StackFrame(
+        frame,
+        throwFunc.pc,
+        args,
+        2,
+        frame.valueStackSize,
+        frame.valueStackSize,
+        new Dictionary<string, Value>(),
+        null,
+        false,
+        null,
+        false);
+
+    return new ExecutionResult(
+        ExecutionResultType.THROW_REINVOKE,
+        task,
+        0,
+        null,
+        null);
+}
+
+ExecutionResult ThrowError(
+    ExecutionTask task,
+    StackFrame frame,
+    int pc,
+    int valueStackSize,
+    int errId,
+    string msg) {
+
+    frame.pc = pc;
+    frame.valueStackSize = valueStackSize;
+    task.stack = frame;
+
+    return ThrowErrorImpl(task, errId, msg);
+}
+
+ExecutionResult RunInterpreter(ExecutionTask task) {
+    bool reinvoke = true;
+    ExecutionResult result = null;
+    while (reinvoke) {
+        result = RunInterpreterImpl(task);
+        reinvoke = result.type == ExecutionResultType.THROW_REINVOKE;
+    }
+    return result;
+}
+
+ExecutionResult RunInterpreterImpl(ExecutionTask task) {
+    ExecutionContext ec = task.execCtx;
+    StackFrame frame = task.stack;
+    StackFrame nextFrame = null;
+    Array<ByteCodeRow> byteCode = ec.byteCode;
+    ByteCodeRow row = null;
+    GlobalValues globalValues = ec.globalValues;
+    TryDescriptor td = null;
+    NameLookup nameLookup = ec.nameLookup;
+    int LENGTH_ID = nameLookup.lengthId;
+    Array<Array<FunctionPointer>> primitiveMethodLookup = nameLookup.primitiveMethodsByTypeByNameId;
+
+    int pc = frame.pc;
+    Array<Value> valueStack = task.valueStack;
+    int valueStackSize = frame.valueStackSize;
+    int valueStackCapacity = valueStack.Size();
+    Dictionary<string, Value> locals = frame.locals;
+    bool interrupt = false;
+    bool doInvoke = false;
+    bool overrideReturnValueWithContext = false;
+
+    // set these before importing macros/throw.pst
+    int errorId = 0; // use ExceptionTypeId enum
+    string errorMsg = null;
+
+    int i = 0;
+    int j = 0;
+    int argc = 0;
+    int int1 = 0;
+    int int2 = 0;
+    int int3 = 0;
+    int sz = 0;
+    int leftType = 0;
+    int rightType = 0;
+    bool bool1 = true;
+    bool bool2 = true;
+    bool bool3 = true;
+    string str1 = null;
+    string str2 = null;
+    string name = null;
+    double float1 = 0.0;
+    double float2 = 0.0;
+
+    object object1 = null;
+
+    Value value = null;
+    Value value1 = null;
+    Value value2 = null;
+    Value output = null;
+    Value left = null;
+    Value right = null;
+    FunctionPointer fp = null;
+    FunctionInfo fn = null;
+    StringImpl stringImpl1 = null;
+    StringImpl stringImpl2 = null;
+    ListImpl listImpl1 = null;
+    ListImpl listImpl2 = null;
+    DictImpl dictImpl1 = null;
+    Instance instance1 = null;
+    ClassInfo classDef = null;
+
+    Array<Value> args = null;
+    Array<Value> valueArr = null;
+    Array<int> intArray1 = null;
+    Array<object> objArr = null;
+    Array<Value> keys = null;
+    Array<Value> values = null;
+
+    Func<object, object, Array<object>> extensionFunc = null;
+    Dictionary<string, int> opMap = null;
+    Dictionary<string, FunctionInfo> str2FuncDef = null;
+    Dictionary<string, Value> str2Val = null;
+    Dictionary<int, int> switchIntLookup = null;
+    Dictionary<string, int> switchStrLookup = null;
+    List<int> intList = null;
+    List<Value> valueList = null;
+
+    Value VALUE_TRUE = globalValues.trueValue;
+    Value VALUE_FALSE = globalValues.falseValue;
+    Value VALUE_NULL = globalValues.nullValue;
+
+    Array<Value> value16 = new Array<Value>(16);
+    Array<int> intBuffer16 = new Array<int>(16);
+
+    while (true) {
+        row = byteCode[pc];
+        switch (row.op) {
+
+            case OP_ASSIGN_FIELD: Core.EmitComment("OP_ASSIGN_FIELD"); @import("ops/op_assign_field.pst"); break;
+            case OP_ASSIGN_INDEX: Core.EmitComment("OP_ASSIGN_INDEX"); @import("ops/op_assign_index.pst"); break;
+            case OP_ASSIGN_VAR: Core.EmitComment("OP_ASSIGN_VAR"); @import("ops/op_assign_var.pst"); break;
+            case OP_BIN_OP: Core.EmitComment("OP_BIN_OP"); @import("ops/op_bin_op.pst"); break;
+            case OP_BIN_OP_ADD: Core.EmitComment("OP_BIN_OP_ADD"); @import("ops/op_bin_op_add.pst"); break;
+            case OP_BIN_OP_COMPARE: Core.EmitComment("OP_BIN_OP_COMPARE"); @import("ops/op_bin_op_compare.pst"); break;
+            case OP_BIN_OP_EQUAL: Core.EmitComment("OP_BIN_OP_EQUAL"); @import("ops/op_bin_op_equal.pst"); break;
+            case OP_BIN_OP_MATH: Core.EmitComment("OP_BIN_OP_MATH"); @import("ops/op_bin_op_math.pst"); break;
+            case OP_BIN_OP_BIT_MATH: Core.EmitComment("OP_BIN_OP_BIT_MATH"); @import("ops/op_bin_op_bit_math.pst"); break;
+            case OP_BITWISE_NOT: Core.EmitComment("OP_BITWISE_NOT"); @import("ops/op_bitwise_not.pst"); break;
+            case OP_BOOLEAN_NOT: Core.EmitComment("OP_BOOLEAN_NOT"); @import("ops/op_boolean_not.pst"); break;
+            case OP_BUILD_DICT: Core.EmitComment("OP_BUILD_DICT"); @import("ops/op_build_dict.pst"); break;
+            case OP_BUILD_LIST: Core.EmitComment("OP_BUILD_LIST"); @import("ops/op_build_list.pst"); break;
+            case OP_CTOR_REF: Core.EmitComment("OP_CTOR_REF"); @import("ops/op_ctor_ref.pst"); break;
+            case OP_DOT_FIELD: Core.EmitComment("OP_DOT_FIELD"); @import("ops/op_dot_field.pst"); break;
+            case OP_ENSURE_BOOL: Core.EmitComment("OP_ENSURE_BOOL"); @import("ops/op_ensure_bool.pst"); break;
+            case OP_ENSURE_INT: Core.EmitComment("OP_ENSURE_INT"); @import("ops/op_ensure_int.pst"); break;
+            case OP_ENSURE_INT_OR_STRING: Core.EmitComment("OP_ENSURE_INT_OR_STRING"); @import("ops/op_ensure_int_or_string.pst"); break;
+            case OP_ENSURE_STRING: Core.EmitComment("OP_ENSURE_STRING"); @import("ops/op_ensure_string.pst"); break;
+            case OP_EXT_INVOKE: Core.EmitComment("OP_EXT_INVOKE"); @import("ops/op_ext_invoke.pst"); break;
+            case OP_FUNCTION_INVOKE: Core.EmitComment("OP_FUNCTION_INVOKE"); @import("ops/op_function_invoke.pst"); break;
+            case OP_INDEX: Core.EmitComment("OP_INDEX"); @import("ops/op_index.pst"); break;
+            case OP_INT_INCR: Core.EmitComment("OP_INT_INCR"); @import("ops/op_int_incr.pst"); break;
+            case OP_JUMP: Core.EmitComment("OP_JUMP"); @import("ops/op_jump.pst"); break;
+            case OP_NEGATIVE_SIGN: Core.EmitComment("OP_NEGATIVE_SIGN"); @import("ops/op_negative_sign.pst"); break;
+            case OP_POP: Core.EmitComment("OP_POP"); @import("ops/op_pop.pst"); break;
+            case OP_POP_AND_JUMP_IF_FALSE: Core.EmitComment("OP_POP_AND_JUMP_IF_FALSE"); @import("ops/op_pop_and_jump_if_false.pst"); break;
+            case OP_POP_AND_JUMP_IF_TRUE: Core.EmitComment("OP_POP_AND_JUMP_IF_TRUE"); @import("ops/op_pop_and_jump_if_true.pst"); break;
+            case OP_POP_IF_FALSE_OR_JUMP: Core.EmitComment("OP_POP_IF_FALSE_OR_JUMP"); @import("ops/op_pop_if_false_or_jump.pst"); break;
+            case OP_POP_IF_NULL_OR_JUMP: Core.EmitComment("OP_POP_IF_NULL_OR_JUMP"); @import("ops/op_pop_if_null_or_jump.pst"); break;
+            case OP_POP_IF_TRUE_OR_JUMP: Core.EmitComment("OP_POP_IF_TRUE_OR_JUMP"); @import("ops/op_pop_if_true_or_jump.pst"); break;
+            case OP_PUSH_ARG: Core.EmitComment("OP_PUSH_ARG"); @import("ops/op_push_arg.pst"); break;
+            case OP_PUSH_ARG_IF_PRESENT: Core.EmitComment("OP_PUSH_ARG_IF_PRESENT"); @import("ops/op_push_arg_if_present.pst"); break;
+            case OP_PUSH_BASE_CTOR: Core.EmitComment("OP_PUSH_BASE_CTOR"); @import("ops/op_push_base_ctor.pst"); break;
+            case OP_PUSH_BOOL: Core.EmitComment("OP_PUSH_BOOL"); @import("ops/op_push_bool.pst"); break;
+            case OP_PUSH_CLASS_REF: Core.EmitComment("OP_PUSH_CLASS_REF"); @import("ops/op_push_class_ref.pst"); break;
+            case OP_PUSH_FLOAT: Core.EmitComment("OP_PUSH_FLOAT"); @import("ops/op_push_float.pst"); break;
+            case OP_PUSH_FUNC_PTR: Core.EmitComment("OP_PUSH_FUNC_PTR"); @import("ops/op_push_func_ptr.pst"); break;
+            case OP_PUSH_INT: Core.EmitComment("OP_PUSH_INT"); @import("ops/op_push_int.pst"); break;
+            case OP_PUSH_NULL: Core.EmitComment("OP_PUSH_NULL"); @import("ops/op_push_null.pst"); break;
+            case OP_PUSH_STRING: Core.EmitComment("OP_PUSH_STRING"); @import("ops/op_push_string.pst"); break;
+            case OP_PUSH_THIS: Core.EmitComment("OP_PUSH_THIS"); @import("ops/op_push_this.pst"); break;
+            case OP_PUSH_VALUE: Core.EmitComment("OP_PUSH_VALUE"); @import("ops/op_push_value.pst"); break;
+            case OP_PUSH_VAR: Core.EmitComment("OP_PUSH_VAR"); @import("ops/op_push_var.pst"); break;
+            case OP_RETURN: Core.EmitComment("OP_RETURN"); @import("ops/op_return.pst"); break;
+            case OP_SLICE: Core.EmitComment("OP_SLICE"); @import("ops/op_slice.pst"); break;
+            case OP_SPECIAL_ACTION: Core.EmitComment("OP_SPECIAL_ACTION"); @import("ops/op_special_action.pst"); break;
+            case OP_STACK_DO_SI_DO_4A: Core.EmitComment("OP_STACK_DO_SI_DO_4A"); @import("ops/op_stack_do_si_do_4a.pst"); break;
+            case OP_STACK_DO_SI_DUP_1: Core.EmitComment("OP_STACK_DO_SI_DUP_1"); @import("ops/op_stack_do_si_dup_1.pst"); break;
+            case OP_STACK_DO_SI_DUP_2: Core.EmitComment("OP_STACK_DO_SI_DUP_2"); @import("ops/op_stack_do_si_dup_2.pst"); break;
+            case OP_STACK_DUPLICATE: Core.EmitComment("OP_STACK_DUPLICATE"); @import("ops/op_stack_duplicate.pst"); break;
+            case OP_STACK_DUPLICATE_2: Core.EmitComment("OP_STACK_DUPLICATE_2"); @import("ops/op_stack_duplicate_2.pst"); break;
+            case OP_SWITCH_ADD: Core.EmitComment("OP_SWITCH_ADD"); @import("ops/op_switch_add.pst"); break;
+            case OP_SWITCH_BUILD: Core.EmitComment("OP_SWITCH_BUILD"); @import("ops/op_switch_build.pst"); break;
+            case OP_SWITCH_FINALIZE: Core.EmitComment("OP_SWITCH_FINALIZE"); @import("ops/op_switch_finalize.pst"); break;
+            case OP_SWITCH_INT: Core.EmitComment("OP_SWITCH_INT"); @import("ops/op_switch_int.pst"); break;
+            case OP_SWITCH_STRING: Core.EmitComment("OP_SWITCH_STRING"); @import("ops/op_switch_string.pst"); break;
+            case OP_THROW: Core.EmitComment("OP_THROW"); @import("ops/op_throw.pst"); break;
+            case OP_TRY_CATCH_ROUTER: Core.EmitComment("OP_TRY_CATCH_ROUTER"); @import("ops/op_try_catch_router.pst"); break;
+            case OP_TRY_FINALLY_END: Core.EmitComment("OP_TRY_FINALLY_END"); @import("ops/op_try_finally_end.pst"); break;
+
+            default:
+                @import("macros/saveframe.pst");
+                return ExRes_HardCrash(task, Core.StringConcatAll("INVALID OP CODE: ", Core.IntToString(row.op)));
+        }
+
+        pc += 1;
+    }
+}

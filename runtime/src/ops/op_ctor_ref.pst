@@ -1,0 +1,7 @@
+int1 = row.firstArg;
+
+// TODO: include the constructor as a normal function.
+row.valueCache = ec.classes[int1].ctor;
+
+row.op = OP_PUSH_VALUE;
+pc -= 1;

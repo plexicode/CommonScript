@@ -1,0 +1,5 @@
+// OP_PUSH_FUNC_PTR
+
+row.valueCache = ec.functionsAsValues[row.firstArg];
+row.op = OP_PUSH_VALUE;
+pc -= 1;

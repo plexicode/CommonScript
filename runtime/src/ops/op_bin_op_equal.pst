@@ -1,0 +1,63 @@
+valueStackSize -= 2;
+left = valueStack[valueStackSize];
+right = valueStack[valueStackSize + 1];
+
+if (left.type != right.type) {
+    if (left.type == Type.INTEGER) {
+        if (right.type == Type.FLOAT) {
+            int1 = (int)left.internalValue;
+            bool1 = int1 == (double)right.internalValue;
+        } else {
+            bool1 = false;
+        }
+    } else if (left.type == Type.FLOAT) {
+        if (left.type == Type.INTEGER) {
+            int1 = (int)right.internalValue;
+            bool1 = int1 == (double)left.internalValue;
+        } else {
+            bool1 = false;
+        }
+    } else {
+        bool1 = false;
+    }
+} else {
+    switch (left.type) {
+        case Type.NULL:
+            bool1 = true;
+            break;
+        case Type.BOOLEAN:
+            bool1 = (bool) left.internalValue == (bool) right.internalValue;
+            break;
+        case Type.INTEGER:
+            bool1 = (int) left.internalValue == (int) right.internalValue;
+            break;
+        case Type.FLOAT:
+            // suppress warning
+            bool1 = (double) left.internalValue == (double) right.internalValue;
+            break;
+        case Type.STRING:
+            if (left.internalValue == right.internalValue) {
+                bool1 = true;
+            } else {
+                stringImpl1 = (StringImpl) left.internalValue;
+                stringImpl2 = (StringImpl) right.internalValue;
+                if (stringImpl1.length != stringImpl2.length) {
+                    bool1 = false;
+                } else {
+                    if (stringImpl1.isBuilder) stringFlatten(stringImpl1);
+                    if (stringImpl2.isBuilder) stringFlatten(stringImpl2);
+                    bool1 = Core.StringEquals(stringImpl1.nativeStr, stringImpl2.nativeStr);
+                }
+            }
+            break;
+        default:
+            // all other types must be a 100% match
+            bool1 = left.internalValue == right.internalValue;
+            break;
+    }
+}
+if (row.boolArg) bool1 = !bool1;
+
+if (bool1) valueStack[valueStackSize] = globalValues.trueValue;
+else valueStack[valueStackSize] = globalValues.falseValue;
+valueStackSize += 1;

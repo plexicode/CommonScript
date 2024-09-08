@@ -1,0 +1,14 @@
+/*
+    args[0] - jump offset for default
+*/
+valueStackSize -= 1;
+value = valueStack[valueStackSize];
+stringImpl1 = (StringImpl) value.internalValue;
+if (stringImpl1.isBuilder) stringFlatten(stringImpl1);
+str1 = stringImpl1.nativeStr;
+switchStrLookup = ec.switchStrLookupsByPc[pc];
+if (switchStrLookup.Contains(str1)) {
+    pc += switchStrLookup[str1];
+} else {
+    pc += row.firstArg;
+}

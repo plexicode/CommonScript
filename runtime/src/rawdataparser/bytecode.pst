@@ -1,0 +1,33 @@
+
+Array<ByteCodeRow> ParseRaw_popByteCodeRows(RawDataParser rdp, int rowCount) {
+    Array<ByteCodeRow> rows = new Array<ByteCodeRow>(rowCount);
+    for (int i = 0; i < rowCount; i += 1) {
+
+        if (!ParseRaw_popInt(rdp)) return null;
+        int op = rdp.intOut;
+        if (!ParseRaw_popInt(rdp)) return null;
+        int flags = rdp.intOut;
+        bool hasString = Core.ForceParens(flags & 1) != 0;
+        bool hasToken = Core.ForceParens(flags & 2) != 0;
+        int argc = flags >> 2;
+        int stringId = 0;
+        if (hasString) {
+            if (!ParseRaw_popInt(rdp)) return null;
+            stringId = rdp.intOut;
+        }
+        int tokenId = 0;
+        if (hasToken) {
+            if (!ParseRaw_popInt(rdp)) return null;
+            tokenId = rdp.intOut;
+        }
+
+        Array<int> args = new Array<int>(argc);
+        for (int j = 0; j < argc; j += 1) {
+            if (!ParseRaw_popInt(rdp)) return null;
+            args[j] = rdp.intOut;
+        }
+
+        rows[i] = new_ByteCodeRow(op, args, stringId, tokenId);
+    }
+    return rows;
+}

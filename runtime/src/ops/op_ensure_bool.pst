@@ -1,0 +1,5 @@
+if (valueStack[valueStackSize - 1].type != Type.BOOLEAN) {
+    errorId = ExceptionTypeId.TYPE;
+    errorMsg = "Expected a boolean here.";
+    @import("macros/throw.pst");
+}
