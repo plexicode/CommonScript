@@ -27,7 +27,7 @@
       "name": "javascript",
       "language": "javascript",
       "output": {
-        "functions-path": "web_raw/gen.js"
+        "functions-path": "../templates/gen.js"
       }
     }
   ]
