@@ -52,7 +52,7 @@ def main(args):
     if is_node:
       return 'ERROR: node not done yet.'
 
-    output_path = 'runtime/dist/web/CommonScript_web_' + VERSION_UNDERSCORE + '.js'
+    output_path = 'dist/CommonScriptRuntime_web_' + VERSION_UNDERSCORE + '.js'
     file_write_text(output_path, final_code)
 
   return 'Done'
