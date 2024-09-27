@@ -30,30 +30,44 @@ def file_write_text(path, content):
 
 def main(args):
   mode = (args + [''])[:1][0]
-  is_js = mode in ('jsweb', 'jsnode')
-  is_node = mode == 'jsnode'
-
-  if not is_js:
-    return 'ERROR: invalid target option'
+  is_js = mode in ('js', )
 
   if is_js:
     dir = 'runtime/templates'
     code = {
-      'main': file_read_text(dir + '/dist_template.js'), 
-      'gen': file_read_text(dir + '/gen.js'), 
+      'dist_main': file_read_text(dir + '/dist_template.js'),
+      'dist_web': file_read_text(dir + '/dist_template_web.js'),
+      'dist_node': file_read_text(dir + '/dist_template_node.js'),
+      'dist_plexios': file_read_text(dir + '/dist_template_plexios.js'),
+      'gen': file_read_text(dir + '/gen.js'),
       'wrapper': file_read_text(dir + '/commonscript.js')
     }
 
-    final_code = (code['main']
+    common_script_base_code = (code['dist_main']
       ).replace('%%%VERSION%%%', VERSION_DOTTED
       ).replace('%%%JS_WRAPPER%%%', '\n' + code['wrapper']
       ).replace('%%%PASTEL_GENERATED%%%', '\n' + code['gen'])
-    
-    if is_node:
-      return 'ERROR: node not done yet.'
+
+    web_code = (code['dist_web']
+      ).replace('%%%VERSION%%%', VERSION_DOTTED
+      ).replace('%%%COMMON_SCRIPT%%%', common_script_base_code)
+
+    node_code = (code['dist_node']
+      ).replace('%%%VERSION%%%', VERSION_DOTTED
+      ).replace('%%%COMMON_SCRIPT%%%', common_script_base_code)
+
+    plexios_code = (code['dist_plexios']
+      ).replace('%%%VERSION%%%', VERSION_DOTTED
+      ).replace('%%%COMMON_SCRIPT%%%', common_script_base_code)
 
     output_path = 'dist/CommonScriptRuntime_web_' + VERSION_UNDERSCORE + '.js'
-    file_write_text(output_path, final_code)
+    file_write_text(output_path, web_code)
+    output_path = 'dist/CommonScriptRuntime_node_' + VERSION_UNDERSCORE + '.js'
+    file_write_text(output_path, node_code)
+    output_path = 'dist/CommonScriptRuntime_plexios_' + VERSION_UNDERSCORE + '.js'
+    file_write_text(output_path, plexios_code)
+  else: 
+    return 'ERROR: invalid target option'
 
   return 'Done'
 

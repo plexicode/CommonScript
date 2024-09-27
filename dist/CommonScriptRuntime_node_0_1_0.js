@@ -1,16 +1,4 @@
-if (!window.getCommonScript) {
-    window.getCommonScript = (optVersion) => {
-        if (!optVersion) optVersion = '0.1.0';
-        let ver = (optVersion || '').trim();
-        let o = window.COMMON_SCRIPT_VERSIONS[ver];
-        if (!o) throw new Error("CommonScript version not found: " + ver);
-        return o;
-    };
-    window.COMMON_SCRIPT_VERSIONS = {};
-}
-
-{
-    const CommonScript = (() => {
+const CommonScript = (() => {
 
   //
 const [bubbleException, buildAsciiStringImpl, buildBase64String, buildFloat, buildFunctionFromInfo, buildInteger, buildList, buildString, convertToStringImpl, createClassInfo, createMainTask, createNewTask, createStringFromUnicodeArray, DictImpl_ensureCapacity, exceptionCatcherRouteException, ExRes_Done, ExRes_HardCrash, ExRes_Suspend, finalizeExecutionContext, FunctionPointer_cloneWithNewType, generateNameLookup, generateStackTrace, generateTryDescriptors, getExceptionMessage, getGlobalsFromTask, increaseValueStackCapacity, injectNameLookup, isValueEqual, List_add, List_expandCapacity, List_get, List_join, List_pop, List_removeAt, List_set, new_ByteCodeRow, new_ExecutionContext, new_ExecutionResult, new_GlobalValues, ParseRaw_entitiesSection_classMemberResolver, ParseRaw_entitiesSection_parseClasses, ParseRaw_entitiesSection_parseEnums, ParseRaw_entitiesSection_parseFunctions, ParseRaw_parseEntityData, ParseRaw_parseMetadata, ParseRaw_parseStringData, ParseRaw_parseTokenData, ParseRaw_popByteCodeRows, ParseRaw_popBytes, ParseRaw_popFixedLenString, ParseRaw_popInt, ParseRaw_popLenString, ParseRaw_popSingleByte, ParseRawData, PUBLIC_getApplicationContextFromTask, PUBLIC_getExecutionContextError, PUBLIC_getTaskResultError, PUBLIC_getTaskResultSleepAmount, PUBLIC_getTaskResultStatus, PUBLIC_initializeExecutionContext, PUBLIC_listValueAdd, PUBLIC_requestTaskSuspension, PUBLIC_startMainTask, PUBLIC_unwrapInteger, PUBLIC_unwrapNativeHandle, PUBLIC_valueToString, PUBLIC_wrapBoolean, PUBLIC_wrapInteger, PUBLIC_wrapNativeHandle, PUBLIC_wrapString, RunInterpreter, RunInterpreterImpl, Sort_buildTaskList, Sort_end, Sort_getNextCmp, Sort_proceedWithCmpResult, Sort_start, stringFlatten, stringUtil_changeCase, stringUtil_split, stringUtil_trim, ThrowError, ThrowErrorImpl, tryGetNameId, valueArrayIncreaseCapacity, valueToHumanString] = (() => {
@@ -4083,5 +4071,5 @@ let newEngineContextBuilder = (name, ver) => {
   });
 })();
 
-    window.COMMON_SCRIPT_VERSIONS['0.1.0'] = CommonScript;
-}
+
+module.exports = CommonScript;
