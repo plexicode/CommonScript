@@ -5,8 +5,7 @@ Usage:
   python build.py target
 
   target options:
-  - jsweb: populates runtime/dist/web/...
-  - jsnode: populates runtime/dist/node/...
+  - jsruntime: populates all runtime JavaScript for dist/CommonScriptRuntime_*_{ver}.js
 
 '''
 
@@ -30,7 +29,7 @@ def file_write_text(path, content):
 
 def main(args):
   mode = (args + [''])[:1][0]
-  is_js = mode in ('js', )
+  is_js = mode in ('jsruntime', )
 
   if is_js:
     dir = 'runtime/templates'
@@ -66,7 +65,7 @@ def main(args):
     file_write_text(output_path, node_code)
     output_path = 'dist/CommonScriptRuntime_plexios_' + VERSION_UNDERSCORE + '.js'
     file_write_text(output_path, plexios_code)
-  else: 
+  else:
     return 'ERROR: invalid target option'
 
   return 'Done'
