@@ -20,19 +20,19 @@ let bubbleException = function(task, exceptionValue) {
 	let ec = task[1];
 	let keepGoing = true;
 	while (keepGoing) {
-		if ((frame == null)) {
+		if (frame == null) {
 			task[2] = null;
 			return true;
 		}
 		let pc = frame[1];
 		let td = ec[10][pc];
-		if ((td != null)) {
+		if (td != null) {
 			keepGoing = false;
-			if ((pc < td[1])) {
-				frame[1] = (td[1] - 1);
+			if (pc < td[1]) {
+				frame[1] = td[1] - 1;
 				frame[9] = exceptionValue;
-			} else if ((pc >= td[2])) {
-				frame[1] = (td[3] - 1);
+			} else if (pc >= td[2]) {
+				frame[1] = td[3] - 1;
 				frame[9] = exceptionValue;
 				frame[10] = true;
 			} else {
@@ -58,21 +58,21 @@ let buildBase64String = function(rawBytes) {
 	let sz = rawBytes.length;
 	let n = 0;
 	let i = 0;
-	while ((i < sz)) {
+	while (i < sz) {
 		n = rawBytes[i];
-		pairs.push((((n >> 6)) & 3));
-		pairs.push((((n >> 4)) & 3));
-		pairs.push((((n >> 2)) & 3));
-		pairs.push((n & 3));
+		pairs.push((n >> 6) & 3);
+		pairs.push((n >> 4) & 3);
+		pairs.push((n >> 2) & 3);
+		pairs.push(n & 3);
 		i += 1;
 	}
 	let chars = PST$createNewArray(64);
 	let j = 0;
-	while ((j < 26)) {
-		chars[j] = String.fromCharCode((("A").charCodeAt(0) + j));
-		chars[(j + 26)] = String.fromCharCode((("a").charCodeAt(0) + j));
-		if ((j < 10)) {
-			chars[(j + 52)] = String.fromCharCode((("0").charCodeAt(0) + j));
+	while (j < 26) {
+		chars[j] = String.fromCharCode("A".charCodeAt(0) + j);
+		chars[j + 26] = String.fromCharCode("a".charCodeAt(0) + j);
+		if (j < 10) {
+			chars[j + 52] = String.fromCharCode("0".charCodeAt(0) + j);
 		}
 		j += 1;
 	}
@@ -83,12 +83,12 @@ let buildBase64String = function(rawBytes) {
 	pairs.push(0);
 	let sb = [];
 	let k = 0;
-	while ((k < pairSize)) {
-		n = (((pairs[k] << 4)) | ((pairs[(k + 1)] << 2)) | pairs[(k + 2)]);
+	while (k < pairSize) {
+		n = (pairs[k] << 4) | (pairs[k + 1] << 2) | pairs[k + 2];
 		sb.push(chars[n]);
 		k += 3;
 	}
-	while (((sb.length % 4) != 0)) {
+	while (sb.length % 4 != 0) {
 		sb.push("=");
 	}
 	return sb.join("");
@@ -104,11 +104,11 @@ let buildFunctionFromInfo = function(fn) {
 };
 
 let buildInteger = function(g, value) {
-	if ((value < 0)) {
-		if ((value > -1200)) {
+	if (value < 0) {
+		if (value > -1200) {
 			return g[4][-value];
 		}
-	} else if ((value < 1200)) {
+	} else if (value < 1200) {
 		return g[3][value];
 	}
 	return [3, value];
@@ -118,13 +118,13 @@ let buildList = function(ec, values, copyValues, lengthOrNegativeOne) {
 	let id = ec[17];
 	ec[17] += 1;
 	let size = lengthOrNegativeOne;
-	if ((size == -1)) {
+	if (size == -1) {
 		size = values.length;
 	}
 	if (copyValues) {
 		let buf = PST$createNewArray(size);
 		let i = 0;
-		while ((i < size)) {
+		while (i < size) {
 			buf[i] = values[i];
 			i += 1;
 		}
@@ -134,7 +134,7 @@ let buildList = function(ec, values, copyValues, lengthOrNegativeOne) {
 };
 
 let buildString = function(g, rawValue, isCommon) {
-	if ((g[6][rawValue] !== undefined)) {
+	if (g[6][rawValue] !== undefined) {
 		return g[6][rawValue];
 	}
 	let charValues = PST$stringToUtf8Bytes(rawValue);
@@ -157,10 +157,10 @@ let convertToStringImpl = function(g, v) {
 			return buildString(g, "false", true)[1];
 		case 3:
 			let n = v[1];
-			if (((n < 20) && (n > -20))) {
-				return buildString(g, ('' + n), true)[1];
+			if (n < 20 && n > -20) {
+				return buildString(g, n + '', true)[1];
 			}
-			return buildAsciiStringImpl(('' + n));
+			return buildAsciiStringImpl(n + '');
 		case 4:
 			return buildString(g, valueToHumanString(v), false)[1];
 		case 5:
@@ -180,7 +180,7 @@ let createClassInfo = function(id, parentId, name, ctor, newFields, newMemberInf
 };
 
 let createMainTask = function(ec, cliArgs) {
-	if ((ec[16] != 1)) {
+	if (ec[16] != 1) {
 		return null;
 	}
 	finalizeExecutionContext(ec);
@@ -191,7 +191,7 @@ let createMainTask = function(ec, cliArgs) {
 };
 
 let createNewTask = function(ec, fpValue, args) {
-	if ((fpValue[0] != 11)) {
+	if (fpValue[0] != 11) {
 		return null;
 	}
 	let fp = fpValue[1];
@@ -201,7 +201,7 @@ let createNewTask = function(ec, fpValue, args) {
 	switch (fp[0]) {
 		case 1:
 			pc = fp[3];
-			if (((argc < fp[1]) || (argc > fp[2]))) {
+			if (argc < fp[1] || argc > fp[2]) {
 				return null;
 			}
 			argcMax = fp[2];
@@ -211,7 +211,7 @@ let createNewTask = function(ec, fpValue, args) {
 	}
 	let argsClone = PST$createNewArray(argc);
 	let i = 0;
-	while ((i < argc)) {
+	while (i < argc) {
 		argsClone[i] = args[i];
 		i += 1;
 	}
@@ -225,8 +225,8 @@ let createNewTask = function(ec, fpValue, args) {
 let createStringFromUnicodeArray = function(g, buffer, copyBuffer) {
 	let uchars = buffer;
 	let sz = buffer.length;
-	if ((sz < 2)) {
-		if ((sz == 0)) {
+	if (sz < 2) {
+		if (sz == 0) {
 			return g[5];
 		}
 		let singleChar = String.fromCharCode(buffer[0]);
@@ -235,19 +235,19 @@ let createStringFromUnicodeArray = function(g, buffer, copyBuffer) {
 	if (copyBuffer) {
 		uchars = PST$createNewArray(sz);
 		let i = 0;
-		while ((i < sz)) {
+		while (i < sz) {
 			uchars[i] = buffer[i];
 			i += 1;
 		}
 	}
 	let sb = [];
 	let j = 0;
-	while ((j < sz)) {
+	while (j < sz) {
 		sb.push(String.fromCharCode(uchars[j]));
 		j += 1;
 	}
 	let finalString = sb.join("");
-	if ((g[6][finalString] !== undefined)) {
+	if (g[6][finalString] !== undefined) {
 		return g[6][finalString];
 	}
 	return [5, [sz, false, uchars, finalString, null, null]];
@@ -255,11 +255,11 @@ let createStringFromUnicodeArray = function(g, buffer, copyBuffer) {
 
 let DictImpl_ensureCapacity = function(dict) {
 	let size = dict[2];
-	if ((size < dict[3])) {
+	if (size < dict[3]) {
 		return;
 	}
-	let newCapacity = (dict[3] * 2);
-	if ((newCapacity < 4)) {
+	let newCapacity = dict[3] * 2;
+	if (newCapacity < 4) {
 		newCapacity = 4;
 	}
 	let newKeys = PST$createNewArray(newCapacity);
@@ -267,7 +267,7 @@ let DictImpl_ensureCapacity = function(dict) {
 	let oldKeys = dict[4];
 	let oldValues = dict[5];
 	let i = 0;
-	while ((i < size)) {
+	while (i < size) {
 		newKeys[i] = oldKeys[i];
 		newValues[i] = oldValues[i];
 		i += 1;
@@ -281,24 +281,24 @@ let exceptionCatcherRouteException = function(exceptionInstance, args, outBuffer
 	let inst = exceptionInstance[1];
 	let exClassId = inst[1][0];
 	let groupStartIndex = 1;
-	while ((groupStartIndex < args.length)) {
+	while (groupStartIndex < args.length) {
 		let groupJumpPc = args[groupStartIndex];
 		let totalExceptionsChecked = 0;
-		let i = (groupStartIndex + 1);
-		while ((i < args.length)) {
-			groupStartIndex = (i + 1);
-			if ((args[i] == 0)) {
+		let i = groupStartIndex + 1;
+		while (i < args.length) {
+			groupStartIndex = i + 1;
+			if (args[i] == 0) {
 				i += args.length;
 			} else {
 				totalExceptionsChecked += 1;
-				if ((args[i] == exClassId)) {
+				if (args[i] == exClassId) {
 					outBuffer[0] = groupJumpPc;
 					return false;
 				}
 			}
 			i += 1;
 		}
-		if ((totalExceptionsChecked == 0)) {
+		if (totalExceptionsChecked == 0) {
 			outBuffer[0] = groupJumpPc;
 			return false;
 		}
@@ -315,7 +315,7 @@ let ExRes_HardCrash = function(task, message) {
 	let isDebug = 1;
 	let res = new_ExecutionResult(2, task);
 	res[3] = message;
-	if ((isDebug == 1)) {
+	if (isDebug == 1) {
 		let failArgs = PST$createNewArray(1);
 		failArgs[0] = message;
 		let ignore = (PST$extCallbacks["hardCrash"] || ((o) => null))(failArgs);
@@ -339,12 +339,12 @@ let finalizeExecutionContext = function(ec) {
 	let length = ec[9].length;
 	let row = null;
 	let i = 0;
-	while ((i < length)) {
+	while (i < length) {
 		row = byteCode[i];
-		if ((row[4] != 0)) {
+		if (row[4] != 0) {
 			row[5] = ec[12][row[4]];
 		}
-		if ((row[6] != 0)) {
+		if (row[6] != 0) {
 			row[7] = ec[11][row[6]];
 		}
 		i += 1;
@@ -360,11 +360,11 @@ let generateNameLookup = function(ec) {
 	let stringsToId = {};
 	let i = 1;
 	let sz = ec[12].length;
-	while ((i < sz)) {
+	while (i < sz) {
 		stringsToId[ec[12][i]] = i;
 		i += 1;
 	}
-	if ((stringsToId["length"] !== undefined)) {
+	if (stringsToId["length"] !== undefined) {
 		lookup[0] = stringsToId["length"];
 	}
 	let deadArray = PST$createNewArray(16);
@@ -412,8 +412,8 @@ let generateNameLookup = function(ec) {
 	injectNameLookup(fpMap, 37, 5, tryGetNameId(stringsToId, "trim"), 0, 0);
 	injectNameLookup(fpMap, 38, 5, tryGetNameId(stringsToId, "upper"), 0, 0);
 	i = 0;
-	while ((i < sz)) {
-		if ((fpMap[i] == null)) {
+	while (i < sz) {
+		if (fpMap[i] == null) {
 			fpMap[i] = deadArray;
 		}
 		i += 1;
@@ -425,20 +425,20 @@ let generateStackTrace = function(task) {
 	let frame = task[2];
 	let ec = task[1];
 	let trace = [];
-	while ((frame != null)) {
+	while (frame != null) {
 		let invokeToken = ec[9][frame[1]][7];
-		if ((invokeToken != null)) {
-			let info = [invokeToken[0], " Line ", ('' + invokeToken[1]), " Col ", ('' + invokeToken[2])].join('');
+		if (invokeToken != null) {
+			let info = [invokeToken[0], " Line ", invokeToken[1] + '', " Col ", invokeToken[2] + ''].join('');
 			trace.push(info);
 		} else {
-			trace.push("PC:" + ('' + frame[1]));
+			trace.push("PC:" + (frame[1] + ''));
 		}
 		frame = frame[0];
 	}
 	let sz = trace.length;
 	let traceArr = PST$createNewArray(sz);
 	let i = 0;
-	while ((i < sz)) {
+	while (i < sz) {
 		traceArr[i] = buildString(ec[1], trace[i], false);
 		i += 1;
 	}
@@ -450,18 +450,18 @@ let generateTryDescriptors = function(ec) {
 	let sz = bc.length;
 	ec[10] = PST$createNewArray(sz);
 	let i = 0;
-	while ((i < sz)) {
+	while (i < sz) {
 		ec[10][i] = null;
 		let row = bc[i];
-		if ((row[0] == 62)) {
-			let pcTry = (i + row[1][0]);
-			let pcRouter = (pcTry + row[1][1]);
-			let pcFinally = (pcRouter + row[1][2]);
-			let pcEnd = (pcFinally + row[1][3]);
+		if (row[0] == 62) {
+			let pcTry = i + row[1][0];
+			let pcRouter = pcTry + row[1][1];
+			let pcFinally = pcRouter + row[1][2];
+			let pcEnd = pcFinally + row[1][3];
 			let td = [pcTry, pcRouter, pcFinally, pcEnd];
 			pcEnd -= 1;
 			let j = pcTry;
-			while ((j < pcEnd)) {
+			while (j < pcEnd) {
 				ec[10][j] = td;
 				j += 1;
 			}
@@ -477,11 +477,11 @@ let getExceptionMessage = function(exceptionInstance, includeStackTrace) {
 	lines.push(valueToHumanString(msgField));
 	if (includeStackTrace) {
 		let stackTrace = inst[2][inst[1][8]["trace"]];
-		if ((stackTrace[0] == 9)) {
+		if (stackTrace[0] == 9) {
 			let trace = stackTrace[1];
 			lines.push("Stack trace:");
 			let i = 0;
-			while ((i < trace[1])) {
+			while (i < trace[1]) {
 				lines.push("  at " + valueToHumanString(trace[3][i]));
 				i += 1;
 			}
@@ -502,25 +502,25 @@ let increaseValueStackCapacity = function(task) {
 };
 
 let injectNameLookup = function(lookup, primitiveMethodId, typeId, nameId, argcMin, argcMax) {
-	if ((nameId == -1)) {
+	if (nameId == -1) {
 		return;
 	}
 	let fp = [4, argcMin, argcMax, primitiveMethodId, null, null];
-	if ((lookup[nameId] == null)) {
+	if (lookup[nameId] == null) {
 		lookup[nameId] = PST$createNewArray(16);
 	}
 	lookup[nameId][typeId] = fp;
 };
 
 let isValueEqual = function(a, b) {
-	if ((a[0] != b[0])) {
-		if ((a[0] == 3)) {
-			if ((b[0] == 4)) {
-				return ((0.0 + a[1]) == b[1]);
+	if (a[0] != b[0]) {
+		if (a[0] == 3) {
+			if (b[0] == 4) {
+				return 0.0 + a[1] == b[1];
 			}
-		} else if ((a[0] == 4)) {
-			if ((b[0] == 3)) {
-				return (a[1] == (0.0 + b[1]));
+		} else if (a[0] == 4) {
+			if (b[0] == 3) {
+				return a[1] == 0.0 + b[1];
 			}
 		}
 		return false;
@@ -529,19 +529,19 @@ let isValueEqual = function(a, b) {
 		case 1:
 			return true;
 		case 2:
-			return (a[1] == b[1]);
+			return a[1] == b[1];
 		case 3:
-			return (a[1] == b[1]);
+			return a[1] == b[1];
 		case 4:
-			return (a[1] == b[1]);
+			return a[1] == b[1];
 		case 5:
 			let s1 = a[1];
 			let s2 = b[1];
-			if ((s1 == s2)) {
+			if (s1 == s2) {
 				return true;
 			}
 			let sLen = s1[0];
-			if ((sLen != s2[0])) {
+			if (sLen != s2[0]) {
 				return false;
 			}
 			if (s1[1]) {
@@ -550,37 +550,37 @@ let isValueEqual = function(a, b) {
 			if (s2[1]) {
 				stringFlatten(s2);
 			}
-			if ((sLen == 0)) {
+			if (sLen == 0) {
 				return true;
 			}
-			if ((s1[2][0] != s2[2][0])) {
+			if (s1[2][0] != s2[2][0]) {
 				return false;
 			}
 			sLen -= 1;
-			if ((s1[2][sLen] != s2[2][sLen])) {
+			if (s1[2][sLen] != s2[2][sLen]) {
 				return false;
 			}
 			let i = 1;
-			while ((i < sLen)) {
-				if ((s1[2][i] != s2[2][i])) {
+			while (i < sLen) {
+				if (s1[2][i] != s2[2][i]) {
 					return false;
 				}
 				i += 1;
 			}
 			return true;
 		case 9:
-			return ((a[1])[0] == (b[1])[0]);
+			return (a[1])[0] == (b[1])[0];
 		case 10:
-			return ((a[1])[0] == (b[1])[0]);
+			return (a[1])[0] == (b[1])[0];
 		case 12:
-			return ((a[1])[0] == (b[1])[0]);
+			return (a[1])[0] == (b[1])[0];
 		default:
-			return (a[1] == b[1]);
+			return a[1] == b[1];
 	}
 };
 
 let List_add = function(o, v) {
-	if ((o[2] == o[1])) {
+	if (o[2] == o[1]) {
 		List_expandCapacity(o);
 	}
 	o[3][o[1]] = v;
@@ -589,14 +589,14 @@ let List_add = function(o, v) {
 
 let List_expandCapacity = function(o) {
 	let oldCapacity = o[2];
-	let newCapacity = (oldCapacity * 2);
-	if ((newCapacity < 4)) {
+	let newCapacity = oldCapacity * 2;
+	if (newCapacity < 4) {
 		newCapacity = 4;
 	}
 	let newItems = PST$createNewArray(newCapacity);
 	let oldItems = o[3];
 	let i = 0;
-	while ((i < oldCapacity)) {
+	while (i < oldCapacity) {
 		newItems[i] = oldItems[i];
 		i += 1;
 	}
@@ -605,10 +605,10 @@ let List_expandCapacity = function(o) {
 };
 
 let List_get = function(o, index) {
-	if ((index < 0)) {
+	if (index < 0) {
 		index += o[1];
 	}
-	if (((index < 0) || (index >= o[1]))) {
+	if (index < 0 || index >= o[1]) {
 		return null;
 	}
 	return o[3][index];
@@ -616,14 +616,14 @@ let List_get = function(o, index) {
 
 let List_join = function(g, v, sep) {
 	let o = v[1];
-	if ((o[1] == 0)) {
+	if (o[1] == 0) {
 		return g[5];
 	}
 	let output = [];
 	output.push(valueToHumanString(o[3][0]));
 	let sz = o[1];
 	let i = 1;
-	while ((i < sz)) {
+	while (i < sz) {
 		output.push(valueToHumanString(o[3][i]));
 		i += 1;
 	}
@@ -632,7 +632,7 @@ let List_join = function(g, v, sep) {
 };
 
 let List_pop = function(o, v) {
-	if ((o[1] == 0)) {
+	if (o[1] == 0) {
 		return null;
 	}
 	o[1] -= 1;
@@ -640,25 +640,25 @@ let List_pop = function(o, v) {
 };
 
 let List_removeAt = function(o, index) {
-	if ((index < 0)) {
+	if (index < 0) {
 		index += o[1];
 	}
-	if (((index < 0) || (index >= o[1]))) {
+	if (index < 0 || index >= o[1]) {
 		return false;
 	}
 	o[1] -= 1;
-	while ((index < o[1])) {
-		o[3][index] = o[3][(index + 1)];
+	while (index < o[1]) {
+		o[3][index] = o[3][index + 1];
 		index += 1;
 	}
 	return true;
 };
 
 let List_set = function(o, index, v) {
-	if ((index < 0)) {
+	if (index < 0) {
 		index += o[1];
 	}
-	if (((index < 0) || (index >= o[1]))) {
+	if (index < 0 || index >= o[1]) {
 		return false;
 	}
 	o[3][index] = v;
@@ -668,10 +668,10 @@ let List_set = function(o, index, v) {
 let new_ByteCodeRow = function(op, args, stringId, tokenId) {
 	let arg1 = 0;
 	let arg2 = 0;
-	if ((args.length > 0)) {
+	if (args.length > 0) {
 		arg1 = args[0];
 	}
-	if ((args.length > 1)) {
+	if (args.length > 1) {
 		arg2 = args[1];
 	}
 	return [op, args, arg1, arg2, stringId, null, tokenId, null, null, false, false];
@@ -680,21 +680,21 @@ let new_ByteCodeRow = function(op, args, stringId, tokenId) {
 let new_ExecutionContext = function(rawBytes, extensions, appCtx) {
 	let ec = [null, new_GlobalValues(), extensions, {}, null, null, null, null, null, null, null, null, null, null, null, null, 1, 1, {}, appCtx];
 	let err = ParseRawData(rawBytes, ec);
-	if ((err == null)) {
+	if (err == null) {
 		ec[0] = "CORRUPT_EXECUTABLE";
-	} else if ((err != "OK")) {
+	} else if (err != "OK") {
 		ec[0] = err;
 	} else {
 		let i = 0;
 		ec[5] = PST$createNewArray(ec[4].length);
 		i = 1;
-		while ((i < ec[4].length)) {
+		while (i < ec[4].length) {
 			ec[5][i] = buildFunctionFromInfo(ec[4][i]);
 			i += 1;
 		}
 		ec[7] = PST$createNewArray(ec[6].length);
 		i = 1;
-		while ((i < ec[6].length)) {
+		while (i < ec[6].length) {
 			ec[7][i] = [13, ec[6][i]];
 			i += 1;
 		}
@@ -714,7 +714,7 @@ let new_GlobalValues = function() {
 	g[3] = PST$createNewArray(1200);
 	g[4] = PST$createNewArray(1200);
 	let i = 0;
-	while ((i < 1200)) {
+	while (i < 1200) {
 		g[3][i] = [3, i];
 		g[4][i] = [3, -i];
 		i += 1;
@@ -724,8 +724,8 @@ let new_GlobalValues = function() {
 	g[4][0] = g[7];
 	g[5] = buildString(g, "", true);
 	let j = 0;
-	while ((j < 5)) {
-		g[9][j] = [4, (j * 0.25)];
+	while (j < 5) {
+		g[9][j] = [4, j * 0.25];
 		j += 1;
 	}
 	return g;
@@ -734,23 +734,23 @@ let new_GlobalValues = function() {
 let ParseRaw_entitiesSection_classMemberResolver = function(classes, globalValues) {
 	let j = 0;
 	let id = 1;
-	while ((id < classes.length)) {
+	while (id < classes.length) {
 		let cd = classes[id];
 		cd[2] = classes[cd[1]];
 		let newFieldCount = cd[11].length;
 		let parentFieldCount = 0;
-		if ((cd[2] != null)) {
+		if (cd[2] != null) {
 			parentFieldCount = cd[2][9].length;
 		}
-		let fieldCount = (newFieldCount + parentFieldCount);
+		let fieldCount = newFieldCount + parentFieldCount;
 		let nameByOffset = PST$createNewArray(fieldCount);
 		let flatOffset = 0;
-		while ((flatOffset < parentFieldCount)) {
+		while (flatOffset < parentFieldCount) {
 			nameByOffset[flatOffset] = cd[2][9][flatOffset];
 			flatOffset += 1;
 		}
 		let localOffset = 0;
-		while ((flatOffset < fieldCount)) {
+		while (flatOffset < fieldCount) {
 			nameByOffset[flatOffset] = cd[11][localOffset];
 			flatOffset += 1;
 			localOffset += 1;
@@ -759,18 +759,18 @@ let ParseRaw_entitiesSection_classMemberResolver = function(classes, globalValue
 		cd[8] = {};
 		cd[10] = PST$createNewArray(fieldCount);
 		let i = 0;
-		while ((i < fieldCount)) {
+		while (i < fieldCount) {
 			let memberName = nameByOffset[i];
 			cd[8][memberName] = i;
-			localOffset = (i - parentFieldCount);
-			if ((localOffset < 0)) {
+			localOffset = i - parentFieldCount;
+			if (localOffset < 0) {
 				cd[10][i] = cd[2][10][i];
-				if (((cd[2][7][memberName] !== undefined) && !(cd[7][memberName] !== undefined))) {
+				if (cd[2][7][memberName] !== undefined && !(cd[7][memberName] !== undefined)) {
 					cd[7][memberName] = cd[2][7][memberName];
 				}
 			} else {
 				let memberInfoFlag = cd[12][localOffset];
-				let isMethod = (((memberInfoFlag & 1)) != 0);
+				let isMethod = (memberInfoFlag & 1) != 0;
 				if (isMethod) {
 					cd[10][i] = null;
 				} else {
@@ -792,9 +792,9 @@ let ParseRaw_entitiesSection_parseClasses = function(rdp, classCount, functions,
 	classes.push(null);
 	let cd = null;
 	id = 1;
-	while ((id <= classCount)) {
+	while (id <= classCount) {
 		let className = ParseRaw_popLenString(rdp);
-		if ((className == null)) {
+		if (className == null) {
 			return null;
 		}
 		if (!ParseRaw_popInt(rdp)) {
@@ -805,14 +805,14 @@ let ParseRaw_entitiesSection_parseClasses = function(rdp, classCount, functions,
 			return null;
 		}
 		let ctorId = rdp[3];
-		if (((ctorId >= functions.length) || (ctorId < 1))) {
+		if (ctorId >= functions.length || ctorId < 1) {
 			return null;
 		}
 		if (!ParseRaw_popInt(rdp)) {
 			return null;
 		}
 		let cctorId = rdp[3];
-		if (((cctorId >= functions.length) || (cctorId < 0))) {
+		if (cctorId >= functions.length || cctorId < 0) {
 			return null;
 		}
 		if (!ParseRaw_popInt(rdp)) {
@@ -834,9 +834,9 @@ let ParseRaw_entitiesSection_parseClasses = function(rdp, classCount, functions,
 		let newMembersByOffset = [];
 		let newMemberInfo = [];
 		j = 0;
-		while ((j < fieldCount)) {
+		while (j < fieldCount) {
 			let memberName = ParseRaw_popLenString(rdp);
-			if ((memberName == null)) {
+			if (memberName == null) {
 				return null;
 			}
 			if (!ParseRaw_popInt(rdp)) {
@@ -849,9 +849,9 @@ let ParseRaw_entitiesSection_parseClasses = function(rdp, classCount, functions,
 		cd = createClassInfo(id, parentId, className, functions[ctorId], newMembersByOffset, newMemberInfo, cctorId);
 		functions[ctorId][3] = cd;
 		j = 0;
-		while ((j < methodCount)) {
+		while (j < methodCount) {
 			let methodName = ParseRaw_popLenString(rdp);
-			if ((methodName == null)) {
+			if (methodName == null) {
 				return null;
 			}
 			if (!ParseRaw_popInt(rdp)) {
@@ -862,14 +862,14 @@ let ParseRaw_entitiesSection_parseClasses = function(rdp, classCount, functions,
 			j += 1;
 		}
 		j = 0;
-		while ((j < staticFieldCount)) {
+		while (j < staticFieldCount) {
 			let stFieldName = ParseRaw_popLenString(rdp);
 			cd[14][stFieldName] = globalValues[0];
 			cd[15][stFieldName] = true;
 			j += 1;
 		}
 		j = 0;
-		while ((j < staticMethodCount)) {
+		while (j < staticMethodCount) {
 			let stMethodName = ParseRaw_popLenString(rdp);
 			if (!ParseRaw_popInt(rdp)) {
 				return null;
@@ -891,18 +891,18 @@ let ParseRaw_entitiesSection_parseEnums = function(rdp, enumCount) {
 	let enums = [];
 	enums.push(null);
 	let i = 0;
-	while ((i < enumCount)) {
+	while (i < enumCount) {
 		if (!ParseRaw_popInt(rdp)) {
 			return null;
 		}
 		let memberCount = rdp[3];
-		let id = (i + 1);
+		let id = i + 1;
 		let enumValues = PST$createNewArray(memberCount);
 		let enumNames = PST$createNewArray(memberCount);
 		let j = 0;
-		while ((j < memberCount)) {
+		while (j < memberCount) {
 			let enumName = ParseRaw_popLenString(rdp);
-			if (((enumName == null) || !ParseRaw_popInt(rdp))) {
+			if (enumName == null || !ParseRaw_popInt(rdp)) {
 				return null;
 			}
 			enumNames[j] = enumName;
@@ -919,7 +919,7 @@ let ParseRaw_entitiesSection_parseFunctions = function(rdp, fnCount, byteCodeOut
 	let functions = [];
 	functions.push(null);
 	let i = 0;
-	while ((i < fnCount)) {
+	while (i < fnCount) {
 		if (!ParseRaw_popInt(rdp)) {
 			return null;
 		}
@@ -928,11 +928,11 @@ let ParseRaw_entitiesSection_parseFunctions = function(rdp, fnCount, byteCodeOut
 			return null;
 		}
 		let argcMax = rdp[3];
-		if ((argcMax < argcMin)) {
+		if (argcMax < argcMin) {
 			return null;
 		}
 		let fnName = ParseRaw_popLenString(rdp);
-		if ((fnName == null)) {
+		if (fnName == null) {
 			return null;
 		}
 		if (!ParseRaw_popInt(rdp)) {
@@ -940,13 +940,13 @@ let ParseRaw_entitiesSection_parseFunctions = function(rdp, fnCount, byteCodeOut
 		}
 		let codeLen = rdp[3];
 		let byteCode = ParseRaw_popByteCodeRows(rdp, codeLen);
-		if ((byteCode == null)) {
+		if (byteCode == null) {
 			return null;
 		}
 		let pc = byteCodeOut.length;
 		let fn = [argcMin, argcMax, pc, null, fnName];
 		let j = 0;
-		while ((j < codeLen)) {
+		while (j < codeLen) {
 			byteCodeOut.push(byteCode[j]);
 			j += 1;
 		}
@@ -970,15 +970,15 @@ let ParseRaw_parseEntityData = function(rdp, byteCodeOut, globalValues) {
 	}
 	let classCount = rdp[3];
 	let functions = ParseRaw_entitiesSection_parseFunctions(rdp, fnCount, byteCodeOut);
-	if ((functions == null)) {
+	if (functions == null) {
 		return null;
 	}
 	let enums = ParseRaw_entitiesSection_parseEnums(rdp, enumCount);
-	if ((enums == null)) {
+	if (enums == null) {
 		return null;
 	}
 	let classes = ParseRaw_entitiesSection_parseClasses(rdp, classCount, functions, globalValues);
-	if ((classes == null)) {
+	if (classes == null) {
 		return null;
 	}
 	let ok = ParseRaw_entitiesSection_classMemberResolver(classes, globalValues);
@@ -1005,15 +1005,15 @@ let ParseRaw_parseStringData = function(rdp) {
 		return null;
 	}
 	let count = rdp[3];
-	let output = PST$createNewArray((count + 1));
+	let output = PST$createNewArray(count + 1);
 	output[0] = null;
 	let i = 0;
-	while ((i < count)) {
+	while (i < count) {
 		let s = ParseRaw_popLenString(rdp);
-		if ((s == null)) {
+		if (s == null) {
 			return null;
 		}
-		output[(i + 1)] = s;
+		output[i + 1] = s;
 		i += 1;
 	}
 	return output;
@@ -1029,17 +1029,17 @@ let ParseRaw_parseTokenData = function(rdp) {
 	}
 	let fileCount = rdp[3];
 	let fileNames = [];
-	while ((fileCount > 0)) {
+	while (fileCount > 0) {
 		fileCount -= 1;
 		let fileName = ParseRaw_popLenString(rdp);
-		if ((fileName == null)) {
+		if (fileName == null) {
 			return null;
 		}
 		fileNames.push(fileName);
 	}
 	let output = [];
 	output.push(null);
-	while ((tokenCount > 0)) {
+	while (tokenCount > 0) {
 		tokenCount -= 1;
 		if (!ParseRaw_popInt(rdp)) {
 			return null;
@@ -1053,7 +1053,7 @@ let ParseRaw_parseTokenData = function(rdp) {
 			return null;
 		}
 		let col = rdp[3];
-		if (((fileId < 0) || (fileId >= fileNames.length))) {
+		if (fileId < 0 || fileId >= fileNames.length) {
 			return null;
 		}
 		output.push([fileNames[fileId], line, col]);
@@ -1064,7 +1064,7 @@ let ParseRaw_parseTokenData = function(rdp) {
 let ParseRaw_popByteCodeRows = function(rdp, rowCount) {
 	let rows = PST$createNewArray(rowCount);
 	let i = 0;
-	while ((i < rowCount)) {
+	while (i < rowCount) {
 		if (!ParseRaw_popInt(rdp)) {
 			return null;
 		}
@@ -1073,9 +1073,9 @@ let ParseRaw_popByteCodeRows = function(rdp, rowCount) {
 			return null;
 		}
 		let flags = rdp[3];
-		let hasString = (((flags & 1)) != 0);
-		let hasToken = (((flags & 2)) != 0);
-		let argc = (flags >> 2);
+		let hasString = (flags & 1) != 0;
+		let hasToken = (flags & 2) != 0;
+		let argc = flags >> 2;
 		let stringId = 0;
 		if (hasString) {
 			if (!ParseRaw_popInt(rdp)) {
@@ -1092,7 +1092,7 @@ let ParseRaw_popByteCodeRows = function(rdp, rowCount) {
 		}
 		let args = PST$createNewArray(argc);
 		let j = 0;
-		while ((j < argc)) {
+		while (j < argc) {
 			if (!ParseRaw_popInt(rdp)) {
 				return null;
 			}
@@ -1106,13 +1106,13 @@ let ParseRaw_popByteCodeRows = function(rdp, rowCount) {
 };
 
 let ParseRaw_popBytes = function(rdp, byteCount) {
-	if (((rdp[1] + byteCount) > rdp[2])) {
+	if (rdp[1] + byteCount > rdp[2]) {
 		return null;
 	}
 	let output = PST$createNewArray(byteCount);
 	let i = 0;
-	while ((i < byteCount)) {
-		output[i] = rdp[0][(i + rdp[1])];
+	while (i < byteCount) {
+		output[i] = rdp[0][i + rdp[1]];
 		i += 1;
 	}
 	rdp[1] += byteCount;
@@ -1120,13 +1120,13 @@ let ParseRaw_popBytes = function(rdp, byteCount) {
 };
 
 let ParseRaw_popFixedLenString = function(rdp, expectedSize) {
-	if (((rdp[1] + expectedSize) > rdp[2])) {
+	if (rdp[1] + expectedSize > rdp[2]) {
 		return null;
 	}
 	let strBytes = PST$createNewArray(expectedSize);
 	let i = 0;
-	while ((i < expectedSize)) {
-		strBytes[i] = (rdp[0][(rdp[1] + i)] & 255);
+	while (i < expectedSize) {
+		strBytes[i] = rdp[0][rdp[1] + i] & 255;
 		i += 1;
 	}
 	rdp[1] += expectedSize;
@@ -1135,39 +1135,39 @@ let ParseRaw_popFixedLenString = function(rdp, expectedSize) {
 };
 
 let ParseRaw_popInt = function(rdp) {
-	if ((rdp[1] >= rdp[2])) {
+	if (rdp[1] >= rdp[2]) {
 		return false;
 	}
 	let b = rdp[0][rdp[1]];
-	if ((b < 128)) {
+	if (b < 128) {
 		rdp[3] = b;
 		rdp[1] += 1;
 		return true;
 	}
-	if ((b == 192)) {
+	if (b == 192) {
 		rdp[3] = -2147483647;
 		rdp[1] += 1;
 		return true;
 	}
-	if ((b == 224)) {
+	if (b == 224) {
 		rdp[1] += 1;
 		return false;
 	}
 	let sign = 1;
-	if ((((b & 16)) != 0)) {
+	if ((b & 16) != 0) {
 		sign = -1;
 	}
-	let byteCount = (b & 15);
+	let byteCount = b & 15;
 	let output = 0;
 	rdp[1] += 1;
 	let i = 0;
-	while ((i < byteCount)) {
-		output = (output << 8);
+	while (i < byteCount) {
+		output = output << 8;
 		output += rdp[0][rdp[1]];
 		rdp[1] += 1;
 		i += 1;
 	}
-	rdp[3] = (output * sign);
+	rdp[3] = output * sign;
 	return true;
 };
 
@@ -1179,7 +1179,7 @@ let ParseRaw_popLenString = function(rdp) {
 };
 
 let ParseRaw_popSingleByte = function(rdp, fallback) {
-	if ((rdp[1] >= rdp[2])) {
+	if (rdp[1] >= rdp[2]) {
 		return fallback;
 	}
 	let val = rdp[0][rdp[1]];
@@ -1189,14 +1189,14 @@ let ParseRaw_popSingleByte = function(rdp, fallback) {
 
 let ParseRawData = function(rawBytes, ec) {
 	let rdp = [rawBytes, 0, rawBytes.length, 0];
-	if ((ParseRaw_popFixedLenString(rdp, 4) != "PXCS")) {
+	if (ParseRaw_popFixedLenString(rdp, 4) != "PXCS") {
 		return null;
 	}
-	if ((ParseRaw_popSingleByte(rdp, -1) != 0)) {
+	if (ParseRaw_popSingleByte(rdp, -1) != 0) {
 		return null;
 	}
 	let versionData = ParseRaw_popBytes(rdp, 3);
-	if ((versionData == null)) {
+	if (versionData == null) {
 		return null;
 	}
 	let majorVersion = versionData[0];
@@ -1204,7 +1204,7 @@ let ParseRawData = function(rawBytes, ec) {
 	let patchVersion = versionData[2];
 	let flavor = ParseRaw_popLenString(rdp);
 	let flavorVersion = ParseRaw_popLenString(rdp);
-	if (((flavor == null) || (flavorVersion == null))) {
+	if (flavor == null || flavorVersion == null) {
 		return null;
 	}
 	let mtd = null;
@@ -1212,48 +1212,48 @@ let ParseRawData = function(rawBytes, ec) {
 	let tokensById = null;
 	let ent = null;
 	let byteCodeAcc = [];
-	while ((rdp[1] < rdp[2])) {
+	while (rdp[1] < rdp[2]) {
 		let chunkType = ParseRaw_popFixedLenString(rdp, 3);
-		if ((chunkType == null)) {
+		if (chunkType == null) {
 			return null;
 		}
-		if ((chunkType == "MTD")) {
-			if ((mtd != null)) {
+		if (chunkType == "MTD") {
+			if (mtd != null) {
 				return null;
 			}
 			mtd = ParseRaw_parseMetadata(rdp);
-			if ((mtd == null)) {
+			if (mtd == null) {
 				return null;
 			}
-		} else if ((chunkType == "TOK")) {
-			if ((tokensById != null)) {
+		} else if (chunkType == "TOK") {
+			if (tokensById != null) {
 				return null;
 			}
 			tokensById = ParseRaw_parseTokenData(rdp);
-			if ((tokensById == null)) {
+			if (tokensById == null) {
 				return null;
 			}
-		} else if ((chunkType == "STR")) {
-			if ((stringById != null)) {
+		} else if (chunkType == "STR") {
+			if (stringById != null) {
 				return null;
 			}
 			stringById = ParseRaw_parseStringData(rdp);
-			if ((stringById == null)) {
+			if (stringById == null) {
 				return null;
 			}
-		} else if ((chunkType == "ENT")) {
-			if ((ent != null)) {
+		} else if (chunkType == "ENT") {
+			if (ent != null) {
 				return null;
 			}
 			ent = ParseRaw_parseEntityData(rdp, byteCodeAcc, ec[1]);
-			if ((ent == null)) {
+			if (ent == null) {
 				return null;
 			}
 		} else {
 			return null;
 		}
 	}
-	if (((mtd == null) || (stringById == null) || (ent == null))) {
+	if (mtd == null || stringById == null || ent == null) {
 		return null;
 	}
 	ec[4] = [...(ent[0])];
@@ -1264,9 +1264,9 @@ let ParseRawData = function(rawBytes, ec) {
 	ec[12] = stringById;
 	ec[3]["main"] = mtd[0];
 	let i = 1;
-	while ((i <= mtd[1])) {
+	while (i <= mtd[1]) {
 		let fnName = ec[4][i][4];
-		if (((fnName == "map") || (fnName == "filter") || (fnName == "reduce") || (fnName == "thrw") || (fnName == "sort") || (fnName == "sortK"))) {
+		if (fnName == "map" || fnName == "filter" || fnName == "reduce" || fnName == "thrw" || fnName == "sort" || fnName == "sortK") {
 			ec[3][fnName] = i;
 		}
 		i += 1;
@@ -1288,14 +1288,14 @@ let PUBLIC_getExecutionContextError = function(ecObj) {
 let PUBLIC_getTaskResultError = function(resObj, includeStackTrace) {
 	let result = resObj;
 	let o = [];
-	if ((result[0] != 2)) {
+	if (result[0] != 2) {
 		return null;
 	}
 	o.push(result[3]);
 	let tr = result[4];
-	if ((tr != null)) {
+	if (tr != null) {
 		let i = 0;
-		while ((i < tr.length)) {
+		while (i < tr.length) {
 			o.push(tr[i]);
 			i += 1;
 		}
@@ -1325,7 +1325,7 @@ let PUBLIC_listValueAdd = function(listObj, wrappedValue) {
 let PUBLIC_requestTaskSuspension = function(taskObj, withSleep, sleepMillis) {
 	let task = taskObj;
 	task[3] = true;
-	if ((sleepMillis < 0)) {
+	if (sleepMillis < 0) {
 		sleepMillis = 0;
 	}
 	if (withSleep) {
@@ -1379,7 +1379,7 @@ let RunInterpreter = function(task) {
 	let result = null;
 	while (reinvoke) {
 		result = RunInterpreterImpl(task);
-		reinvoke = (result[0] == 5);
+		reinvoke = result[0] == 5;
 	}
 	return result;
 };
@@ -1463,12 +1463,12 @@ let RunInterpreterImpl = function(task) {
 			case 1:
 				// OP_ASSIGN_FIELD;
 				valueStackSize -= 2;
-				if ((row[2] == 0)) {
+				if (row[2] == 0) {
 					right = valueStack[valueStackSize];
-					left = valueStack[(valueStackSize + 1)];
+					left = valueStack[valueStackSize + 1];
 				} else {
 					left = valueStack[valueStackSize];
-					right = valueStack[(valueStackSize + 1)];
+					right = valueStack[valueStackSize + 1];
 				}
 				switch (left[0]) {
 					case 12:
@@ -1502,27 +1502,27 @@ let RunInterpreterImpl = function(task) {
 			case 2:
 				// OP_ASSIGN_INDEX;
 				valueStackSize -= 3;
-				if ((row[2] == 0)) {
+				if (row[2] == 0) {
 					value = valueStack[valueStackSize];
-					left = valueStack[(valueStackSize + 1)];
-					right = valueStack[(valueStackSize + 2)];
+					left = valueStack[valueStackSize + 1];
+					right = valueStack[valueStackSize + 2];
 				} else {
 					left = valueStack[valueStackSize];
-					right = valueStack[(valueStackSize + 1)];
-					value = valueStack[(valueStackSize + 2)];
+					right = valueStack[valueStackSize + 1];
+					value = valueStack[valueStackSize + 2];
 				}
-				switch (((left[0] * 16) + right[0])) {
+				switch (left[0] * 16 + right[0]) {
 					case 147:
 						i = right[1];
 						listImpl1 = left[1];
-						if ((i < 0)) {
+						if (i < 0) {
 							i += listImpl1[1];
-							if ((i < 0)) {
+							if (i < 0) {
 								bool1 = true;
 							} else {
 								bool1 = false;
 							}
-						} else if ((i >= listImpl1[1])) {
+						} else if (i >= listImpl1[1]) {
 							bool1 = true;
 						} else {
 							bool1 = false;
@@ -1542,22 +1542,22 @@ let RunInterpreterImpl = function(task) {
 						}
 						str1 = stringImpl1[3];
 						dictImpl1 = left[1];
-						if ((dictImpl1[2] == dictImpl1[3])) {
+						if (dictImpl1[2] == dictImpl1[3]) {
 							DictImpl_ensureCapacity(dictImpl1);
 						}
-						if ((dictImpl1[1] == 1)) {
+						if (dictImpl1[1] == 1) {
 							dictImpl1[1] = 5;
 							dictImpl1[7] = {};
 							dictImpl1[7][str1] = 0;
 							dictImpl1[4][0] = right;
 							dictImpl1[5][0] = value;
 							dictImpl1[2] = 1;
-						} else if ((dictImpl1[1] == 5)) {
-							if ((dictImpl1[7][str1] !== undefined)) {
+						} else if (dictImpl1[1] == 5) {
+							if (dictImpl1[7][str1] !== undefined) {
 								dictImpl1[5][dictImpl1[7][str1]] = value;
 							} else {
 								i = dictImpl1[2];
-								dictImpl1[2] = (i + 1);
+								dictImpl1[2] = i + 1;
 								dictImpl1[4][i] = right;
 								dictImpl1[5][i] = value;
 								dictImpl1[7][str1] = i;
@@ -1571,21 +1571,21 @@ let RunInterpreterImpl = function(task) {
 					case 163:
 						int1 = right[1];
 						dictImpl1 = left[1];
-						if ((dictImpl1[2] == dictImpl1[3])) {
+						if (dictImpl1[2] == dictImpl1[3]) {
 							DictImpl_ensureCapacity(dictImpl1);
 						}
-						if ((dictImpl1[1] == 1)) {
+						if (dictImpl1[1] == 1) {
 							dictImpl1[1] = 3;
 							dictImpl1[6] = {};
 							dictImpl1[6][int1] = 0;
 							dictImpl1[4][0] = right;
 							dictImpl1[5][0] = value;
 							dictImpl1[2] = 1;
-						} else if ((dictImpl1[6][int1] !== undefined)) {
+						} else if (dictImpl1[6][int1] !== undefined) {
 							dictImpl1[5][dictImpl1[6][int1]] = value;
 						} else {
 							i = dictImpl1[2];
-							dictImpl1[2] = (i + 1);
+							dictImpl1[2] = i + 1;
 							dictImpl1[4][i] = right;
 							dictImpl1[5][i] = value;
 							dictImpl1[6][int1] = i;
@@ -1604,7 +1604,7 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 4:
 				// OP_BIN_OP;
-				if ((opMap == null)) {
+				if (opMap == null) {
 					opMap = {};
 					opMap["+"] = 1;
 					opMap["-"] = 2;
@@ -1627,17 +1627,17 @@ let RunInterpreterImpl = function(task) {
 					opMap[">>>"] = 19;
 				}
 				str1 = row[5];
-				if ((str1 == "+")) {
+				if (str1 == "+") {
 					row[0] = 5;
-				} else if (((str1 == "==") || (str1 == "!="))) {
-					row[9] = (str1 == "!=");
+				} else if (str1 == "==" || str1 == "!=") {
+					row[9] = str1 == "!=";
 					row[0] = 8;
-				} else if (((str1 == "<") || (str1 == ">") || (str1 == "<=") || (str1 == ">="))) {
-					row[9] = ((str1 == "<") || (str1 == "<="));
-					row[10] = ((str1 == "<=") || (str1 == ">="));
+				} else if (str1 == "<" || str1 == ">" || str1 == "<=" || str1 == ">=") {
+					row[9] = str1 == "<" || str1 == "<=";
+					row[10] = str1 == "<=" || str1 == ">=";
 					row[2] = opMap[str1];
 					row[0] = 7;
-				} else if (((str1 == "&") || (str1 == "|") || (str1 == "^") || (str1 == "<<") || (str1 == ">>") || (str1 == ">>>"))) {
+				} else if (str1 == "&" || str1 == "|" || str1 == "^" || str1 == "<<" || str1 == ">>" || str1 == ">>>") {
 					row[2] = opMap[str1];
 					row[0] = 6;
 				} else {
@@ -1650,12 +1650,12 @@ let RunInterpreterImpl = function(task) {
 				// OP_BIN_OP_ADD;
 				valueStackSize -= 2;
 				left = valueStack[valueStackSize];
-				right = valueStack[(valueStackSize + 1)];
-				switch ((((left[0] << 5)) | right[0])) {
+				right = valueStack[valueStackSize + 1];
+				switch ((left[0] << 5) | right[0]) {
 					case 99:
-						i = (left[1] + right[1]);
-						if (((i < 1200) && (i >= 1200))) {
-							if ((i < 0)) {
+						i = left[1] + right[1];
+						if (i < 1200 && i >= 1200) {
+							if (i < 0) {
 								value = globalValues[4][-i];
 							} else {
 								value = globalValues[3][i];
@@ -1665,19 +1665,19 @@ let RunInterpreterImpl = function(task) {
 						}
 						break;
 					case 132:
-						value = [4, (left[1] + right[1])];
+						value = [4, left[1] + right[1]];
 						break;
 					case 131:
-						value = [4, (left[1] + right[1])];
+						value = [4, left[1] + right[1]];
 						break;
 					case 100:
-						value = [4, (left[1] + right[1])];
+						value = [4, left[1] + right[1]];
 						break;
 					default:
-						if (((left[0] == 5) || (right[0] == 5))) {
+						if (left[0] == 5 || right[0] == 5) {
 							stringImpl1 = convertToStringImpl(globalValues, left);
 							stringImpl2 = convertToStringImpl(globalValues, right);
-							stringImpl1 = [(stringImpl1[0] + stringImpl2[0]), true, null, null, stringImpl1, stringImpl2];
+							stringImpl1 = [stringImpl1[0] + stringImpl2[0], true, null, null, stringImpl1, stringImpl2];
 							value = [5, stringImpl1];
 						} else {
 							errorId = 4;
@@ -1693,31 +1693,31 @@ let RunInterpreterImpl = function(task) {
 				// OP_BIN_OP_COMPARE;
 				valueStackSize -= 2;
 				left = valueStack[valueStackSize];
-				right = valueStack[(valueStackSize + 1)];
-				switch (((left[0] * 16) + right[0])) {
+				right = valueStack[valueStackSize + 1];
+				switch (left[0] * 16 + right[0]) {
 					case 51:
 						int1 = left[1];
 						int2 = right[1];
-						bool1 = (int1 == int2);
-						bool2 = (int1 < int2);
+						bool1 = int1 == int2;
+						bool2 = int1 < int2;
 						break;
 					case 52:
 						int1 = left[1];
 						float2 = right[1];
-						bool1 = (int1 == float2);
-						bool2 = (int1 < float2);
+						bool1 = int1 == float2;
+						bool2 = int1 < float2;
 						break;
 					case 67:
 						float1 = left[1];
 						int2 = right[1];
-						bool1 = (float1 == int2);
-						bool2 = (float1 < int2);
+						bool1 = float1 == int2;
+						bool2 = float1 < int2;
 						break;
 					case 68:
 						float1 = left[1];
 						float2 = right[1];
-						bool1 = (float1 == float2);
-						bool2 = (float1 < float2);
+						bool1 = float1 == float2;
+						bool2 = float1 < float2;
 						break;
 					default:
 						errorId = 4;
@@ -1732,12 +1732,12 @@ let RunInterpreterImpl = function(task) {
 						}
 						break;
 					case 13:
-						if ((bool2 || bool1)) {
+						if (bool2 || bool1) {
 							value = VALUE_TRUE;
 						}
 						break;
 					case 10:
-						if ((!bool2 && !bool1)) {
+						if (!bool2 && !bool1) {
 							value = VALUE_TRUE;
 						}
 						break;
@@ -1756,19 +1756,19 @@ let RunInterpreterImpl = function(task) {
 				// OP_BIN_OP_EQUAL;
 				valueStackSize -= 2;
 				left = valueStack[valueStackSize];
-				right = valueStack[(valueStackSize + 1)];
-				if ((left[0] != right[0])) {
-					if ((left[0] == 3)) {
-						if ((right[0] == 4)) {
+				right = valueStack[valueStackSize + 1];
+				if (left[0] != right[0]) {
+					if (left[0] == 3) {
+						if (right[0] == 4) {
 							int1 = left[1];
-							bool1 = (int1 == right[1]);
+							bool1 = int1 == right[1];
 						} else {
 							bool1 = false;
 						}
-					} else if ((left[0] == 4)) {
-						if ((left[0] == 3)) {
+					} else if (left[0] == 4) {
+						if (left[0] == 3) {
 							int1 = right[1];
-							bool1 = (int1 == left[1]);
+							bool1 = int1 == left[1];
 						} else {
 							bool1 = false;
 						}
@@ -1781,21 +1781,21 @@ let RunInterpreterImpl = function(task) {
 							bool1 = true;
 							break;
 						case 2:
-							bool1 = (left[1] == right[1]);
+							bool1 = left[1] == right[1];
 							break;
 						case 3:
-							bool1 = (left[1] == right[1]);
+							bool1 = left[1] == right[1];
 							break;
 						case 4:
-							bool1 = (left[1] == right[1]);
+							bool1 = left[1] == right[1];
 							break;
 						case 5:
-							if ((left[1] == right[1])) {
+							if (left[1] == right[1]) {
 								bool1 = true;
 							} else {
 								stringImpl1 = left[1];
 								stringImpl2 = right[1];
-								if ((stringImpl1[0] != stringImpl2[0])) {
+								if (stringImpl1[0] != stringImpl2[0]) {
 									bool1 = false;
 								} else {
 									if (stringImpl1[1]) {
@@ -1809,7 +1809,7 @@ let RunInterpreterImpl = function(task) {
 							}
 							break;
 						default:
-							bool1 = (left[1] == right[1]);
+							bool1 = left[1] == right[1];
 							break;
 					}
 				}
@@ -1827,31 +1827,31 @@ let RunInterpreterImpl = function(task) {
 				// OP_BIN_OP_MATH;
 				valueStackSize -= 2;
 				left = valueStack[valueStackSize];
-				right = valueStack[(valueStackSize + 1)];
-				switch ((((((left[0] * 20) + row[2])) * 16) + right[0])) {
+				right = valueStack[valueStackSize + 1];
+				switch ((left[0] * 20 + row[2]) * 16 + right[0]) {
 					case 995:
 						int1 = left[1];
 						int2 = right[1];
-						value = buildInteger(globalValues, (int1 - int2));
+						value = buildInteger(globalValues, int1 - int2);
 						break;
 					case 1011:
 						int1 = left[1];
 						int2 = right[1];
-						value = buildInteger(globalValues, (int1 * int2));
+						value = buildInteger(globalValues, int1 * int2);
 						break;
 					case 1331:
-						value = [4, (left[1] * right[1])];
+						value = [4, left[1] * right[1]];
 						break;
 					case 1012:
-						value = [4, (left[1] * right[1])];
+						value = [4, left[1] * right[1]];
 						break;
 					case 1332:
-						value = [4, (left[1] * right[1])];
+						value = [4, left[1] * right[1]];
 						break;
 					case 1027:
 						int1 = left[1];
 						int2 = right[1];
-						if ((int2 == 0)) {
+						if (int2 == 0) {
 							errorId = 10;
 							errorMsg = "Cannot divide by zero";
 							return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
@@ -1860,122 +1860,122 @@ let RunInterpreterImpl = function(task) {
 						break;
 					case 1347:
 						float1 = left[1];
-						if ((float1 == 0)) {
+						if (float1 == 0) {
 							errorId = 10;
 							errorMsg = "Cannot divide by zero";
 							return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 						}
-						value = [4, (float1 / right[1])];
+						value = [4, float1 / right[1]];
 						break;
 					case 1028:
 						int1 = left[1];
-						if ((int1 == 0)) {
+						if (int1 == 0) {
 							errorId = 10;
 							errorMsg = "Cannot divide by zero";
 							return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 						}
-						value = [4, (int1 / right[1])];
+						value = [4, int1 / right[1]];
 						break;
 					case 1348:
 						float1 = left[1];
-						if ((float1 == 0)) {
+						if (float1 == 0) {
 							errorId = 10;
 							errorMsg = "Cannot divide by zero";
 							return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 						}
-						value = [4, (float1 / right[1])];
+						value = [4, float1 / right[1]];
 						break;
 					case 1043:
 						int1 = left[1];
 						int2 = right[1];
-						if ((int2 <= 0)) {
+						if (int2 <= 0) {
 							errorId = 10;
 							errorMsg = "Modulo only applicable to positive divisors.";
 							return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 						}
-						int1 = (int1 % int2);
-						if ((int1 < 0)) {
+						int1 = int1 % int2;
+						if (int1 < 0) {
 							int1 += int2;
 						}
 						value = buildInteger(globalValues, int1);
 						break;
 					case 1364:
-						if ((left[0] == 3)) {
-							float1 = (0.0 + left[1]);
+						if (left[0] == 3) {
+							float1 = 0.0 + left[1];
 						} else {
 							float1 = left[1];
 						}
-						if ((right[0] == 3)) {
-							float2 = (0.0 + right[1]);
+						if (right[0] == 3) {
+							float2 = 0.0 + right[1];
 						} else {
 							float2 = right[1];
 						}
-						if ((float2 <= 0)) {
+						if (float2 <= 0) {
 							errorId = 10;
 							errorMsg = "Modulo only applicable to positive divisors.";
 							return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 						}
-						float1 = (float1 % float2);
-						if ((float1 < 0)) {
+						float1 = float1 % float2;
+						if (float1 < 0) {
 							float1 += float2;
 						}
 						value = [4, float1];
 						break;
 					case 1363:
-						if ((left[0] == 3)) {
-							float1 = (0.0 + left[1]);
+						if (left[0] == 3) {
+							float1 = 0.0 + left[1];
 						} else {
 							float1 = left[1];
 						}
-						if ((right[0] == 3)) {
-							float2 = (0.0 + right[1]);
+						if (right[0] == 3) {
+							float2 = 0.0 + right[1];
 						} else {
 							float2 = right[1];
 						}
-						if ((float2 <= 0)) {
+						if (float2 <= 0) {
 							errorId = 10;
 							errorMsg = "Modulo only applicable to positive divisors.";
 							return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 						}
-						float1 = (float1 % float2);
-						if ((float1 < 0)) {
+						float1 = float1 % float2;
+						if (float1 < 0) {
 							float1 += float2;
 						}
 						value = [4, float1];
 						break;
 					case 1044:
-						if ((left[0] == 3)) {
-							float1 = (0.0 + left[1]);
+						if (left[0] == 3) {
+							float1 = 0.0 + left[1];
 						} else {
 							float1 = left[1];
 						}
-						if ((right[0] == 3)) {
-							float2 = (0.0 + right[1]);
+						if (right[0] == 3) {
+							float2 = 0.0 + right[1];
 						} else {
 							float2 = right[1];
 						}
-						if ((float2 <= 0)) {
+						if (float2 <= 0) {
 							errorId = 10;
 							errorMsg = "Modulo only applicable to positive divisors.";
 							return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 						}
-						float1 = (float1 % float2);
-						if ((float1 < 0)) {
+						float1 = float1 % float2;
+						if (float1 < 0) {
 							float1 += float2;
 						}
 						value = [4, float1];
 						break;
 					case 1316:
-						value = [4, (left[1] - right[1])];
+						value = [4, left[1] - right[1]];
 						break;
 					case 996:
-						value = [4, (left[1] - right[1])];
+						value = [4, left[1] - right[1]];
 						break;
 					case 1315:
-						value = [4, (left[1] - right[1])];
+						value = [4, left[1] - right[1]];
 						break;
 					case 1651:
-						if ((left[0] == 5)) {
+						if (left[0] == 5) {
 							value2 = left;
 							stringImpl1 = left[1];
 							sz = right[1];
@@ -1984,22 +1984,22 @@ let RunInterpreterImpl = function(task) {
 							stringImpl1 = right[1];
 							sz = left[1];
 						}
-						if ((sz == 0)) {
+						if (sz == 0) {
 							value = globalValues[5];
-						} else if ((sz == 1)) {
+						} else if (sz == 1) {
 							value = value2;
 						} else {
 							stringImpl2 = stringImpl1;
 							i = 1;
-							while ((i < sz)) {
-								stringImpl2 = [(stringImpl1[0] + stringImpl2[0]), true, null, null, stringImpl1, stringImpl2];
+							while (i < sz) {
+								stringImpl2 = [stringImpl1[0] + stringImpl2[0], true, null, null, stringImpl1, stringImpl2];
 								i += 1;
 							}
 							value = [5, stringImpl2];
 						}
 						break;
 					case 1013:
-						if ((left[0] == 5)) {
+						if (left[0] == 5) {
 							value2 = left;
 							stringImpl1 = left[1];
 							sz = right[1];
@@ -2008,15 +2008,15 @@ let RunInterpreterImpl = function(task) {
 							stringImpl1 = right[1];
 							sz = left[1];
 						}
-						if ((sz == 0)) {
+						if (sz == 0) {
 							value = globalValues[5];
-						} else if ((sz == 1)) {
+						} else if (sz == 1) {
 							value = value2;
 						} else {
 							stringImpl2 = stringImpl1;
 							i = 1;
-							while ((i < sz)) {
-								stringImpl2 = [(stringImpl1[0] + stringImpl2[0]), true, null, null, stringImpl1, stringImpl2];
+							while (i < sz) {
+								stringImpl2 = [stringImpl1[0] + stringImpl2[0], true, null, null, stringImpl1, stringImpl2];
 								i += 1;
 							}
 							value = [5, stringImpl2];
@@ -2034,8 +2034,8 @@ let RunInterpreterImpl = function(task) {
 				// OP_BIN_OP_BIT_MATH;
 				valueStackSize -= 2;
 				left = valueStack[valueStackSize];
-				right = valueStack[(valueStackSize + 1)];
-				if (((left[0] != 3) || (right[0] != 3))) {
+				right = valueStack[valueStackSize + 1];
+				if (left[0] != 3 || right[0] != 3) {
 					errorId = 9;
 					errorMsg = "Expected integers for this operator.";
 					return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
@@ -2044,26 +2044,26 @@ let RunInterpreterImpl = function(task) {
 				int2 = right[1];
 				switch (row[2]) {
 					case 14:
-						int3 = (int1 & int2);
+						int3 = int1 & int2;
 						break;
 					case 15:
-						int3 = (int1 | int2);
+						int3 = int1 | int2;
 						break;
 					case 16:
-						int3 = (int1 ^ int2);
+						int3 = int1 ^ int2;
 						break;
 					case 17:
-						int3 = (int1 << int2);
+						int3 = int1 << int2;
 						break;
 					case 18:
-						int3 = (int1 >> int2);
+						int3 = int1 >> int2;
 						break;
 					default:
 						return ExRes_HardCrash(task, "Op not implemented yet");
 				}
-				if ((int1 == int3)) {
+				if (int1 == int3) {
 					value = left;
-				} else if ((int2 == int3)) {
+				} else if (int2 == int3) {
 					value = right;
 				} else {
 					value = buildInteger(globalValues, int3);
@@ -2073,16 +2073,16 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 10:
 				// OP_BITWISE_NOT;
-				i = (valueStackSize - 1);
+				i = valueStackSize - 1;
 				value = valueStack[i];
-				int1 = ((-value[1]) - 1);
+				int1 = (-value[1]) - 1;
 				valueStack[i] = buildInteger(globalValues, int1);
 				break;
 			case 11:
 				// OP_BOOLEAN_NOT;
-				i = (valueStackSize - 1);
+				i = valueStackSize - 1;
 				value = valueStack[i];
-				if ((value[0] != 2)) {
+				if (value[0] != 2) {
 					errorId = 9;
 					errorMsg = "Only a boolean can be used here.";
 					return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
@@ -2097,8 +2097,8 @@ let RunInterpreterImpl = function(task) {
 				// OP_BUILD_DICT;
 				sz = row[2];
 				int1 = 1;
-				if ((sz == 0)) {
-					if ((valueStackSize == valueStackCapacity)) {
+				if (sz == 0) {
+					if (valueStackSize == valueStackCapacity) {
 						valueStack = increaseValueStackCapacity(task);
 						valueStackCapacity = valueStack.length;
 					}
@@ -2109,12 +2109,12 @@ let RunInterpreterImpl = function(task) {
 					int2 = sz;
 					keys = PST$createNewArray(sz);
 					values = PST$createNewArray(sz);
-					valueStackSize -= (sz * 2);
+					valueStackSize -= sz * 2;
 					j = valueStackSize;
 					i = 0;
-					while ((i < sz)) {
+					while (i < sz) {
 						keys[i] = valueStack[j];
-						values[i] = valueStack[(j + 1)];
+						values[i] = valueStack[j + 1];
 						j += 2;
 						i += 1;
 					}
@@ -2122,17 +2122,17 @@ let RunInterpreterImpl = function(task) {
 				}
 				dictImpl1 = [ec[17], int1, sz, int2, keys, values, null, null];
 				ec[17] += 1;
-				if ((dictImpl1[1] == 3)) {
+				if (dictImpl1[1] == 3) {
 					dictImpl1[6] = {};
 					i = 0;
-					while ((i < sz)) {
+					while (i < sz) {
 						dictImpl1[6][keys[i][1]] = i;
 						i += 1;
 					}
-				} else if ((dictImpl1[1] == 5)) {
+				} else if (dictImpl1[1] == 5) {
 					dictImpl1[7] = {};
 					i = 0;
-					while ((i < sz)) {
+					while (i < sz) {
 						value = keys[i];
 						stringImpl1 = value[1];
 						if (stringImpl1[1]) {
@@ -2153,12 +2153,12 @@ let RunInterpreterImpl = function(task) {
 				args = PST$createNewArray(sz);
 				valueStackSize -= sz;
 				i = 0;
-				while ((i < sz)) {
-					args[i] = valueStack[(valueStackSize + i)];
+				while (i < sz) {
+					args[i] = valueStack[valueStackSize + i];
 					i += 1;
 				}
-				if ((sz == 0)) {
-					if ((valueStackSize == valueStackCapacity)) {
+				if (sz == 0) {
+					if (valueStackSize == valueStackCapacity) {
 						valueStack = increaseValueStackCapacity(task);
 						valueStackCapacity = valueStack.length;
 					}
@@ -2177,23 +2177,23 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 15:
 				// OP_DOT_FIELD;
-				i = (valueStackSize - 1);
+				i = valueStackSize - 1;
 				value = valueStack[i];
 				int3 = -1;
 				j = row[4];
 				name = row[5];
 				switch (value[0]) {
 					case 8:
-						if ((j == LENGTH_ID)) {
+						if (j == LENGTH_ID) {
 							sz = (value[1]).length;
-							if ((sz < 1200)) {
+							if (sz < 1200) {
 								output = globalValues[3][sz];
 							} else {
 								output = buildInteger(globalValues, sz);
 							}
 						} else {
 							fp = primitiveMethodLookup[j][8];
-							if ((fp == null)) {
+							if (fp == null) {
 								output = null;
 							} else {
 								output = [11, [4, fp[1], fp[2], fp[3], null, value]];
@@ -2201,16 +2201,16 @@ let RunInterpreterImpl = function(task) {
 						}
 						break;
 					case 5:
-						if ((j == LENGTH_ID)) {
+						if (j == LENGTH_ID) {
 							sz = (value[1])[0];
-							if ((sz < 1200)) {
+							if (sz < 1200) {
 								output = globalValues[3][sz];
 							} else {
 								output = buildInteger(globalValues, sz);
 							}
 						} else {
 							fp = primitiveMethodLookup[j][5];
-							if ((fp == null)) {
+							if (fp == null) {
 								output = null;
 							} else {
 								output = [11, [4, fp[1], fp[2], fp[3], null, value]];
@@ -2218,16 +2218,16 @@ let RunInterpreterImpl = function(task) {
 						}
 						break;
 					case 9:
-						if ((j == LENGTH_ID)) {
+						if (j == LENGTH_ID) {
 							sz = (value[1])[1];
-							if ((sz < 1200)) {
+							if (sz < 1200) {
 								output = globalValues[3][sz];
 							} else {
 								output = buildInteger(globalValues, sz);
 							}
 						} else {
 							fp = primitiveMethodLookup[j][9];
-							if ((fp == null)) {
+							if (fp == null) {
 								output = null;
 							} else {
 								output = [11, [4, fp[1], fp[2], fp[3], null, value]];
@@ -2236,7 +2236,7 @@ let RunInterpreterImpl = function(task) {
 						break;
 					case 10:
 						fp = primitiveMethodLookup[j][10];
-						if ((fp == null)) {
+						if (fp == null) {
 							output = null;
 						} else {
 							output = [11, [4, fp[1], fp[2], fp[3], null, value]];
@@ -2251,7 +2251,7 @@ let RunInterpreterImpl = function(task) {
 						}
 						int1 = instance1[1][8][name];
 						output = instance1[2][int1];
-						if ((output == null)) {
+						if (output == null) {
 							str2FuncDef = instance1[1][7];
 							fn = str2FuncDef[name];
 							fp = [2, fn[0], fn[1], fn[2], fn, value];
@@ -2273,13 +2273,13 @@ let RunInterpreterImpl = function(task) {
 						output = null;
 						break;
 				}
-				if ((output == null)) {
+				if (output == null) {
 					errorId = 3;
 					errorMsg = "Field not found: ." + row[5];
-					if ((value[0] == 1)) {
+					if (value[0] == 1) {
 						errorId = 7;
 						errorMsg = "Cannot access fields on null.";
-						if ((byteCode[(pc - 1)][0] == 21)) {
+						if (byteCode[pc - 1][0] == 21) {
 							errorMsg = "The function returned null and the field could not be accessed.";
 						}
 					}
@@ -2289,7 +2289,7 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 16:
 				// OP_ENSURE_BOOL;
-				if ((valueStack[(valueStackSize - 1)][0] != 2)) {
+				if (valueStack[valueStackSize - 1][0] != 2) {
 					errorId = 9;
 					errorMsg = "Expected a boolean here.";
 					return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
@@ -2297,7 +2297,7 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 18:
 				// OP_ENSURE_INT;
-				if ((valueStack[(valueStackSize - 1)][0] != 3)) {
+				if (valueStack[valueStackSize - 1][0] != 3) {
 					errorId = 9;
 					errorMsg = "Expected an integer here.";
 					return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
@@ -2305,8 +2305,8 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 17:
 				// OP_ENSURE_INT_OR_STRING;
-				i = valueStack[(valueStackSize - 1)][0];
-				if (((i != 3) && (i != 5))) {
+				i = valueStack[valueStackSize - 1][0];
+				if (i != 3 && i != 5) {
 					errorId = 9;
 					errorMsg = "Expected an integer or string here.";
 					return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
@@ -2314,7 +2314,7 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 19:
 				// OP_ENSURE_STRING;
-				if ((valueStack[(valueStackSize - 1)][0] != 5)) {
+				if (valueStack[valueStackSize - 1][0] != 5) {
 					errorId = 9;
 					errorMsg = "Expected a string here.";
 					return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
@@ -2324,10 +2324,10 @@ let RunInterpreterImpl = function(task) {
 				// OP_EXT_INVOKE;
 				name = row[5];
 				argc = row[2];
-				if ((ec[2][name] !== undefined)) {
+				if (ec[2][name] !== undefined) {
 					objArr = PST$createNewArray(argc);
-					i = (argc - 1);
-					while ((i >= 0)) {
+					i = argc - 1;
+					while (i >= 0) {
 						valueStackSize -= 1;
 						objArr[i] = valueStack[valueStackSize];
 						i -= 1;
@@ -2341,9 +2341,9 @@ let RunInterpreterImpl = function(task) {
 					if (task[3]) {
 						frame[1] += 1;
 						task[3] = false;
-						return ExRes_Suspend(task, (task[4] >= 0), task[4]);
+						return ExRes_Suspend(task, task[4] >= 0, task[4]);
 					}
-					if ((value == null)) {
+					if (value == null) {
 						value = globalValues[0];
 					}
 					valueStack[valueStackSize] = value;
@@ -2358,21 +2358,21 @@ let RunInterpreterImpl = function(task) {
 				// OP_FUNCTION_INVOKE;
 				argc = row[2];
 				args = PST$createNewArray(argc);
-				i = (argc - 1);
-				while ((i >= 0)) {
+				i = argc - 1;
+				while (i >= 0) {
 					valueStackSize -= 1;
 					args[i] = valueStack[valueStackSize];
 					i -= 1;
 				}
 				valueStackSize -= 1;
 				value = valueStack[valueStackSize];
-				if ((value[0] != 11)) {
+				if (value[0] != 11) {
 					errorId = 5;
 					errorMsg = "This is not a function";
 					return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 				}
 				fp = value[1];
-				if (((argc < fp[1]) || (argc > fp[2]))) {
+				if (argc < fp[1] || argc > fp[2]) {
 					errorId = 5;
 					errorMsg = "Incorrect number of arguments.";
 					return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
@@ -2400,7 +2400,7 @@ let RunInterpreterImpl = function(task) {
 						sz = valueArr.length;
 						values = PST$createNewArray(sz);
 						i = 0;
-						while ((i < sz)) {
+						while (i < sz) {
 							values[i] = valueArr[i];
 							i += 1;
 						}
@@ -2429,7 +2429,7 @@ let RunInterpreterImpl = function(task) {
 								sz = dictImpl1[2];
 								valueArr = PST$createNewArray(sz);
 								i = 0;
-								while ((i < sz)) {
+								while (i < sz) {
 									valueArr[i] = keys[i];
 									i += 1;
 								}
@@ -2441,7 +2441,7 @@ let RunInterpreterImpl = function(task) {
 								sz = dictImpl1[2];
 								valueArr = PST$createNewArray(sz);
 								i = 0;
-								while ((i < sz)) {
+								while (i < sz) {
 									valueArr[i] = values[i];
 									i += 1;
 								}
@@ -2449,7 +2449,7 @@ let RunInterpreterImpl = function(task) {
 								break;
 							case 10:
 								listImpl1 = fp[5][1];
-								if ((listImpl1[1] == listImpl1[2])) {
+								if (listImpl1[1] == listImpl1[2]) {
 									List_expandCapacity(listImpl1);
 								}
 								output = globalValues[0];
@@ -2461,7 +2461,7 @@ let RunInterpreterImpl = function(task) {
 								sz = listImpl1[1];
 								valueArr = listImpl1[3];
 								i = 0;
-								while ((i < sz)) {
+								while (i < sz) {
 									valueArr[i] = null;
 									i += 1;
 								}
@@ -2486,35 +2486,35 @@ let RunInterpreterImpl = function(task) {
 								sz = listImpl1[1];
 								int2 = 0;
 								int3 = sz;
-								if ((argc > 1)) {
+								if (argc > 1) {
 									value = args[1];
-									if ((value[0] != 3)) {
+									if (value[0] != 3) {
 										errorId = 4;
 										errorMsg = "starting index must be an integer.";
 										return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 									}
 									int2 = value[1];
-									if ((int2 < 0)) {
+									if (int2 < 0) {
 										int2 += sz;
 									}
-									if (((int2 < 0) || (int2 >= sz))) {
+									if (int2 < 0 || int2 >= sz) {
 										errorId = 8;
 										errorMsg = "starting index out of range.";
 										return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 									}
 								}
-								if ((argc == 3)) {
+								if (argc == 3) {
 									value = args[2];
-									if ((value[0] != 3)) {
+									if (value[0] != 3) {
 										errorId = 4;
 										errorMsg = "end index must be an integer.";
 										return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 									}
 									int3 = value[1];
-									if ((int3 < 0)) {
+									if (int3 < 0) {
 										int3 += sz;
 									}
-									if (((int3 < 0) || (int3 >= sz))) {
+									if (int3 < 0 || int3 >= sz) {
 										errorId = 8;
 										errorMsg = "end index out of range.";
 										return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
@@ -2527,7 +2527,7 @@ let RunInterpreterImpl = function(task) {
 								bool1 = false;
 								output = globalValues[4][1];
 								i = int2;
-								while ((i < int3)) {
+								while (i < int3) {
 									if (isValueEqual(left, valueArr[i])) {
 										output = buildInteger(globalValues, i);
 										i += sz;
@@ -2538,37 +2538,37 @@ let RunInterpreterImpl = function(task) {
 							case 16:
 								listImpl1 = fp[5][1];
 								sz = listImpl1[1];
-								int2 = (sz - 1);
+								int2 = sz - 1;
 								int3 = -1;
-								if ((argc > 1)) {
+								if (argc > 1) {
 									value = args[1];
-									if ((value[0] != 3)) {
+									if (value[0] != 3) {
 										errorId = 4;
 										errorMsg = "starting index must be an integer.";
 										return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 									}
 									int2 = value[1];
-									if ((int2 < 0)) {
+									if (int2 < 0) {
 										int2 += sz;
 									}
-									if (((int2 < 0) || (int2 >= sz))) {
+									if (int2 < 0 || int2 >= sz) {
 										errorId = 8;
 										errorMsg = "starting index out of range.";
 										return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 									}
 								}
-								if ((argc == 3)) {
+								if (argc == 3) {
 									value = args[2];
-									if ((value[0] != 3)) {
+									if (value[0] != 3) {
 										errorId = 4;
 										errorMsg = "end index must be an integer.";
 										return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 									}
 									int3 = value[1];
-									if ((int3 < -1)) {
+									if (int3 < -1) {
 										int3 += sz;
 									}
-									if (((int3 < -1) || (int3 > (sz - 1)))) {
+									if (int3 < -1 || int3 > sz - 1) {
 										errorId = 8;
 										errorMsg = "end index out of range.";
 										return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
@@ -2581,7 +2581,7 @@ let RunInterpreterImpl = function(task) {
 								bool1 = false;
 								output = globalValues[4][1];
 								i = int2;
-								while ((i > int3)) {
+								while (i > int3) {
 									if (isValueEqual(left, valueArr[i])) {
 										output = buildInteger(globalValues, i);
 										i -= int3;
@@ -2591,9 +2591,9 @@ let RunInterpreterImpl = function(task) {
 								break;
 							case 17:
 								str1 = "";
-								if ((argc == 1)) {
+								if (argc == 1) {
 									value1 = args[0];
-									if ((value1[0] != 5)) {
+									if (value1[0] != 5) {
 										return ThrowErrorImpl(task, 4, "list.join(sep) requires a string");
 									}
 									stringImpl1 = value1[1];
@@ -2615,8 +2615,8 @@ let RunInterpreterImpl = function(task) {
 								break;
 							case 19:
 								listImpl1 = fp[5][1];
-								sz = (listImpl1[1] - 1);
-								if ((sz == -1)) {
+								sz = listImpl1[1] - 1;
+								if (sz == -1) {
 									errorId = 8;
 									errorMsg = "Cannot pop from an empty list.";
 									return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
@@ -2629,7 +2629,7 @@ let RunInterpreterImpl = function(task) {
 								value16[0] = fp[5];
 								value16[1] = args[0];
 								value16[2] = null;
-								if ((args.length == 2)) {
+								if (args.length == 2) {
 									value16[2] = args[1];
 								}
 								argc += 1;
@@ -2641,11 +2641,11 @@ let RunInterpreterImpl = function(task) {
 							case 23:
 								listImpl1 = fp[5][1];
 								sz = listImpl1[1];
-								int1 = (sz >> 1);
+								int1 = sz >> 1;
 								valueArr = listImpl1[3];
-								j = (sz - 1);
+								j = sz - 1;
 								i = 0;
-								while ((i < int1)) {
+								while (i < int1) {
 									value = valueArr[i];
 									valueArr[i] = valueArr[j];
 									valueArr[j] = value;
@@ -2656,7 +2656,7 @@ let RunInterpreterImpl = function(task) {
 								break;
 							case 22:
 								value = args[0];
-								if ((value[0] != 3)) {
+								if (value[0] != 3) {
 									errorId = 4;
 									errorMsg = "list.remove() requires a valid index integer.";
 									return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
@@ -2664,19 +2664,19 @@ let RunInterpreterImpl = function(task) {
 								listImpl1 = fp[5][1];
 								j = value[1];
 								sz = listImpl1[1];
-								if ((j < 0)) {
+								if (j < 0) {
 									j += sz;
 								}
-								if (((j >= sz) || (j < 0))) {
+								if (j >= sz || j < 0) {
 									errorId = 8;
 									errorMsg = "list.remove() was given an index out of range.";
 									return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 								}
 								valueArr = listImpl1[3];
 								output = valueArr[j];
-								i = (j + 1);
-								while ((i < sz)) {
-									valueArr[(i - 1)] = valueArr[i];
+								i = j + 1;
+								while (i < sz) {
+									valueArr[i - 1] = valueArr[i];
 									i += 1;
 								}
 								sz -= 1;
@@ -2685,7 +2685,7 @@ let RunInterpreterImpl = function(task) {
 								break;
 							case 20:
 								value16[0] = fp[5];
-								if ((args.length == 1)) {
+								if (args.length == 1) {
 									value16[1] = args[0];
 								}
 								argc += 1;
@@ -2708,12 +2708,12 @@ let RunInterpreterImpl = function(task) {
 								sz = listImpl1[1];
 								intArray1 = PST$createNewArray(sz);
 								i = 0;
-								while ((i < sz)) {
+								while (i < sz) {
 									left = listImpl1[3][i];
-									if ((left[0] != 3)) {
+									if (left[0] != 3) {
 										return ThrowErrorImpl(task, 4, "Only lists of integers can be converted to byte buffers.");
 									}
-									intArray1[i] = (255 & left[1]);
+									intArray1[i] = 255 & left[1];
 									i += 1;
 								}
 								output = [8, intArray1];
@@ -2721,16 +2721,16 @@ let RunInterpreterImpl = function(task) {
 								break;
 							case 29:
 								value1 = args[0];
-								if ((value1[0] != 3)) {
+								if (value1[0] != 3) {
 									return ThrowErrorImpl(task, 4, "string.getCodePoint() requires an integer index ");
 								}
 								i = value1[1];
 								stringImpl1 = fp[5][1];
 								sz = stringImpl1[0];
-								if ((i < 0)) {
+								if (i < 0) {
 									i += sz;
 								}
-								if (((i < 0) || (i >= sz))) {
+								if (i < 0 || i >= sz) {
 									return ThrowErrorImpl(task, 8, "Index out of range.");
 								}
 								if (stringImpl1[1]) {
@@ -2743,7 +2743,7 @@ let RunInterpreterImpl = function(task) {
 								break;
 							case 32:
 								value1 = args[0];
-								if ((value1[0] != 5)) {
+								if (value1[0] != 5) {
 									return ThrowErrorImpl(task, 4, "string.split(sep) requires a string separator");
 								}
 								str1 = valueToHumanString(value1);
@@ -2759,9 +2759,9 @@ let RunInterpreterImpl = function(task) {
 								valueArr = PST$createNewArray(sz);
 								intArray1 = stringImpl1[2];
 								i = 0;
-								while ((i < sz)) {
+								while (i < sz) {
 									j = intArray1[i];
-									if ((j < 1200)) {
+									if (j < 1200) {
 										valueArr[i] = globalValues[3][j];
 									} else {
 										valueArr[i] = buildInteger(globalValues, j);
@@ -2797,13 +2797,13 @@ let RunInterpreterImpl = function(task) {
 					task[2] = frame;
 					fn = fp[4];
 					nextFrame = task[6];
-					if ((nextFrame != null)) {
+					if (nextFrame != null) {
 						task[6] = nextFrame[0];
 					} else {
 						nextFrame = [null, 0, null, 0, 0, 0, null, null, false, null, false];
 					}
 					nextFrame[0] = frame;
-					nextFrame[1] = (fn[2] - 1);
+					nextFrame[1] = fn[2] - 1;
 					nextFrame[2] = args;
 					nextFrame[3] = argc;
 					nextFrame[4] = valueStackSize;
@@ -2821,9 +2821,9 @@ let RunInterpreterImpl = function(task) {
 			case 22:
 				// OP_INDEX;
 				valueStackSize -= 1;
-				left = valueStack[(valueStackSize - 1)];
+				left = valueStack[valueStackSize - 1];
 				right = valueStack[valueStackSize];
-				switch (((left[0] * 16) + right[0])) {
+				switch (left[0] * 16 + right[0]) {
 					case 83:
 						stringImpl1 = left[1];
 						if (stringImpl1[1]) {
@@ -2832,12 +2832,12 @@ let RunInterpreterImpl = function(task) {
 						sz = stringImpl1[0];
 						i = right[1];
 						bool1 = false;
-						if ((i < 0)) {
+						if (i < 0) {
 							i += sz;
-							if ((i < 0)) {
+							if (i < 0) {
 								bool1 = true;
 							}
-						} else if ((i >= sz)) {
+						} else if (i >= sz) {
 							bool1 = true;
 						}
 						if (bool1) {
@@ -2847,20 +2847,20 @@ let RunInterpreterImpl = function(task) {
 						}
 						intArray1 = PST$createNewArray(1);
 						intArray1[0] = stringImpl1[2][i];
-						str1 = stringImpl1[3].substring(i, (i) + (1));
-						valueStack[(valueStackSize - 1)] = [5, [1, false, intArray1, str1, null, null]];
+						str1 = stringImpl1[3].substring(i, i + 1);
+						valueStack[valueStackSize - 1] = [5, [1, false, intArray1, str1, null, null]];
 						break;
 					case 147:
 						listImpl1 = left[1];
 						i = right[1];
 						sz = listImpl1[1];
 						bool1 = false;
-						if ((i < 0)) {
+						if (i < 0) {
 							i += sz;
-							if ((i < 0)) {
+							if (i < 0) {
 								bool1 = true;
 							}
-						} else if ((i >= sz)) {
+						} else if (i >= sz) {
 							bool1 = true;
 						}
 						if (bool1) {
@@ -2868,15 +2868,15 @@ let RunInterpreterImpl = function(task) {
 							errorMsg = "List index out of range.";
 							return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 						}
-						valueStack[(valueStackSize - 1)] = listImpl1[3][i];
+						valueStack[valueStackSize - 1] = listImpl1[3][i];
 						break;
 					case 163:
 						dictImpl1 = left[1];
 						i = right[1];
-						if ((dictImpl1[1] == 3)) {
-							if ((dictImpl1[6][i] !== undefined)) {
+						if (dictImpl1[1] == 3) {
+							if (dictImpl1[6][i] !== undefined) {
 								bool1 = false;
-								valueStack[(valueStackSize - 1)] = dictImpl1[5][dictImpl1[6][i]];
+								valueStack[valueStackSize - 1] = dictImpl1[5][dictImpl1[6][i]];
 							} else {
 								bool1 = true;
 							}
@@ -2896,10 +2896,10 @@ let RunInterpreterImpl = function(task) {
 							stringFlatten(stringImpl1);
 						}
 						str1 = stringImpl1[3];
-						if ((dictImpl1[1] == 5)) {
-							if ((dictImpl1[7][str1] !== undefined)) {
+						if (dictImpl1[1] == 5) {
+							if (dictImpl1[7][str1] !== undefined) {
 								bool1 = false;
-								valueStack[(valueStackSize - 1)] = dictImpl1[5][dictImpl1[7][str1]];
+								valueStack[valueStackSize - 1] = dictImpl1[5][dictImpl1[7][str1]];
 							} else {
 								bool1 = true;
 							}
@@ -2933,14 +2933,14 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 23:
 				// OP_INT_INCR;
-				i = (valueStackSize - 1);
+				i = valueStackSize - 1;
 				value = valueStack[i];
-				if ((value[0] != 3)) {
+				if (value[0] != 3) {
 					errorId = 9;
 					errorMsg = "Cannot increment/decrement non-integer";
 					return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 				}
-				valueStack[i] = buildInteger(globalValues, (row[2] + value[1]));
+				valueStack[i] = buildInteger(globalValues, row[2] + value[1]);
 				break;
 			case 24:
 				// OP_JUMP;
@@ -2948,12 +2948,12 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 26:
 				// OP_NEGATIVE_SIGN;
-				value = valueStack[(valueStackSize - 1)];
+				value = valueStack[valueStackSize - 1];
 				switch (value[0]) {
 					case 3:
 						i = -value[1];
-						if (((i < 1200) && (-i > 1200))) {
-							if ((i < 0)) {
+						if (i < 1200 && -i > 1200) {
+							if (i < 0) {
 								value = globalValues[3][i];
 							} else {
 								value = globalValues[3][i];
@@ -2964,7 +2964,7 @@ let RunInterpreterImpl = function(task) {
 						break;
 					case 4:
 						float1 = value[1];
-						if ((float1 != 0)) {
+						if (float1 != 0) {
 							value = [4, -float1];
 						}
 						break;
@@ -2973,7 +2973,7 @@ let RunInterpreterImpl = function(task) {
 						errorMsg = "Cannot apply a negative sign to this type.";
 						return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 				}
-				valueStack[(valueStackSize - 1)] = value;
+				valueStack[valueStackSize - 1] = value;
 				break;
 			case 27:
 				// OP_POP;
@@ -2997,8 +2997,8 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 30:
 				// OP_POP_IF_FALSE_OR_JUMP;
-				value = valueStack[(valueStackSize - 1)];
-				if (((value[0] == 2) && !value[1])) {
+				value = valueStack[valueStackSize - 1];
+				if (value[0] == 2 && !value[1]) {
 					valueStackSize -= 1;
 				} else {
 					pc += row[2];
@@ -3006,8 +3006,8 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 31:
 				// OP_POP_IF_NULL_OR_JUMP;
-				value = valueStack[(valueStackSize - 1)];
-				if ((value[0] == 1)) {
+				value = valueStack[valueStackSize - 1];
+				if (value[0] == 1) {
 					valueStackSize -= 1;
 				} else {
 					pc += row[2];
@@ -3015,8 +3015,8 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 32:
 				// OP_POP_IF_TRUE_OR_JUMP;
-				value = valueStack[(valueStackSize - 1)];
-				if (((value[0] == 2) && value[1])) {
+				value = valueStack[valueStackSize - 1];
+				if (value[0] == 2 && value[1]) {
 					valueStackSize -= 1;
 				} else {
 					pc += row[2];
@@ -3024,7 +3024,7 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 33:
 				// OP_PUSH_ARG;
-				if ((valueStackSize == valueStackCapacity)) {
+				if (valueStackSize == valueStackCapacity) {
 					valueStack = increaseValueStackCapacity(task);
 					valueStackCapacity = valueStack.length;
 				}
@@ -3033,8 +3033,8 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 34:
 				// OP_PUSH_ARG_IF_PRESENT;
-				if ((row[2] < frame[3])) {
-					if ((valueStackSize == valueStackCapacity)) {
+				if (row[2] < frame[3]) {
+					if (valueStackSize == valueStackCapacity) {
 						valueStack = increaseValueStackCapacity(task);
 						valueStackCapacity = valueStack.length;
 					}
@@ -3054,7 +3054,7 @@ let RunInterpreterImpl = function(task) {
 			case 36:
 				// OP_PUSH_BOOL;
 				row[8] = globalValues[2];
-				if ((row[2] == 1)) {
+				if (row[2] == 1) {
 					row[8] = globalValues[1];
 				}
 				row[0] = 44;
@@ -3069,11 +3069,11 @@ let RunInterpreterImpl = function(task) {
 					pc -= 1;
 				} else {
 					classDef[6] = true;
-					if ((classDef[5] > 0)) {
+					if (classDef[5] > 0) {
 						frame[1] = pc;
 						frame[4] = valueStackSize;
 						task[2] = frame;
-						pc = (ec[4][classDef[5]][2] - 1);
+						pc = ec[4][classDef[5]][2] - 1;
 						frame = [frame, pc, PST$createNewArray(0), 0, valueStackSize, valueStackSize, {}, classDef[13], true, null, false];
 						locals = frame[6];
 						task[2] = frame;
@@ -3084,12 +3084,12 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 38:
 				// OP_PUSH_FLOAT;
-				if ((row[1].length == 1)) {
+				if (row[1].length == 1) {
 					i = row[2];
-					if (((i >= 0) && (i <= 4))) {
+					if (i >= 0 && i <= 4) {
 						value = globalValues[9][i];
 					} else {
-						value = buildFloat((i * 0.25));
+						value = buildFloat(i * 0.25);
 					}
 				} else {
 					value = buildFloat(parseFloat(row[5]));
@@ -3124,7 +3124,7 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 43:
 				// OP_PUSH_THIS;
-				if ((valueStackSize == valueStackCapacity)) {
+				if (valueStackSize == valueStackCapacity) {
 					valueStack = increaseValueStackCapacity(task);
 					valueStackCapacity = valueStack.length;
 				}
@@ -3133,7 +3133,7 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 44:
 				// OP_PUSH_VALUE;
-				if ((valueStackSize == valueStackCapacity)) {
+				if (valueStackSize == valueStackCapacity) {
 					valueStack = increaseValueStackCapacity(task);
 					valueStackCapacity = valueStack.length;
 				}
@@ -3143,8 +3143,8 @@ let RunInterpreterImpl = function(task) {
 			case 45:
 				// OP_PUSH_VAR;
 				name = row[5];
-				if ((locals[name] !== undefined)) {
-					if ((valueStackSize == valueStackCapacity)) {
+				if (locals[name] !== undefined) {
+					if (valueStackSize == valueStackCapacity) {
 						valueStack = increaseValueStackCapacity(task);
 						valueStackCapacity = valueStack.length;
 					}
@@ -3158,14 +3158,14 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 46:
 				// OP_RETURN;
-				if ((ec[10][pc] != null)) {
+				if (ec[10][pc] != null) {
 					frame[1] = pc;
 					frame[4] = valueStackSize;
 					task[2] = frame;
 					return ExRes_HardCrash(task, "TODO: returns from within try/catch/finally blocks");
 				}
 				if (frame[8]) {
-					valueStack[(valueStackSize - 1)] = frame[7];
+					valueStack[valueStackSize - 1] = frame[7];
 				}
 				nextFrame = frame[0];
 				frame[0] = task[6];
@@ -3173,7 +3173,7 @@ let RunInterpreterImpl = function(task) {
 				frame[7] = null;
 				frame = nextFrame;
 				task[2] = frame;
-				if ((frame == null)) {
+				if (frame == null) {
 					return ExRes_Done(task);
 				}
 				locals = frame[6];
@@ -3183,9 +3183,9 @@ let RunInterpreterImpl = function(task) {
 				// OP_SLICE;
 				i = row[2];
 				valueStackSize -= 1;
-				if ((((i & 4)) > 0)) {
+				if ((i & 4) > 0) {
 					int3 = valueStack[valueStackSize][1];
-					if ((int3 == 0)) {
+					if (int3 == 0) {
 						errorId = 4;
 						errorMsg = "Cannot use 0 as a step distance for a slice.";
 						return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
@@ -3194,14 +3194,14 @@ let RunInterpreterImpl = function(task) {
 				} else {
 					int3 = 1;
 				}
-				if ((((i & 2)) > 0)) {
+				if ((i & 2) > 0) {
 					int2 = valueStack[valueStackSize][1];
 					valueStackSize -= 1;
 					bool2 = true;
 				} else {
 					bool2 = false;
 				}
-				if ((((i & 1)) > 0)) {
+				if ((i & 1) > 0) {
 					int1 = valueStack[valueStackSize][1];
 					valueStackSize -= 1;
 					bool1 = true;
@@ -3209,14 +3209,14 @@ let RunInterpreterImpl = function(task) {
 					bool1 = false;
 				}
 				value = valueStack[valueStackSize];
-				if ((value[0] == 5)) {
+				if (value[0] == 5) {
 					bool3 = true;
 					stringImpl1 = value[1];
 					if (stringImpl1[1]) {
 						stringFlatten(stringImpl1);
 					}
 					sz = stringImpl1[0];
-				} else if ((value[0] == 9)) {
+				} else if (value[0] == 9) {
 					bool3 = false;
 					listImpl1 = value[1];
 					sz = listImpl1[1];
@@ -3226,42 +3226,42 @@ let RunInterpreterImpl = function(task) {
 					return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 				}
 				if (bool1) {
-					if ((int1 < 0)) {
+					if (int1 < 0) {
 						int1 += sz;
 					}
-					if (((int1 < 0) || (int1 >= sz))) {
+					if (int1 < 0 || int1 >= sz) {
 						errorId = 8;
 						errorMsg = "Start index is out of range.";
 						return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 					}
 				}
-				if ((bool2 && (int2 < 0))) {
+				if (bool2 && int2 < 0) {
 					int2 += sz;
 				}
 				if (bool1) {
 					if (bool2) {
-						if ((int3 > 0)) {
-							if ((int1 <= int2)) {
+						if (int3 > 0) {
+							if (int1 <= int2) {
 								leftType = int1;
 								rightType = int2;
-								if ((rightType > sz)) {
+								if (rightType > sz) {
 									rightType = sz;
 								}
 							} else {
 								leftType = 0;
 								rightType = 0;
 							}
-						} else if ((int1 <= int2)) {
+						} else if (int1 <= int2) {
 							leftType = 0;
 							rightType = 0;
 						} else {
 							leftType = int1;
 							rightType = int2;
-							if ((rightType < -1)) {
+							if (rightType < -1) {
 								rightType = -1;
 							}
 						}
-					} else if ((int3 > 0)) {
+					} else if (int3 > 0) {
 						leftType = int1;
 						rightType = sz;
 					} else {
@@ -3269,38 +3269,38 @@ let RunInterpreterImpl = function(task) {
 						rightType = -1;
 					}
 				} else if (bool2) {
-					if ((int3 > 0)) {
+					if (int3 > 0) {
 						leftType = 0;
 						rightType = int2;
-						if ((rightType > sz)) {
+						if (rightType > sz) {
 							rightType = sz;
 						}
 					} else {
-						leftType = (sz - 1);
+						leftType = sz - 1;
 						rightType = int2;
-						if ((rightType < -1)) {
+						if (rightType < -1) {
 							rightType = -1;
 						}
 					}
-				} else if ((int3 > 0)) {
+				} else if (int3 > 0) {
 					leftType = 0;
 					rightType = sz;
 				} else {
-					leftType = (sz - 1);
+					leftType = sz - 1;
 					rightType = -1;
 				}
 				if (bool3) {
 					intList = [];
 					intArray1 = stringImpl1[2];
-					if ((int3 > 0)) {
+					if (int3 > 0) {
 						i = leftType;
-						while ((i < rightType)) {
+						while (i < rightType) {
 							intList.push(intArray1[i]);
 							i += int3;
 						}
 					} else {
 						i = leftType;
-						while ((i > rightType)) {
+						while (i > rightType) {
 							intList.push(intArray1[i]);
 							i += int3;
 						}
@@ -3309,15 +3309,15 @@ let RunInterpreterImpl = function(task) {
 				} else {
 					valueList = [];
 					valueArr = listImpl1[3];
-					if ((int3 > 0)) {
+					if (int3 > 0) {
 						i = leftType;
-						while ((i < rightType)) {
+						while (i < rightType) {
 							valueList.push(valueArr[i]);
 							i += int3;
 						}
 					} else {
 						i = leftType;
-						while ((i > rightType)) {
+						while (i > rightType) {
 							valueList.push(valueArr[i]);
 							i += int3;
 						}
@@ -3335,22 +3335,22 @@ let RunInterpreterImpl = function(task) {
 					case 6:
 						valueStackSize -= 2;
 						left = valueStack[valueStackSize];
-						right = valueStack[(valueStackSize + 1)];
+						right = valueStack[valueStackSize + 1];
 						leftType = left[0];
 						rightType = right[0];
-						if ((leftType != rightType)) {
-							if (((leftType == 3) && (rightType == 4))) {
-								float1 = (left[1] - right[1]);
-							} else if (((leftType == 4) && (rightType == 3))) {
-								float1 = (left[1] - right[1]);
+						if (leftType != rightType) {
+							if (leftType == 3 && rightType == 4) {
+								float1 = left[1] - right[1];
+							} else if (leftType == 4 && rightType == 3) {
+								float1 = left[1] - right[1];
 							} else {
-								float1 = (0.0 + leftType - rightType);
+								float1 = 0.0 + leftType - rightType;
 							}
-						} else if ((leftType == 3)) {
-							float1 = (0.0 + left[1] - right[1]);
-						} else if ((leftType == 4)) {
-							float1 = (left[1] - right[1]);
-						} else if ((leftType == 5)) {
+						} else if (leftType == 3) {
+							float1 = 0.0 + left[1] - right[1];
+						} else if (leftType == 4) {
+							float1 = left[1] - right[1];
+						} else if (leftType == 5) {
 							stringImpl1 = left[1];
 							stringImpl2 = right[1];
 							if (stringImpl1[1]) {
@@ -3361,30 +3361,30 @@ let RunInterpreterImpl = function(task) {
 							}
 							sz = stringImpl1[0];
 							int2 = stringImpl2[0];
-							if ((int2 < sz)) {
+							if (int2 < sz) {
 								sz = int2;
 							}
 							int3 = 0;
 							i = 0;
-							while ((i < sz)) {
+							while (i < sz) {
 								int1 = stringImpl1[2][i];
 								int2 = stringImpl2[2][i];
-								if ((int1 != int2)) {
-									int3 = (int1 - int2);
+								if (int1 != int2) {
+									int3 = int1 - int2;
 									i += sz;
 								}
 								i += 1;
 							}
-							if ((int3 == 0)) {
-								int3 = (stringImpl2[0] - stringImpl1[0]);
+							if (int3 == 0) {
+								int3 = stringImpl2[0] - stringImpl1[0];
 							}
-							float1 = (0.0 + int3);
+							float1 = 0.0 + int3;
 						} else {
 							float1 = 0.0;
 						}
-						if ((float1 == 0)) {
+						if (float1 == 0) {
 							output = globalValues[7];
-						} else if ((float1 < 0)) {
+						} else if (float1 < 0) {
 							output = globalValues[4][1];
 						} else {
 							output = globalValues[8];
@@ -3397,30 +3397,30 @@ let RunInterpreterImpl = function(task) {
 					case 4:
 						valueStackSize -= 2;
 						output = VALUE_FALSE;
-						if (Sort_getNextCmp(valueStack[valueStackSize], valueStack[(valueStackSize + 1)])) {
+						if (Sort_getNextCmp(valueStack[valueStackSize], valueStack[valueStackSize + 1])) {
 							output = VALUE_TRUE;
 						}
 						break;
 					case 5:
 						valueStackSize -= 2;
 						value = valueStack[valueStackSize];
-						bool1 = valueStack[(valueStackSize + 1)][1];
+						bool1 = valueStack[valueStackSize + 1][1];
 						output = Sort_proceedWithCmpResult(value, bool1);
 						break;
 					case 2:
 						valueStackSize -= 2;
-						output = Sort_start(valueStack[valueStackSize], valueStack[(valueStackSize + 1)]);
+						output = Sort_start(valueStack[valueStackSize], valueStack[valueStackSize + 1]);
 						break;
 					case 1:
-						float1 = ((Date.now ? Date.now() : new Date().getTime()) / 1000.0);
-						if ((row[3] == 1)) {
+						float1 = (Date.now ? Date.now() : new Date().getTime()) / 1000.0;
+						if (row[3] == 1) {
 							output = buildFloat(float1);
 						} else {
 							output = buildInteger(globalValues, Math.floor(float1));
 						}
 						break;
 				}
-				if ((valueStackSize == valueStackCapacity)) {
+				if (valueStackSize == valueStackCapacity) {
 					valueStack = increaseValueStackCapacity(task);
 					valueStackCapacity = valueStack.length;
 				}
@@ -3429,59 +3429,59 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 49:
 				// OP_STACK_DO_SI_DO_4A;
-				i = (valueStackSize - 4);
-				j = (i + 2);
+				i = valueStackSize - 4;
+				j = i + 2;
 				value = valueStack[i];
 				valueStack[i] = valueStack[j];
 				valueStack[j] = value;
-				value = valueStack[(i + 1)];
-				valueStack[(i + 1)] = valueStack[(j + 1)];
-				valueStack[(j + 1)] = value;
+				value = valueStack[i + 1];
+				valueStack[i + 1] = valueStack[j + 1];
+				valueStack[j + 1] = value;
 				break;
 			case 50:
 				// OP_STACK_DO_SI_DUP_1;
-				if ((valueStackSize == valueStackCapacity)) {
+				if (valueStackSize == valueStackCapacity) {
 					valueStack = increaseValueStackCapacity(task);
 					valueStackCapacity = valueStack.length;
 				}
-				i = (valueStackSize - 2);
+				i = valueStackSize - 2;
 				valueStackSize += 1;
-				valueStack[(i + 2)] = valueStack[i];
-				valueStack[i] = valueStack[(i + 1)];
+				valueStack[i + 2] = valueStack[i];
+				valueStack[i] = valueStack[i + 1];
 				break;
 			case 51:
 				// OP_STACK_DO_SI_DUP_2;
-				i = (valueStackSize - 3);
+				i = valueStackSize - 3;
 				value = valueStack[i];
-				valueStack[i] = valueStack[(i + 1)];
-				valueStack[(i + 1)] = valueStack[(i + 2)];
-				valueStack[(i + 2)] = value;
+				valueStack[i] = valueStack[i + 1];
+				valueStack[i + 1] = valueStack[i + 2];
+				valueStack[i + 2] = value;
 				break;
 			case 52:
 				// OP_STACK_DUPLICATE;
-				if ((valueStackSize == valueStackCapacity)) {
+				if (valueStackSize == valueStackCapacity) {
 					valueStack = increaseValueStackCapacity(task);
 					valueStackCapacity = valueStack.length;
 				}
-				valueStack[valueStackSize] = valueStack[(valueStackSize - 1)];
+				valueStack[valueStackSize] = valueStack[valueStackSize - 1];
 				valueStackSize += 1;
 				break;
 			case 53:
 				// OP_STACK_DUPLICATE_2;
-				if (((valueStackSize + 2) >= valueStackCapacity)) {
+				if (valueStackSize + 2 >= valueStackCapacity) {
 					valueStack = increaseValueStackCapacity(task);
 					valueStackCapacity = valueStack.length;
 				}
-				valueStack[valueStackSize] = valueStack[(valueStackSize - 2)];
-				valueStack[(valueStackSize + 1)] = valueStack[(valueStackSize - 1)];
+				valueStack[valueStackSize] = valueStack[valueStackSize - 2];
+				valueStack[valueStackSize + 1] = valueStack[valueStackSize - 1];
 				valueStackSize += 2;
 				break;
 			case 54:
 				// OP_SWITCH_ADD;
-				if ((row[2] < 0)) {
+				if (row[2] < 0) {
 					i = 1;
-					while ((i < row[1].length)) {
-						switchIntLookup[row[1][(i + 1)]] = row[1][i];
+					while (i < row[1].length) {
+						switchIntLookup[row[1][i + 1]] = row[1][i];
 						i += 2;
 					}
 				} else {
@@ -3490,7 +3490,7 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 55:
 				// OP_SWITCH_BUILD;
-				if ((row[3] == 1)) {
+				if (row[3] == 1) {
 					switchIntLookup = {};
 					switchStrLookup = null;
 				} else {
@@ -3502,7 +3502,7 @@ let RunInterpreterImpl = function(task) {
 				// OP_SWITCH_FINALIZE;
 				pc -= row[1][0];
 				row = byteCode[pc];
-				if ((switchIntLookup != null)) {
+				if (switchIntLookup != null) {
 					ec[13][pc] = switchIntLookup;
 					row[0] = 57;
 				} else {
@@ -3517,7 +3517,7 @@ let RunInterpreterImpl = function(task) {
 				value = valueStack[valueStackSize];
 				i = value[1];
 				switchIntLookup = ec[13][pc];
-				if ((switchIntLookup[i] !== undefined)) {
+				if (switchIntLookup[i] !== undefined) {
 					pc += switchIntLookup[i];
 				} else {
 					pc += row[2];
@@ -3533,7 +3533,7 @@ let RunInterpreterImpl = function(task) {
 				}
 				str1 = stringImpl1[3];
 				switchStrLookup = ec[14][pc];
-				if ((switchStrLookup[str1] !== undefined)) {
+				if (switchStrLookup[str1] !== undefined) {
 					pc += switchStrLookup[str1];
 				} else {
 					pc += row[2];
@@ -3544,19 +3544,19 @@ let RunInterpreterImpl = function(task) {
 				valueStackSize -= 1;
 				value = valueStack[valueStackSize];
 				bool1 = false;
-				if ((value[0] == 12)) {
+				if (value[0] == 12) {
 					instance1 = value[1];
 					int1 = 0;
 					i = 1;
-					while (((i < ec[6].length) && (int1 == 0))) {
-						if ((ec[6][i][3] == "Exception")) {
+					while (i < ec[6].length && int1 == 0) {
+						if (ec[6][i][3] == "Exception") {
 							int1 = i;
 						}
 						i += 1;
 					}
 					classDef = instance1[1];
-					while ((classDef != null)) {
-						if ((classDef[0] == int1)) {
+					while (classDef != null) {
+						if (classDef[0] == int1) {
 							bool1 = true;
 						}
 						classDef = classDef[2];
@@ -3584,7 +3584,7 @@ let RunInterpreterImpl = function(task) {
 				frame[10] = exceptionCatcherRouteException(value, row[1], intBuffer16);
 				pc += intBuffer16[0];
 				if (!frame[10]) {
-					if ((valueStackSize == valueStackCapacity)) {
+					if (valueStackSize == valueStackCapacity) {
 						valueStack = increaseValueStackCapacity(task);
 						valueStackCapacity = valueStack.length;
 					}
@@ -3595,7 +3595,7 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 60:
 				// OP_TRY_FINALLY_END;
-				if ((frame[9] != null)) {
+				if (frame[9] != null) {
 					value = frame[9];
 					if (frame[10]) {
 						frame[1] = pc;
@@ -3615,29 +3615,29 @@ let RunInterpreterImpl = function(task) {
 				frame[1] = pc;
 				frame[4] = valueStackSize;
 				task[2] = frame;
-				return ExRes_HardCrash(task, "INVALID OP CODE: " + ('' + row[0]));
+				return ExRes_HardCrash(task, "INVALID OP CODE: " + (row[0] + ''));
 		}
 		pc += 1;
 	}
 };
 
 let Sort_buildTaskList = function(start, length, items, output, tasks) {
-	if ((length == 1)) {
+	if (length == 1) {
 		let node = [items[start], output[start], null];
 		let task = [true, null, null, node, node, null, false, null];
 		tasks.push(task);
 		return task;
 	}
-	if ((length == 2)) {
+	if (length == 2) {
 		let left = [items[start], output[start], null];
-		let right = [items[(start + 1)], output[(start + 1)], null];
+		let right = [items[start + 1], output[start + 1], null];
 		let task2 = [false, left, right, null, null, null, false, null];
 		tasks.push(task2);
 		return task2;
 	}
-	let half = (length >> 1);
+	let half = length >> 1;
 	let leftTask = Sort_buildTaskList(start, half, items, output, tasks);
-	let rightTask = Sort_buildTaskList((start + half), (length - half), items, output, tasks);
+	let rightTask = Sort_buildTaskList(start + half, length - half, items, output, tasks);
 	let taskMerge = [false, null, null, null, null, null, false, null];
 	leftTask[5] = taskMerge;
 	leftTask[6] = true;
@@ -3651,7 +3651,7 @@ let Sort_end = function(state) {
 	let items = (arr[1])[3];
 	let walker = state[0];
 	let i = 0;
-	while ((walker != null)) {
+	while (walker != null) {
 		items[i] = walker[1];
 		walker = walker[2];
 		i += 1;
@@ -3666,7 +3666,7 @@ let Sort_getNextCmp = function(sortStateValue, pairValue) {
 	let keepRunning = true;
 	while (keepRunning) {
 		if (task[0]) {
-			if ((task[5] == null)) {
+			if (task[5] == null) {
 				o[0] = task[3];
 				keepRunning = false;
 				return false;
@@ -3678,18 +3678,18 @@ let Sort_getNextCmp = function(sortStateValue, pairValue) {
 			}
 			task = task[7];
 			o[4] = task;
-			keepRunning = (task != null);
+			keepRunning = task != null;
 		} else {
-			if (((task[1] != null) && (task[2] != null))) {
+			if (task[1] != null && task[2] != null) {
 				pair[0] = task[1][0];
 				pair[1] = task[2][0];
 				return true;
 			}
-			if (((task[1] == null) && (task[2] == null))) {
+			if (task[1] == null && task[2] == null) {
 				task[0] = true;
 			} else {
 				let mergeWinner = null;
-				if ((task[1] == null)) {
+				if (task[1] == null) {
 					mergeWinner = task[2];
 					task[2] = mergeWinner[2];
 					mergeWinner[2] = null;
@@ -3698,7 +3698,7 @@ let Sort_getNextCmp = function(sortStateValue, pairValue) {
 					task[1] = mergeWinner[2];
 					mergeWinner[2] = null;
 				}
-				if ((task[3] == null)) {
+				if (task[3] == null) {
 					task[3] = mergeWinner;
 					task[4] = mergeWinner;
 				} else {
@@ -3723,7 +3723,7 @@ let Sort_proceedWithCmpResult = function(stateVal, isSwap) {
 		task[1] = winner[2];
 	}
 	winner[2] = null;
-	if ((task[3] == null)) {
+	if (task[3] == null) {
 		task[3] = winner;
 	} else {
 		task[4][2] = winner;
@@ -3733,24 +3733,24 @@ let Sort_proceedWithCmpResult = function(stateVal, isSwap) {
 };
 
 let Sort_start = function(valueList, mirrorList) {
-	if ((mirrorList[0] == 1)) {
+	if (mirrorList[0] == 1) {
 		mirrorList = valueList;
 	}
 	let values = valueList[1];
 	let sz = values[1];
 	let items = values[3];
 	let mirror = (mirrorList[1])[3];
-	let o = [null, null, null, (values[1] < 2), null, mirrorList];
+	let o = [null, null, null, values[1] < 2, null, mirrorList];
 	if (o[3]) {
-		if ((items.length == 1)) {
+		if (items.length == 1) {
 			o[0] = [items[0], mirror[0], null];
 		}
 	} else {
 		let tasks = [];
 		Sort_buildTaskList(0, sz, items, mirror, tasks);
 		let i = 1;
-		while ((i < tasks.length)) {
-			tasks[(i - 1)][7] = tasks[i];
+		while (i < tasks.length) {
+			tasks[i - 1][7] = tasks[i];
 			i += 1;
 		}
 		o[4] = tasks[0];
@@ -3768,7 +3768,7 @@ let stringFlatten = function(s) {
 	let i = 0;
 	let currentLen = 0;
 	let currentUChars = null;
-	while ((q.length > 0)) {
+	while (q.length > 0) {
 		current = q.pop();
 		if (current[1]) {
 			q.push(current[5]);
@@ -3777,8 +3777,8 @@ let stringFlatten = function(s) {
 			currentUChars = current[2];
 			currentLen = current[0];
 			i = 0;
-			while ((i < currentLen)) {
-				ucharsBuilder[(i + ucharOffset)] = currentUChars[i];
+			while (i < currentLen) {
+				ucharsBuilder[i + ucharOffset] = currentUChars[i];
 				i += 1;
 			}
 			ucharOffset += currentLen;
@@ -3805,7 +3805,7 @@ let stringUtil_changeCase = function(orig, isUpper) {
 	} else {
 		s2 = s.toLowerCase();
 	}
-	if ((s2 == s)) {
+	if (s2 == s) {
 		return orig;
 	}
 	return [5, buildAsciiStringImpl(s2)];
@@ -3820,7 +3820,7 @@ let stringUtil_split = function(g, str, sep) {
 	let sz = values.length;
 	let o = PST$createNewArray(sz);
 	let i = 0;
-	while ((i < sz)) {
+	while (i < sz) {
 		o[i] = buildString(g, values[i], false);
 		i += 1;
 	}
@@ -3831,7 +3831,7 @@ let stringUtil_trim = function(str, front, back) {
 	let strimpl = str[1];
 	let start = 0;
 	let length = strimpl[0];
-	if ((length == 0)) {
+	if (length == 0) {
 		return str;
 	}
 	if (strimpl[1]) {
@@ -3839,8 +3839,8 @@ let stringUtil_trim = function(str, front, back) {
 	}
 	let c = 0;
 	let uchars = strimpl[2];
-	while ((back && (length > 0))) {
-		c = uchars[(length - 1)];
+	while (back && length > 0) {
+		c = uchars[length - 1];
 		switch (c) {
 			case 9:
 				length -= 1;
@@ -3859,7 +3859,7 @@ let stringUtil_trim = function(str, front, back) {
 				break;
 		}
 	}
-	while ((front && (length > 0))) {
+	while (front && length > 0) {
 		c = uchars[start];
 		switch (c) {
 			case 9:
@@ -3883,16 +3883,16 @@ let stringUtil_trim = function(str, front, back) {
 				break;
 		}
 	}
-	if ((length == strimpl[0])) {
+	if (length == strimpl[0]) {
 		return str;
 	}
 	let newChars = PST$createNewArray(length);
 	let i = 0;
-	while ((i < length)) {
-		newChars[i] = uchars[(i + start)];
+	while (i < length) {
+		newChars[i] = uchars[i + start];
 		i += 1;
 	}
-	let o = [length, false, newChars, strimpl[3].substring(start, (start) + (length)), null, null];
+	let o = [length, false, newChars, strimpl[3].substring(start, start + length), null, null];
 	return [5, o];
 };
 
@@ -3905,7 +3905,7 @@ let ThrowError = function(task, frame, pc, valueStackSize, errId, msg) {
 
 let ThrowErrorImpl = function(task, errId, msg) {
 	let frame = task[2];
-	if (((frame[4] + 5) < task[5].length)) {
+	if (frame[4] + 5 < task[5].length) {
 		increaseValueStackCapacity(task);
 	}
 	let ec = task[1];
@@ -3919,7 +3919,7 @@ let ThrowErrorImpl = function(task, errId, msg) {
 };
 
 let tryGetNameId = function(names, s) {
-	if ((names[s] !== undefined)) {
+	if (names[s] !== undefined) {
 		return names[s];
 	}
 	return -1;
@@ -3927,13 +3927,13 @@ let tryGetNameId = function(names, s) {
 
 let valueArrayIncreaseCapacity = function(oldArr) {
 	let oldCapacity = oldArr.length;
-	let newCapacity = (oldCapacity * 2);
-	if ((newCapacity < 8)) {
+	let newCapacity = oldCapacity * 2;
+	if (newCapacity < 8) {
 		newCapacity = 8;
 	}
 	let newArr = PST$createNewArray(newCapacity);
 	let i = 0;
-	while ((i < oldCapacity)) {
+	while (i < oldCapacity) {
 		newArr[i] = oldArr[i];
 		i += 1;
 	}
@@ -3951,9 +3951,9 @@ let valueToHumanString = function(value) {
 			}
 			return "false";
 		case 3:
-			return ('' + value[1]);
+			return value[1] + '';
 		case 4:
-			let floatStr = '' + value[1];
+			let floatStr = value[1] + '';
 			if (!(floatStr.indexOf(".") != -1)) {
 				floatStr = floatStr + ".0";
 			}
@@ -3966,11 +3966,11 @@ let valueToHumanString = function(value) {
 			return strImpl[3];
 		case 12:
 			let inst = value[1];
-			return ["Instance<", inst[1][3], ":", ('' + inst[0]), ">"].join('');
+			return ["Instance<", inst[1][3], ":", inst[0] + '', ">"].join('');
 		default:
 			break;
 	}
-	return "TODO: to string for type: " + ('' + value[0]);
+	return "TODO: to string for type: " + (value[0] + '');
 };
 
 return [bubbleException, buildAsciiStringImpl, buildBase64String, buildFloat, buildFunctionFromInfo, buildInteger, buildList, buildString, convertToStringImpl, createClassInfo, createMainTask, createNewTask, createStringFromUnicodeArray, DictImpl_ensureCapacity, exceptionCatcherRouteException, ExRes_Done, ExRes_HardCrash, ExRes_Suspend, finalizeExecutionContext, FunctionPointer_cloneWithNewType, generateNameLookup, generateStackTrace, generateTryDescriptors, getExceptionMessage, getGlobalsFromTask, increaseValueStackCapacity, injectNameLookup, isValueEqual, List_add, List_expandCapacity, List_get, List_join, List_pop, List_removeAt, List_set, new_ByteCodeRow, new_ExecutionContext, new_ExecutionResult, new_GlobalValues, ParseRaw_entitiesSection_classMemberResolver, ParseRaw_entitiesSection_parseClasses, ParseRaw_entitiesSection_parseEnums, ParseRaw_entitiesSection_parseFunctions, ParseRaw_parseEntityData, ParseRaw_parseMetadata, ParseRaw_parseStringData, ParseRaw_parseTokenData, ParseRaw_popByteCodeRows, ParseRaw_popBytes, ParseRaw_popFixedLenString, ParseRaw_popInt, ParseRaw_popLenString, ParseRaw_popSingleByte, ParseRawData, PUBLIC_getApplicationContextFromTask, PUBLIC_getExecutionContextError, PUBLIC_getTaskResultError, PUBLIC_getTaskResultSleepAmount, PUBLIC_getTaskResultStatus, PUBLIC_initializeExecutionContext, PUBLIC_listValueAdd, PUBLIC_requestTaskSuspension, PUBLIC_startMainTask, PUBLIC_unwrapInteger, PUBLIC_unwrapNativeHandle, PUBLIC_valueToString, PUBLIC_wrapBoolean, PUBLIC_wrapInteger, PUBLIC_wrapNativeHandle, PUBLIC_wrapString, RunInterpreter, RunInterpreterImpl, Sort_buildTaskList, Sort_end, Sort_getNextCmp, Sort_proceedWithCmpResult, Sort_start, stringFlatten, stringUtil_changeCase, stringUtil_split, stringUtil_trim, ThrowError, ThrowErrorImpl, tryGetNameId, valueArrayIncreaseCapacity, valueToHumanString];
