@@ -5,15 +5,17 @@ namespace CommonScript.Runtime.Internal
 {
     public static class FunctionWrapper
     {
-        #pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
-        #pragma warning disable CS8602 // Dereference of a possibly null reference.
-        #pragma warning disable CS8603 // Possible null reference return.
-        #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-        private static int[] PST_stringToUtf8Bytes(string str) {
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+#pragma warning disable CS8603 // Possible null reference return.
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
+        private static int[] PST_stringToUtf8Bytes(string str)
+        {
             byte[] bytes = System.Text.Encoding.UTF8.GetBytes(str);
             int len = bytes.Length;
             int[] output = new int[len];
-            for (int i = 0; i < len; i++) {
+            for (int i = 0; i < len; i++)
+            {
                 output[i] = ((int)bytes[i]) & 255;
             }
             return output;
@@ -129,11 +131,11 @@ namespace CommonScript.Runtime.Internal
             int j = 0;
             while (j < 26)
             {
-                chars[j] = ((char) ((int) 'A' + j)).ToString();
-                chars[j + 26] = ((char) ((int) 'a' + j)).ToString();
+                chars[j] = ((char)((int)'A' + j)).ToString();
+                chars[j + 26] = ((char)((int)'a' + j)).ToString();
                 if (j < 10)
                 {
-                    chars[j + 52] = ((char) ((int) '0' + j)).ToString();
+                    chars[j + 52] = ((char)((int)'0' + j)).ToString();
                 }
                 j += 1;
             }
@@ -228,24 +230,24 @@ namespace CommonScript.Runtime.Internal
             switch (v.type)
             {
                 case 1:
-                    return (StringImpl) buildString(g, "null", true).internalValue;
+                    return (StringImpl)buildString(g, "null", true).internalValue;
                 case 2:
-                    if ((bool) v.internalValue)
+                    if ((bool)v.internalValue)
                     {
-                        return (StringImpl) buildString(g, "true", true).internalValue;
+                        return (StringImpl)buildString(g, "true", true).internalValue;
                     }
-                    return (StringImpl) buildString(g, "false", true).internalValue;
+                    return (StringImpl)buildString(g, "false", true).internalValue;
                 case 3:
-                    int n = (int) v.internalValue;
+                    int n = (int)v.internalValue;
                     if (n < 20 && n > -20)
                     {
-                        return (StringImpl) buildString(g, n.ToString(), true).internalValue;
+                        return (StringImpl)buildString(g, n.ToString(), true).internalValue;
                     }
                     return buildAsciiStringImpl(n.ToString());
                 case 4:
-                    return (StringImpl) buildString(g, valueToHumanString(v), false).internalValue;
+                    return (StringImpl)buildString(g, valueToHumanString(v), false).internalValue;
                 case 5:
-                    return (StringImpl) v.internalValue;
+                    return (StringImpl)v.internalValue;
                 default:
                     break;
             }
@@ -280,7 +282,7 @@ namespace CommonScript.Runtime.Internal
             {
                 return null;
             }
-            FunctionPointer fp = (FunctionPointer) fpValue.internalValue;
+            FunctionPointer fp = (FunctionPointer)fpValue.internalValue;
             int pc = 0;
             int argc = args.Length;
             int argcMax = argc;
@@ -321,7 +323,7 @@ namespace CommonScript.Runtime.Internal
                 {
                     return g.emptyString;
                 }
-                string singleChar = ((char) buffer[0]).ToString();
+                string singleChar = ((char)buffer[0]).ToString();
                 return buildString(g, singleChar, true);
             }
             if (copyBuffer)
@@ -338,7 +340,7 @@ namespace CommonScript.Runtime.Internal
             int j = 0;
             while (j < sz)
             {
-                sb.Add(((char) uchars[j]).ToString());
+                sb.Add(((char)uchars[j]).ToString());
                 j += 1;
             }
             string finalString = string.Join("", sb);
@@ -379,7 +381,7 @@ namespace CommonScript.Runtime.Internal
 
         public static bool exceptionCatcherRouteException(Value exceptionInstance, int[] args, int[] outBuffer)
         {
-            Instance inst = (Instance) exceptionInstance.internalValue;
+            Instance inst = (Instance)exceptionInstance.internalValue;
             int exClassId = inst.classDef.id;
             int groupStartIndex = 1;
             while (groupStartIndex < args.Length)
@@ -607,7 +609,7 @@ namespace CommonScript.Runtime.Internal
 
         public static string getExceptionMessage(Value exceptionInstance, bool includeStackTrace)
         {
-            Instance inst = (Instance) exceptionInstance.internalValue;
+            Instance inst = (Instance)exceptionInstance.internalValue;
             Value msgField = inst.members[inst.classDef.nameToOffset["message"]];
             System.Collections.Generic.List<string> lines = new List<string>();
             lines.Add(valueToHumanString(msgField));
@@ -616,7 +618,7 @@ namespace CommonScript.Runtime.Internal
                 Value stackTrace = inst.members[inst.classDef.nameToOffset["trace"]];
                 if (stackTrace.type == 9)
                 {
-                    ListImpl trace = (ListImpl) stackTrace.internalValue;
+                    ListImpl trace = (ListImpl)stackTrace.internalValue;
                     lines.Add("Stack trace:");
                     int i = 0;
                     while (i < trace.length)
@@ -635,7 +637,7 @@ namespace CommonScript.Runtime.Internal
 
         public static GlobalValues getGlobalsFromTask(object taskObj)
         {
-            return ((ExecutionTask) taskObj).execCtx.globalValues;
+            return ((ExecutionTask)taskObj).execCtx.globalValues;
         }
 
         public static Value[] increaseValueStackCapacity(ExecutionTask task)
@@ -666,14 +668,14 @@ namespace CommonScript.Runtime.Internal
                 {
                     if (b.type == 4)
                     {
-                        return 0.0 + (int) a.internalValue == (double) b.internalValue;
+                        return 0.0 + (int)a.internalValue == (double)b.internalValue;
                     }
                 }
                 else if (a.type == 4)
                 {
                     if (b.type == 3)
                     {
-                        return (double) a.internalValue == 0.0 + (int) b.internalValue;
+                        return (double)a.internalValue == 0.0 + (int)b.internalValue;
                     }
                 }
                 return false;
@@ -683,14 +685,14 @@ namespace CommonScript.Runtime.Internal
                 case 1:
                     return true;
                 case 2:
-                    return (bool) a.internalValue == (bool) b.internalValue;
+                    return (bool)a.internalValue == (bool)b.internalValue;
                 case 3:
-                    return (int) a.internalValue == (int) b.internalValue;
+                    return (int)a.internalValue == (int)b.internalValue;
                 case 4:
-                    return (double) a.internalValue == (double) b.internalValue;
+                    return (double)a.internalValue == (double)b.internalValue;
                 case 5:
-                    StringImpl s1 = (StringImpl) a.internalValue;
-                    StringImpl s2 = (StringImpl) b.internalValue;
+                    StringImpl s1 = (StringImpl)a.internalValue;
+                    StringImpl s2 = (StringImpl)b.internalValue;
                     if (s1 == s2)
                     {
                         return true;
@@ -732,11 +734,11 @@ namespace CommonScript.Runtime.Internal
                     }
                     return true;
                 case 9:
-                    return ((ListImpl) a.internalValue).id == ((ListImpl) b.internalValue).id;
+                    return ((ListImpl)a.internalValue).id == ((ListImpl)b.internalValue).id;
                 case 10:
-                    return ((DictImpl) a.internalValue).id == ((DictImpl) b.internalValue).id;
+                    return ((DictImpl)a.internalValue).id == ((DictImpl)b.internalValue).id;
                 case 12:
-                    return ((Instance) a.internalValue).id == ((Instance) b.internalValue).id;
+                    return ((Instance)a.internalValue).id == ((Instance)b.internalValue).id;
                 default:
                     return a.internalValue == b.internalValue;
             }
@@ -787,7 +789,7 @@ namespace CommonScript.Runtime.Internal
 
         public static Value List_join(GlobalValues g, Value v, string sep)
         {
-            ListImpl o = (ListImpl) v.internalValue;
+            ListImpl o = (ListImpl)v.internalValue;
             if (o.length == 0)
             {
                 return g.emptyString;
@@ -1602,19 +1604,19 @@ namespace CommonScript.Runtime.Internal
 
         public static object PUBLIC_getApplicationContextFromTask(object taskObj)
         {
-            ExecutionTask task = (ExecutionTask) taskObj;
+            ExecutionTask task = (ExecutionTask)taskObj;
             return task.execCtx.appCtx;
         }
 
         public static string PUBLIC_getExecutionContextError(object ecObj)
         {
-            ExecutionContext ec = (ExecutionContext) ecObj;
+            ExecutionContext ec = (ExecutionContext)ecObj;
             return ec.errMsg;
         }
 
         public static string[] PUBLIC_getTaskResultError(object resObj, bool includeStackTrace)
         {
-            ExecutionResult result = (ExecutionResult) resObj;
+            ExecutionResult result = (ExecutionResult)resObj;
             System.Collections.Generic.List<string> o = new List<string>();
             if (result.type != 2)
             {
@@ -1636,13 +1638,13 @@ namespace CommonScript.Runtime.Internal
 
         public static int PUBLIC_getTaskResultSleepAmount(object resObj)
         {
-            ExecutionResult result = (ExecutionResult) resObj;
+            ExecutionResult result = (ExecutionResult)resObj;
             return result.sleepMillis;
         }
 
         public static int PUBLIC_getTaskResultStatus(object resObj)
         {
-            ExecutionResult result = (ExecutionResult) resObj;
+            ExecutionResult result = (ExecutionResult)resObj;
             return result.type;
         }
 
@@ -1653,13 +1655,13 @@ namespace CommonScript.Runtime.Internal
 
         public static void PUBLIC_listValueAdd(object listObj, object wrappedValue)
         {
-            ListImpl list = (ListImpl) ((Value) listObj).internalValue;
-            List_add(list, (Value) wrappedValue);
+            ListImpl list = (ListImpl)((Value)listObj).internalValue;
+            List_add(list, (Value)wrappedValue);
         }
 
         public static void PUBLIC_requestTaskSuspension(object taskObj, bool withSleep, int sleepMillis)
         {
-            ExecutionTask task = (ExecutionTask) taskObj;
+            ExecutionTask task = (ExecutionTask)taskObj;
             task.suspendRequested = true;
             if (sleepMillis < 0)
             {
@@ -1677,23 +1679,23 @@ namespace CommonScript.Runtime.Internal
 
         public static object PUBLIC_startMainTask(object ecObj, string[] args)
         {
-            ExecutionTask mainTask = createMainTask((ExecutionContext) ecObj, args);
+            ExecutionTask mainTask = createMainTask((ExecutionContext)ecObj, args);
             return RunInterpreter(mainTask);
         }
 
         public static int PUBLIC_unwrapInteger(object val)
         {
-            return (int) ((Value) val).internalValue;
+            return (int)((Value)val).internalValue;
         }
 
         public static object PUBLIC_unwrapNativeHandle(object val)
         {
-            return ((Value) val).internalValue;
+            return ((Value)val).internalValue;
         }
 
         public static string PUBLIC_valueToString(object valueObj)
         {
-            return valueToHumanString((Value) valueObj);
+            return valueToHumanString((Value)valueObj);
         }
 
         public static Value PUBLIC_wrapBoolean(object taskObj, bool val)
@@ -1830,7 +1832,7 @@ namespace CommonScript.Runtime.Internal
                         switch (left.type)
                         {
                             case 12:
-                                instance1 = (Instance) left.internalValue;
+                                instance1 = (Instance)left.internalValue;
                                 if (!instance1.classDef.nameToOffset.ContainsKey(row.stringArg))
                                 {
                                     errorId = 3;
@@ -1844,7 +1846,7 @@ namespace CommonScript.Runtime.Internal
                                 }
                                 break;
                             case 13:
-                                classDef = (ClassInfo) left.internalValue;
+                                classDef = (ClassInfo)left.internalValue;
                                 str1 = row.stringArg;
                                 if (classDef.staticMemberIsMutable[str1])
                                 {
@@ -1881,8 +1883,8 @@ namespace CommonScript.Runtime.Internal
                         switch (left.type * 16 + right.type)
                         {
                             case 147:
-                                i = (int) right.internalValue;
-                                listImpl1 = (ListImpl) left.internalValue;
+                                i = (int)right.internalValue;
+                                listImpl1 = (ListImpl)left.internalValue;
                                 if (i < 0)
                                 {
                                     i += listImpl1.length;
@@ -1915,13 +1917,13 @@ namespace CommonScript.Runtime.Internal
                                 }
                                 break;
                             case 165:
-                                stringImpl1 = (StringImpl) right.internalValue;
+                                stringImpl1 = (StringImpl)right.internalValue;
                                 if (stringImpl1.isBuilder)
                                 {
                                     stringFlatten(stringImpl1);
                                 }
                                 str1 = stringImpl1.nativeStr;
-                                dictImpl1 = (DictImpl) left.internalValue;
+                                dictImpl1 = (DictImpl)left.internalValue;
                                 if (dictImpl1.size == dictImpl1.capacity)
                                 {
                                     DictImpl_ensureCapacity(dictImpl1);
@@ -1958,8 +1960,8 @@ namespace CommonScript.Runtime.Internal
                                 }
                                 break;
                             case 163:
-                                int1 = (int) right.internalValue;
-                                dictImpl1 = (DictImpl) left.internalValue;
+                                int1 = (int)right.internalValue;
+                                dictImpl1 = (DictImpl)left.internalValue;
                                 if (dictImpl1.size == dictImpl1.capacity)
                                 {
                                     DictImpl_ensureCapacity(dictImpl1);
@@ -2059,7 +2061,7 @@ namespace CommonScript.Runtime.Internal
                         switch ((left.type << 5) | right.type)
                         {
                             case 99:
-                                i = (int) left.internalValue + (int) right.internalValue;
+                                i = (int)left.internalValue + (int)right.internalValue;
                                 if (i < 1200 && i >= 1200)
                                 {
                                     if (i < 0)
@@ -2077,13 +2079,13 @@ namespace CommonScript.Runtime.Internal
                                 }
                                 break;
                             case 132:
-                                value = new Value(4, (double) left.internalValue + (double) right.internalValue);
+                                value = new Value(4, (double)left.internalValue + (double)right.internalValue);
                                 break;
                             case 131:
-                                value = new Value(4, (double) left.internalValue + (int) right.internalValue);
+                                value = new Value(4, (double)left.internalValue + (int)right.internalValue);
                                 break;
                             case 100:
-                                value = new Value(4, (int) left.internalValue + (double) right.internalValue);
+                                value = new Value(4, (int)left.internalValue + (double)right.internalValue);
                                 break;
                             default:
                                 if (left.type == 5 || right.type == 5)
@@ -2112,26 +2114,26 @@ namespace CommonScript.Runtime.Internal
                         switch (left.type * 16 + right.type)
                         {
                             case 51:
-                                int1 = (int) left.internalValue;
-                                int2 = (int) right.internalValue;
+                                int1 = (int)left.internalValue;
+                                int2 = (int)right.internalValue;
                                 bool1 = int1 == int2;
                                 bool2 = int1 < int2;
                                 break;
                             case 52:
-                                int1 = (int) left.internalValue;
-                                float2 = (double) right.internalValue;
+                                int1 = (int)left.internalValue;
+                                float2 = (double)right.internalValue;
                                 bool1 = int1 == float2;
                                 bool2 = int1 < float2;
                                 break;
                             case 67:
-                                float1 = (double) left.internalValue;
-                                int2 = (int) right.internalValue;
+                                float1 = (double)left.internalValue;
+                                int2 = (int)right.internalValue;
                                 bool1 = float1 == int2;
                                 bool2 = float1 < int2;
                                 break;
                             case 68:
-                                float1 = (double) left.internalValue;
-                                float2 = (double) right.internalValue;
+                                float1 = (double)left.internalValue;
+                                float2 = (double)right.internalValue;
                                 bool1 = float1 == float2;
                                 bool2 = float1 < float2;
                                 break;
@@ -2184,8 +2186,8 @@ namespace CommonScript.Runtime.Internal
                             {
                                 if (right.type == 4)
                                 {
-                                    int1 = (int) left.internalValue;
-                                    bool1 = int1 == (double) right.internalValue;
+                                    int1 = (int)left.internalValue;
+                                    bool1 = int1 == (double)right.internalValue;
                                 }
                                 else
                                 {
@@ -2196,8 +2198,8 @@ namespace CommonScript.Runtime.Internal
                             {
                                 if (left.type == 3)
                                 {
-                                    int1 = (int) right.internalValue;
-                                    bool1 = int1 == (double) left.internalValue;
+                                    int1 = (int)right.internalValue;
+                                    bool1 = int1 == (double)left.internalValue;
                                 }
                                 else
                                 {
@@ -2217,13 +2219,13 @@ namespace CommonScript.Runtime.Internal
                                     bool1 = true;
                                     break;
                                 case 2:
-                                    bool1 = (bool) left.internalValue == (bool) right.internalValue;
+                                    bool1 = (bool)left.internalValue == (bool)right.internalValue;
                                     break;
                                 case 3:
-                                    bool1 = (int) left.internalValue == (int) right.internalValue;
+                                    bool1 = (int)left.internalValue == (int)right.internalValue;
                                     break;
                                 case 4:
-                                    bool1 = (double) left.internalValue == (double) right.internalValue;
+                                    bool1 = (double)left.internalValue == (double)right.internalValue;
                                     break;
                                 case 5:
                                     if (left.internalValue == right.internalValue)
@@ -2232,8 +2234,8 @@ namespace CommonScript.Runtime.Internal
                                     }
                                     else
                                     {
-                                        stringImpl1 = (StringImpl) left.internalValue;
-                                        stringImpl2 = (StringImpl) right.internalValue;
+                                        stringImpl1 = (StringImpl)left.internalValue;
+                                        stringImpl2 = (StringImpl)right.internalValue;
                                         if (stringImpl1.length != stringImpl2.length)
                                         {
                                             bool1 = false;
@@ -2279,27 +2281,27 @@ namespace CommonScript.Runtime.Internal
                         switch ((left.type * 20 + row.firstArg) * 16 + right.type)
                         {
                             case 995:
-                                int1 = (int) left.internalValue;
-                                int2 = (int) right.internalValue;
+                                int1 = (int)left.internalValue;
+                                int2 = (int)right.internalValue;
                                 value = buildInteger(globalValues, int1 - int2);
                                 break;
                             case 1011:
-                                int1 = (int) left.internalValue;
-                                int2 = (int) right.internalValue;
+                                int1 = (int)left.internalValue;
+                                int2 = (int)right.internalValue;
                                 value = buildInteger(globalValues, int1 * int2);
                                 break;
                             case 1331:
-                                value = new Value(4, (double) left.internalValue * (int) right.internalValue);
+                                value = new Value(4, (double)left.internalValue * (int)right.internalValue);
                                 break;
                             case 1012:
-                                value = new Value(4, (int) left.internalValue * (double) right.internalValue);
+                                value = new Value(4, (int)left.internalValue * (double)right.internalValue);
                                 break;
                             case 1332:
-                                value = new Value(4, (double) left.internalValue * (double) right.internalValue);
+                                value = new Value(4, (double)left.internalValue * (double)right.internalValue);
                                 break;
                             case 1027:
-                                int1 = (int) left.internalValue;
-                                int2 = (int) right.internalValue;
+                                int1 = (int)left.internalValue;
+                                int2 = (int)right.internalValue;
                                 if (int2 == 0)
                                 {
                                     errorId = 10;
@@ -2309,38 +2311,38 @@ namespace CommonScript.Runtime.Internal
                                 value = buildInteger(globalValues, int1 / int2);
                                 break;
                             case 1347:
-                                float1 = (double) left.internalValue;
+                                float1 = (double)left.internalValue;
                                 if (float1 == 0)
                                 {
                                     errorId = 10;
                                     errorMsg = "Cannot divide by zero";
                                     return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
                                 }
-                                value = new Value(4, float1 / (int) right.internalValue);
+                                value = new Value(4, float1 / (int)right.internalValue);
                                 break;
                             case 1028:
-                                int1 = (int) left.internalValue;
+                                int1 = (int)left.internalValue;
                                 if (int1 == 0)
                                 {
                                     errorId = 10;
                                     errorMsg = "Cannot divide by zero";
                                     return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
                                 }
-                                value = new Value(4, int1 / (double) right.internalValue);
+                                value = new Value(4, int1 / (double)right.internalValue);
                                 break;
                             case 1348:
-                                float1 = (double) left.internalValue;
+                                float1 = (double)left.internalValue;
                                 if (float1 == 0)
                                 {
                                     errorId = 10;
                                     errorMsg = "Cannot divide by zero";
                                     return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
                                 }
-                                value = new Value(4, float1 / (double) right.internalValue);
+                                value = new Value(4, float1 / (double)right.internalValue);
                                 break;
                             case 1043:
-                                int1 = (int) left.internalValue;
-                                int2 = (int) right.internalValue;
+                                int1 = (int)left.internalValue;
+                                int2 = (int)right.internalValue;
                                 if (int2 <= 0)
                                 {
                                     errorId = 10;
@@ -2357,19 +2359,19 @@ namespace CommonScript.Runtime.Internal
                             case 1364:
                                 if (left.type == 3)
                                 {
-                                    float1 = 0.0 + (int) left.internalValue;
+                                    float1 = 0.0 + (int)left.internalValue;
                                 }
                                 else
                                 {
-                                    float1 = (double) left.internalValue;
+                                    float1 = (double)left.internalValue;
                                 }
                                 if (right.type == 3)
                                 {
-                                    float2 = 0.0 + (int) right.internalValue;
+                                    float2 = 0.0 + (int)right.internalValue;
                                 }
                                 else
                                 {
-                                    float2 = (double) right.internalValue;
+                                    float2 = (double)right.internalValue;
                                 }
                                 if (float2 <= 0)
                                 {
@@ -2387,19 +2389,19 @@ namespace CommonScript.Runtime.Internal
                             case 1363:
                                 if (left.type == 3)
                                 {
-                                    float1 = 0.0 + (int) left.internalValue;
+                                    float1 = 0.0 + (int)left.internalValue;
                                 }
                                 else
                                 {
-                                    float1 = (double) left.internalValue;
+                                    float1 = (double)left.internalValue;
                                 }
                                 if (right.type == 3)
                                 {
-                                    float2 = 0.0 + (int) right.internalValue;
+                                    float2 = 0.0 + (int)right.internalValue;
                                 }
                                 else
                                 {
-                                    float2 = (double) right.internalValue;
+                                    float2 = (double)right.internalValue;
                                 }
                                 if (float2 <= 0)
                                 {
@@ -2417,19 +2419,19 @@ namespace CommonScript.Runtime.Internal
                             case 1044:
                                 if (left.type == 3)
                                 {
-                                    float1 = 0.0 + (int) left.internalValue;
+                                    float1 = 0.0 + (int)left.internalValue;
                                 }
                                 else
                                 {
-                                    float1 = (double) left.internalValue;
+                                    float1 = (double)left.internalValue;
                                 }
                                 if (right.type == 3)
                                 {
-                                    float2 = 0.0 + (int) right.internalValue;
+                                    float2 = 0.0 + (int)right.internalValue;
                                 }
                                 else
                                 {
-                                    float2 = (double) right.internalValue;
+                                    float2 = (double)right.internalValue;
                                 }
                                 if (float2 <= 0)
                                 {
@@ -2445,26 +2447,26 @@ namespace CommonScript.Runtime.Internal
                                 value = new Value(4, float1);
                                 break;
                             case 1316:
-                                value = new Value(4, (double) left.internalValue - (double) right.internalValue);
+                                value = new Value(4, (double)left.internalValue - (double)right.internalValue);
                                 break;
                             case 996:
-                                value = new Value(4, (int) left.internalValue - (double) right.internalValue);
+                                value = new Value(4, (int)left.internalValue - (double)right.internalValue);
                                 break;
                             case 1315:
-                                value = new Value(4, (double) left.internalValue - (int) right.internalValue);
+                                value = new Value(4, (double)left.internalValue - (int)right.internalValue);
                                 break;
                             case 1651:
                                 if (left.type == 5)
                                 {
                                     value2 = left;
-                                    stringImpl1 = (StringImpl) left.internalValue;
-                                    sz = (int) right.internalValue;
+                                    stringImpl1 = (StringImpl)left.internalValue;
+                                    sz = (int)right.internalValue;
                                 }
                                 else
                                 {
                                     value2 = right;
-                                    stringImpl1 = (StringImpl) right.internalValue;
-                                    sz = (int) left.internalValue;
+                                    stringImpl1 = (StringImpl)right.internalValue;
+                                    sz = (int)left.internalValue;
                                 }
                                 if (sz == 0)
                                 {
@@ -2490,14 +2492,14 @@ namespace CommonScript.Runtime.Internal
                                 if (left.type == 5)
                                 {
                                     value2 = left;
-                                    stringImpl1 = (StringImpl) left.internalValue;
-                                    sz = (int) right.internalValue;
+                                    stringImpl1 = (StringImpl)left.internalValue;
+                                    sz = (int)right.internalValue;
                                 }
                                 else
                                 {
                                     value2 = right;
-                                    stringImpl1 = (StringImpl) right.internalValue;
-                                    sz = (int) left.internalValue;
+                                    stringImpl1 = (StringImpl)right.internalValue;
+                                    sz = (int)left.internalValue;
                                 }
                                 if (sz == 0)
                                 {
@@ -2538,8 +2540,8 @@ namespace CommonScript.Runtime.Internal
                             errorMsg = "Expected integers for this operator.";
                             return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
                         }
-                        int1 = (int) left.internalValue;
-                        int2 = (int) right.internalValue;
+                        int1 = (int)left.internalValue;
+                        int2 = (int)right.internalValue;
                         switch (row.firstArg)
                         {
                             case 14:
@@ -2579,7 +2581,7 @@ namespace CommonScript.Runtime.Internal
                         // OP_BITWISE_NOT;
                         i = valueStackSize - 1;
                         value = valueStack[i];
-                        int1 = (-(int) value.internalValue) - 1;
+                        int1 = (-(int)value.internalValue) - 1;
                         valueStack[i] = buildInteger(globalValues, int1);
                         break;
                     case 11:
@@ -2592,7 +2594,7 @@ namespace CommonScript.Runtime.Internal
                             errorMsg = "Only a boolean can be used here.";
                             return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
                         }
-                        if ((bool) value.internalValue)
+                        if ((bool)value.internalValue)
                         {
                             valueStack[i] = VALUE_FALSE;
                         }
@@ -2641,7 +2643,7 @@ namespace CommonScript.Runtime.Internal
                             i = 0;
                             while (i < sz)
                             {
-                                dictImpl1.intKeyLookup[(int) keys[i].internalValue] = i;
+                                dictImpl1.intKeyLookup[(int)keys[i].internalValue] = i;
                                 i += 1;
                             }
                         }
@@ -2652,12 +2654,12 @@ namespace CommonScript.Runtime.Internal
                             while (i < sz)
                             {
                                 value = keys[i];
-                                stringImpl1 = (StringImpl) value.internalValue;
+                                stringImpl1 = (StringImpl)value.internalValue;
                                 if (stringImpl1.isBuilder)
                                 {
                                     stringFlatten(stringImpl1);
                                 }
-                                dictImpl1.strKeyLookup[(string) stringImpl1.nativeStr] = i;
+                                dictImpl1.strKeyLookup[(string)stringImpl1.nativeStr] = i;
                                 i += 1;
                             }
                         }
@@ -2709,7 +2711,7 @@ namespace CommonScript.Runtime.Internal
                             case 8:
                                 if (j == LENGTH_ID)
                                 {
-                                    sz = ((int[]) value.internalValue).Length;
+                                    sz = ((int[])value.internalValue).Length;
                                     if (sz < 1200)
                                     {
                                         output = globalValues.posIntegers[sz];
@@ -2735,7 +2737,7 @@ namespace CommonScript.Runtime.Internal
                             case 5:
                                 if (j == LENGTH_ID)
                                 {
-                                    sz = ((StringImpl) value.internalValue).length;
+                                    sz = ((StringImpl)value.internalValue).length;
                                     if (sz < 1200)
                                     {
                                         output = globalValues.posIntegers[sz];
@@ -2761,7 +2763,7 @@ namespace CommonScript.Runtime.Internal
                             case 9:
                                 if (j == LENGTH_ID)
                                 {
-                                    sz = ((ListImpl) value.internalValue).length;
+                                    sz = ((ListImpl)value.internalValue).length;
                                     if (sz < 1200)
                                     {
                                         output = globalValues.posIntegers[sz];
@@ -2796,7 +2798,7 @@ namespace CommonScript.Runtime.Internal
                                 }
                                 break;
                             case 12:
-                                instance1 = (Instance) value.internalValue;
+                                instance1 = (Instance)value.internalValue;
                                 if (!instance1.classDef.nameToOffset.ContainsKey(name))
                                 {
                                     errorId = 3;
@@ -2815,7 +2817,7 @@ namespace CommonScript.Runtime.Internal
                                 }
                                 break;
                             case 13:
-                                str2Val = ((ClassInfo) value.internalValue).staticMembers;
+                                str2Val = ((ClassInfo)value.internalValue).staticMembers;
                                 if (!str2Val.ContainsKey(name))
                                 {
                                     frame.pc = pc;
@@ -2901,7 +2903,7 @@ namespace CommonScript.Runtime.Internal
                             frame.valueStackSize = valueStackSize;
                             task.stack = frame;
                             extensionFunc = ec.extensions[name];
-                            value = (Value) (extensionFunc((object) task, objArr));
+                            value = (Value)(extensionFunc((object)task, objArr));
                             objArr = null;
                             if (task.suspendRequested)
                             {
@@ -2942,7 +2944,7 @@ namespace CommonScript.Runtime.Internal
                             errorMsg = "This is not a function";
                             return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
                         }
-                        fp = (FunctionPointer) value.internalValue;
+                        fp = (FunctionPointer)value.internalValue;
                         if (argc < fp.argcMin || argc > fp.argcMax)
                         {
                             errorId = 5;
@@ -2996,10 +2998,10 @@ namespace CommonScript.Runtime.Internal
                                 switch (fp.pcOrId)
                                 {
                                     case 40:
-                                        output = buildString(globalValues, buildBase64String((int[]) fp.ctx.internalValue), false);
+                                        output = buildString(globalValues, buildBase64String((int[])fp.ctx.internalValue), false);
                                         break;
                                     case 5:
-                                        dictImpl1 = (DictImpl) fp.ctx.internalValue;
+                                        dictImpl1 = (DictImpl)fp.ctx.internalValue;
                                         keys = dictImpl1.keys;
                                         sz = dictImpl1.size;
                                         valueArr = new Value[sz];
@@ -3012,7 +3014,7 @@ namespace CommonScript.Runtime.Internal
                                         output = buildList(ec, valueArr, false, valueArr.Length);
                                         break;
                                     case 9:
-                                        dictImpl1 = (DictImpl) fp.ctx.internalValue;
+                                        dictImpl1 = (DictImpl)fp.ctx.internalValue;
                                         values = dictImpl1.values;
                                         sz = dictImpl1.size;
                                         valueArr = new Value[sz];
@@ -3025,7 +3027,7 @@ namespace CommonScript.Runtime.Internal
                                         output = buildList(ec, valueArr, false, valueArr.Length);
                                         break;
                                     case 10:
-                                        listImpl1 = (ListImpl) fp.ctx.internalValue;
+                                        listImpl1 = (ListImpl)fp.ctx.internalValue;
                                         if (listImpl1.length == listImpl1.capacity)
                                         {
                                             List_expandCapacity(listImpl1);
@@ -3035,7 +3037,7 @@ namespace CommonScript.Runtime.Internal
                                         listImpl1.length += 1;
                                         break;
                                     case 11:
-                                        listImpl1 = (ListImpl) fp.ctx.internalValue;
+                                        listImpl1 = (ListImpl)fp.ctx.internalValue;
                                         sz = listImpl1.length;
                                         valueArr = listImpl1.items;
                                         i = 0;
@@ -3048,7 +3050,7 @@ namespace CommonScript.Runtime.Internal
                                         output = VALUE_NULL;
                                         break;
                                     case 12:
-                                        listImpl1 = (ListImpl) fp.ctx.internalValue;
+                                        listImpl1 = (ListImpl)fp.ctx.internalValue;
                                         output = buildList(ec, listImpl1.items, true, listImpl1.length);
                                         break;
                                     case 14:
@@ -3056,12 +3058,12 @@ namespace CommonScript.Runtime.Internal
                                         value16[1] = args[0];
                                         args = value16;
                                         argc += 1;
-                                        fp = (FunctionPointer) ec.functionsAsValues[ec.significantFunctions["filter"]].internalValue;
+                                        fp = (FunctionPointer)ec.functionsAsValues[ec.significantFunctions["filter"]].internalValue;
                                         doInvoke = true;
                                         overrideReturnValueWithContext = false;
                                         break;
                                     case 15:
-                                        listImpl1 = (ListImpl) fp.ctx.internalValue;
+                                        listImpl1 = (ListImpl)fp.ctx.internalValue;
                                         sz = listImpl1.length;
                                         int2 = 0;
                                         int3 = sz;
@@ -3074,7 +3076,7 @@ namespace CommonScript.Runtime.Internal
                                                 errorMsg = "starting index must be an integer.";
                                                 return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
                                             }
-                                            int2 = (int) value.internalValue;
+                                            int2 = (int)value.internalValue;
                                             if (int2 < 0)
                                             {
                                                 int2 += sz;
@@ -3095,7 +3097,7 @@ namespace CommonScript.Runtime.Internal
                                                 errorMsg = "end index must be an integer.";
                                                 return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
                                             }
-                                            int3 = (int) value.internalValue;
+                                            int3 = (int)value.internalValue;
                                             if (int3 < 0)
                                             {
                                                 int3 += sz;
@@ -3125,7 +3127,7 @@ namespace CommonScript.Runtime.Internal
                                         }
                                         break;
                                     case 16:
-                                        listImpl1 = (ListImpl) fp.ctx.internalValue;
+                                        listImpl1 = (ListImpl)fp.ctx.internalValue;
                                         sz = listImpl1.length;
                                         int2 = sz - 1;
                                         int3 = -1;
@@ -3138,7 +3140,7 @@ namespace CommonScript.Runtime.Internal
                                                 errorMsg = "starting index must be an integer.";
                                                 return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
                                             }
-                                            int2 = (int) value.internalValue;
+                                            int2 = (int)value.internalValue;
                                             if (int2 < 0)
                                             {
                                                 int2 += sz;
@@ -3159,7 +3161,7 @@ namespace CommonScript.Runtime.Internal
                                                 errorMsg = "end index must be an integer.";
                                                 return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
                                             }
-                                            int3 = (int) value.internalValue;
+                                            int3 = (int)value.internalValue;
                                             if (int3 < -1)
                                             {
                                                 int3 += sz;
@@ -3197,7 +3199,7 @@ namespace CommonScript.Runtime.Internal
                                             {
                                                 return ThrowErrorImpl(task, 4, "list.join(sep) requires a string");
                                             }
-                                            stringImpl1 = (StringImpl) value1.internalValue;
+                                            stringImpl1 = (StringImpl)value1.internalValue;
                                             if (stringImpl1.isBuilder)
                                             {
                                                 stringFlatten(stringImpl1);
@@ -3211,12 +3213,12 @@ namespace CommonScript.Runtime.Internal
                                         value16[1] = args[0];
                                         args = value16;
                                         argc += 1;
-                                        fp = (FunctionPointer) ec.functionsAsValues[ec.significantFunctions["map"]].internalValue;
+                                        fp = (FunctionPointer)ec.functionsAsValues[ec.significantFunctions["map"]].internalValue;
                                         doInvoke = true;
                                         overrideReturnValueWithContext = false;
                                         break;
                                     case 19:
-                                        listImpl1 = (ListImpl) fp.ctx.internalValue;
+                                        listImpl1 = (ListImpl)fp.ctx.internalValue;
                                         sz = listImpl1.length - 1;
                                         if (sz == -1)
                                         {
@@ -3238,12 +3240,12 @@ namespace CommonScript.Runtime.Internal
                                         }
                                         argc += 1;
                                         args = value16;
-                                        fp = (FunctionPointer) ec.functionsAsValues[ec.significantFunctions["reduce"]].internalValue;
+                                        fp = (FunctionPointer)ec.functionsAsValues[ec.significantFunctions["reduce"]].internalValue;
                                         doInvoke = true;
                                         overrideReturnValueWithContext = false;
                                         break;
                                     case 23:
-                                        listImpl1 = (ListImpl) fp.ctx.internalValue;
+                                        listImpl1 = (ListImpl)fp.ctx.internalValue;
                                         sz = listImpl1.length;
                                         int1 = sz >> 1;
                                         valueArr = listImpl1.items;
@@ -3267,8 +3269,8 @@ namespace CommonScript.Runtime.Internal
                                             errorMsg = "list.remove() requires a valid index integer.";
                                             return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
                                         }
-                                        listImpl1 = (ListImpl) fp.ctx.internalValue;
-                                        j = (int) value.internalValue;
+                                        listImpl1 = (ListImpl)fp.ctx.internalValue;
+                                        j = (int)value.internalValue;
                                         sz = listImpl1.length;
                                         if (j < 0)
                                         {
@@ -3300,7 +3302,7 @@ namespace CommonScript.Runtime.Internal
                                         }
                                         argc += 1;
                                         args = value16;
-                                        fp = (FunctionPointer) ec.functionsAsValues[ec.significantFunctions["sort"]].internalValue;
+                                        fp = (FunctionPointer)ec.functionsAsValues[ec.significantFunctions["sort"]].internalValue;
                                         doInvoke = true;
                                         overrideReturnValueWithContext = false;
                                         break;
@@ -3309,12 +3311,12 @@ namespace CommonScript.Runtime.Internal
                                         value16[1] = args[0];
                                         argc += 1;
                                         args = value16;
-                                        fp = (FunctionPointer) ec.functionsAsValues[ec.significantFunctions["sortK"]].internalValue;
+                                        fp = (FunctionPointer)ec.functionsAsValues[ec.significantFunctions["sortK"]].internalValue;
                                         doInvoke = true;
                                         overrideReturnValueWithContext = false;
                                         break;
                                     case 24:
-                                        listImpl1 = (ListImpl) fp.ctx.internalValue;
+                                        listImpl1 = (ListImpl)fp.ctx.internalValue;
                                         sz = listImpl1.length;
                                         intArray1 = new int[sz];
                                         i = 0;
@@ -3325,7 +3327,7 @@ namespace CommonScript.Runtime.Internal
                                             {
                                                 return ThrowErrorImpl(task, 4, "Only lists of integers can be converted to byte buffers.");
                                             }
-                                            intArray1[i] = 255 & (int) left.internalValue;
+                                            intArray1[i] = 255 & (int)left.internalValue;
                                             i += 1;
                                         }
                                         output = new Value(8, intArray1);
@@ -3337,8 +3339,8 @@ namespace CommonScript.Runtime.Internal
                                         {
                                             return ThrowErrorImpl(task, 4, "string.getCodePoint() requires an integer index ");
                                         }
-                                        i = (int) value1.internalValue;
-                                        stringImpl1 = (StringImpl) fp.ctx.internalValue;
+                                        i = (int)value1.internalValue;
+                                        stringImpl1 = (StringImpl)fp.ctx.internalValue;
                                         sz = stringImpl1.length;
                                         if (i < 0)
                                         {
@@ -3371,7 +3373,7 @@ namespace CommonScript.Runtime.Internal
                                         ec.nextRefId += 1;
                                         break;
                                     case 36:
-                                        stringImpl1 = (StringImpl) fp.ctx.internalValue;
+                                        stringImpl1 = (StringImpl)fp.ctx.internalValue;
                                         sz = stringImpl1.length;
                                         valueArr = new Value[sz];
                                         intArray1 = stringImpl1.uChars;
@@ -3451,13 +3453,13 @@ namespace CommonScript.Runtime.Internal
                         switch (left.type * 16 + right.type)
                         {
                             case 83:
-                                stringImpl1 = (StringImpl) left.internalValue;
+                                stringImpl1 = (StringImpl)left.internalValue;
                                 if (stringImpl1.isBuilder)
                                 {
                                     stringFlatten(stringImpl1);
                                 }
                                 sz = stringImpl1.length;
-                                i = (int) right.internalValue;
+                                i = (int)right.internalValue;
                                 bool1 = false;
                                 if (i < 0)
                                 {
@@ -3483,8 +3485,8 @@ namespace CommonScript.Runtime.Internal
                                 valueStack[valueStackSize - 1] = new Value(5, new StringImpl(1, false, intArray1, str1, null, null));
                                 break;
                             case 147:
-                                listImpl1 = (ListImpl) left.internalValue;
-                                i = (int) right.internalValue;
+                                listImpl1 = (ListImpl)left.internalValue;
+                                i = (int)right.internalValue;
                                 sz = listImpl1.length;
                                 bool1 = false;
                                 if (i < 0)
@@ -3508,8 +3510,8 @@ namespace CommonScript.Runtime.Internal
                                 valueStack[valueStackSize - 1] = listImpl1.items[i];
                                 break;
                             case 163:
-                                dictImpl1 = (DictImpl) left.internalValue;
-                                i = (int) right.internalValue;
+                                dictImpl1 = (DictImpl)left.internalValue;
+                                i = (int)right.internalValue;
                                 if (dictImpl1.keyType == 3)
                                 {
                                     if (dictImpl1.intKeyLookup.ContainsKey(i))
@@ -3534,8 +3536,8 @@ namespace CommonScript.Runtime.Internal
                                 }
                                 break;
                             case 165:
-                                dictImpl1 = (DictImpl) left.internalValue;
-                                stringImpl1 = (StringImpl) right.internalValue;
+                                dictImpl1 = (DictImpl)left.internalValue;
+                                stringImpl1 = (StringImpl)right.internalValue;
                                 if (stringImpl1.isBuilder)
                                 {
                                     stringFlatten(stringImpl1);
@@ -3594,7 +3596,7 @@ namespace CommonScript.Runtime.Internal
                             errorMsg = "Cannot increment/decrement non-integer";
                             return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
                         }
-                        valueStack[i] = buildInteger(globalValues, row.firstArg + (int) value.internalValue);
+                        valueStack[i] = buildInteger(globalValues, row.firstArg + (int)value.internalValue);
                         break;
                     case 24:
                         // OP_JUMP;
@@ -3606,7 +3608,7 @@ namespace CommonScript.Runtime.Internal
                         switch (value.type)
                         {
                             case 3:
-                                i = -(int) value.internalValue;
+                                i = -(int)value.internalValue;
                                 if (i < 1200 && -i > 1200)
                                 {
                                     if (i < 0)
@@ -3624,7 +3626,7 @@ namespace CommonScript.Runtime.Internal
                                 }
                                 break;
                             case 4:
-                                float1 = (double) value.internalValue;
+                                float1 = (double)value.internalValue;
                                 if (float1 != 0)
                                 {
                                     value = new Value(4, -float1);
@@ -3645,7 +3647,7 @@ namespace CommonScript.Runtime.Internal
                         // OP_POP_AND_JUMP_IF_FALSE;
                         valueStackSize -= 1;
                         value = valueStack[valueStackSize];
-                        if (!(bool) value.internalValue)
+                        if (!(bool)value.internalValue)
                         {
                             pc += row.firstArg;
                         }
@@ -3654,7 +3656,7 @@ namespace CommonScript.Runtime.Internal
                         // OP_POP_AND_JUMP_IF_TRUE;
                         valueStackSize -= 1;
                         value = valueStack[valueStackSize];
-                        if ((bool) value.internalValue)
+                        if ((bool)value.internalValue)
                         {
                             pc += row.firstArg;
                         }
@@ -3662,7 +3664,7 @@ namespace CommonScript.Runtime.Internal
                     case 30:
                         // OP_POP_IF_FALSE_OR_JUMP;
                         value = valueStack[valueStackSize - 1];
-                        if (value.type == 2 && !(bool) value.internalValue)
+                        if (value.type == 2 && !(bool)value.internalValue)
                         {
                             valueStackSize -= 1;
                         }
@@ -3686,7 +3688,7 @@ namespace CommonScript.Runtime.Internal
                     case 32:
                         // OP_POP_IF_TRUE_OR_JUMP;
                         value = valueStack[valueStackSize - 1];
-                        if (value.type == 2 && (bool) value.internalValue)
+                        if (value.type == 2 && (bool)value.internalValue)
                         {
                             valueStackSize -= 1;
                         }
@@ -3722,7 +3724,7 @@ namespace CommonScript.Runtime.Internal
                     case 35:
                         // OP_PUSH_BASE_CTOR;
                         value = ec.classes[row.firstArg].ctor;
-                        fp = FunctionPointer_cloneWithNewType((FunctionPointer) value.internalValue, 6);
+                        fp = FunctionPointer_cloneWithNewType((FunctionPointer)value.internalValue, 6);
                         row.valueCache = new Value(11, fp);
                         row.op = 44;
                         pc -= 1;
@@ -3883,7 +3885,7 @@ namespace CommonScript.Runtime.Internal
                         valueStackSize -= 1;
                         if ((i & 4) > 0)
                         {
-                            int3 = (int) valueStack[valueStackSize].internalValue;
+                            int3 = (int)valueStack[valueStackSize].internalValue;
                             if (int3 == 0)
                             {
                                 errorId = 4;
@@ -3898,7 +3900,7 @@ namespace CommonScript.Runtime.Internal
                         }
                         if ((i & 2) > 0)
                         {
-                            int2 = (int) valueStack[valueStackSize].internalValue;
+                            int2 = (int)valueStack[valueStackSize].internalValue;
                             valueStackSize -= 1;
                             bool2 = true;
                         }
@@ -3908,7 +3910,7 @@ namespace CommonScript.Runtime.Internal
                         }
                         if ((i & 1) > 0)
                         {
-                            int1 = (int) valueStack[valueStackSize].internalValue;
+                            int1 = (int)valueStack[valueStackSize].internalValue;
                             valueStackSize -= 1;
                             bool1 = true;
                         }
@@ -3920,7 +3922,7 @@ namespace CommonScript.Runtime.Internal
                         if (value.type == 5)
                         {
                             bool3 = true;
-                            stringImpl1 = (StringImpl) value.internalValue;
+                            stringImpl1 = (StringImpl)value.internalValue;
                             if (stringImpl1.isBuilder)
                             {
                                 stringFlatten(stringImpl1);
@@ -3930,7 +3932,7 @@ namespace CommonScript.Runtime.Internal
                         else if (value.type == 9)
                         {
                             bool3 = false;
-                            listImpl1 = (ListImpl) value.internalValue;
+                            listImpl1 = (ListImpl)value.internalValue;
                             sz = listImpl1.length;
                         }
                         else
@@ -4101,11 +4103,11 @@ namespace CommonScript.Runtime.Internal
                                 {
                                     if (leftType == 3 && rightType == 4)
                                     {
-                                        float1 = (int) left.internalValue - (double) right.internalValue;
+                                        float1 = (int)left.internalValue - (double)right.internalValue;
                                     }
                                     else if (leftType == 4 && rightType == 3)
                                     {
-                                        float1 = (double) left.internalValue - (int) right.internalValue;
+                                        float1 = (double)left.internalValue - (int)right.internalValue;
                                     }
                                     else
                                     {
@@ -4114,16 +4116,16 @@ namespace CommonScript.Runtime.Internal
                                 }
                                 else if (leftType == 3)
                                 {
-                                    float1 = 0.0 + (int) left.internalValue - (int) right.internalValue;
+                                    float1 = 0.0 + (int)left.internalValue - (int)right.internalValue;
                                 }
                                 else if (leftType == 4)
                                 {
-                                    float1 = (double) left.internalValue - (double) right.internalValue;
+                                    float1 = (double)left.internalValue - (double)right.internalValue;
                                 }
                                 else if (leftType == 5)
                                 {
-                                    stringImpl1 = (StringImpl) left.internalValue;
-                                    stringImpl2 = (StringImpl) right.internalValue;
+                                    stringImpl1 = (StringImpl)left.internalValue;
+                                    stringImpl2 = (StringImpl)right.internalValue;
                                     if (stringImpl1.isBuilder)
                                     {
                                         stringFlatten(stringImpl1);
@@ -4176,7 +4178,7 @@ namespace CommonScript.Runtime.Internal
                                 break;
                             case 3:
                                 valueStackSize -= 1;
-                                output = Sort_end((SortState) valueStack[valueStackSize].internalValue);
+                                output = Sort_end((SortState)valueStack[valueStackSize].internalValue);
                                 break;
                             case 4:
                                 valueStackSize -= 2;
@@ -4189,7 +4191,7 @@ namespace CommonScript.Runtime.Internal
                             case 5:
                                 valueStackSize -= 2;
                                 value = valueStack[valueStackSize];
-                                bool1 = (bool) valueStack[valueStackSize + 1].internalValue;
+                                bool1 = (bool)valueStack[valueStackSize + 1].internalValue;
                                 output = Sort_proceedWithCmpResult(value, bool1);
                                 break;
                             case 2:
@@ -4204,7 +4206,7 @@ namespace CommonScript.Runtime.Internal
                                 }
                                 else
                                 {
-                                    output = buildInteger(globalValues, (int) float1);
+                                    output = buildInteger(globalValues, (int)float1);
                                 }
                                 break;
                         }
@@ -4317,7 +4319,7 @@ namespace CommonScript.Runtime.Internal
                         // OP_SWITCH_INT;
                         valueStackSize -= 1;
                         value = valueStack[valueStackSize];
-                        i = (int) value.internalValue;
+                        i = (int)value.internalValue;
                         switchIntLookup = ec.switchIntLookupsByPc[pc];
                         if (switchIntLookup.ContainsKey(i))
                         {
@@ -4332,7 +4334,7 @@ namespace CommonScript.Runtime.Internal
                         // OP_SWITCH_STRING;
                         valueStackSize -= 1;
                         value = valueStack[valueStackSize];
-                        stringImpl1 = (StringImpl) value.internalValue;
+                        stringImpl1 = (StringImpl)value.internalValue;
                         if (stringImpl1.isBuilder)
                         {
                             stringFlatten(stringImpl1);
@@ -4355,7 +4357,7 @@ namespace CommonScript.Runtime.Internal
                         bool1 = false;
                         if (value.type == 12)
                         {
-                            instance1 = (Instance) value.internalValue;
+                            instance1 = (Instance)value.internalValue;
                             int1 = 0;
                             i = 1;
                             while (i < ec.classes.Length && int1 == 0)
@@ -4473,7 +4475,7 @@ namespace CommonScript.Runtime.Internal
         public static Value Sort_end(SortState state)
         {
             Value arr = state.copyBackBuffer;
-            Value[] items = ((ListImpl) arr.internalValue).items;
+            Value[] items = ((ListImpl)arr.internalValue).items;
             SortNode walker = state.output;
             int i = 0;
             while (walker != null)
@@ -4487,8 +4489,8 @@ namespace CommonScript.Runtime.Internal
 
         public static bool Sort_getNextCmp(Value sortStateValue, Value pairValue)
         {
-            Value[] pair = ((ListImpl) pairValue.internalValue).items;
-            SortState o = (SortState) sortStateValue.internalValue;
+            Value[] pair = ((ListImpl)pairValue.internalValue).items;
+            SortState o = (SortState)sortStateValue.internalValue;
             SortTask task = o.taskQueue;
             bool keepRunning = true;
             while (keepRunning)
@@ -4558,7 +4560,7 @@ namespace CommonScript.Runtime.Internal
 
         public static Value Sort_proceedWithCmpResult(Value stateVal, bool isSwap)
         {
-            SortState state = (SortState) stateVal.internalValue;
+            SortState state = (SortState)stateVal.internalValue;
             SortTask task = state.taskQueue;
             SortNode winner = null;
             if (isSwap)
@@ -4590,10 +4592,10 @@ namespace CommonScript.Runtime.Internal
             {
                 mirrorList = valueList;
             }
-            ListImpl values = (ListImpl) valueList.internalValue;
+            ListImpl values = (ListImpl)valueList.internalValue;
             int sz = values.length;
             Value[] items = values.items;
-            Value[] mirror = ((ListImpl) mirrorList.internalValue).items;
+            Value[] mirror = ((ListImpl)mirrorList.internalValue).items;
             SortState o = new SortState(null, null, null, values.length < 2, null, mirrorList);
             if (o.isDone)
             {
@@ -4660,7 +4662,7 @@ namespace CommonScript.Runtime.Internal
         public static Value stringUtil_changeCase(Value orig, bool isUpper)
         {
             bool changes = false;
-            StringImpl si = (StringImpl) orig.internalValue;
+            StringImpl si = (StringImpl)orig.internalValue;
             if (si.isBuilder)
             {
                 stringFlatten(si);
@@ -4684,7 +4686,7 @@ namespace CommonScript.Runtime.Internal
 
         public static Value[] stringUtil_split(GlobalValues g, Value str, string sep)
         {
-            StringImpl si = (StringImpl) str.internalValue;
+            StringImpl si = (StringImpl)str.internalValue;
             if (si.isBuilder)
             {
                 stringFlatten(si);
@@ -4703,7 +4705,7 @@ namespace CommonScript.Runtime.Internal
 
         public static Value stringUtil_trim(Value str, bool front, bool back)
         {
-            StringImpl strimpl = (StringImpl) str.internalValue;
+            StringImpl strimpl = (StringImpl)str.internalValue;
             int start = 0;
             int length = strimpl.length;
             if (length == 0)
@@ -4838,30 +4840,30 @@ namespace CommonScript.Runtime.Internal
                 case 1:
                     return "null";
                 case 2:
-                    bool b = (bool) value.internalValue;
+                    bool b = (bool)value.internalValue;
                     if (b)
                     {
                         return "true";
                     }
                     return "false";
                 case 3:
-                    return ((int) value.internalValue).ToString();
+                    return ((int)value.internalValue).ToString();
                 case 4:
-                    string floatStr = PST_FloatToString((double) value.internalValue);
+                    string floatStr = PST_FloatToString((double)value.internalValue);
                     if (!floatStr.Contains("."))
                     {
                         floatStr = floatStr + ".0";
                     }
                     return floatStr;
                 case 5:
-                    StringImpl strImpl = (StringImpl) value.internalValue;
+                    StringImpl strImpl = (StringImpl)value.internalValue;
                     if (strImpl.isBuilder)
                     {
                         stringFlatten(strImpl);
                     }
                     return strImpl.nativeStr;
                 case 12:
-                    Instance inst = (Instance) value.internalValue;
+                    Instance inst = (Instance)value.internalValue;
                     return string.Join("", new string[] { "Instance<", inst.classDef.name, ":", inst.id.ToString(), ">" });
                 default:
                     break;
