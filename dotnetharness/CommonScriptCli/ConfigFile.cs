@@ -4,7 +4,7 @@ namespace CommonScriptCli
 {
     internal class ConfigFile
     {
-        public string MainSource { get; private set; } = null;
+        public string? MainSource { get; private set; } = null;
         public Dictionary<string, string> ModuleDirectoriesById { get; private set; } = new Dictionary<string, string>();
 
         public static ConfigFile Parse(string path)

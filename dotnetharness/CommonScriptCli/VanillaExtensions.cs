@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 namespace CommonScriptCli
 {
+#pragma warning disable CS8603 // Possible null reference return.
     internal static class VanillaExtensions
     {
         public static Dictionary<string, Func<object, object[], object>> BuildExtensionSet()
@@ -20,4 +21,5 @@ namespace CommonScriptCli
             return output;
         }
     }
+#pragma warning restore CS8603 // Possible null reference return.
 }

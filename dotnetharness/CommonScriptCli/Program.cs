@@ -43,7 +43,7 @@ namespace CommonScriptCli
                 }
                 else
                 {
-                    if (!args.ModuleDirByName.TryGetValue(nextModId, out string modDir))
+                    if (!args.ModuleDirByName.TryGetValue(nextModId, out string? modDir))
                     {
                         throw new UserFacingException("Module does not exist: " + nextModId);
                     }
