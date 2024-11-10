@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonScriptCompiler", "Com
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonScriptRuntime", "CommonScriptRuntime\CommonScriptRuntime.csproj", "{1A1B744E-CB9F-40C7-A4BD-6855344714C3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonScriptCli", "CommonScriptCli\CommonScriptCli.csproj", "{495188F4-E00C-4B0E-BCD3-AEFF41519EFF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{1A1B744E-CB9F-40C7-A4BD-6855344714C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A1B744E-CB9F-40C7-A4BD-6855344714C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A1B744E-CB9F-40C7-A4BD-6855344714C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{495188F4-E00C-4B0E-BCD3-AEFF41519EFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{495188F4-E00C-4B0E-BCD3-AEFF41519EFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{495188F4-E00C-4B0E-BCD3-AEFF41519EFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{495188F4-E00C-4B0E-BCD3-AEFF41519EFF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
