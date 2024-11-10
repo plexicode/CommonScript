@@ -20,10 +20,20 @@ namespace CommonScript.Compiler
         public bool IsComplete { get { return this.isDone; } }
         public string NextRequiredModule { get { return this.nextModuleIdCache; } }
 
-        public void ProvideFilesForModuleCompilation(string moduleId, Dictionary<string, string> codeFiles)
+        public void ProvideFilesForUserModuleCompilation(string moduleId, Dictionary<string, string> codeFiles)
+        {
+            ProvideFilesForModuleCompilationImpl(moduleId, codeFiles, false);
+        }
+
+        public void ProvideFilesForBuiltinLibraryModuleCompilation(string moduleId, Dictionary<string, string> codeFiles)
+        {
+            ProvideFilesForModuleCompilationImpl(moduleId, codeFiles, true);
+        }
+
+        private void ProvideFilesForModuleCompilationImpl(string moduleId, Dictionary<string, string> codeFiles, bool isBuiltin)
         {
             if (moduleId != this.NextRequiredModule) throw new InvalidOperationException();
-            CompilerContext.SupplyFilesForModule(this.genCompiler, moduleId, codeFiles, false);
+            CompilerContext.SupplyFilesForModule(this.genCompiler, moduleId, codeFiles, false, false);
             this.nextModuleIdCache = CompilerContext.GetNextRequiredModuleId(this.genCompiler);
             this.isDone = this.nextModuleIdCache == null;
         }

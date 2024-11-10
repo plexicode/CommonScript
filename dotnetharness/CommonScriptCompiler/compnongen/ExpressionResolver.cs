@@ -753,6 +753,7 @@ namespace CommonScript.Compiler
                 case "math_floor": argc = 1; break;
                 case "parse_int": argc = 1; break;
                 case "unix_time": argc = 1; break;
+                case "random_float": argc = 0; break;
                 case "sort_start": argc = 2; break;
                 case "sort_get_next_cmp": argc = 2; break;
                 case "sort_proceed": argc = 2; break;

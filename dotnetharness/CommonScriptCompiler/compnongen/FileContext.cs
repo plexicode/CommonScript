@@ -9,7 +9,8 @@ namespace CommonScript.Compiler
         public TokenStream tokens;
         public ImportStatement[] imports = null;
         public Dictionary<string, ImportStatement> importsByVar;
-        public bool isBuiltIn =false;
+        public bool isBuiltInLib = false;
+        public bool isCoreBuiltin = false;
 
         public FileContext(string path, string content)
         {

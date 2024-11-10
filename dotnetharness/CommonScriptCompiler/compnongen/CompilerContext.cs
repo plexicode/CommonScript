@@ -4,6 +4,13 @@ using System.Linq;
 
 namespace CommonScript.Compiler
 {
+    internal enum ModuleType
+    {
+        CORE_BUILTIN,
+        LIB_BUILTIN,
+        USER,
+    }
+
     internal class CompilerContext
     {
         public string rootId;
@@ -33,7 +40,7 @@ namespace CommonScript.Compiler
                 { "builtins.script", BuiltinUtil.GetBuiltinSource() },
             };
 
-            SupplyFilesForModule(this, "{BUILTIN}", builtinFiles, true);
+            SupplyFilesForModule(this, "{BUILTIN}", builtinFiles, true, true);
         }
 
         private static CompilerContext GetCompiler(object compObj)
@@ -45,11 +52,11 @@ namespace CommonScript.Compiler
             object compObj,
             string moduleId,
             Dictionary<string, string> fileLookup,
-            bool isBuiltIn)
+            bool isCoreBuiltin,
+            bool isBuiltInLib)
         {
             CompilerContext compiler = GetCompiler(compObj);
-            bool moduleIsBuiltin = moduleId == "{BUILTIN}";
-
+            
             compiler.depIdsByModuleId[moduleId] = new List<string>();
 
             List<FileContext> files = new List<FileContext>();
@@ -57,9 +64,10 @@ namespace CommonScript.Compiler
             foreach (string path in fileLookup.Keys.OrderBy(n => n))
             {
                 FileContext fileCtx = new FileContext(path, fileLookup[path]);
-                fileCtx.isBuiltIn = isBuiltIn;
+                fileCtx.isCoreBuiltin = isCoreBuiltin;
+                fileCtx.isBuiltInLib = isBuiltInLib;
                 files.Add(fileCtx);
-                fileCtx.imports = ImportParser.AdvanceThroughImports(fileCtx.tokens, moduleIsBuiltin);
+                fileCtx.imports = ImportParser.AdvanceThroughImports(fileCtx.tokens, isCoreBuiltin);
                 fileCtx.InitializeImportLookup();
                 foreach (ImportStatement impStmnt in fileCtx.imports)
                 {
@@ -79,17 +87,32 @@ namespace CommonScript.Compiler
             {
                 if (!compiler.filesByModuleId.ContainsKey(depId))
                 {
+
                     compiler.unfulfilledDependencies[depId] = true;
                 }
             }
         }
 
-        public static string GetNextRequiredModuleId(object compObj)
+        public static string? GetNextRequiredModuleId(object compObj)
         {
             CompilerContext compiler = GetCompiler(compObj);
-            string[] keys = compiler.unfulfilledDependencies.Keys.ToArray();
-            if (keys.Length == 0) return null;
-            return keys[0];
+            while (true)
+            {
+                string nextKey = compiler.unfulfilledDependencies.Keys.OrderBy(k => k).FirstOrDefault();
+                if (nextKey == null) return null;
+
+                if (!BuiltinUtil.IsBuiltInModule(nextKey))
+                {
+                    return nextKey;
+                }
+
+                SupplyFilesForModule(
+                    compiler,
+                    nextKey,
+                    new Dictionary<string, string>() { { nextKey + ".script", BuiltinUtil.GetSourceFilesFor(nextKey) } },
+                    false,
+                    true);
+            }
         }
 
         public static void EnsureDependenciesFulfilled(object compObj)

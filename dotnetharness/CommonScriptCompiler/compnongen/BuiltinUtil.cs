@@ -1,4 +1,6 @@
-﻿namespace CommonScript.Compiler
+﻿using System.Collections.Generic;
+
+namespace CommonScript.Compiler
 {
     internal class BuiltinUtil
     {
@@ -76,5 +78,31 @@
 
             return string.Join("\n", lines);
         }
+
+        public static string GetSourceFilesFor(string moduleId)
+        {
+            return BUILTIN_MODULES[moduleId];
+        }
+
+        public static bool IsBuiltInModule(string moduleId)
+        {
+            return BUILTIN_MODULES.ContainsKey(moduleId);
+        }
+
+
+        private static readonly Dictionary<string, string> BUILTIN_MODULES = new Dictionary<string, string>()
+        {
+            { "random", string.Join('\n', [
+                "function randomFloat() { return $random_float(); }",
+                "function randomInt(a, b = null) {",
+                    "if (b == null) { b = a; a = 0; }",
+                    "d = b - a;",
+                    "if (d <= 0) throw new InvalidArgumentException('Range must be a positive number.');",
+                    "return a + $math_floor($random_float() * d);",
+                "}",
+                "function randomBool() { return $random_float() < .5; }",
+                "",
+            ]) },
+        };
     }
 }

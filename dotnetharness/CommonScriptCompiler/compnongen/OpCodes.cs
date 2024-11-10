@@ -9,6 +9,8 @@
         public const int SORT_GET_NEXT_CMP = 4;
         public const int SORT_PROCEED = 5;
 
+        public const int RANDOM_FLOAT = 7;
+
         public const int CMP = 6;
     }
 

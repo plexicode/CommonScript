@@ -23,6 +23,8 @@ namespace CommonScript.Runtime.Internal
 
         private static Dictionary<string, System.Func<object[], object>> PST_ExtCallbacks = new Dictionary<string, System.Func<object[], object>>();
 
+        private static readonly System.Random PST_Random = new System.Random();
+
         private static readonly System.DateTime PST_UnixEpoch = new System.DateTime(1970, 1, 1);
 
         private static double PST_CurrentTime
@@ -4175,6 +4177,9 @@ namespace CommonScript.Runtime.Internal
                                 {
                                     output = globalValues.intOne;
                                 }
+                                break;
+                            case 7:
+                                output = buildFloat(PST_Random.NextDouble());
                                 break;
                             case 3:
                                 valueStackSize -= 1;

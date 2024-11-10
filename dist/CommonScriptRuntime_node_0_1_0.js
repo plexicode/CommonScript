@@ -3389,6 +3389,9 @@ let RunInterpreterImpl = function(task) {
 							output = globalValues[8];
 						}
 						break;
+					case 7:
+						output = buildFloat(Math.random());
+						break;
 					case 3:
 						valueStackSize -= 1;
 						output = Sort_end(valueStack[valueStackSize][1]);

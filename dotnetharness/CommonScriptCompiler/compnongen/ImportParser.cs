@@ -17,10 +17,10 @@ namespace CommonScript.Compiler
                 Token.createFakeToken(tokens, TokenType.PUNCTUATION, "*", 0, 0));
         }
 
-        public static ImportStatement[] AdvanceThroughImports(TokenStream tokens, bool isBuiltin)
+        public static ImportStatement[] AdvanceThroughImports(TokenStream tokens, bool isCoreBuiltin)
         {
             List<ImportStatement> output = new List<ImportStatement>();
-            if (!isBuiltin) output.Add(createBuiltinImport(tokens));
+            if (!isCoreBuiltin) output.Add(createBuiltinImport(tokens));
 
             while (tokens.hasMore() && tokens.isNext("import"))
             {

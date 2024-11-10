@@ -33,29 +33,52 @@ namespace CommonScript.Compiler
 
         public CompilationResult DoStaticCompilation(
             string rootModuleId,
-            Dictionary<string, Dictionary<string, string>> codeFilesByModuleId)
+            Dictionary<string, Dictionary<string, string>> userCodeFilesByModuleId,
+            Dictionary<string, Dictionary<string, string>> builtinCodeFilesByModuleId)
         {
             AdaptiveCompilation comp = this.CreateAdaptiveCompilation(rootModuleId);
+            userCodeFilesByModuleId = userCodeFilesByModuleId ?? new Dictionary<string, Dictionary<string, string>>();
+            builtinCodeFilesByModuleId = builtinCodeFilesByModuleId ?? new Dictionary<string, Dictionary<string, string>>();
 
             while (!comp.IsComplete)
             {
                 string moduleId = comp.NextRequiredModule;
-                if (!codeFilesByModuleId.ContainsKey(moduleId)) throw new InvalidOperationException();
-                Dictionary<string, string> files = codeFilesByModuleId[moduleId];
-                if (isDebug)
+
+                Dictionary<string, Dictionary<string, string>>[] sources = [
+                    userCodeFilesByModuleId,
+                    builtinCodeFilesByModuleId,
+                ];
+
+                bool found = false;
+                for (int i = 0; i < 2; i++)
                 {
-                    comp.ProvideFilesForModuleCompilation(moduleId, files);
+                    bool isUserCode = i == 0;
+                    if (sources[i].ContainsKey(moduleId))
+                    {
+                        found = true;
+                        if (isDebug)
+                        {
+                            if (isUserCode) comp.ProvideFilesForUserModuleCompilation(moduleId, sources[i][moduleId]);
+                            else comp.ProvideFilesForBuiltinLibraryModuleCompilation(moduleId, sources[i][moduleId]);
+                        }
+                        else
+                        {
+                            try
+                            {
+                                if (isUserCode) comp.ProvideFilesForUserModuleCompilation(moduleId, sources[i][moduleId]);
+                                else comp.ProvideFilesForBuiltinLibraryModuleCompilation(moduleId, sources[i][moduleId]);
+                            }
+                            catch (Exception ex)
+                            {
+                                return new CompilationResult(null, ex.Message);
+                            }
+                        }
+                    }
                 }
-                else
+
+                if (!found)
                 {
-                    try
-                    {
-                        comp.ProvideFilesForModuleCompilation(moduleId, files);
-                    }
-                    catch (Exception ex)
-                    {
-                        return new CompilationResult(null, ex.Message);
-                    }
+                    return new CompilationResult(null, "The module '" + moduleId + "' could not be loaded.");
                 }
             }
 

@@ -260,6 +260,9 @@ namespace CommonScript.Compiler
                     // TODO: I don't think this is correct as it leaves off 'buf'.
                     return ByteCode.create0(OpCodes.OP_MATH_FLOOR, extInvoke.firstToken, null);
 
+                case "random_float":
+                    return ByteCode.create1(OpCodes.OP_SPECIAL_ACTION, null, null, SpecialActionCodes.RANDOM_FLOAT);
+
                 case "unix_time":
                     return ByteCode.create2(OpCodes.OP_SPECIAL_ACTION, null, null, SpecialActionCodes.UNIX_TIME, extInvoke.args[0].intVal);
 

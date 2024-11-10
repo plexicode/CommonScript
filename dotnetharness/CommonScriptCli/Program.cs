@@ -50,7 +50,7 @@ namespace CommonScriptCli
                     code = DiskUtil.GatherFilesAsDictionary(modDir, ".script")
                         ?? throw new UserFacingException("The directory for the module " + nextModId + " does not exist.");
                 }
-                compilation.ProvideFilesForModuleCompilation(nextModId, code);
+                compilation.ProvideFilesForUserModuleCompilation(nextModId, code);
             }
 
             return compilation.GetCompilation();

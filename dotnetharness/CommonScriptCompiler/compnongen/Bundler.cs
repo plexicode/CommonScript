@@ -35,7 +35,7 @@ namespace CommonScript.Compiler
                         
                         case EntityType.FUNCTION:
                             FunctionLikeEntity func = (FunctionLikeEntity) tle;
-                            if (tle.fileContext.isBuiltIn)
+                            if (tle.fileContext.isCoreBuiltin)
                             {
                                 builtInFunctions.Add(func);
                             }
