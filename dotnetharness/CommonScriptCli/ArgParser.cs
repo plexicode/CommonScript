@@ -30,6 +30,7 @@ namespace CommonScriptCli
             SOURCE_DIR,
             MODULE_INFO,
             BYTECODE_OUT_DIR,
+            CONFIG_FILE,
         }
 
         private static CliArg GetArgType(string rawValue)
@@ -47,6 +48,10 @@ namespace CommonScriptCli
                 case "-XCS:bc":
                 case "--XCS:bytecode":
                     return CliArg.BYTECODE_OUT_DIR;
+
+                case "-XCS:c":
+                case "--XCS:config":
+                    return CliArg.CONFIG_FILE;
 
                 default:
                     return CliArg.UNKNOWN;
@@ -92,6 +97,15 @@ namespace CommonScriptCli
 
                         case CliArg.BYTECODE_OUT_DIR:
                             parsedArgs.ByteCodeExportPath = argValue;
+                            break;
+
+                        case CliArg.CONFIG_FILE:
+                            ConfigFile cfgFile = ConfigFile.Parse(argValue);
+                            parsedArgs.SourceDirectory = cfgFile.MainSource ?? parsedArgs.SourceDirectory;
+                            foreach (string modId in cfgFile.ModuleDirectoriesById.Keys)
+                            {
+                                parsedArgs.ModuleDirByName[modId] = cfgFile.ModuleDirectoriesById[modId];
+                            }
                             break;
                     }
                 }

@@ -5,6 +5,32 @@ namespace CommonScriptCli
 {
     internal class DiskUtil
     {
+        public static string? TryFileReadText(string path)
+        {
+            string absPath = System.IO.Path.GetFullPath(path);
+            if (System.IO.File.Exists(absPath))
+            {
+                try
+                {
+                    return System.IO.File.ReadAllText(absPath);
+                }
+                catch (System.Exception)
+                {
+                    return null;
+                }
+            }
+            return null;
+        }
+
+        public static string FlexibleCombine(string left, string right)
+        {
+            char sep = System.IO.Path.DirectorySeparatorChar;
+            left = left.Replace('/', sep);
+            right = right.Replace('\\', sep);
+            if (System.IO.Path.IsPathRooted(right)) return System.IO.Path.GetFullPath(right);
+            return System.IO.Path.GetFullPath(System.IO.Path.Combine(left, right));
+        }
+
         public static void EnsureDirectoryExists(string path)
         {
             string absPath = System.IO.Path.GetFullPath(path);
