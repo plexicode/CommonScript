@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace CommonScript.Compiler
 {
@@ -77,6 +78,7 @@ namespace CommonScript.Compiler
                 case ExpressionType.INTEGER_CONST: return this.SecondPass_IntegerConstant(expr);
                 case ExpressionType.LAMBDA: return this.SecondPass_Lambda(expr);
                 case ExpressionType.LIST_DEFINITION: return this.SecondPass_ListDefinition(expr);
+                case ExpressionType.NAMESPACE_REFERENCE: return this.SecondPass_NamespaceReference(expr);
                 case ExpressionType.NEGATIVE_SIGN: return this.SecondPass_NegativeSign(expr);
                 case ExpressionType.NULL_CONST: return this.SecondPass_NullConstant(expr);
                 case ExpressionType.SLICE: return this.SecondPass_Slice(expr);
@@ -193,6 +195,15 @@ namespace CommonScript.Compiler
                     }
                     Errors.ThrowError(dotField.opToken, "The enum " + enumRef.fqName + " does not have a member named '" + fieldName + "'");
                     break;
+
+                case ExpressionType.NAMESPACE_REFERENCE:
+                    NamespaceEntity nsEntity = (NamespaceEntity)dotField.root.objPtr;
+                    if (!nsEntity.nestedMembers.ContainsKey(fieldName))
+                    {
+                        Errors.ThrowError(dotField.opToken, "There is no member of this namespace named '" + fieldName + "'.");
+                    }
+                    AbstractEntity referencedEntity = nsEntity.nestedMembers[fieldName];
+                    return WrapEntityIntoReferenceExpression(dotField.firstToken, referencedEntity);
             }
 
             return dotField;
@@ -312,6 +323,35 @@ namespace CommonScript.Compiler
             return null;
         }
 
+        private Expression WrapEntityIntoReferenceExpression(Token token, AbstractEntity entity)
+        {
+            switch (entity.type)
+            {
+                case EntityType.FUNCTION:
+                    return Expression.createFunctionReference(token, entity.simpleName, entity);
+
+                case EntityType.CLASS:
+                    return Expression.createClassReference(token, entity);
+
+                case EntityType.CONST:
+                    {
+                        // TODO: is this cast safe?
+                        ConstEntity constRef = (ConstEntity)this.resolver.DoLookup(this.resolver.GetCurrentNamespace(), entity.simpleName);
+                        Expression constVal = constRef.constValue;
+                        return Expression.cloneExpressionWithNewToken(token, constVal);
+                    }
+
+                case EntityType.ENUM:
+                    return Expression.createEnumReference(token, entity);
+
+                case EntityType.NAMESPACE:
+                    return Expression.createNamespaceReference(token, entity);
+            }
+
+            Errors.ThrowError(token, "Not implemented!");
+            return null;
+        }
+
         private Expression FirstPass_Variable(Expression varExpr)
         {
             string name = varExpr.strVal;
@@ -319,30 +359,7 @@ namespace CommonScript.Compiler
             AbstractEntity localEntity = FindLocallyReferencedEntity(this.resolver.nestedEntities, name);
             if (localEntity != null)
             {
-                if (localEntity.type == EntityType.FUNCTION)
-                {
-                    return Expression.createFunctionReference(varExpr.firstToken, name, localEntity);
-                }
-                else if (localEntity.type == EntityType.CLASS)
-                {
-                    return Expression.createClassReference(varExpr.firstToken, localEntity);
-                }
-                else if (localEntity.type == EntityType.CONST)
-                {
-                    // TODO: is this cast safe?
-                    ConstEntity constRef = (ConstEntity)this.resolver.DoLookup(this.resolver.GetCurrentNamespace(), name);
-                    Expression constVal = constRef.constValue;
-                    return Expression.cloneExpressionWithNewToken(varExpr.firstToken, constVal);
-                }
-                else if (localEntity.type == EntityType.ENUM)
-                {
-                    return Expression.createEnumReference(varExpr.firstToken, localEntity);
-                }
-                else
-                {
-                    throw new NotImplementedException();
-
-                }
+                return WrapEntityIntoReferenceExpression(varExpr.firstToken, localEntity);
             }
 
             Expression importedRef = LookupEngine.DoFirstPassVariableLookupThroughImports(this.resolver, varExpr.firstToken, name);
@@ -872,6 +889,12 @@ namespace CommonScript.Compiler
                 listDef.values[i] = this.ResolveExpressionSecondPass(listDef.values[i]);
             }
             return listDef;
+        }
+
+        private Expression SecondPass_NamespaceReference(Expression nsRef)
+        {
+            Errors.ThrowError(nsRef.firstToken, "You cannot use a namespace reference like this.");
+            return null;
         }
 
         private Expression SecondPass_NegativeSign(Expression negSign)

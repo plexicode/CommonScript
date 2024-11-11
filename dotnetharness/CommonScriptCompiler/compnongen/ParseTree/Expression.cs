@@ -26,6 +26,7 @@
         INTEGER_CONST = 22,
         LAMBDA = 23,
         LIST_DEFINITION = 24,
+        NAMESPACE_REFERENCE = 32,
         NEGATIVE_SIGN = 25,
         NULL_CONST = 26,
         SLICE = 27,
@@ -34,7 +35,7 @@
         THIS = 30,
         VARIABLE = 31,
 
-        MAX_VALUE = 32,
+        MAX_VALUE = 33,
     }
 
     internal class Expression
@@ -318,6 +319,13 @@
             Expression impRef = new Expression(firstToken, ExpressionType.IMPORT_REFERENCE);
             impRef.objPtr = importStatement;
             return impRef;
+        }
+
+        public static Expression createNamespaceReference(Token firstToken, AbstractEntity nsDef)
+        {
+            Expression nsRef = new Expression(firstToken, ExpressionType.NAMESPACE_REFERENCE);
+            nsRef.objPtr = nsDef;
+            return nsRef;
         }
 
         public static Expression createSliceExpression(

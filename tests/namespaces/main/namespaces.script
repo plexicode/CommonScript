@@ -1,8 +1,5 @@
 import dep -> deplib;
-
-function assertStrEqual(a, b) {
-    if (a + '' != b + '') print("ERR: " + a + " is not the same as " + b + "!");
-}
+import testlib -> *;
 
 namespace Internal {
     function immaSecret() {
@@ -11,5 +8,7 @@ namespace Internal {
 }
 
 function main(args) {
-    assertStrEqual('wheeeeee', Internal.immaSecret());
+    v = Internal.immaSecret();
+    assertStrEqual('wheeeeee', v);
+    print('ALL DONE');
 }
