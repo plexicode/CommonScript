@@ -218,6 +218,7 @@ namespace CommonScript.Compiler
                         left.Type = TokenType.FLOAT;
                         tokens[i - 1] = null;
                         tokens[i] = left;
+                        current = left;
                     }
 
                     if (right != null &&

@@ -5,14 +5,8 @@ function main(args) {
     runTest();
 }
 
-function HACK_tempFloatCheck(a, b) {
-    assertFloatEqual(a, floor(b * 10000));
-}
-
 function runTest() {
 
-    /*
-    TODO: very concerning that these floats are not being recognized by actual value.
     assertFloatEqual(0.8414709848078965, math.sin(1));
     assertFloatEqual(0.5403023058681398, math.cos(1));
     assertFloatEqual(1.5574077246549023, math.tan(1));
@@ -24,19 +18,6 @@ function runTest() {
     assertFloatEqual(0.9542425094393249, math.log10(9));
     assertFloatEqual(3.1699250014423126, math.log2(9));
     assertFloatEqual(2.1972245773362196, math.ln(9));
-    */
-
-    HACK_tempFloatCheck(8414, math.sin(1));
-    HACK_tempFloatCheck(5403, math.cos(1));
-    HACK_tempFloatCheck(15574, math.tan(1));
-    HACK_tempFloatCheck(5235, math.arcsin(.5));
-    HACK_tempFloatCheck(10471, math.arccos(.5));
-    HACK_tempFloatCheck(4636, math.arctan(.5));
-    HACK_tempFloatCheck(4636, math.arctan(.5, 1));
-    HACK_tempFloatCheck(4636, math.arctan(1, 2));
-    HACK_tempFloatCheck(9542, math.log10(9));
-    HACK_tempFloatCheck(31699, math.log2(9));
-    HACK_tempFloatCheck(21972, math.ln(9));
 
     assertStrEqual(1, math.sign(9));
     assertStrEqual(-1, math.sign(-9));
