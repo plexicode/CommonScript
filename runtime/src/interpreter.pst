@@ -102,6 +102,7 @@ ExecutionResult RunInterpreterImpl(ExecutionTask task) {
     string name = null;
     double float1 = 0.0;
     double float2 = 0.0;
+    double float3 = 0.0;
 
     object object1 = null;
 
@@ -172,6 +173,7 @@ ExecutionResult RunInterpreterImpl(ExecutionTask task) {
             case OP_INDEX: Core.EmitComment("OP_INDEX"); @import("ops/op_index.pst"); break;
             case OP_INT_INCR: Core.EmitComment("OP_INT_INCR"); @import("ops/op_int_incr.pst"); break;
             case OP_JUMP: Core.EmitComment("OP_JUMP"); @import("ops/op_jump.pst"); break;
+            case OP_MATH_FLOOR: Core.EmitComment("OP_MATH_FLOOR"); @import("ops/op_math_floor.pst"); break;
             case OP_NEGATIVE_SIGN: Core.EmitComment("OP_NEGATIVE_SIGN"); @import("ops/op_negative_sign.pst"); break;
             case OP_POP: Core.EmitComment("OP_POP"); @import("ops/op_pop.pst"); break;
             case OP_POP_AND_JUMP_IF_FALSE: Core.EmitComment("OP_POP_AND_JUMP_IF_FALSE"); @import("ops/op_pop_and_jump_if_false.pst"); break;

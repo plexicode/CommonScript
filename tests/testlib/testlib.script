@@ -6,3 +6,13 @@ function assertStrEqual(a, b) {
         print("ERR: " + a + " is not the same as " + b + "!");
     }
 }
+
+// Compares two floating point decimals with a bit of fuzzy tolerance.
+@public
+function assertFloatEqual(expected, actual) {
+    diff = expected - actual;
+    diff = diff < 0 ? -diff : diff;
+    if (diff > 0.000000001) {
+        assertStrEqual(expected, actual); // fail
+    }
+}

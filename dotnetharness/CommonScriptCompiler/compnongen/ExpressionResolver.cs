@@ -759,6 +759,13 @@ namespace CommonScript.Compiler
                 case "sort_proceed": argc = 2; break;
                 case "sort_end": argc = 1; break;
                 case "cmp": argc = 2; break;
+                case "math_sin": argc = 1; break;
+                case "math_cos": argc = 1; break;
+                case "math_tan": argc = 1; break;
+                case "math_arcsin": argc = 1; break;
+                case "math_arccos": argc = 1; break;
+                case "math_arctan": argc = 2; break;
+                case "math_log": argc = 2; break;
 
                 default:
                     if (this.resolver.isValidRegisteredExtension(expr.strVal))

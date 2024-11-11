@@ -1,0 +1,16 @@
+
+value = valueStack[valueStackSize - 1];
+if (value.type == Type.FLOAT) {
+    float1 = (double) value.internalValue;
+    int1 = (int) float1;
+    if (int1 > float1) {
+        int1 -= 1;
+    }
+    valueStack[valueStackSize - 1] = buildInteger(globalValues, int1);
+} else if (value.type == Type.INTEGER) {
+    // do nothing.
+} else {
+    errorId = ExceptionTypeId.INVALID_ARGUMENT;
+    errorMsg = "floor can only take in a numeric value.";
+    @import("macros/throw.pst");
+}

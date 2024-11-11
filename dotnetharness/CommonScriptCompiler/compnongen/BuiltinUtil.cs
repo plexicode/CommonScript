@@ -93,15 +93,33 @@ namespace CommonScript.Compiler
         private static readonly Dictionary<string, string> BUILTIN_MODULES = new Dictionary<string, string>()
         {
             { "random", string.Join('\n', [
-                "function randomFloat() { return $random_float(); }",
-                "function randomInt(a, b = null) {",
+                "@public function randomFloat() { return $random_float(); }",
+                "@public function randomInt(a, b = null) {",
                     "if (b == null) { b = a; a = 0; }",
                     "d = b - a;",
                     "if (d <= 0) throw new InvalidArgumentException('Range must be a positive number.');",
                     "return a + $math_floor($random_float() * d);",
                 "}",
-                "function randomBool() { return $random_float() < .5; }",
+                "@public function randomBool() { return $random_float() < .5; }",
                 "",
+            ]) },
+            { "math", string.Join('\n', [
+                // Use n - 0 to force numeric validation. 
+                // TODO: better quick argument validation.
+                "@public function sin(r) { return $math_sin(r-0); }",
+                "@public function cos(r) { return $math_cos(r-0); }",
+                "@public function tan(r) { return $math_tan(r-0); }",
+                "@public function arcsin(x) { return $math_arcsin(x-0); }",
+                "@public function arccos(x) { return $math_arccos(x-0); }",
+                "@public function arctan(yOrVal, x = null) { return $math_arctan(yOrVal, x == null ? null : (x-0)); }",
+                "@public function log10(val) { return $math_log(val-0, 0); }",
+                "@public function log2(val) { return $math_log(val-0, 1); }",
+                "@public function ln(val) { return $math_log(val-0, -1); }",
+                "@public function abs(val) { return val < 0 ? -val : val; }",
+                "@public function sign(val) { return val == 0 ? 0 : val < 0 ? -1 : 1; }",
+                
+                // TODO: there seems to be a parsing problem with **
+                // "@public function sqrt(val) { return val ** .5; }",
             ]) },
         };
     }

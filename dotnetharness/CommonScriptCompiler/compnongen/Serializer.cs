@@ -239,6 +239,17 @@ namespace CommonScript.Compiler
             );
         }
 
+        private static readonly Dictionary<string, int> SPECIAL_ACTION_BY_FUNC_NAME = new Dictionary<string, int>()
+        {
+            { "math_sin", SpecialActionCodes .MATH_SIN },
+            { "math_cos", SpecialActionCodes .MATH_COS },
+            { "math_tan", SpecialActionCodes .MATH_TAN },
+            { "math_arcsin", SpecialActionCodes .MATH_ARCSIN },
+            { "math_arccos", SpecialActionCodes .MATH_ARCCOS },
+            { "math_arctan", SpecialActionCodes .MATH_ARCTAN },
+            { "math_log", SpecialActionCodes .MATH_LOG },
+        };
+
         private static ByteCodeBuffer serializeExtensionInvocation(Expression extInvoke)
         {
             ByteCodeBuffer buf = null;
@@ -257,8 +268,9 @@ namespace CommonScript.Compiler
                         ByteCode.create1(OpCodes.OP_SPECIAL_ACTION, null, null, SpecialActionCodes.CMP));
 
                 case "math_floor":
-                    // TODO: I don't think this is correct as it leaves off 'buf'.
-                    return ByteCode.create0(OpCodes.OP_MATH_FLOOR, extInvoke.firstToken, null);
+                    return ByteCode.join2(
+                        buf, 
+                        ByteCode.create0(OpCodes.OP_MATH_FLOOR, extInvoke.firstToken, null));
 
                 case "random_float":
                     return ByteCode.create1(OpCodes.OP_SPECIAL_ACTION, null, null, SpecialActionCodes.RANDOM_FLOAT);
@@ -288,6 +300,23 @@ namespace CommonScript.Compiler
                     return ByteCode.join2(
                         serializeExpression(extInvoke.args[0]),
                         ByteCode.create1(OpCodes.OP_SPECIAL_ACTION, null, null, SpecialActionCodes.SORT_END));
+
+                case "math_sin":
+                case "math_cos":
+                case "math_tan":
+                case "math_arccos":
+                case "math_arcsin":
+                    return ByteCode.join2(
+                        serializeExpression(extInvoke.args[0]), 
+                        ByteCode.create1(OpCodes.OP_SPECIAL_ACTION, null, null, SPECIAL_ACTION_BY_FUNC_NAME[extInvoke.strVal]));
+
+                case "math_arctan":
+                case "math_log":
+                    return ByteCode.join3(
+                        serializeExpression(extInvoke.args[0]),
+                        serializeExpression(extInvoke.args[1]),
+                        ByteCode.create1(OpCodes.OP_SPECIAL_ACTION, null, null, SPECIAL_ACTION_BY_FUNC_NAME[extInvoke.strVal]));
+
 
                 default:
                     return ByteCode.join2(

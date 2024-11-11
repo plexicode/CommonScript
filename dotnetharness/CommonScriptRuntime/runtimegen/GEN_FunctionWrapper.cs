@@ -1778,6 +1778,7 @@ namespace CommonScript.Runtime.Internal
             string name = null;
             double float1 = 0.0;
             double float2 = 0.0;
+            double float3 = 0.0;
             object object1 = null;
             Value value = null;
             Value value1 = null;
@@ -3604,6 +3605,29 @@ namespace CommonScript.Runtime.Internal
                         // OP_JUMP;
                         pc += row.firstArg;
                         break;
+                    case 25:
+                        // OP_MATH_FLOOR;
+                        value = valueStack[valueStackSize - 1];
+                        if (value.type == 4)
+                        {
+                            float1 = (double)value.internalValue;
+                            int1 = (int)float1;
+                            if (int1 > float1)
+                            {
+                                int1 -= 1;
+                            }
+                            valueStack[valueStackSize - 1] = buildInteger(globalValues, int1);
+                        }
+                        else if (value.type == 3)
+                        {
+                        }
+                        else
+                        {
+                            errorId = 4;
+                            errorMsg = "floor can only take in a numeric value.";
+                            return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+                        }
+                        break;
                     case 26:
                         // OP_NEGATIVE_SIGN;
                         value = valueStack[valueStackSize - 1];
@@ -4177,6 +4201,142 @@ namespace CommonScript.Runtime.Internal
                                 {
                                     output = globalValues.intOne;
                                 }
+                                break;
+                            case 8:
+                                valueStackSize -= 1;
+                                value = valueStack[valueStackSize];
+                                if (value.type == 4)
+                                {
+                                    float1 = (double)value.internalValue;
+                                }
+                                else
+                                {
+                                    float1 = 0.0 + (int)value.internalValue;
+                                }
+                                output = buildFloat(System.Math.Acos(float1));
+                                break;
+                            case 9:
+                                valueStackSize -= 1;
+                                value = valueStack[valueStackSize];
+                                if (value.type == 4)
+                                {
+                                    float1 = (double)value.internalValue;
+                                }
+                                else
+                                {
+                                    float1 = 0.0 + (int)value.internalValue;
+                                }
+                                output = buildFloat(System.Math.Asin(float1));
+                                break;
+                            case 10:
+                                valueStackSize -= 2;
+                                value = valueStack[valueStackSize];
+                                right = valueStack[valueStackSize + 1];
+                                if (value.type == 4)
+                                {
+                                    float1 = (double)value.internalValue;
+                                }
+                                else
+                                {
+                                    float1 = 0.0 + (int)value.internalValue;
+                                }
+                                if (right.type == 1)
+                                {
+                                    float2 = 1.0;
+                                }
+                                else if (right.type == 4)
+                                {
+                                    float2 = (double)right.internalValue;
+                                }
+                                else
+                                {
+                                    float2 = 0.0 + (int)right.internalValue;
+                                }
+                                output = buildFloat(System.Math.Atan2(float1, float2));
+                                break;
+                            case 11:
+                                valueStackSize -= 1;
+                                value = valueStack[valueStackSize];
+                                if (value.type == 4)
+                                {
+                                    float1 = (double)value.internalValue;
+                                }
+                                else
+                                {
+                                    float1 = 0.0 + (int)value.internalValue;
+                                }
+                                output = buildFloat(System.Math.Cos(float1));
+                                break;
+                            case 12:
+                                valueStackSize -= 2;
+                                value = valueStack[valueStackSize];
+                                i = (int)valueStack[valueStackSize + 1].internalValue;
+                                if (value.type == 4)
+                                {
+                                    float1 = (double)value.internalValue;
+                                }
+                                else
+                                {
+                                    float1 = 0.0 + (int)value.internalValue;
+                                }
+                                if (float1 <= 0)
+                                {
+                                    output = VALUE_NULL;
+                                }
+                                else
+                                {
+                                    if (i == 0)
+                                    {
+                                        bool1 = true;
+                                        float2 = 10.0;
+                                    }
+                                    else if (i > 0)
+                                    {
+                                        bool1 = true;
+                                        float2 = 2.0;
+                                    }
+                                    else
+                                    {
+                                        bool1 = false;
+                                        float2 = 2.718281828459;
+                                    }
+                                    float3 = System.Math.Log(float1) / System.Math.Log(float2);
+                                    if (bool1)
+                                    {
+                                        int1 = (int)(float1 + 0.0000000000015);
+                                        if ((int)float1 != int1 && System.Math.Pow(float2, int1) == float1)
+                                        {
+                                            float3 = 0.0 + int1;
+                                        }
+                                    }
+                                    output = buildFloat(float3);
+                                }
+                                break;
+                            case 13:
+                                valueStackSize -= 1;
+                                value = valueStack[valueStackSize];
+                                if (value.type == 4)
+                                {
+                                    float1 = (double)value.internalValue;
+                                }
+                                else
+                                {
+                                    float1 = 0.0 + (int)value.internalValue;
+                                }
+                                output = buildFloat(System.Math.Sin(float1));
+                                break;
+                            case 14:
+                                valueStackSize -= 1;
+                                value = valueStack[valueStackSize];
+                                if (value.type == 4)
+                                {
+                                    float1 = (double)value.internalValue;
+                                }
+                                else
+                                {
+                                    float1 = 0.0 + (int)value.internalValue;
+                                }
+                                output = buildFloat(System.Math.Tan(float1));
                                 break;
                             case 7:
                                 output = buildFloat(PST_Random.NextDouble());

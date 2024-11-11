@@ -1,0 +1,37 @@
+valueStackSize -= 2;
+value = valueStack[valueStackSize];
+i = (int) valueStack[valueStackSize + 1].internalValue;
+
+if (value.type == Type.FLOAT) {
+    float1 = (double) value.internalValue;
+} else {
+    float1 = 0.0 + (int) value.internalValue;
+}
+
+if (float1 <= 0) {
+    output = VALUE_NULL;
+} else {
+    if (i == 0) {
+        bool1 = true;
+        float2 = 10.0;
+    } else if (i > 0) {
+        bool1 = true;
+        float2 = 2.0;
+    } else {
+        bool1 = false;
+        float2 = 2.7182818284590;
+    }
+    float3 = Core.FloatDivision(Core.Log(float1), Core.Log(float2));
+
+    // For integer bases, check if the float rounding is causing an intended-integer
+    // answer from showing up as (n-1).999999999999999997 or something. 
+    if (bool1) {
+        int1 = (int) (float1 + 0.000000000001);
+        if ((int) float1 != int1 && 
+            Core.Pow(float2, int1) == float1) {
+            
+            float3 = 0.0 + int1;
+        }
+    }
+    output = buildFloat(float3);
+}

@@ -1,6 +1,13 @@
 output = globalValues.nullValue;
 switch (row.firstArg) {
     case SPECIAL_ACTION_CMP: @import("special_actions/cmp.pst"); break;
+    case SPECIAL_ACTION_MATH_ARCCOS: @import("special_actions/math_arccos.pst"); break;
+    case SPECIAL_ACTION_MATH_ARCSIN: @import("special_actions/math_arcsin.pst"); break;
+    case SPECIAL_ACTION_MATH_ARCTAN: @import("special_actions/math_arctan.pst"); break;
+    case SPECIAL_ACTION_MATH_COS: @import("special_actions/math_cos.pst"); break;
+    case SPECIAL_ACTION_MATH_LOG: @import("special_actions/math_log.pst"); break;
+    case SPECIAL_ACTION_MATH_SIN: @import("special_actions/math_sin.pst"); break;
+    case SPECIAL_ACTION_MATH_TAN: @import("special_actions/math_tan.pst"); break;
     case SPECIAL_ACTION_RANDOM_FLOAT: @import("special_actions/random_float.pst"); break;
     case SPECIAL_ACTION_SORT_END: @import("special_actions/sort_end.pst"); break;
     case SPECIAL_ACTION_SORT_GET_NEXT_CMP: @import("special_actions/sort_get_next_cmp.pst"); break;

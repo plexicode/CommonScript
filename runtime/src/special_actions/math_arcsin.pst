@@ -1,0 +1,8 @@
+valueStackSize -= 1;
+value = valueStack[valueStackSize];
+if (value.type == Type.FLOAT) {
+    float1 = (double) value.internalValue;
+} else {
+    float1 = 0.0 + (int) value.internalValue;
+}
+output = buildFloat(Core.ArcSin(float1));

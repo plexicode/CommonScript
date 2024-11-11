@@ -1,0 +1,19 @@
+valueStackSize -= 2;
+value = valueStack[valueStackSize];
+right = valueStack[valueStackSize + 1];
+
+if (value.type == Type.FLOAT) {
+    float1 = (double) value.internalValue;
+} else {
+    float1 = 0.0 + (int) value.internalValue;
+}
+
+if (right.type == Type.NULL) {
+    float2 = 1.0;
+} else if (right.type == Type.FLOAT) {
+    float2 = (double) right.internalValue;
+} else {
+    float2 = 0.0 + (int) right.internalValue;
+}
+
+output = buildFloat(Core.ArcTan(float1, float2));
