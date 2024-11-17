@@ -241,13 +241,14 @@ namespace CommonScript.Compiler
 
         private static readonly Dictionary<string, int> SPECIAL_ACTION_BY_FUNC_NAME = new Dictionary<string, int>()
         {
-            { "math_sin", SpecialActionCodes .MATH_SIN },
-            { "math_cos", SpecialActionCodes .MATH_COS },
-            { "math_tan", SpecialActionCodes .MATH_TAN },
-            { "math_arcsin", SpecialActionCodes .MATH_ARCSIN },
-            { "math_arccos", SpecialActionCodes .MATH_ARCCOS },
-            { "math_arctan", SpecialActionCodes .MATH_ARCTAN },
-            { "math_log", SpecialActionCodes .MATH_LOG },
+            { "math_sin", SpecialActionCodes.MATH_SIN },
+            { "math_cos", SpecialActionCodes.MATH_COS },
+            { "math_tan", SpecialActionCodes.MATH_TAN },
+            { "math_arcsin", SpecialActionCodes.MATH_ARCSIN },
+            { "math_arccos", SpecialActionCodes.MATH_ARCCOS },
+            { "math_arctan", SpecialActionCodes.MATH_ARCTAN },
+            { "math_log", SpecialActionCodes.MATH_LOG },
+            { "parse_int", SpecialActionCodes.PARSE_INT },
         };
 
         private static ByteCodeBuffer serializeExtensionInvocation(Expression extInvoke)
@@ -306,6 +307,7 @@ namespace CommonScript.Compiler
                 case "math_tan":
                 case "math_arccos":
                 case "math_arcsin":
+                case "parse_int":
                     return ByteCode.join2(
                         serializeExpression(extInvoke.args[0]), 
                         ByteCode.create1(OpCodes.OP_SPECIAL_ACTION, null, null, SPECIAL_ACTION_BY_FUNC_NAME[extInvoke.strVal]));
@@ -316,7 +318,6 @@ namespace CommonScript.Compiler
                         serializeExpression(extInvoke.args[0]),
                         serializeExpression(extInvoke.args[1]),
                         ByteCode.create1(OpCodes.OP_SPECIAL_ACTION, null, null, SPECIAL_ACTION_BY_FUNC_NAME[extInvoke.strVal]));
-
 
                 default:
                     return ByteCode.join2(

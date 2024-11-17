@@ -1,3 +1,9 @@
+string stringUtil_getFlatValue(Value val) {
+    StringImpl si = (StringImpl) val.internalValue;
+    if (si.isBuilder) stringFlatten(si);
+    return si.nativeStr;
+}
+
 Value stringUtil_trim(Value str, bool front, bool back) {
     StringImpl strimpl = (StringImpl) str.internalValue;
     int start = 0;

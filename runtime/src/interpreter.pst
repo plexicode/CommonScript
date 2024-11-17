@@ -144,6 +144,7 @@ ExecutionResult RunInterpreterImpl(ExecutionTask task) {
 
     Array<Value> value16 = new Array<Value>(16);
     Array<int> intBuffer16 = new Array<int>(16);
+    Array<double> floatBuffer16 = new Array<double>(16);
 
     while (true) {
         row = byteCode[pc];
