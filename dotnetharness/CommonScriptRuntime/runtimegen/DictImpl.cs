@@ -25,5 +25,4 @@ namespace CommonScript.Runtime.Internal
             this.strKeyLookup = strKeyLookup;
         }
     }
-
 }

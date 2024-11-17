@@ -23,5 +23,4 @@ namespace CommonScript.Runtime.Internal
             this.framePool = framePool;
         }
     }
-
 }

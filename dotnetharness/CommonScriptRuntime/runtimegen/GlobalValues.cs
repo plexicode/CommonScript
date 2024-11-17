@@ -29,5 +29,4 @@ namespace CommonScript.Runtime.Internal
             this.floatsBy4x = floatsBy4x;
         }
     }
-
 }

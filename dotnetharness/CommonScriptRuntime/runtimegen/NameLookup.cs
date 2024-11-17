@@ -13,5 +13,4 @@ namespace CommonScript.Runtime.Internal
             this.primitiveMethodsByTypeByNameId = primitiveMethodsByTypeByNameId;
         }
     }
-
 }

@@ -49,5 +49,4 @@ namespace CommonScript.Runtime.Internal
             this.appCtx = appCtx;
         }
     }
-
 }

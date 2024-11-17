@@ -41,5 +41,4 @@ namespace CommonScript.Runtime.Internal
             this.staticMemberIsMutable = staticMemberIsMutable;
         }
     }
-
 }

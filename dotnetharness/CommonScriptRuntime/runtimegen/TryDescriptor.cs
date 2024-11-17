@@ -17,5 +17,4 @@ namespace CommonScript.Runtime.Internal
             this.finallyEnd = finallyEnd;
         }
     }
-
 }

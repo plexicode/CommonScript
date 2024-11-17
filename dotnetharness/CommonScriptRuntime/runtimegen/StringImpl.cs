@@ -21,5 +21,4 @@ namespace CommonScript.Runtime.Internal
             this.right = right;
         }
     }
-
 }

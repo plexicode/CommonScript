@@ -15,5 +15,4 @@ namespace CommonScript.Runtime.Internal
             this.classesById = classesById;
         }
     }
-
 }

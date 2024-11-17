@@ -19,5 +19,4 @@ namespace CommonScript.Runtime.Internal
             this.name = name;
         }
     }
-
 }

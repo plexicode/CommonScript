@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace CommonScript.Runtime.Internal
 {
-    public static class FunctionWrapper
+    internal static class FunctionWrapper
     {
 #pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
@@ -22,6 +22,13 @@ namespace CommonScript.Runtime.Internal
         }
 
         private static Dictionary<string, System.Func<object[], object>> PST_ExtCallbacks = new Dictionary<string, System.Func<object[], object>>();
+
+        public static void PST_ParseFloat(string strValue, double[] output)
+        {
+            double num = 0.0;
+            output[0] = double.TryParse(strValue, out num) ? 1 : -1;
+            output[1] = num;
+        }
 
         private static readonly System.Random PST_Random = new System.Random();
 
@@ -379,6 +386,27 @@ namespace CommonScript.Runtime.Internal
             dict.keys = newKeys;
             dict.values = newValues;
             dict.capacity = newCapacity;
+        }
+
+        public static Value doExponent(GlobalValues g, double left, double right)
+        {
+            if (left == 0)
+            {
+                if (right == 0)
+                {
+                    return g.nullValue;
+                }
+                return g.intZero;
+            }
+            if (left == 1)
+            {
+                return g.intOne;
+            }
+            if (left < 0 && right % 1 != 0)
+            {
+                return g.nullValue;
+            }
+            return new Value(4, System.Math.Pow(left, right));
         }
 
         public static bool exceptionCatcherRouteException(Value exceptionInstance, int[] args, int[] outBuffer)
@@ -1814,6 +1842,7 @@ namespace CommonScript.Runtime.Internal
             Value VALUE_NULL = globalValues.nullValue;
             Value[] value16 = new Value[16];
             int[] intBuffer16 = new int[16];
+            double[] floatBuffer16 = new double[16];
             while (true)
             {
                 row = byteCode[pc];
@@ -2012,6 +2041,7 @@ namespace CommonScript.Runtime.Internal
                             opMap["*"] = 3;
                             opMap["/"] = 4;
                             opMap["%"] = 5;
+                            opMap["**"] = 20;
                             opMap["&&"] = 6;
                             opMap["||"] = 7;
                             opMap["=="] = 8;
@@ -2281,28 +2311,40 @@ namespace CommonScript.Runtime.Internal
                         valueStackSize -= 2;
                         left = valueStack[valueStackSize];
                         right = valueStack[valueStackSize + 1];
-                        switch ((left.type * 20 + row.firstArg) * 16 + right.type)
+                        switch ((left.type * 21 + row.firstArg) * 16 + right.type)
                         {
-                            case 995:
+                            case 1331:
+                                value = doExponent(globalValues, 0.0 + (int)left.internalValue, 0.0 + (int)right.internalValue);
+                                break;
+                            case 1667:
+                                value = doExponent(globalValues, (double)left.internalValue, 0.0 + (int)right.internalValue);
+                                break;
+                            case 1332:
+                                value = doExponent(globalValues, 0.0 + (int)left.internalValue, (double)right.internalValue);
+                                break;
+                            case 1668:
+                                value = doExponent(globalValues, (double)left.internalValue, (double)right.internalValue);
+                                break;
+                            case 1043:
                                 int1 = (int)left.internalValue;
                                 int2 = (int)right.internalValue;
                                 value = buildInteger(globalValues, int1 - int2);
                                 break;
-                            case 1011:
+                            case 1059:
                                 int1 = (int)left.internalValue;
                                 int2 = (int)right.internalValue;
                                 value = buildInteger(globalValues, int1 * int2);
                                 break;
-                            case 1331:
+                            case 1395:
                                 value = new Value(4, (double)left.internalValue * (int)right.internalValue);
                                 break;
-                            case 1012:
+                            case 1060:
                                 value = new Value(4, (int)left.internalValue * (double)right.internalValue);
                                 break;
-                            case 1332:
+                            case 1396:
                                 value = new Value(4, (double)left.internalValue * (double)right.internalValue);
                                 break;
-                            case 1027:
+                            case 1075:
                                 int1 = (int)left.internalValue;
                                 int2 = (int)right.internalValue;
                                 if (int2 == 0)
@@ -2313,7 +2355,7 @@ namespace CommonScript.Runtime.Internal
                                 }
                                 value = buildInteger(globalValues, int1 / int2);
                                 break;
-                            case 1347:
+                            case 1411:
                                 float1 = (double)left.internalValue;
                                 if (float1 == 0)
                                 {
@@ -2323,7 +2365,7 @@ namespace CommonScript.Runtime.Internal
                                 }
                                 value = new Value(4, float1 / (int)right.internalValue);
                                 break;
-                            case 1028:
+                            case 1076:
                                 int1 = (int)left.internalValue;
                                 if (int1 == 0)
                                 {
@@ -2333,7 +2375,7 @@ namespace CommonScript.Runtime.Internal
                                 }
                                 value = new Value(4, int1 / (double)right.internalValue);
                                 break;
-                            case 1348:
+                            case 1412:
                                 float1 = (double)left.internalValue;
                                 if (float1 == 0)
                                 {
@@ -2343,7 +2385,7 @@ namespace CommonScript.Runtime.Internal
                                 }
                                 value = new Value(4, float1 / (double)right.internalValue);
                                 break;
-                            case 1043:
+                            case 1091:
                                 int1 = (int)left.internalValue;
                                 int2 = (int)right.internalValue;
                                 if (int2 <= 0)
@@ -2359,7 +2401,7 @@ namespace CommonScript.Runtime.Internal
                                 }
                                 value = buildInteger(globalValues, int1);
                                 break;
-                            case 1364:
+                            case 1428:
                                 if (left.type == 3)
                                 {
                                     float1 = 0.0 + (int)left.internalValue;
@@ -2389,7 +2431,7 @@ namespace CommonScript.Runtime.Internal
                                 }
                                 value = new Value(4, float1);
                                 break;
-                            case 1363:
+                            case 1427:
                                 if (left.type == 3)
                                 {
                                     float1 = 0.0 + (int)left.internalValue;
@@ -2419,7 +2461,7 @@ namespace CommonScript.Runtime.Internal
                                 }
                                 value = new Value(4, float1);
                                 break;
-                            case 1044:
+                            case 1092:
                                 if (left.type == 3)
                                 {
                                     float1 = 0.0 + (int)left.internalValue;
@@ -2449,16 +2491,16 @@ namespace CommonScript.Runtime.Internal
                                 }
                                 value = new Value(4, float1);
                                 break;
-                            case 1316:
+                            case 1380:
                                 value = new Value(4, (double)left.internalValue - (double)right.internalValue);
                                 break;
-                            case 996:
+                            case 1044:
                                 value = new Value(4, (int)left.internalValue - (double)right.internalValue);
                                 break;
-                            case 1315:
+                            case 1379:
                                 value = new Value(4, (double)left.internalValue - (int)right.internalValue);
                                 break;
-                            case 1651:
+                            case 1731:
                                 if (left.type == 5)
                                 {
                                     value2 = left;
@@ -2491,7 +2533,7 @@ namespace CommonScript.Runtime.Internal
                                     value = new Value(5, stringImpl2);
                                 }
                                 break;
-                            case 1013:
+                            case 1061:
                                 if (left.type == 5)
                                 {
                                     value2 = left;
@@ -4338,6 +4380,24 @@ namespace CommonScript.Runtime.Internal
                                 }
                                 output = buildFloat(System.Math.Tan(float1));
                                 break;
+                            case 15:
+                                valueStackSize -= 1;
+                                value = valueStack[valueStackSize];
+                                if (value.type == 5)
+                                {
+                                    PST_ParseFloat(stringUtil_getFlatValue(value), floatBuffer16);
+                                    output = VALUE_NULL;
+                                    if (floatBuffer16[0] > 0)
+                                    {
+                                        int1 = (int)floatBuffer16[1];
+                                        output = buildInteger(globalValues, int1);
+                                    }
+                                }
+                                else
+                                {
+                                    output = VALUE_NULL;
+                                }
+                                break;
                             case 7:
                                 output = buildFloat(PST_Random.NextDouble());
                                 break;
@@ -4847,6 +4907,16 @@ namespace CommonScript.Runtime.Internal
                 return orig;
             }
             return new Value(5, buildAsciiStringImpl(s2));
+        }
+
+        public static string stringUtil_getFlatValue(Value val)
+        {
+            StringImpl si = (StringImpl)val.internalValue;
+            if (si.isBuilder)
+            {
+                stringFlatten(si);
+            }
+            return si.nativeStr;
         }
 
         public static Value[] stringUtil_split(GlobalValues g, Value str, string sep)

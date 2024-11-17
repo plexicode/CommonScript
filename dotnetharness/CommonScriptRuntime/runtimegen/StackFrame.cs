@@ -31,5 +31,4 @@ namespace CommonScript.Runtime.Internal
             this.bubblingValueUncaught = bubblingValueUncaught;
         }
     }
-
 }

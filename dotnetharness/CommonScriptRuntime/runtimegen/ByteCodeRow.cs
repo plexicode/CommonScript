@@ -31,5 +31,4 @@ namespace CommonScript.Runtime.Internal
             this.boolArg2 = boolArg2;
         }
     }
-
 }
