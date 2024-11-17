@@ -110,6 +110,19 @@ namespace CommonScript.Compiler
 
             allocateStringAndTokenIds(bundle);
 
+            if (mainFunc == null)
+            {
+                Errors.ThrowGeneralError("There is no main() function defined.");
+            }
+
+            if (mainFunc.argTokens.Length >= 2)
+            {
+                Errors.ThrowError(
+                    mainFunc.nameToken,
+                    "The main function can only take in at most one argument. " +
+                    "Note that multiple CLI arguments are passed in to main(args) as a single list of strings.");
+            }
+
             bundle.mainFunctionId = mainFunc.serializationIndex;
             bundle.builtInCount = builtInFunctions.Count;
 
