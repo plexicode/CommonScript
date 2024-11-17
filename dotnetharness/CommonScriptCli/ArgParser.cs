@@ -2,8 +2,51 @@
 
 namespace CommonScriptCli
 {
+    /*
+        Args prepended with XCS: are execution arguments for Common Script CLI itself.
+        Each argument that requires more information is defined with the next argument in the list.
+        All other unaccounted args are passed sequentially to the user application.
+    */
     internal class ParsedArgs
     {
+        private enum CliArg
+        {
+            UNKNOWN,
+
+            // The source directory for the main module. Multiple definitions of this flag
+            // will overwrite previous definitions. If not specified, the current directory
+            // is treated as the source directory.
+            // --XCS:source path/to/source/directory
+            SOURCE_DIR,
+
+            // A directory containing a module name. The value is in the format of
+            // {modulename}:{path to module} (without curly braces)
+            // Multiple definitions are allowed.
+            // --XCS:module helper:path/to/helper/lib
+            MODULE_INFO,
+
+            // A directory to emit the byte code. This prevents execution.
+            // --XCS:bytecode path/to/bytecode/folder
+            BYTECODE_OUT_DIR,
+
+            // A path to a configuration file that contains values for the above arguments.
+            // The contents of the config file are treated as though they were arguments
+            // provided via command line.
+            // --XCS:config path/to/config/file.config
+            CONFIG_FILE,
+        }
+
+        private static readonly Dictionary<string, CliArg> FLAG_TO_ARG = new Dictionary<string, CliArg>() {
+            { "-XCS:s", CliArg.SOURCE_DIR },
+            { "--XCS:source", CliArg.SOURCE_DIR },
+            { "-XCS:m", CliArg.MODULE_INFO },
+            { "--XCS:module", CliArg.MODULE_INFO },
+            { "-XCS:bc", CliArg.BYTECODE_OUT_DIR },
+            { "--XCS:bytecode", CliArg.BYTECODE_OUT_DIR },
+            { "-XCS:c", CliArg.CONFIG_FILE },
+            { "--XCS:config", CliArg.CONFIG_FILE },
+        };
+
         public string[] UserRuntimeArgs { get; set; } = [];
         public Dictionary<string, string> ModuleDirByName { get; set; } = new Dictionary<string, string>();
         public string SourceDirectory { get; set; } = ".";
@@ -24,38 +67,11 @@ namespace CommonScriptCli
             argsOut.ModuleDirByName[name] = path;
         }
 
-        private enum CliArg
-        {
-            UNKNOWN,
-            SOURCE_DIR,
-            MODULE_INFO,
-            BYTECODE_OUT_DIR,
-            CONFIG_FILE,
-        }
-
         private static CliArg GetArgType(string rawValue)
         {
-            switch (rawValue)
-            {
-                case "-XCS:s":
-                case "--XCS:source":
-                    return CliArg.SOURCE_DIR;
-
-                case "-XCS:m":
-                case "--XCS:module":
-                    return CliArg.MODULE_INFO;
-
-                case "-XCS:bc":
-                case "--XCS:bytecode":
-                    return CliArg.BYTECODE_OUT_DIR;
-
-                case "-XCS:c":
-                case "--XCS:config":
-                    return CliArg.CONFIG_FILE;
-
-                default:
-                    return CliArg.UNKNOWN;
-            }
+            return FLAG_TO_ARG.TryGetValue(rawValue, out CliArg output)
+                ? output
+                : CliArg.UNKNOWN;
         }
 
         private static bool ArgTypeRequiresSubsequentValue(CliArg arg)
