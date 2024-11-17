@@ -219,3 +219,16 @@ bool isValueEqual(Value a, Value b) {
             return a.internalValue == b.internalValue;
     }
 }
+
+Value doExponent(GlobalValues g, double left, double right) {
+    if (left == 0) {
+        if (right == 0) return g.nullValue;
+        return g.intZero;
+    }
+
+    if (left == 1) return g.intOne;
+
+    if (left < 0 && right % 1 != 0) return g.nullValue;
+
+    return new Value(Type.FLOAT, Core.Pow(left, right));
+}
