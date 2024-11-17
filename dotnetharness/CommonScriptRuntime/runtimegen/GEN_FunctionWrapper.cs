@@ -282,6 +282,14 @@ namespace CommonScript.Runtime.Internal
             Value mainFn = ec.functionsAsValues[ec.significantFunctions["main"]];
             Value args = ec.globalValues.nullValue;
             Value[] argList = new Value[1];
+            Value[] argValues = new Value[cliArgs.Length];
+            int i = 0;
+            while (i < cliArgs.Length)
+            {
+                argValues[i] = buildString(ec.globalValues, cliArgs[i], true);
+                i += 1;
+            }
+            argList[0] = buildList(ec, argValues, false, -1);
             return createNewTask(ec, mainFn, argList);
         }
 
