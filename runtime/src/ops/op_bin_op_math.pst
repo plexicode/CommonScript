@@ -4,6 +4,22 @@ right = valueStack[valueStackSize + 1];
 
 switch (Core.ForceParens(left.type * BinaryOp.MAX + row.firstArg) * Type.MAX + right.type) {
 
+    case (Type.INTEGER * BinaryOp.MAX + BinaryOp.EXPONENT) * Type.MAX + Type.INTEGER:
+        value = doExponent(globalValues, 0.0 + (int) left.internalValue, 0.0 + (int) right.internalValue);
+        break;
+
+    case (Type.FLOAT * BinaryOp.MAX + BinaryOp.EXPONENT) * Type.MAX + Type.INTEGER:
+        value = doExponent(globalValues, (double) left.internalValue, 0.0 + (int) right.internalValue);
+        break;
+
+    case (Type.INTEGER * BinaryOp.MAX + BinaryOp.EXPONENT) * Type.MAX + Type.FLOAT:
+        value = doExponent(globalValues, 0.0 + (int) left.internalValue, (double) right.internalValue);
+        break;
+
+    case (Type.FLOAT * BinaryOp.MAX + BinaryOp.EXPONENT) * Type.MAX + Type.FLOAT:
+        value = doExponent(globalValues, (double) left.internalValue, (double) right.internalValue);
+        break;
+
     case (Type.INTEGER * BinaryOp.MAX + BinaryOp.SUBTRACT) * Type.MAX + Type.INTEGER:
         int1 = (int) left.internalValue;
         int2 = (int) right.internalValue;

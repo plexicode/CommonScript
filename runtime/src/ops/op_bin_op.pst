@@ -8,6 +8,7 @@ if (opMap == null) {
     opMap["*"] = BinaryOp.MULTIPLY;
     opMap["/"] = BinaryOp.DIVIDE;
     opMap["%"] = BinaryOp.MODULO;
+    opMap["**"] = BinaryOp.EXPONENT;
     opMap["&&"] = BinaryOp.BOOLEAN_AND;
     opMap["||"] = BinaryOp.BOOLEAN_OR;
     opMap["=="] = BinaryOp.EQUAL;

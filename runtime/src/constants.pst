@@ -30,6 +30,7 @@ enum BinaryOp {
     MULTIPLY = 3,
     DIVIDE = 4,
     MODULO = 5,
+    EXPONENT = 20,
     BOOLEAN_AND = 6,
     BOOLEAN_OR = 7,
     EQUAL = 8,
@@ -45,7 +46,7 @@ enum BinaryOp {
     BIT_SHIFT_RIGHT = 18,
     BIT_SHIFT_RIGHT_SIGN_EXT = 19,
 
-    MAX = 20,
+    MAX = 21,
 }
 
 enum ExecutionResultType {

@@ -144,12 +144,29 @@ namespace CommonScript.Compiler
 
         private Expression ParseMultiplication()
         {
-            Expression root = this.ParseUnaryPrefix();
+            Expression root = this.ParseExponent();
             if (this.tokens.doesNextInclulde3("*", "/", "%"))
             {
                 List<Expression> expressions = new List<Expression>() { root };
                 List<Token> ops = new List<Token>();
                 while (this.tokens.doesNextInclulde3("*", "/", "%"))
+                {
+                    ops.Add(this.tokens.pop());
+                    expressions.Add(this.ParseExponent());
+                }
+                root = FlattenBinaryOpChain(expressions, ops);
+            }
+            return root;
+        }
+
+        private Expression ParseExponent()
+        {
+            Expression root = this.ParseUnaryPrefix();
+            if (this.tokens.isNext("**"))
+            {
+                List<Expression> expressions = new List<Expression>() { root };
+                List<Token> ops = new List<Token>();
+                while (this.tokens.isNext("**"))
                 {
                     ops.Add(this.tokens.pop());
                     expressions.Add(this.ParseUnaryPrefix());
