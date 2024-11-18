@@ -1,9 +1,6 @@
 import dep -> deplib;
 import testlib -> *;
 
-// FAILING TEST
-// If you move isRainy and main to AFTER the enum definition, they don't show up to the compiler.
-// It is weird.
 enum Weather {
     SUNNY = 1,
     CLOUDY = 2,
@@ -11,8 +8,6 @@ enum Weather {
     SNOWY = 8,
     THUNDER = 16,
     WINDY = 32,
-
-    // FAILING TEST -- compiler doesn't like this.
     STORMY = deplib.STORMY64,
 
     FOG = 128,
@@ -21,26 +16,21 @@ enum Weather {
     RAIN_SNOW_MIX = Weather.SNOWY | Weather.RAINY,
 }
 
-
 function isRainy(weatherMask) {
     return (weatherMask & Weather.RAINY) != 0;
 }
 
 function main(args) {
-    // FAILING TEST
-    // It's a disasterrrrrrr!
-    // So many weird errors after porting this to the new harness.
-    // Seemed like even though this was in the file before, some things were not getting touched.
-    // Additionally the deplib is possibly throwing a wrench in the resolver.
-    // Either way, this test is commented out now.
-    
+    assertStrEqual(0 | Weather.SUNNY, 1);
 
-    assertStrEqual(Weather.SUNNY, 1);
+    // TODO: uncomment these when enum serialization is supported.
+    // assertStrEqual(Weather.SUNNY * 1, 1);
+    // assertStrEqual(Weather.SUNNY + '', 'SUNNY');
 
     // FAILING TEST
-    assertStrEqual(isRainy(Weather.SNOWY), false);
-    assertStrEqual(isRainy(Weather.SUNNY), false);
-    assertStrEqual(isRainy(Weather.RAIN_SNOW_MIX), true);
+    assertStrEqual(isRainy(0 | Weather.SNOWY), false);
+    assertStrEqual(isRainy(0 | Weather.SUNNY), false);
+    assertStrEqual(isRainy(0 | Weather.RAIN_SNOW_MIX), true);
 
     assertStrEqual(deplib.LIFE_UNIVERSE_EVERYTHING, 42);
 

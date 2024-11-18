@@ -117,12 +117,24 @@ namespace CommonScript.Compiler
         {
             binOp.left = this.ResolveExpressionFirstPass(binOp.left);
             binOp.right = this.ResolveExpressionFirstPass(binOp.right);
+            switch (binOp.opToken.Value)
+            {
+                case "|":
+                case "&":
+                case "^":
+                case "<<":
+                case ">>":
+                    binOp.left = this.IntegerRequired(binOp.left);
+                    binOp.right = this.IntegerRequired(binOp.right);
+                    break;
+            }
             return binOp;
         }
 
         private Expression FirstPass_BitwiseNot(Expression bwn)
         {
             bwn.root = this.ResolveExpressionFirstPass(bwn.root);
+            bwn.root = this.IntegerRequired(bwn.root);
             return bwn;
         }
 
@@ -987,6 +999,38 @@ namespace CommonScript.Compiler
             // TODO: come up with a list of suggestions.
             Errors.ThrowError(varExpr.firstToken, "There is no variable by the name of '" + varExpr.strVal + "'.");
             return null;
+        }
+
+        private Expression IntegerRequired(Expression expr)
+        {
+            switch (expr.type)
+            {
+                case ExpressionType.ENUM_CONST:
+                    EnumEntity enumParent = (EnumEntity)expr.objPtr;
+                    string enumMem = expr.strVal;
+                    for (int i = 0; i < enumParent.memberValues.Length; i++)
+                    {
+                        if (enumMem == enumParent.memberNameTokens[i].Value)
+                        {
+                            Expression val = enumParent.memberValues[i];
+                            if (val.type != ExpressionType.INTEGER_CONST)
+                            {
+                                throw new InvalidOperationException();
+                            }
+                            return val;
+                        }
+                    }
+                    Errors.ThrowError(expr.firstToken, "The enum '" + enumParent.fqName + "' does not have a member named '" + enumMem + "'.");
+                    break;
+
+                case ExpressionType.BOOL_CONST:
+                case ExpressionType.FLOAT_CONST:
+                case ExpressionType.STRING_CONST:
+                case ExpressionType.BOOLEAN_NOT:
+                    Errors.ThrowError(expr.firstToken, "An integer is expected here.");
+                    break;
+            }
+            return expr;
         }
     }
 }
