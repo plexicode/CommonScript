@@ -14,5 +14,13 @@ function main(args) {
     value = deplib.Internal2.memberFunction2();
     assertStrEqual("wheeeeee2", value);
 
+    value = deplib.notWrappedMember();
+    assertStrEqual("bananas", value);
+
+    value = deplib.Deep.Nesting.doubleWrap();
+    assertStrEqual("deeeeeep", value);
+
+    x = deplib.Internal2;
+
     print('ALL DONE');
 }

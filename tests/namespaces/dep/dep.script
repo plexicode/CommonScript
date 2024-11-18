@@ -3,3 +3,15 @@ namespace Internal2 {
         return "wheeeeee2";
     }
 }
+
+namespace Deep {
+    namespace Nesting {
+        function doubleWrap() {
+            return "deeeeeep";
+        }
+    }
+}
+
+function notWrappedMember() {
+    return "bananas";
+}
