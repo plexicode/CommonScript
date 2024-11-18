@@ -1,4 +1,5 @@
 import dep -> deplib;
+import dep2 -> *;
 import testlib -> *;
 
 enum Weather {
@@ -33,6 +34,10 @@ function main(args) {
     assertStrEqual(isRainy(0 | Weather.RAIN_SNOW_MIX), true);
 
     assertStrEqual(deplib.LIFE_UNIVERSE_EVERYTHING, 42);
+
+    assertStrEqual(FIVE, 5);
+    assertStrEqual(BiggerNums.TEN, 10);
+    assertStrEqual(getTen(), 10);
 
     print("ALL DONE");
 }

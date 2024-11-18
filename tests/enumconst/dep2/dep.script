@@ -1,0 +1,9 @@
+const FIVE = 5;
+
+namespace BiggerNums {
+    const TEN = FIVE * 2;
+}
+
+function getTen() {
+    return BiggerNums.TEN;
+}

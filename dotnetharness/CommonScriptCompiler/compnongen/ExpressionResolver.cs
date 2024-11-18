@@ -345,12 +345,7 @@ namespace CommonScript.Compiler
                     return Expression.createClassReference(token, entity);
 
                 case EntityType.CONST:
-                    {
-                        // TODO: is this cast safe?
-                        ConstEntity constRef = (ConstEntity)this.resolver.DoLookup(this.resolver.GetCurrentNamespace(), entity.simpleName);
-                        Expression constVal = constRef.constValue;
-                        return Expression.cloneExpressionWithNewToken(token, constVal);
-                    }
+                    return Expression.cloneExpressionWithNewToken(token, ((ConstEntity)entity).constValue);
 
                 case EntityType.ENUM:
                     return Expression.createEnumReference(token, entity);
