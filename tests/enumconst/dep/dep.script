@@ -5,8 +5,13 @@ const TAU = PI * 2;
 @public
 const PI = 3.14159265358979323;
 
-@public 
+@public
 const LIFE_UNIVERSE_EVERYTHING = 42;
 
 @public
 const STORMY64 = 64;
+
+namespace Wrapped {
+    @public
+    const WINDY32 = 32;
+}

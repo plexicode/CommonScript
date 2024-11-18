@@ -7,7 +7,7 @@ enum Weather {
     RAINY = 4,
     SNOWY = 8,
     THUNDER = 16,
-    WINDY = 32,
+    WINDY = deplib.Wrapped.WINDY32,
     STORMY = deplib.STORMY64,
 
     FOG = 128,

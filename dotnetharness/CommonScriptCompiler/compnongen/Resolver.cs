@@ -286,7 +286,7 @@ namespace CommonScript.Compiler
             {
                 for (int i = 0; i < resOrder.Length; i++)
                 {
-                    AbstractEntity entity = this.DoLookup("", resOrder[i]);
+                    AbstractEntity entity = this.flattenedEntitiesAndEnumValues[resOrder[i]];
                     this.activeEntity = entity;
                     if (entity.type == EntityType.ENUM)
                     {
@@ -453,7 +453,7 @@ namespace CommonScript.Compiler
                 }
                 else
                 {
-                    AbstractEntity item = this.DoLookup("", itemFqName);
+                    AbstractEntity item = this.flattenedEntitiesAndEnumValues[itemFqName];
                     Token itemToken = item.firstToken;
                     if (item.fqName != itemFqName) // an enum member
                     {
@@ -534,7 +534,7 @@ namespace CommonScript.Compiler
                     return expr;
 
                 case ExpressionType.VARIABLE:
-                    AbstractEntity referenced = this.DoLookup(fqNamespace, expr.strVal);
+                    AbstractEntity referenced = this.TryDoExactLookupForConstantEntity(file, fqNamespace, expr.strVal);
                     if (referenced == null)
                     {
                         Errors.ThrowError(expr.firstToken, "No definition for '" + expr.strVal + "'");
@@ -599,13 +599,7 @@ namespace CommonScript.Compiler
                     {
                         string enumMemberName = fullRefSegments[fullRefSegments.Length - 1];
                         string enumName = fullRefDotted.Substring(0, fullRefDotted.Length - enumMemberName.Length - 1);
-                        AbstractEntity enumParentCheck = this.DoLookup(fqNamespace, enumName);
-                        if (enumParentCheck != reffedEntity)
-                        {
-                            Errors.ThrowError(expr.firstToken, "Cannot refer to enum types directly in constant expression. You can only reference an enum member.");
-                        }
-
-                        refs.Add(enumParentCheck.fqName + "." + enumMemberName);
+                        refs.Add(reffedEntity.fqName + "." + enumMemberName);
                     }
                     else
                     {
