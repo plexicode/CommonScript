@@ -44,7 +44,7 @@ namespace CommonScript.Compiler
                     case EntityType.FUNCTION:
                         return Expression.createFunctionReference(refToken, name, tle);
                     case EntityType.CONST:
-                        throw new NotImplementedException();
+                        return ((ConstEntity)tle).constValue;
                     case EntityType.CLASS:
                         return Expression.createClassReference(refToken, tle);
                     case EntityType.NAMESPACE:

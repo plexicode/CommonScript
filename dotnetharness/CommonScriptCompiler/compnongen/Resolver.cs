@@ -413,7 +413,7 @@ namespace CommonScript.Compiler
                 string ns = c.nestParent == null ? "" : c.nestParent.fqName;
 
                 List<string> refsOut = new List<string>();
-                c.constValue = this.GetListOfConstReferences(c.fileContext, ns, c.constValue, refsOut);
+                c.constValue = this.GetListOfUnresolvedConstReferences(c.fileContext, ns, c.constValue, refsOut);
                 referencesMadeByFqItem[c.fqName] = refsOut;
             }
 
@@ -427,7 +427,7 @@ namespace CommonScript.Compiler
                     string memFqName = e.fqName + "." + e.memberNameTokens[i].Value;
                     Expression val = e.memberValues[i];
                     List<string> refsOut = new List<string>();
-                    e.memberValues[i] = this.GetListOfConstReferences(e.fileContext, ns, val, refsOut);
+                    e.memberValues[i] = this.GetListOfUnresolvedConstReferences(e.fileContext, ns, val, refsOut);
                     referencesMadeByFqItem[memFqName] = refsOut;
                 }
             }
@@ -511,12 +511,12 @@ namespace CommonScript.Compiler
             return -1;
         }
 
-        private Expression GetListOfConstReferences(FileContext file, string fqNamespace, Expression expr, List<string> refsOut)
+        private Expression GetListOfUnresolvedConstReferences(FileContext file, string fqNamespace, Expression expr, List<string> refsOut)
         {
-            return this.GetListOfConstReferencesImpl(file, fqNamespace, expr, refsOut);
+            return this.GetListOfUnresolvedConstReferencesImpl(file, fqNamespace, expr, refsOut);
         }
 
-        private Expression GetListOfConstReferencesImpl(FileContext file, string fqNamespace, Expression expr, List<string> refs)
+        private Expression GetListOfUnresolvedConstReferencesImpl(FileContext file, string fqNamespace, Expression expr, List<string> refs)
         {
             switch (expr.type)
             {
@@ -529,8 +529,8 @@ namespace CommonScript.Compiler
                     return expr;
 
                 case ExpressionType.BINARY_OP:
-                    expr.left = this.GetListOfConstReferencesImpl(file, fqNamespace, expr.left, refs);
-                    expr.right = this.GetListOfConstReferencesImpl(file, fqNamespace, expr.right, refs);
+                    expr.left = this.GetListOfUnresolvedConstReferencesImpl(file, fqNamespace, expr.left, refs);
+                    expr.right = this.GetListOfUnresolvedConstReferencesImpl(file, fqNamespace, expr.right, refs);
                     return expr;
 
                 case ExpressionType.VARIABLE:
@@ -541,6 +541,22 @@ namespace CommonScript.Compiler
                     }
                     else
                     {
+                        if (referenced.fileContext.compiledModule != file.compiledModule)
+                        {
+                            if (referenced.type == EntityType.CONST)
+                            {
+                                throw new NotImplementedException();
+                            }
+                            else if (referenced.type == EntityType.ENUM)
+                            {
+                                throw new NotImplementedException();
+                            }
+                            else
+                            {
+                                throw new NotImplementedException();
+                            }
+                        }
+
                         switch (referenced.type)
                         {
                             case EntityType.CONST:
@@ -561,6 +577,20 @@ namespace CommonScript.Compiler
                     string fullRefDotted = string.Join('.', fullRefSegments);
                     AbstractEntity reffedEntity = this.TryDoExactLookupForConstantEntity(file, fqNamespace, fullRefDotted);
                     if (reffedEntity == null) Errors.ThrowError(expr.firstToken, "Invalid expression for constant.");
+                    if (reffedEntity.fileContext.compiledModule != file.compiledModule)
+                    {
+                        if (reffedEntity.type == EntityType.CONST) return ((ConstEntity)reffedEntity).constValue;
+
+                        if (reffedEntity.type == EntityType.ENUM)
+                        {
+                            throw new NotImplementedException();
+                        }
+                        else
+                        {
+                            throw new NotImplementedException();
+                        }
+                    }
+
                     if (reffedEntity.type == EntityType.CONST)
                     {
                         refs.Add(reffedEntity.fqName);
