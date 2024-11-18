@@ -11,6 +11,7 @@ namespace CommonScript.Compiler
         public Dictionary<string, ImportStatement> importsByVar;
         public bool isBuiltInLib = false;
         public bool isCoreBuiltin = false;
+        public CompiledModule compiledModule = null;
 
         public FileContext(string path, string content)
         {

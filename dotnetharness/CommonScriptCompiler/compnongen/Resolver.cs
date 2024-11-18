@@ -11,6 +11,7 @@ namespace CommonScript.Compiler
         public Dictionary<string, AbstractEntity> builtinRefs;
         public Dictionary<string, AbstractEntity> flattenedEntities;
         public Dictionary<string, AbstractEntity> flattenedEntitiesAndEnumValues;
+        public Dictionary<string, AbstractEntity> flattenedEntitiesNoEnumParents;
 
         public AbstractEntity activeEntity = null;
         public AbstractEntity[] entityList = null;
@@ -41,12 +42,17 @@ namespace CommonScript.Compiler
             this.flattenedEntities = new Dictionary<string, AbstractEntity>();
             this.enumsByMemberFqName = new Dictionary<string, AbstractEntity>();
             this.flattenedEntitiesAndEnumValues = new Dictionary<string, AbstractEntity>();
+            this.flattenedEntitiesNoEnumParents = new Dictionary<string, AbstractEntity>();
 
             this.entityList = Resolver.FlattenEntities(rootEntities);
             foreach (AbstractEntity tle in this.entityList)
             {
                 this.flattenedEntities[tle.fqName] = tle;
                 this.flattenedEntitiesAndEnumValues[tle.fqName] = tle;
+                if (tle.type != EntityType.ENUM)
+                {
+                    this.flattenedEntitiesNoEnumParents[tle.fqName] = tle;
+                }
             }
 
             foreach (EnumEntity enumDef in this.entityList.OfType<EnumEntity>())
@@ -56,6 +62,7 @@ namespace CommonScript.Compiler
                     string fqName = enumDef.fqName + "." + enumDef.memberNameTokens[i].Value;
                     this.enumsByMemberFqName[fqName] = enumDef;
                     this.flattenedEntitiesAndEnumValues[fqName] = enumDef;
+                    this.flattenedEntitiesNoEnumParents[fqName] = enumDef;
                 }
             }
         }
@@ -552,7 +559,7 @@ namespace CommonScript.Compiler
                 case ExpressionType.DOT_FIELD:
                     string[] fullRefSegments = Expression.DotField_getVariableRootedDottedChain(expr, "Cannot use this type of entity from a constant expression.");
                     string fullRefDotted = string.Join('.', fullRefSegments);
-                    AbstractEntity reffedEntity = this.TryDoExactLookupForConstantEntity(file, fqNamespace, fullRefDotted, false);
+                    AbstractEntity reffedEntity = this.TryDoExactLookupForConstantEntity(file, fqNamespace, fullRefDotted);
                     if (reffedEntity == null) Errors.ThrowError(expr.firstToken, "Invalid expression for constant.");
                     if (reffedEntity.type == EntityType.CONST)
                     {
@@ -584,17 +591,14 @@ namespace CommonScript.Compiler
             return null;
         }
 
-        private AbstractEntity TryDoExactLookupForConstantEntity(FileContext file, string fqNamespace, string dottedEntityName, bool allowEnumParent)
+        // Finds the constant entity value given the current namespace and name.
+        // This will find constsants and enum values. Enum parents will be ignored.
+        private AbstractEntity TryDoExactLookupForConstantEntity(FileContext file, string fqNamespace, string dottedEntityName)
         {
             // If you are using a fully-qualified name, just go with that.
-            if (this.flattenedEntitiesAndEnumValues.ContainsKey(dottedEntityName))
+            if (this.flattenedEntitiesNoEnumParents.ContainsKey(dottedEntityName))
             {
-                AbstractEntity refEntity = this.flattenedEntitiesAndEnumValues[dottedEntityName];
-                if (!allowEnumParent && refEntity.type == EntityType.ENUM && this.flattenedEntities.ContainsKey(dottedEntityName))
-                {
-                    return null;
-                }
-                return refEntity;
+                return this.flattenedEntitiesNoEnumParents[dottedEntityName];
             }
 
             // Check all possible nest levels of the current namespace with the full dotted name suffixed at the end.
@@ -606,14 +610,9 @@ namespace CommonScript.Compiler
             while (nsParts.Count > 0)
             {
                 string lookupName = string.Join('.', [.. nsParts, .. dottedEntityName]);
-                if (this.flattenedEntitiesAndEnumValues.ContainsKey(lookupName))
+                if (this.flattenedEntitiesNoEnumParents.ContainsKey(lookupName))
                 {
-                    AbstractEntity refEntity = this.flattenedEntitiesAndEnumValues[lookupName];
-                    if (!allowEnumParent && refEntity.type == EntityType.ENUM && this.flattenedEntities.ContainsKey(lookupName))
-                    {
-                        refEntity = null;
-                    }
-                    return refEntity;
+                    return this.flattenedEntitiesNoEnumParents[lookupName];
                 }
                 nsParts.RemoveAt(nsParts.Count - 1);
             }
@@ -627,7 +626,7 @@ namespace CommonScript.Compiler
                 // reference within that imported module.
                 CompiledModule targetModule = file.importsByVar[entityNameSegments[0]].compiledModuleRef;
                 string scopedName = string.Join('.', [.. entityNameSegments.Skip(1)]);
-                return CompiledModuleEntityLookup(targetModule, scopedName, allowEnumParent);
+                return CompiledModuleEntityLookup(targetModule, scopedName);
             }
 
             // If it wasn't found locally or in an variable-scoped import, then check the wildcard imports.
@@ -636,34 +635,23 @@ namespace CommonScript.Compiler
             {
                 if (imp.importTargetVariableName == null)
                 {
-                    return CompiledModuleEntityLookup(imp.compiledModuleRef, dottedEntityName, allowEnumParent);
+                    return CompiledModuleEntityLookup(imp.compiledModuleRef, dottedEntityName);
                 }
             }
 
             return null;
         }
-        private static AbstractEntity CompiledModuleEntityLookup(CompiledModule mod, string fqName, bool allowEnumParent)
+        private static AbstractEntity CompiledModuleEntityLookup(CompiledModule mod, string fqName)
         {
-            if (mod.flattenedEntities.ContainsKey(fqName))
+            if (mod.entitiesNoEnumParents.ContainsKey(fqName))
             {
-                AbstractEntity entityRef = mod.flattenedEntities[fqName];
-                if (!allowEnumParent && entityRef.type == EntityType.ENUM) return null;
-                return entityRef;
+                return mod.entitiesNoEnumParents[fqName];
             }
             string[] parts = fqName.Split('.');
             string potentialEnumParentName = string.Join('.', parts.SkipLast(1));
-            if (mod.flattenedEntities.ContainsKey(potentialEnumParentName))
+            if (mod.entitiesNoEnumParents.ContainsKey(potentialEnumParentName))
             {
-                AbstractEntity entityRef = mod.flattenedEntities[potentialEnumParentName];
-                if (entityRef.type == EntityType.ENUM)
-                {
-                    // Verify this enum valule exists as a member.
-                    string enumMemberName = parts.Last();
-                    foreach (string memName in ((EnumEntity)entityRef).memberNameTokens.Select(t => t.Value))
-                    {
-                        if (memName == enumMemberName) return entityRef;
-                    }
-                }
+                return mod.entitiesNoEnumParents[potentialEnumParentName];
             }
 
             return null;

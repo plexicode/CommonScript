@@ -9,12 +9,37 @@ namespace CommonScript.Compiler
         public Dictionary<string, string> textResources;
         public Dictionary<string, AbstractEntity> nestedEntities;
         public Dictionary<string, AbstractEntity> flattenedEntities;
+        public Dictionary<string, AbstractEntity> entitiesNoEnumParents;
 
         public CompiledModule(string id)
         {
             this.id = id;
             this.codeFiles = new Dictionary<string, string>();
             this.textResources = new Dictionary<string, string>();
+        }
+
+        public void InitializeCompieldModuleLookups(Dictionary<string, AbstractEntity> rootEntities, Dictionary<string, AbstractEntity> flatEntities)
+        {
+            this.nestedEntities = rootEntities;
+            this.flattenedEntities = flatEntities;
+            this.entitiesNoEnumParents = new Dictionary<string, AbstractEntity>();
+            foreach (string fqName in this.flattenedEntities.Keys)
+            {
+                AbstractEntity entity = this.flattenedEntities[fqName];
+                if (entity.type == EntityType.ENUM)
+                {
+                    // for no-enum-parents, add all the children but not the entity itself. This is
+                    // used for situations where a specific enum member is desired instead of the definition.
+                    foreach (Token enumMem in ((EnumEntity)entity).memberNameTokens)
+                    {
+                        this.entitiesNoEnumParents[fqName + "." + enumMem.Value] = entity;
+                    }
+                }
+                else
+                {
+                    this.entitiesNoEnumParents[fqName] = entity;
+                }
+            }
         }
     }
 

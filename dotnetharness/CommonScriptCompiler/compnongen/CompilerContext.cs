@@ -56,7 +56,7 @@ namespace CommonScript.Compiler
             bool isBuiltInLib)
         {
             CompilerContext compiler = GetCompiler(compObj);
-            
+
             compiler.depIdsByModuleId[moduleId] = new List<string>();
 
             List<FileContext> files = new List<FileContext>();
@@ -231,8 +231,11 @@ namespace CommonScript.Compiler
 
             CompiledModule m = new CompiledModule(moduleId);
             m.codeFiles = sourceCode;
-            m.nestedEntities = resolverCtx.nestedEntities;
-            m.flattenedEntities = resolverCtx.flattenedEntities;
+            m.InitializeCompieldModuleLookups(resolverCtx.nestedEntities, resolverCtx.flattenedEntities);
+            foreach (FileContext file in files)
+            {
+                file.compiledModule = m;
+            }
 
             return m;
         }
