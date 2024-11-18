@@ -281,6 +281,7 @@ namespace CommonScript.Compiler
 
             while (keepChecking)
             {
+                Token firstToken = tokens.peek();
                 Dictionary<string, Token> annotationTokens = ParseOutAnnotations(tokens);
 
                 string nextToken = file.tokens.peekValueNonNull();
@@ -322,8 +323,14 @@ namespace CommonScript.Compiler
                         Errors.ThrowError(tokens.peek(), "All imports must appear at the top of the file.");
                         break;
 
-                    default:
+                    case "}":
                         keepChecking = false;
+                        break;
+
+                    default:
+                        // Unexpected EOF or stray tokens.
+                        tokens.ensureMore();
+                        Errors.ThrowError(tokens.peek(), "Unexpected token: '" + tokens.peekValueNonNull() + "'");
                         break;
                 }
 
@@ -331,6 +338,11 @@ namespace CommonScript.Compiler
                 {
                     entity.isStatic = entity.annotations != null && entity.annotations.ContainsKey("static");
                     AttachEntityToParseTree(entity, nestParent, file, namespacePrefix, currentEntityBucket, annotationTokens);
+                }
+
+                if (entity == null && annotationTokens.Count > 0)
+                {
+                    Errors.ThrowError(firstToken, "This annotation is not attached to any entity.");
                 }
 
                 if (!tokens.hasMore())
