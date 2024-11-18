@@ -1,0 +1,5 @@
+namespace Internal2 {
+    function memberFunction2() {
+        return "wheeeeee2";
+    }
+}

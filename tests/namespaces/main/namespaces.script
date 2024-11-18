@@ -2,13 +2,17 @@ import dep -> deplib;
 import testlib -> *;
 
 namespace Internal {
-    function immaSecret() {
+    function memberFunction() {
         return "wheeeeee";
     }
 }
 
 function main(args) {
-    v = Internal.immaSecret();
-    assertStrEqual('wheeeeee', v);
+    value = Internal.memberFunction();
+    assertStrEqual("wheeeeee", value);
+
+    value = deplib.Internal2.memberFunction2();
+    assertStrEqual("wheeeeee2", value);
+
     print('ALL DONE');
 }

@@ -47,6 +47,8 @@ namespace CommonScript.Compiler
                         throw new NotImplementedException();
                     case EntityType.CLASS:
                         return Expression.createClassReference(refToken, tle);
+                    case EntityType.NAMESPACE:
+                        return Expression.createNamespaceReference(refToken, tle);
                     default:
                         throw new NotImplementedException();
                 }
