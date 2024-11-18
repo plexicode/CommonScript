@@ -218,6 +218,11 @@ namespace CommonScript.Compiler
                     importStatement.compiledModuleRef = compiler.compiledModulesById[importStatement.flatName];
                 }
                 ParseOutEntities(compiler, file, rootEntities, null, "");
+                Token danglingToken = file.tokens.peek();
+                if (danglingToken != null)
+                {
+                    Errors.ThrowError(danglingToken, "Unexpected token: '" + danglingToken.Value + "'. You might have too many close parentheses in this file.");
+                }
             }
 
             Resolver resolverCtx = new Resolver(rootEntities, compiler.extensionNames);

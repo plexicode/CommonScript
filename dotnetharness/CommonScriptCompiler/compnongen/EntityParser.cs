@@ -124,6 +124,8 @@ namespace CommonScript.Compiler
                 nextAllowed = this.tokens.popIfPresent(",");
             }
 
+            tokens.popExpected("}");
+
             return new EnumEntity(enumKeyword, nameToken, names.ToArray(), values.ToArray());
         }
     }
