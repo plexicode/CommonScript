@@ -20,7 +20,5 @@ function main(args) {
     value = deplib.Deep.Nesting.doubleWrap();
     assertStrEqual("deeeeeep", value);
 
-    x = deplib.Internal2;
-
     print('ALL DONE');
 }

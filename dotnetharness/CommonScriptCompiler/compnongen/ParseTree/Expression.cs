@@ -1,4 +1,6 @@
-﻿namespace CommonScript.Compiler
+﻿using System.Collections.Generic;
+
+namespace CommonScript.Compiler
 {
     internal enum ExpressionType
     {
@@ -262,6 +264,34 @@
             df.opToken = dotToken;
             df.strVal = name;
             return df;
+        }
+
+        public static string[] DotField_getVariableRootedDottedChain(Expression outermostDotField, string errorMessage)
+        {
+            List<string> chain = [outermostDotField.strVal];
+            Expression walker = outermostDotField.root;
+            while (walker != null)
+            {
+                chain.Add(walker.strVal);
+                if (walker.type == ExpressionType.DOT_FIELD)
+                {
+                    walker = walker.root;
+                }
+                else if (walker.type == ExpressionType.VARIABLE)
+                {
+                    walker = null;
+                }
+                else if (errorMessage != null)
+                {
+                    Errors.ThrowError(walker.firstToken, errorMessage);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            chain.Reverse();
+            return [.. chain];
         }
 
         public static Expression createFunctionInvocation(Expression root, Token parenToken, Expression[] args)

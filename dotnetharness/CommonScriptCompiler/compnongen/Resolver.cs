@@ -10,6 +10,7 @@ namespace CommonScript.Compiler
         public Dictionary<string, AbstractEntity> enumsByMemberFqName;
         public Dictionary<string, AbstractEntity> builtinRefs;
         public Dictionary<string, AbstractEntity> flattenedEntities;
+        public Dictionary<string, AbstractEntity> flattenedEntitiesAndEnumValues;
 
         public AbstractEntity activeEntity = null;
         public AbstractEntity[] entityList = null;
@@ -39,11 +40,13 @@ namespace CommonScript.Compiler
             this.nestedEntities = rootEntities;
             this.flattenedEntities = new Dictionary<string, AbstractEntity>();
             this.enumsByMemberFqName = new Dictionary<string, AbstractEntity>();
+            this.flattenedEntitiesAndEnumValues = new Dictionary<string, AbstractEntity>();
 
             this.entityList = Resolver.FlattenEntities(rootEntities);
             foreach (AbstractEntity tle in this.entityList)
             {
                 this.flattenedEntities[tle.fqName] = tle;
+                this.flattenedEntitiesAndEnumValues[tle.fqName] = tle;
             }
 
             foreach (EnumEntity enumDef in this.entityList.OfType<EnumEntity>())
@@ -52,6 +55,7 @@ namespace CommonScript.Compiler
                 {
                     string fqName = enumDef.fqName + "." + enumDef.memberNameTokens[i].Value;
                     this.enumsByMemberFqName[fqName] = enumDef;
+                    this.flattenedEntitiesAndEnumValues[fqName] = enumDef;
                 }
             }
         }
@@ -401,7 +405,9 @@ namespace CommonScript.Compiler
             {
                 string ns = c.nestParent == null ? "" : c.nestParent.fqName;
 
-                referencesMadeByFqItem[c.fqName] = this.GetListOfConstReferences(ns, c.constValue);
+                List<string> refsOut = new List<string>();
+                c.constValue = this.GetListOfConstReferences(c.fileContext, ns, c.constValue, refsOut);
+                referencesMadeByFqItem[c.fqName] = refsOut;
             }
 
             foreach (EnumEntity e in enums)
@@ -413,7 +419,9 @@ namespace CommonScript.Compiler
                 {
                     string memFqName = e.fqName + "." + e.memberNameTokens[i].Value;
                     Expression val = e.memberValues[i];
-                    referencesMadeByFqItem[memFqName] = this.GetListOfConstReferences(ns, val);
+                    List<string> refsOut = new List<string>();
+                    e.memberValues[i] = this.GetListOfConstReferences(e.fileContext, ns, val, refsOut);
+                    referencesMadeByFqItem[memFqName] = refsOut;
                 }
             }
 
@@ -442,7 +450,7 @@ namespace CommonScript.Compiler
                     Token itemToken = item.firstToken;
                     if (item.fqName != itemFqName) // an enum member
                     {
-                        EnumEntity parentEnum = (EnumEntity) item;
+                        EnumEntity parentEnum = (EnumEntity)item;
                         int enumValIndex = this.GetEnumMemberIndex(itemFqName, parentEnum);
                         itemToken = parentEnum.memberNameTokens[enumValIndex];
                     }
@@ -496,14 +504,12 @@ namespace CommonScript.Compiler
             return -1;
         }
 
-        private List<string> GetListOfConstReferences(string fqNamespace, Expression expr)
+        private Expression GetListOfConstReferences(FileContext file, string fqNamespace, Expression expr, List<string> refsOut)
         {
-            List<string> refs = new List<string>();
-            this.GetListOfConstReferencesImpl(fqNamespace, expr, refs);
-            return refs;
+            return this.GetListOfConstReferencesImpl(file, fqNamespace, expr, refsOut);
         }
 
-        private void GetListOfConstReferencesImpl(string fqNamespace, Expression expr, List<string> refs)
+        private Expression GetListOfConstReferencesImpl(FileContext file, string fqNamespace, Expression expr, List<string> refs)
         {
             switch (expr.type)
             {
@@ -513,12 +519,12 @@ namespace CommonScript.Compiler
                 case ExpressionType.NULL_CONST:
                 case ExpressionType.STRING_CONST:
                     // This is fine
-                    break;
+                    return expr;
 
                 case ExpressionType.BINARY_OP:
-                    this.GetListOfConstReferencesImpl(fqNamespace, expr.left, refs);
-                    this.GetListOfConstReferencesImpl(fqNamespace, expr.right, refs);
-                    break;
+                    expr.left = this.GetListOfConstReferencesImpl(file, fqNamespace, expr.left, refs);
+                    expr.right = this.GetListOfConstReferencesImpl(file, fqNamespace, expr.right, refs);
+                    return expr;
 
                 case ExpressionType.VARIABLE:
                     AbstractEntity referenced = this.DoLookup(fqNamespace, expr.strVal);
@@ -541,25 +547,12 @@ namespace CommonScript.Compiler
                                 break;
                         }
                     }
-                    break;
+                    return expr;
 
                 case ExpressionType.DOT_FIELD:
-                    // Walk the dot chain down to the variable root and use this as a lookup.
-                    List<string> dotFieldChainBuilder = new List<string>();
-                    Expression walker = expr;
-                    while (walker.type == ExpressionType.DOT_FIELD)
-                    {
-                        dotFieldChainBuilder.Add(walker.strVal);
-                        walker = walker.root;
-                    }
-                    if (walker.type != ExpressionType.VARIABLE)
-                    {
-                        Errors.ThrowError(walker.firstToken, "Cannot use this type of entity from a constant expression.");
-                    }
-                    dotFieldChainBuilder.Add(walker.strVal);
-                    dotFieldChainBuilder.Reverse();
-                    string dotFieldChain = string.Join('.', dotFieldChainBuilder);
-                    AbstractEntity reffedEntity = this.DoLookup(fqNamespace, dotFieldChain);
+                    string[] fullRefSegments = Expression.DotField_getVariableRootedDottedChain(expr, "Cannot use this type of entity from a constant expression.");
+                    string fullRefDotted = string.Join('.', fullRefSegments);
+                    AbstractEntity reffedEntity = this.TryDoExactLookupForConstantEntity(file, fqNamespace, fullRefDotted, false);
                     if (reffedEntity == null) Errors.ThrowError(expr.firstToken, "Invalid expression for constant.");
                     if (reffedEntity.type == EntityType.CONST)
                     {
@@ -567,8 +560,8 @@ namespace CommonScript.Compiler
                     }
                     else if (reffedEntity.type == EntityType.ENUM)
                     {
-                        string enumMemberName = dotFieldChainBuilder[dotFieldChainBuilder.Count - 1];
-                        string enumName = dotFieldChain.Substring(0, dotFieldChain.Length - enumMemberName.Length - 1);
+                        string enumMemberName = fullRefSegments[fullRefSegments.Length - 1];
+                        string enumName = fullRefDotted.Substring(0, fullRefDotted.Length - enumMemberName.Length - 1);
                         AbstractEntity enumParentCheck = this.DoLookup(fqNamespace, enumName);
                         if (enumParentCheck != reffedEntity)
                         {
@@ -581,12 +574,99 @@ namespace CommonScript.Compiler
                     {
                         Errors.ThrowError(expr.firstToken, "Cannot reference this entity from here.");
                     }
-                    break;
+                    return expr;
 
                 default:
                     Errors.ThrowError(expr.firstToken, "Invalid expression for constant.");
                     break;
             }
+
+            return null;
+        }
+
+        private AbstractEntity TryDoExactLookupForConstantEntity(FileContext file, string fqNamespace, string dottedEntityName, bool allowEnumParent)
+        {
+            // If you are using a fully-qualified name, just go with that.
+            if (this.flattenedEntitiesAndEnumValues.ContainsKey(dottedEntityName))
+            {
+                AbstractEntity refEntity = this.flattenedEntitiesAndEnumValues[dottedEntityName];
+                if (!allowEnumParent && refEntity.type == EntityType.ENUM && this.flattenedEntities.ContainsKey(dottedEntityName))
+                {
+                    return null;
+                }
+                return refEntity;
+            }
+
+            // Check all possible nest levels of the current namespace with the full dotted name suffixed at the end.
+            // e.g. namespace = Foo.Bar, reference = Baz
+            // -> check Foo.Bar.Baz
+            // -> check Foo.Baz
+            // no need to check just "Baz" as that was done by the previous check hence the > 0 instead of >= 0 loop condition. 
+            List<string> nsParts = [.. fqNamespace.Split('.')];
+            while (nsParts.Count > 0)
+            {
+                string lookupName = string.Join('.', [.. nsParts, .. dottedEntityName]);
+                if (this.flattenedEntitiesAndEnumValues.ContainsKey(lookupName))
+                {
+                    AbstractEntity refEntity = this.flattenedEntitiesAndEnumValues[lookupName];
+                    if (!allowEnumParent && refEntity.type == EntityType.ENUM && this.flattenedEntities.ContainsKey(lookupName))
+                    {
+                        refEntity = null;
+                    }
+                    return refEntity;
+                }
+                nsParts.RemoveAt(nsParts.Count - 1);
+            }
+
+            // If we didn't find it, it means it doesn't exist in this module. So let's check the imported modules that 
+            // are scoped to a variable. This means the first segment in the reference is the import variable name.
+            string[] entityNameSegments = dottedEntityName.Split('.');
+            if (file.importsByVar.ContainsKey(entityNameSegments[0]))
+            {
+                // If it was found, then use the rest of the dotted segment chain as a fully qualified
+                // reference within that imported module.
+                CompiledModule targetModule = file.importsByVar[entityNameSegments[0]].compiledModuleRef;
+                string scopedName = string.Join('.', [.. entityNameSegments.Skip(1)]);
+                return CompiledModuleEntityLookup(targetModule, scopedName, allowEnumParent);
+            }
+
+            // If it wasn't found locally or in an variable-scoped import, then check the wildcard imports.
+            // In these cases, the entity name is fully qualified as-is and does not require truncation.
+            foreach (ImportStatement imp in file.imports)
+            {
+                if (imp.importTargetVariableName == null)
+                {
+                    return CompiledModuleEntityLookup(imp.compiledModuleRef, dottedEntityName, allowEnumParent);
+                }
+            }
+
+            return null;
+        }
+        private static AbstractEntity CompiledModuleEntityLookup(CompiledModule mod, string fqName, bool allowEnumParent)
+        {
+            if (mod.flattenedEntities.ContainsKey(fqName))
+            {
+                AbstractEntity entityRef = mod.flattenedEntities[fqName];
+                if (!allowEnumParent && entityRef.type == EntityType.ENUM) return null;
+                return entityRef;
+            }
+            string[] parts = fqName.Split('.');
+            string potentialEnumParentName = string.Join('.', parts.SkipLast(1));
+            if (mod.flattenedEntities.ContainsKey(potentialEnumParentName))
+            {
+                AbstractEntity entityRef = mod.flattenedEntities[potentialEnumParentName];
+                if (entityRef.type == EntityType.ENUM)
+                {
+                    // Verify this enum valule exists as a member.
+                    string enumMemberName = parts.Last();
+                    foreach (string memName in ((EnumEntity)entityRef).memberNameTokens.Select(t => t.Value))
+                    {
+                        if (memName == enumMemberName) return entityRef;
+                    }
+                }
+            }
+
+            return null;
         }
 
         private AbstractEntity DoDirectLookup(string fqAttempt)

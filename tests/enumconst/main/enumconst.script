@@ -1,14 +1,30 @@
-// import dep -> deplib;
+import dep -> deplib;
 import testlib -> *;
 
 // FAILING TEST
 // If you move isRainy and main to AFTER the enum definition, they don't show up to the compiler.
 // It is weird.
+enum Weather {
+    SUNNY = 1,
+    CLOUDY = 2,
+    RAINY = 4,
+    SNOWY = 8,
+    THUNDER = 16,
+    WINDY = 32,
 
-/*
+    // FAILING TEST -- compiler doesn't like this.
+    STORMY = deplib.STORMY64,
+
+    FOG = 128,
+    THUNDERSTORMS = Weather.THUNDER | Weather.RAINY | Weather.WINDY,
+    BLIZZARD = Weather.WINDY | Weather.SNOWY,
+    RAIN_SNOW_MIX = Weather.SNOWY | Weather.RAINY,
+}
+
+
 function isRainy(weatherMask) {
     return (weatherMask & Weather.RAINY) != 0;
-}//*/
+}
 
 function main(args) {
     // FAILING TEST
@@ -19,36 +35,14 @@ function main(args) {
     // Either way, this test is commented out now.
     
 
-    /*
     assertStrEqual(Weather.SUNNY, 1);
 
     // FAILING TEST
-    // boolean literal expressions not implemented? lol
-    assertStrEqual(isRainy(Weather.SNOWY), 'false');
-    assertStrEqual(isRainy(Weather.SUNNY), 'false');
-    assertStrEqual(isRainy(Weather.RAIN_SNOW_MIX), 'true');
+    assertStrEqual(isRainy(Weather.SNOWY), false);
+    assertStrEqual(isRainy(Weather.SUNNY), false);
+    assertStrEqual(isRainy(Weather.RAIN_SNOW_MIX), true);
 
     assertStrEqual(deplib.LIFE_UNIVERSE_EVERYTHING, 42);
-    */
+
     print("ALL DONE");
 }
-/*
-enum Weather {
-    SUNNY = 1,
-    CLOUDY = 2,
-    RAINY = 4,
-    SNOWY = 8,
-    THUNDER = 16,
-    WINDY = 32,
-
-    // FAILING TEST -- compiler doesn't like this.
-    // STORMY = deplib.STORMY64,
-    STORMY = 64,
-
-
-    FOG = 128,
-    THUNDERSTORMS = Weather.THUNDER | Weather.RAINY | Weather.WINDY,
-    BLIZZARD = Weather.WINDY | Weather.SNOWY,
-    RAIN_SNOW_MIX = Weather.SNOWY | Weather.RAINY,
-}
-//*/
