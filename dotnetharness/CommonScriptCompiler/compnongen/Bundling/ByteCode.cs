@@ -93,7 +93,7 @@ namespace CommonScript.Compiler
             ByteCodeRow last = buf.last;
             if (last.opCode == OpCodes.OP_PUSH_INT) return buf;
             if (last.opCode == OpCodes.OP_BITWISE_NOT) return buf;
-            return ByteCode.join2(buf, ByteCode.create0(OpCodes.OP_ENSURE_INT, throwToken, null));
+            return join2(buf, create0(OpCodes.OP_ENSURE_INT, throwToken, null));
         }
 
         public static ByteCodeBuffer ensureBooleanExpression(Token throwToken, ByteCodeBuffer buf)
@@ -121,7 +121,7 @@ namespace CommonScript.Compiler
             if (last.opCode == OpCodes.OP_PUSH_BOOL) return buf;
             if (last.opCode == OpCodes.OP_BOOLEAN_NOT) return buf;
 
-            return ByteCode.join2(buf, ByteCode.create0(OpCodes.OP_ENSURE_BOOL, throwToken, null));
+            return join2(buf, create0(OpCodes.OP_ENSURE_BOOL, throwToken, null));
         }
 
         public static ByteCodeRow[] flatten(ByteCodeBuffer buffer)
@@ -155,7 +155,7 @@ namespace CommonScript.Compiler
             ByteCodeBuffer buf = null;
             foreach (ByteCodeRow row in flatRows)
             {
-                buf = ByteCode.join2(buf, new ByteCodeBuffer(row));
+                buf = join2(buf, new ByteCodeBuffer(row));
             }
             return buf;
         }
@@ -175,21 +175,21 @@ namespace CommonScript.Compiler
 
         public ByteCodeBuffer(ByteCodeBuffer left, ByteCodeBuffer right)
         {
-            this.length = left.length + right.length;
-            this.isLeaf = false;
+            length = left.length + right.length;
+            isLeaf = false;
             this.left = left;
             this.right = right;
-            this.first = left.first;
-            this.last = right.last;
+            first = left.first;
+            last = right.last;
         }
 
         public ByteCodeBuffer(ByteCodeRow row)
         {
-            this.length = 1;
-            this.isLeaf = true;
+            length = 1;
+            isLeaf = true;
             this.row = row;
-            this.last = row;
-            this.first = row;
+            last = row;
+            first = row;
         }
     }
 
@@ -209,9 +209,9 @@ namespace CommonScript.Compiler
             this.token = token;
             this.stringArg = stringArg;
             this.args = args;
-            this.stringId = 0;
-            this.tokenId = 0;
-            this.tryCatchInfo = null;
+            stringId = 0;
+            tokenId = 0;
+            tryCatchInfo = null;
         }
     }
 }

@@ -33,9 +33,9 @@ namespace CommonScript.Compiler
                     switch (tle.type)
                     {
                         case EntityType.CONST: break;
-                        
+
                         case EntityType.FUNCTION:
-                            FunctionLikeEntity func = (FunctionLikeEntity) tle;
+                            FunctionLikeEntity func = (FunctionLikeEntity)tle;
                             if (tle.fileContext.isCoreBuiltin)
                             {
                                 builtInFunctions.Add(func);
@@ -59,7 +59,7 @@ namespace CommonScript.Compiler
                         case EntityType.ENUM:
                             enums.Add((EnumEntity)tle);
                             break;
-                        
+
                         case EntityType.CLASS:
                             classes.Add((ClassEntity)tle);
                             break;
@@ -97,7 +97,7 @@ namespace CommonScript.Compiler
                 finalOrder.Add(enums[i]);
             }
 
-            ClassEntity[] sortedClasses = SortClasses(classes); 
+            ClassEntity[] sortedClasses = SortClasses(classes);
 
             for (int i = 0; i < sortedClasses.Length; i++)
             {
@@ -236,21 +236,21 @@ namespace CommonScript.Compiler
                     break;
 
                 case EntityType.CLASS:
-                    bundleClass((ClassEntity) entity, bundle);
+                    bundleClass((ClassEntity)entity, bundle);
                     break;
 
                 case EntityType.ENUM:
-                    bundleEnum((EnumEntity) entity, bundle);
+                    bundleEnum((EnumEntity)entity, bundle);
                     break;
 
                 case EntityType.FIELD:
                     throw new NotImplementedException();
-                
+
                 case EntityType.FUNCTION:
                 case EntityType.CONSTRUCTOR:
-                    bundleFunction((FunctionLikeEntity) entity, bundle, entity.nestParent != null && entity.nestParent.type == EntityType.CLASS);
+                    bundleFunction((FunctionLikeEntity)entity, bundle, entity.nestParent != null && entity.nestParent.type == EntityType.CLASS);
                     break;
-                
+
                 case EntityType.PROPERTY:
                     throw new NotImplementedException();
 

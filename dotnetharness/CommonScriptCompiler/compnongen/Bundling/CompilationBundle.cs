@@ -17,10 +17,10 @@ namespace CommonScript.Compiler
 
         public CompilationBundle()
         {
-            this.byteCodeById = new List<ByteCodeRow[]>() { null };
-            this.functionById = new List<BundleFunctionInfo>() { null };
-            this.classById = new List<BundleClassInfo>() { null };
-            this.enumById = new List<BundleEnumInfo>() { null };
+            byteCodeById = new List<ByteCodeRow[]>() { null };
+            functionById = new List<BundleFunctionInfo>() { null };
+            classById = new List<BundleClassInfo>() { null };
+            enumById = new List<BundleEnumInfo>() { null };
         }
     }
 

@@ -270,7 +270,7 @@ namespace CommonScript.Compiler
 
                 case "math_floor":
                     return ByteCode.join2(
-                        buf, 
+                        buf,
                         ByteCode.create0(OpCodes.OP_MATH_FLOOR, extInvoke.firstToken, null));
 
                 case "random_float":
@@ -309,7 +309,7 @@ namespace CommonScript.Compiler
                 case "math_arcsin":
                 case "parse_int":
                     return ByteCode.join2(
-                        serializeExpression(extInvoke.args[0]), 
+                        serializeExpression(extInvoke.args[0]),
                         ByteCode.create1(OpCodes.OP_SPECIAL_ACTION, null, null, SPECIAL_ACTION_BY_FUNC_NAME[extInvoke.strVal]));
 
                 case "math_arctan":
@@ -544,31 +544,31 @@ namespace CommonScript.Compiler
             bool isPrefix = ii.boolVal;
 
             return ByteCode.join5(
-                
+
                 // []
-                root,  
+                root,
                 // [root]
-                ByteCode.create0(OpCodes.OP_STACK_DUPLICATE, null, null), 
+                ByteCode.create0(OpCodes.OP_STACK_DUPLICATE, null, null),
                 // [root, root]
-                ByteCode.create0(OpCodes.OP_DOT_FIELD, ii.root.opToken, ii.root.strVal), 
+                ByteCode.create0(OpCodes.OP_DOT_FIELD, ii.root.opToken, ii.root.strVal),
                 // [root, originalValue]
                 isPrefix
                     ? ByteCode.join2(
                         ByteCode.create1(OpCodes.OP_INT_INCR, ii.opToken, null, ii.opToken.Value == "++" ? 1 : -1),
                         // [root, return/finalValue]
                         ByteCode.create0(OpCodes.OP_STACK_DO_SI_DUP_1, null, null))
-                        // [returnValue, finalValue, root]
+                    // [returnValue, finalValue, root]
                     : ByteCode.join3(
                         ByteCode.create0(OpCodes.OP_STACK_DUPLICATE, null, null),
                         // [root, returnValue, originalValule]
                         ByteCode.create1(OpCodes.OP_INT_INCR, ii.opToken, null, ii.opToken.Value == "++" ? 1 : -1),
                         // [root, returnValue, finalValue]
                         ByteCode.create0(OpCodes.OP_STACK_DO_SI_DUP_2, null, null)),
-                        // [returnValue, finalValue, root]
+                // [returnValue, finalValue, root]
 
                 // [returnValue, finalValue, root]
                 ByteCode.create0(OpCodes.OP_ASSIGN_FIELD, ii.opToken, ii.root.strVal)
-                // [returnValue]
+            // [returnValue]
             );
 
             /*
