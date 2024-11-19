@@ -1,26 +1,5 @@
 ﻿namespace CommonScript.Compiler
 {
-    internal class SpecialActionCodes
-    {
-        public const int CMP = 6;
-        public const int MATH_ARCCOS = 8;
-        public const int MATH_ARCSIN = 9;
-        public const int MATH_ARCTAN = 10;
-        public const int MATH_COS = 11;
-        public const int MATH_LOG = 12;
-        public const int MATH_SIN = 13;
-        public const int MATH_TAN = 14;
-        public const int PARSE_INT = 15;
-        public const int RANDOM_FLOAT = 7;
-        public const int SORT_START = 2;
-        public const int SORT_END = 3;
-        public const int SORT_GET_NEXT_CMP = 4;
-        public const int SORT_PROCEED = 5;
-        public const int UNIX_TIME = 1;
-
-        // Next ID: 16
-    }
-
     internal class OpCodes
     {
         public const int OP_BREAK_DUMMY = -1;

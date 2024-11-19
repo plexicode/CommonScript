@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CommonScript.Compiler
 {
@@ -96,20 +92,13 @@ namespace CommonScript.Compiler
                 ByteCode.create0(OpCodes.OP_DOT_FIELD, df.opToken, df.strVal));
         }
 
-        private static readonly Dictionary<string, int> SPECIAL_ACTION_BY_FUNC_NAME = new Dictionary<string, int>()
-        {
-            { "math_sin", SpecialActionCodes.MATH_SIN },
-            { "math_cos", SpecialActionCodes.MATH_COS },
-            { "math_tan", SpecialActionCodes.MATH_TAN },
-            { "math_arcsin", SpecialActionCodes.MATH_ARCSIN },
-            { "math_arccos", SpecialActionCodes.MATH_ARCCOS },
-            { "math_arctan", SpecialActionCodes.MATH_ARCTAN },
-            { "math_log", SpecialActionCodes.MATH_LOG },
-            { "parse_int", SpecialActionCodes.PARSE_INT },
-        };
-
         private static ByteCodeBuffer serializeExtensionInvocation(Expression extInvoke)
         {
+            if (SpecialActionUtil.IsSpecialActionAndNotExtension(extInvoke.strVal))
+            {
+                return SpecialActionSerializer.serializeSpecialAction(extInvoke);
+            }
+
             ByteCodeBuffer buf = null;
             int argc = extInvoke.args.Length;
             for (int i = 0; i < argc; i++)
@@ -117,70 +106,9 @@ namespace CommonScript.Compiler
                 buf = ByteCode.join2(buf, serializeExpression(extInvoke.args[i]));
             }
 
-            switch (extInvoke.strVal)
-            {
-                case "cmp":
-                    return ByteCode.join3(
-                        serializeExpression(extInvoke.args[0]),
-                        serializeExpression(extInvoke.args[1]),
-                        ByteCode.create1(OpCodes.OP_SPECIAL_ACTION, null, null, SpecialActionCodes.CMP));
-
-                case "math_floor":
-                    return ByteCode.join2(
-                        buf,
-                        ByteCode.create0(OpCodes.OP_MATH_FLOOR, extInvoke.firstToken, null));
-
-                case "random_float":
-                    return ByteCode.create1(OpCodes.OP_SPECIAL_ACTION, null, null, SpecialActionCodes.RANDOM_FLOAT);
-
-                case "unix_time":
-                    return ByteCode.create2(OpCodes.OP_SPECIAL_ACTION, null, null, SpecialActionCodes.UNIX_TIME, extInvoke.args[0].intVal);
-
-                case "sort_get_next_cmp":
-                    return ByteCode.join3(
-                        serializeExpression(extInvoke.args[0]),
-                        serializeExpression(extInvoke.args[1]),
-                        ByteCode.create1(OpCodes.OP_SPECIAL_ACTION, null, null, SpecialActionCodes.SORT_GET_NEXT_CMP));
-
-                case "sort_start":
-                    return ByteCode.join3(
-                        serializeExpression(extInvoke.args[0]),
-                        serializeExpression(extInvoke.args[1]),
-                        ByteCode.create1(OpCodes.OP_SPECIAL_ACTION, null, null, SpecialActionCodes.SORT_START));
-
-                case "sort_proceed":
-                    return ByteCode.join3(
-                        serializeExpression(extInvoke.args[0]),
-                        serializeExpression(extInvoke.args[1]),
-                        ByteCode.create1(OpCodes.OP_SPECIAL_ACTION, null, null, SpecialActionCodes.SORT_PROCEED));
-
-                case "sort_end":
-                    return ByteCode.join2(
-                        serializeExpression(extInvoke.args[0]),
-                        ByteCode.create1(OpCodes.OP_SPECIAL_ACTION, null, null, SpecialActionCodes.SORT_END));
-
-                case "math_sin":
-                case "math_cos":
-                case "math_tan":
-                case "math_arccos":
-                case "math_arcsin":
-                case "parse_int":
-                    return ByteCode.join2(
-                        serializeExpression(extInvoke.args[0]),
-                        ByteCode.create1(OpCodes.OP_SPECIAL_ACTION, null, null, SPECIAL_ACTION_BY_FUNC_NAME[extInvoke.strVal]));
-
-                case "math_arctan":
-                case "math_log":
-                    return ByteCode.join3(
-                        serializeExpression(extInvoke.args[0]),
-                        serializeExpression(extInvoke.args[1]),
-                        ByteCode.create1(OpCodes.OP_SPECIAL_ACTION, null, null, SPECIAL_ACTION_BY_FUNC_NAME[extInvoke.strVal]));
-
-                default:
-                    return ByteCode.join2(
-                        buf,
-                        ByteCode.create1(OpCodes.OP_EXT_INVOKE, extInvoke.firstToken, extInvoke.strVal, argc));
-            }
+            return ByteCode.join2(
+                buf,
+                ByteCode.create1(OpCodes.OP_EXT_INVOKE, extInvoke.firstToken, extInvoke.strVal, argc));
         }
 
         private static ByteCodeBuffer serializeBitwiseNot(Expression bwn)
@@ -463,6 +391,5 @@ namespace CommonScript.Compiler
             if (v.strVal == "print") throw new InvalidOperationException();
             return ByteCode.create0(OpCodes.OP_PUSH_VAR, v.firstToken, v.strVal);
         }
-
     }
 }

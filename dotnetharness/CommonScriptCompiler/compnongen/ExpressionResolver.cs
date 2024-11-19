@@ -766,41 +766,31 @@ namespace CommonScript.Compiler
         private Expression SecondPass_ExtensionInvocation(Expression expr)
         {
             this.ResolveExpressionArraySecondPass(expr.args);
-            int argc = 0;
-            switch (expr.strVal)
+            int argc;
+            if (SpecialActionUtil.IsSpecialActionAndNotExtension(expr.strVal))
             {
-                // This is a true extension method
-                case "io_stdout": argc = 1; break;
-
-                // These are not. They should be split out as a separate concept.
-                case "math_floor": argc = 1; break;
-                case "parse_int": argc = 1; break;
-                case "unix_time": argc = 1; break;
-                case "random_float": argc = 0; break;
-                case "sort_start": argc = 2; break;
-                case "sort_get_next_cmp": argc = 2; break;
-                case "sort_proceed": argc = 2; break;
-                case "sort_end": argc = 1; break;
-                case "cmp": argc = 2; break;
-                case "math_sin": argc = 1; break;
-                case "math_cos": argc = 1; break;
-                case "math_tan": argc = 1; break;
-                case "math_arcsin": argc = 1; break;
-                case "math_arccos": argc = 1; break;
-                case "math_arctan": argc = 2; break;
-                case "math_log": argc = 2; break;
-
-                default:
-                    if (this.resolver.isValidRegisteredExtension(expr.strVal))
-                    {
-                        return expr;
-                    }
-                    throw new NotImplementedException();
+                argc = SpecialActionUtil.GetSpecialActionArgc(expr.strVal);
             }
+            else
+            {
+                switch (expr.strVal)
+                {
+                    case "io_stdout": argc = 1; break;
+
+                    default:
+                        if (this.resolver.isValidRegisteredExtension(expr.strVal))
+                        {
+                            return expr;
+                        }
+                        throw new NotImplementedException();
+                }
+            }
+
             if (argc != -1 && expr.args.Length != argc)
             {
                 Errors.ThrowError(expr.firstToken, "Incorrect number of arguments to extension");
             }
+
             return expr;
         }
 
