@@ -39,6 +39,7 @@ const int OP_PUSH_CLASS_REF = 37;
 const int OP_PUSH_FLOAT = 38;
 const int OP_PUSH_FUNC_PTR = 39;
 const int OP_PUSH_INT = 40;
+const int OP_PUSH_LAMBDA = 63;
 const int OP_PUSH_NULL = 41;
 const int OP_PUSH_STRING = 42;
 const int OP_PUSH_THIS = 43;

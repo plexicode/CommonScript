@@ -66,6 +66,7 @@
         public const int OP_PUSH_FLOAT = 38;
         public const int OP_PUSH_FUNC_PTR = 39;
         public const int OP_PUSH_INT = 40;
+        public const int OP_PUSH_LAMBDA = 63;
         public const int OP_PUSH_NULL = 41;
         public const int OP_PUSH_STRING = 42;
         public const int OP_PUSH_THIS = 43;
@@ -89,6 +90,6 @@
         public const int OP_TRY_CATCH_ROUTER = 61;
         public const int OP_TRY_INFO = 62;
 
-        // NEXT: 63
+        // NEXT: 64
     }
 }

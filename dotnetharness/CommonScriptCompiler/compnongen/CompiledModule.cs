@@ -10,6 +10,7 @@ namespace CommonScript.Compiler
         public Dictionary<string, AbstractEntity> nestedEntities;
         public Dictionary<string, AbstractEntity> flattenedEntities;
         public Dictionary<string, AbstractEntity> entitiesNoEnumParents;
+        public List<LambdaEntity> lambdaEntities;
 
         public CompiledModule(string id)
         {
@@ -18,7 +19,14 @@ namespace CommonScript.Compiler
             this.textResources = new Dictionary<string, string>();
         }
 
-        public void InitializeCompieldModuleLookups(Dictionary<string, AbstractEntity> rootEntities, Dictionary<string, AbstractEntity> flatEntities)
+        public void AddLambdas(IList<LambdaEntity> lambdas)
+        {
+            this.lambdaEntities = [.. lambdas];
+        }
+
+        public void InitializeCompieldModuleLookups(
+            Dictionary<string, AbstractEntity> rootEntities,
+            Dictionary<string, AbstractEntity> flatEntities)
         {
             this.nestedEntities = rootEntities;
             this.flattenedEntities = flatEntities;

@@ -16,6 +16,7 @@ namespace CommonScript.Compiler
             List<EnumEntity> enums = new List<EnumEntity>();
             List<ClassEntity> classes = new List<ClassEntity>();
             List<FieldEntity> fields = new List<FieldEntity>();
+            List<LambdaEntity> lambdas = new List<LambdaEntity>();
             FunctionEntity mainFunc = null;
 
             foreach (CompiledModule m in deterministicOrder)
@@ -75,6 +76,8 @@ namespace CommonScript.Compiler
                             throw new NotImplementedException();
                     }
                 }
+
+                lambdas.AddRange(m.lambdaEntities);
             }
 
             List<AbstractEntity> finalOrder = new List<AbstractEntity>();
@@ -101,6 +104,11 @@ namespace CommonScript.Compiler
                 ClassEntity cls = sortedClasses[i];
                 cls.serializationIndex = i + 1;
                 finalOrder.Add(cls);
+            }
+
+            for (int i = 0; i < lambdas.Count; i++)
+            {
+                lambdas[i].serializationIndex = i + 1;
             }
 
             foreach (AbstractEntity entity in finalOrder)

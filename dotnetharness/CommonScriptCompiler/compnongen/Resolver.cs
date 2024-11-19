@@ -12,6 +12,7 @@ namespace CommonScript.Compiler
         public Dictionary<string, AbstractEntity> flattenedEntities;
         public Dictionary<string, AbstractEntity> flattenedEntitiesAndEnumValues;
         public Dictionary<string, AbstractEntity> flattenedEntitiesNoEnumParents;
+        public List<LambdaEntity> lambdas = [];
 
         public AbstractEntity activeEntity = null;
         public AbstractEntity[] entityList = null;
@@ -21,7 +22,6 @@ namespace CommonScript.Compiler
         private StatementResolver statementResolver;
         private EntityResolver entityResolver;
 
-        private List<LambdaEntity> lambdas = new List<LambdaEntity>();
         private HashSet<string> extensionNames = new HashSet<string>();
 
         public Resolver(Dictionary<string, AbstractEntity> rootEntities, ICollection<string> extensionNames)

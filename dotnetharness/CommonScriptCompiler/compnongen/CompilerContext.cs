@@ -231,6 +231,7 @@ namespace CommonScript.Compiler
 
             CompiledModule m = new CompiledModule(moduleId);
             m.codeFiles = sourceCode;
+            m.AddLambdas(resolverCtx.lambdas);
             m.InitializeCompieldModuleLookups(resolverCtx.nestedEntities, resolverCtx.flattenedEntities);
             foreach (FileContext file in files)
             {

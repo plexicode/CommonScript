@@ -608,7 +608,8 @@ namespace CommonScript.Compiler
 
         private static ByteCodeBuffer serializeLambda(Expression lambda)
         {
-            throw new NotImplementedException();
+            LambdaEntity lambdaEntity = (LambdaEntity)lambda.objPtr;
+            return ByteCode.create1(OpCodes.OP_PUSH_LAMBDA, lambda.firstToken, null, lambdaEntity.serializationIndex);
         }
 
         private static ByteCodeBuffer serializeListDefinition(Expression listDef)
