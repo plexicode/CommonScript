@@ -326,7 +326,7 @@ namespace CommonScript.Compiler
                 }
                 else
                 {
-                    ByteCodeBuffer defaultValBuffer = Serializer.serializeExpression(argValue);
+                    ByteCodeBuffer defaultValBuffer = ExpressionSerializer.serializeExpression(argValue);
                     argBuffer = ByteCode.create2(OpCodes.OP_PUSH_ARG_IF_PRESENT, argToken, null, i, defaultValBuffer.length);
                     argBuffer = ByteCode.join2(argBuffer, defaultValBuffer);
                 }
@@ -338,7 +338,7 @@ namespace CommonScript.Compiler
 
             foreach (Statement stmnt in entity.code)
             {
-                buffer = ByteCode.join2(buffer, Serializer.serializeStatement(stmnt));
+                buffer = ByteCode.join2(buffer, StatementSerializer.serializeStatement(stmnt));
             }
             List<ByteCodeRow> flatByteCode = new List<ByteCodeRow>(ByteCode.flatten(buffer));
 
