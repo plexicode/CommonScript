@@ -117,9 +117,7 @@ namespace CommonScript.Compiler
                 "@public function ln(val) { return $math_log(val-0, -1); }",
                 "@public function abs(val) { return val < 0 ? -val : val; }",
                 "@public function sign(val) { return val == 0 ? 0 : val < 0 ? -1 : 1; }",
-                
-                // TODO: there seems to be a parsing problem with **
-                // "@public function sqrt(val) { return val ** .5; }",
+                "@public function sqrt(val) { return val ** .5; }",
             ]) },
         };
     }

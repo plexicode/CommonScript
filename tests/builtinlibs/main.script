@@ -18,6 +18,8 @@ function runTest() {
     assertFloatEqual(0.9542425094393249, math.log10(9));
     assertFloatEqual(3.1699250014423126, math.log2(9));
     assertFloatEqual(2.1972245773362196, math.ln(9));
+    assertFloatEqual(3.0, math.sqrt(9));
+    assertFloatEqual(3.1622776601683795, math.sqrt(10));
 
     assertStrEqual(1, math.sign(9));
     assertStrEqual(-1, math.sign(-9));
