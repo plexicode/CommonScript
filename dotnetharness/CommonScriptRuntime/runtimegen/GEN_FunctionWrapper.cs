@@ -843,6 +843,20 @@ namespace CommonScript.Runtime.Internal
             }
         }
 
+        public static Value json_util_parse(ExecutionContext ec, string rawValue, int[] errOut)
+        {
+            errOut[0] = 0;
+            errOut[1] = 0;
+            errOut[2] = 0;
+            GlobalValues g = ec.globalValues;
+            return g.nullValue;
+        }
+
+        public static string json_util_serialize(Value obj, bool useIndent)
+        {
+            return "{ \"ohno\": \"TODO\" }";
+        }
+
         public static void List_add(ListImpl o, Value v)
         {
             if (o.capacity == o.length)
@@ -4398,6 +4412,25 @@ namespace CommonScript.Runtime.Internal
                                 {
                                     output = globalValues.intOne;
                                 }
+                                break;
+                            case 20:
+                                valueStackSize -= 2;
+                                str1 = stringUtil_getFlatValue(valueStack[valueStackSize]);
+                                valueArr = ((ListImpl)valueStack[valueStackSize + 1].internalValue).items;
+                                output = json_util_parse(ec, str1, intBuffer16);
+                                i = 0;
+                                while (i < 3)
+                                {
+                                    valueArr[i] = buildInteger(globalValues, intBuffer16[i]);
+                                    i += 1;
+                                }
+                                break;
+                            case 21:
+                                valueStackSize -= 2;
+                                value = valueStack[valueStackSize];
+                                bool1 = (bool)valueStack[valueStackSize + 1].internalValue;
+                                str1 = json_util_serialize(value, bool1);
+                                output = buildString(globalValues, str1, false);
                                 break;
                             case 8:
                                 valueStackSize -= 1;

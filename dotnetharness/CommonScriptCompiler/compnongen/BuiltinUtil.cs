@@ -126,6 +126,26 @@ namespace CommonScript.Compiler
                 "@public function stringToBase64(str, web=false) { return $b64_from_bytes($txt_utf8_to_bytes(str), web == true); }",
                 "",
             ]) },
+            { "json", string.Join('\n', [
+                "@public class JsonParseException:Exception { constructor(l, c):base('JSON parse error on line ' + l + ', col ' + c){} }",
+                "@public class JsonSerializationException:Exception { constructor():base('Value contained un-serialiazable valule.'){} }",
+                "@public function jsonParse(str) { return parseImpl(str, true); }",
+                "@public function tryJsonParse(str) { return parseImpl(str, false); }",
+                "function parseImpl(str, f) {", 
+                    "e = [0, 0, 0];",
+                    "v = $json_parse(str + '', e);",
+                    "if (e[0]<1) return v;",
+                    "if (f) throw new JsonParseException(e[1], e[2]);",
+                    "return null;",
+                "}",
+                "@public function jsonSerialize(obj, pretty = false, tab = 2) {",
+                    "p = pretty == true;",
+                    "s = $json_serialize(obj, p);",
+                    "if (s == null) throw new JsonSerializationException();",
+                    "return (p && tab != '\t') ? s.replace('\t', ' ' * tab) : s;",
+                "}",
+                "",
+            ]) },
         };
     }
 }

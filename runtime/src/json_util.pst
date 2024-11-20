@@ -1,0 +1,12 @@
+Value json_util_parse(ExecutionContext ec, string rawValue, Array<int> errOut) {
+    errOut[0] = 0;
+    errOut[1] = 0;
+    errOut[2] = 0;
+
+    GlobalValues g = ec.globalValues;
+    return g.nullValue;
+}
+
+string json_util_serialize(Value obj, bool useIndent) {
+    return "{ \"ohno\": \"TODO\" }";
+}

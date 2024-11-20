@@ -1,0 +1,7 @@
+valueStackSize -= 2;
+value = valueStack[valueStackSize];
+bool1 = (bool) valueStack[valueStackSize + 1].internalValue;
+str1 = json_util_serialize(value, bool1);
+
+output = buildString(globalValues, str1, false);
+

@@ -3,6 +3,8 @@ switch (row.firstArg) {
     case SPECIAL_ACTION_B64_FROM_BYTES: @import("special_actions/b64_from_bytes.pst"); break;
     case SPECIAL_ACTION_B64_TO_BYTES: @import("special_actions/b64_to_bytes.pst"); break;
     case SPECIAL_ACTION_CMP: @import("special_actions/cmp.pst"); break;
+    case SPECIAL_ACTION_JSON_PARSE: @import("special_actions/json_parse.pst"); break;
+    case SPECIAL_ACTION_JSON_SERIALIZE: @import("special_actions/json_serialize.pst"); break;
     case SPECIAL_ACTION_MATH_ARCCOS: @import("special_actions/math_arccos.pst"); break;
     case SPECIAL_ACTION_MATH_ARCSIN: @import("special_actions/math_arcsin.pst"); break;
     case SPECIAL_ACTION_MATH_ARCTAN: @import("special_actions/math_arctan.pst"); break;
@@ -19,7 +21,7 @@ switch (row.firstArg) {
     case SPECIAL_ACTION_UNIX_TIME: @import("special_actions/unix_time.pst"); break;
     case SPECIAL_ACTION_TXT_BYTES_TO_UTF8: @import("special_actions/txt_bytes_to_utf8.pst"); break;
     case SPECIAL_ACTION_TXT_UTF8_TO_BYTES: @import("special_actions/txt_utf8_to_bytes.pst"); break;
-    default: 
+    default:
         @import("macros/saveframe.pst");
         return ExRes_HardCrash(task, "ACTION NOT IMPLEMENTED");
 }

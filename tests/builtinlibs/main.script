@@ -1,5 +1,6 @@
-import math;
 import base64;
+import json;
+import math;
 import testlib -> *;
 
 function main(args) {
@@ -49,6 +50,14 @@ function runTest() {
     // TOOD: needs to be fixed in the Pastel layer to accept web-safe base64.
     // msg = base64.base64ToBytes(webB64);
     // assertStrEqual('1 2 3 4 5 6 7 253 254 255', msg.join(' '));
+
+    // TODO: implement JSON methods for real.
+
+    v = { "foo": 42 };
+    encoded = json.jsonSerialize(v);
+    // assertStrEqual(encoded, '{ "foo": 42 }');
+    roundtrip = json.jsonParse(encoded);
+    // assertStrEqual(roundtrip['foo'], 42);
 
     print("ALL DONE");
 }

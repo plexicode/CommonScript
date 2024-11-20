@@ -31,6 +31,7 @@
 @import("constants_ops.pst");
 @import("constants.pst");
 @import("exception_util.pst");
+@import("json_util.pst");
 @import("interpreter.pst");
 @import("public_api.pst");
 @import("string_util.pst");

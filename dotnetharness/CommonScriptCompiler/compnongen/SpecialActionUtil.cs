@@ -7,6 +7,8 @@ namespace CommonScript.Compiler
         public const int B64_FROM_BYTES = 16;
         public const int B64_TO_BYTES = 17;
         public const int CMP = 6;
+        public const int JSON_PARSE = 20;
+        public const int JSON_SERIALIZE = 21;
         public const int MATH_ARCCOS = 8;
         public const int MATH_ARCSIN = 9;
         public const int MATH_ARCTAN = 10;
@@ -24,7 +26,7 @@ namespace CommonScript.Compiler
         public const int TXT_UTF8_TO_BYTES = 19;
         public const int UNIX_TIME = 1;
 
-        // Next ID: 16
+        // Next ID: 22
     }
 
     internal static class SpecialActionUtil
@@ -34,6 +36,8 @@ namespace CommonScript.Compiler
             { "b64_from_bytes", SpecialActionCodes.B64_FROM_BYTES },
             { "b64_to_bytes", SpecialActionCodes.B64_TO_BYTES },
             { "cmp", SpecialActionCodes.CMP },
+            { "json_parse", SpecialActionCodes.JSON_PARSE },
+            { "json_serialize", SpecialActionCodes.JSON_SERIALIZE },
             { "math_arccos", SpecialActionCodes.MATH_ARCCOS },
             { "math_arcsin", SpecialActionCodes.MATH_ARCSIN },
             { "math_arctan", SpecialActionCodes.MATH_ARCTAN },
@@ -58,6 +62,8 @@ namespace CommonScript.Compiler
             { "b64_from_bytes", 2},
             { "b64_to_bytes", 1 },
             { "cmp", 2},
+            { "json_parse", 2 },
+            { "json_serialize", 2 },
             { "math_arccos", 1 },
             { "math_arcsin", 1 },
             { "math_arctan", 2 },

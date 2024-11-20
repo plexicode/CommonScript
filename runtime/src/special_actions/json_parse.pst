@@ -1,0 +1,8 @@
+valueStackSize -= 2;
+str1 = stringUtil_getFlatValue(valueStack[valueStackSize]);
+valueArr = ((ListImpl)valueStack[valueStackSize + 1].internalValue).items;
+
+output = json_util_parse(ec, str1, intBuffer16);
+for (i = 0; i < 3; i += 1) {
+    valueArr[i] = buildInteger(globalValues, intBuffer16[i]);
+}
