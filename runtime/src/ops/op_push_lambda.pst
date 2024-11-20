@@ -1,0 +1,2 @@
+@import("macros/saveframe.pst");
+return ExRes_HardCrash(task, "TODO: LAMBDA");

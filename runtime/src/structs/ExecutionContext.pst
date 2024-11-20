@@ -72,9 +72,9 @@ ExecutionContext new_ExecutionContext(
 
         ec.switchIntLookupsByPc = new Array<Dictionary<int, int>>(ec.byteCode.Size());
         ec.switchStrLookupsByPc = new Array<Dictionary<string, int>>(ec.byteCode.Size());
-    }
 
-    generateNameLookup(ec);
+        generateNameLookup(ec);
+    }
 
     return ec;
 }

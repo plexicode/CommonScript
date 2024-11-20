@@ -12,6 +12,7 @@ struct RawData_Metadata {
 
 struct RawData_Entities {
     List<FunctionInfo> functionsById;
+    List<FunctionInfo> lambdasById;
     List<EnumInfo> enumsById;
     List<ClassInfo> classesById;
 }

@@ -6,9 +6,14 @@ RawData_Entities ParseRaw_parseEntityData(RawDataParser rdp, List<ByteCodeRow> b
     int enumCount = rdp.intOut;
     if (!ParseRaw_popInt(rdp)) return null;
     int classCount = rdp.intOut;
+    if (!ParseRaw_popInt(rdp)) return null;
+    int lambdaCount = rdp.intOut;
 
-    List<FunctionInfo> functions = ParseRaw_entitiesSection_parseFunctions(rdp, fnCount, byteCodeOut);
+    List<FunctionInfo> functions = ParseRaw_entitiesSection_parseFunctions(rdp, fnCount, byteCodeOut, false);
     if (functions == null) return null;
+
+    List<FunctionInfo> lambdas = ParseRaw_entitiesSection_parseFunctions(rdp, lambdaCount, byteCodeOut, true);
+    if (lambdas == null) return null;
 
     List<EnumInfo> enums = ParseRaw_entitiesSection_parseEnums(rdp, enumCount);
     if (enums == null) return null;
@@ -19,13 +24,14 @@ RawData_Entities ParseRaw_parseEntityData(RawDataParser rdp, List<ByteCodeRow> b
     bool ok = ParseRaw_entitiesSection_classMemberResolver(classes, globalValues);
     if (!ok) return null;
 
-    return new RawData_Entities(functions, enums, classes);
+    return new RawData_Entities(functions, lambdas, enums, classes);
 }
 
 List<FunctionInfo> ParseRaw_entitiesSection_parseFunctions(
     RawDataParser rdp,
     int fnCount,
-    List<ByteCodeRow> byteCodeOut) {
+    List<ByteCodeRow> byteCodeOut,
+    bool isLambda) {
 
     List<FunctionInfo> functions = new List<FunctionInfo>();
     functions.Add(null);
@@ -35,8 +41,13 @@ List<FunctionInfo> ParseRaw_entitiesSection_parseFunctions(
         if (!ParseRaw_popInt(rdp)) return null;
         int argcMax = rdp.intOut;
         if (argcMax < argcMin) return null;
-        string fnName = ParseRaw_popLenString(rdp);
-        if (fnName == null) return null;
+        
+        string fnName = null;
+        if (!isLambda) {
+            fnName = ParseRaw_popLenString(rdp);
+            if (fnName == null) return null;
+        }
+
         if (!ParseRaw_popInt(rdp)) return null;
         int codeLen = rdp.intOut;
         Array<ByteCodeRow> byteCode = ParseRaw_popByteCodeRows(rdp, codeLen);

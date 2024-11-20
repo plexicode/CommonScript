@@ -99,6 +99,17 @@ namespace CommonScript.Compiler
                 );
             }
 
+            for (int i = 1; i < bundle.lambdaById.Count; i++)
+            {
+                BundleFunctionInfo fn = bundle.lambdaById[i];
+                entityAcc = bsbJoin2(entityAcc, bsbJoin4(
+                    bsbFromInt(fn.argcMin),
+                    bsbFromInt(fn.argcMax),
+                    bsbFromInt(fn.code.Length),
+                    exportCode(fn.code))
+                );
+            }
+
             for (int i = 1; i < bundle.enumById.Count; i++)
             {
                 BundleEnumInfo bei = bundle.enumById[i];
@@ -184,11 +195,12 @@ namespace CommonScript.Compiler
                     staticMethods);
             }
 
-            ByteStringBuilder entityHeader = bsbJoin4(
+            ByteStringBuilder entityHeader = bsbJoin5(
                 bsbFromUtf8String("ENT"),
                 bsbFromInt(bundle.functionById.Count - 1),
                 bsbFromInt(bundle.enumById.Count - 1),
-                bsbFromInt(bundle.classById.Count - 1));
+                bsbFromInt(bundle.classById.Count - 1),
+                bsbFromInt(bundle.lambdaById.Count - 1));
 
             ByteStringBuilder entityData = bsbJoin2(entityHeader, entityAcc);
 

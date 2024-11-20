@@ -934,8 +934,8 @@ namespace CommonScript.Runtime.Internal
                 }
                 ec.switchIntLookupsByPc = new System.Collections.Generic.Dictionary<int, int>[ec.byteCode.Length];
                 ec.switchStrLookupsByPc = new System.Collections.Generic.Dictionary<string, int>[ec.byteCode.Length];
+                generateNameLookup(ec);
             }
-            generateNameLookup(ec);
             return ec;
         }
 
@@ -1192,7 +1192,7 @@ namespace CommonScript.Runtime.Internal
             return enums;
         }
 
-        public static System.Collections.Generic.List<FunctionInfo> ParseRaw_entitiesSection_parseFunctions(RawDataParser rdp, int fnCount, System.Collections.Generic.List<ByteCodeRow> byteCodeOut)
+        public static System.Collections.Generic.List<FunctionInfo> ParseRaw_entitiesSection_parseFunctions(RawDataParser rdp, int fnCount, System.Collections.Generic.List<ByteCodeRow> byteCodeOut, bool isLambda)
         {
             System.Collections.Generic.List<FunctionInfo> functions = new List<FunctionInfo>();
             functions.Add(null);
@@ -1213,10 +1213,14 @@ namespace CommonScript.Runtime.Internal
                 {
                     return null;
                 }
-                string fnName = ParseRaw_popLenString(rdp);
-                if (fnName == null)
+                string fnName = null;
+                if (!isLambda)
                 {
-                    return null;
+                    fnName = ParseRaw_popLenString(rdp);
+                    if (fnName == null)
+                    {
+                        return null;
+                    }
                 }
                 if (!ParseRaw_popInt(rdp))
                 {
@@ -1259,8 +1263,18 @@ namespace CommonScript.Runtime.Internal
                 return null;
             }
             int classCount = rdp.intOut;
-            System.Collections.Generic.List<FunctionInfo> functions = ParseRaw_entitiesSection_parseFunctions(rdp, fnCount, byteCodeOut);
+            if (!ParseRaw_popInt(rdp))
+            {
+                return null;
+            }
+            int lambdaCount = rdp.intOut;
+            System.Collections.Generic.List<FunctionInfo> functions = ParseRaw_entitiesSection_parseFunctions(rdp, fnCount, byteCodeOut, false);
             if (functions == null)
+            {
+                return null;
+            }
+            System.Collections.Generic.List<FunctionInfo> lambdas = ParseRaw_entitiesSection_parseFunctions(rdp, lambdaCount, byteCodeOut, true);
+            if (lambdas == null)
             {
                 return null;
             }
@@ -1279,7 +1293,7 @@ namespace CommonScript.Runtime.Internal
             {
                 return null;
             }
-            return new RawData_Entities(functions, enums, classes);
+            return new RawData_Entities(functions, lambdas, enums, classes);
         }
 
         public static RawData_Metadata ParseRaw_parseMetadata(RawDataParser rdp)
@@ -3877,6 +3891,12 @@ namespace CommonScript.Runtime.Internal
                         row.op = 44;
                         pc -= 1;
                         break;
+                    case 63:
+                        // OP_PUSH_LAMBDA;
+                        frame.pc = pc;
+                        frame.valueStackSize = valueStackSize;
+                        task.stack = frame;
+                        return ExRes_HardCrash(task, "LARMBDAR");
                     case 41:
                         // OP_PUSH_NULL;
                         row.valueCache = globalValues.nullValue;

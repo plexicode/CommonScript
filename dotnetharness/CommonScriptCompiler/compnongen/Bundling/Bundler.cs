@@ -109,6 +109,7 @@ namespace CommonScript.Compiler
             for (int i = 0; i < lambdas.Count; i++)
             {
                 lambdas[i].serializationIndex = i + 1;
+                finalOrder.Add(lambdas[i]);
             }
 
             foreach (AbstractEntity entity in finalOrder)
@@ -251,6 +252,10 @@ namespace CommonScript.Compiler
                     bundleFunction((FunctionLikeEntity)entity, bundle, entity.nestParent != null && entity.nestParent.type == EntityType.CLASS);
                     break;
 
+                case EntityType.LAMBDA_ENTITY:
+                    bundleFunction((FunctionLikeEntity)entity, bundle, false);
+                    break;
+
                 case EntityType.PROPERTY:
                     throw new NotImplementedException();
 
@@ -310,6 +315,7 @@ namespace CommonScript.Compiler
 
         private static void bundleFunction(FunctionLikeEntity entity, CompilationBundle bundle, bool isMethod)
         {
+            bool isLambda = entity.type == EntityType.LAMBDA_ENTITY;
             ByteCodeBuffer buffer = null;
             int argc = entity.argTokens.Length;
             int argcMin = 0;
@@ -360,9 +366,16 @@ namespace CommonScript.Compiler
                 code = flatByteCode.ToArray(),
                 argcMin = argcMin,
                 argcMax = argc,
-                name = entity.simpleName,
+                name = isLambda ? null : entity.simpleName,
             };
-            bundle.functionById.Add(fd);
+            if (isLambda)
+            {
+                bundle.lambdaById.Add(fd);
+            }
+            else
+            {
+                bundle.functionById.Add(fd);
+            }
         }
     }
 }

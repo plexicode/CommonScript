@@ -9,6 +9,7 @@ namespace CommonScript.Compiler
         public string[] stringById = null;
         public List<ByteCodeRow[]> byteCodeById;
         public List<BundleFunctionInfo> functionById;
+        public List<BundleFunctionInfo> lambdaById;
         public List<BundleClassInfo> classById;
         public List<BundleEnumInfo> enumById;
         public Token[] tokensById = null;
@@ -21,6 +22,7 @@ namespace CommonScript.Compiler
             functionById = new List<BundleFunctionInfo>() { null };
             classById = new List<BundleClassInfo>() { null };
             enumById = new List<BundleEnumInfo>() { null };
+            lambdaById = new List<BundleFunctionInfo>() { null };
         }
     }
 
@@ -42,7 +44,7 @@ namespace CommonScript.Compiler
         public ByteCodeRow[] code;
         public int argcMin;
         public int argcMax;
-        public string name;
+        public string? name;
     }
 
     internal class BundleEnumInfo
