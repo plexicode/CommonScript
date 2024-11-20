@@ -270,6 +270,20 @@ namespace CommonScript.Runtime.Internal
             return v;
         }
 
+        public static Value buildStringDictionary(ExecutionContext ec, Value[] keys, Value[] values)
+        {
+            DictImpl dict = new DictImpl(ec.nextRefId, 5, keys.Length, keys.Length, keys, values, null, new Dictionary<string, int>());
+            ec.nextRefId += 1;
+            System.Collections.Generic.Dictionary<string, int> lookup = dict.strKeyLookup;
+            int i = 0;
+            while (i < keys.Length)
+            {
+                lookup[stringUtil_getFlatValue(keys[i])] = i;
+                i += 1;
+            }
+            return new Value(10, dict);
+        }
+
         public static int[] convertListToByteArray(ListImpl list)
         {
             int sz = list.length;
@@ -848,8 +862,16 @@ namespace CommonScript.Runtime.Internal
             errOut[0] = 0;
             errOut[1] = 0;
             errOut[2] = 0;
-            GlobalValues g = ec.globalValues;
-            return g.nullValue;
+            object[] args = new object[3];
+            args[0] = ec;
+            args[1] = rawValue;
+            args[2] = errOut;
+            object resultObj = PST_ExtCallbacks.ContainsKey("jsonParse") ? PST_ExtCallbacks["jsonParse"].Invoke(args) : null;
+            if (errOut[0] == 1)
+            {
+                return null;
+            }
+            return (Value)resultObj;
         }
 
         public static string json_util_serialize(Value obj, bool useIndent)

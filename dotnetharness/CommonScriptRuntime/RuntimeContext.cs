@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using CommonScript.Runtime.Internal;
+using System.Collections.Generic;
 using System.Linq;
-using CommonScript.Runtime.Internal;
 
 namespace CommonScript.Runtime
 {
@@ -12,6 +12,12 @@ namespace CommonScript.Runtime
             {
                 string msg = args[0].ToString();
                 throw new RuntimeException(msg);
+            });
+
+            FunctionWrapper.PST_RegisterExtensibleCallback("jsonParse", (object[] args) =>
+            {
+                int[] errOut = (int[])args[2];
+                return JsonUtil.Parse((ExecutionContext)args[0], args[1].ToString(), errOut);
             });
         }
 

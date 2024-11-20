@@ -274,3 +274,13 @@ Array<int> convertListToByteArray(ListImpl list) {
     }
     return bytesOut;
 }
+
+Value buildStringDictionary(ExecutionContext ec, Array<Value> keys, Array<Value> values) {
+    DictImpl dict = new DictImpl(ec.nextRefId, Type.STRING, keys.Size(), keys.Size(), keys, values, null, new Dictionary<string, int>());
+    ec.nextRefId += 1;
+    Dictionary<string, int> lookup = dict.strKeyLookup;
+    for (int i = 0; i < keys.Size(); i += 1) {
+        lookup[stringUtil_getFlatValue(keys[i])] = i;
+    }
+    return new Value(Type.DICTIONARY, dict);
+}

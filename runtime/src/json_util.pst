@@ -3,8 +3,13 @@ Value json_util_parse(ExecutionContext ec, string rawValue, Array<int> errOut) {
     errOut[1] = 0;
     errOut[2] = 0;
 
-    GlobalValues g = ec.globalValues;
-    return g.nullValue;
+    Array<object> args = new Array<object>(3);
+    args[0] = ec;
+    args[1] = rawValue;
+    args[2] = errOut;
+    object resultObj = Core.ExtensibleCallbackInvoke("jsonParse", args);
+    if (errOut[0] == 1) return null;
+    return (Value) resultObj;
 }
 
 string json_util_serialize(Value obj, bool useIndent) {
