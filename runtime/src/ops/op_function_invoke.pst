@@ -28,6 +28,7 @@ switch (fp.funcType) {
     case FunctionPointerType.REGULAR:
     case FunctionPointerType.INSTANCE_METHOD:
     case FunctionPointerType.STATIC_METHOD:
+    case FunctionPointerType.LAMBDA:
         doInvoke = true;
         value = fp.ctx; // null when regular method.
         overrideReturnValueWithContext = false;

@@ -1,2 +1,12 @@
-@import("macros/saveframe.pst");
-return ExRes_HardCrash(task, "TODO: LAMBDA");
+// stateless lambdas entries are not populated for closure lambdas. Such lambdas
+// cannot be cached.
+value = ec.statelessLambdasAsValues[row.firstArg];
+if (value == null) {
+    @import("macros/saveframe.pst");
+    return ExRes_HardCrash(task, "TODO: lambda closures");
+} else {
+    // if it can be cached, just use an OP_PUSH_VALUE
+    row.valueCache = value;
+    row.op = OP_PUSH_VALUE;
+    pc -= 1;
+}

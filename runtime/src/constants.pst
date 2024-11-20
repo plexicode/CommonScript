@@ -81,6 +81,7 @@ enum FunctionPointerType {
     PRIMITIVE_METHOD = 4,
     CONSTRUCTOR = 5,
     BASE_CONSTRUCTOR = 6,
+    LAMBDA = 7,
 }
 
 const int INT_CACHE_RANGE = 1200;

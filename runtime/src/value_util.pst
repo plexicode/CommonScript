@@ -8,6 +8,11 @@ Value buildFunctionFromInfo(FunctionInfo fn) {
         fn,
         null
     );
+
+    if (fn.name == null) {
+        fp.funcType = FunctionPointerType.LAMBDA;
+    }
+
     return new Value(Type.FUNCTION, fp);
 }
 

@@ -176,6 +176,10 @@ namespace CommonScript.Runtime.Internal
         public static Value buildFunctionFromInfo(FunctionInfo fn)
         {
             FunctionPointer fp = new FunctionPointer(1, fn.argcMin, fn.argcMax, fn.pc, fn, null);
+            if (fn.name == null)
+            {
+                fp.funcType = 7;
+            }
             return new Value(11, fp);
         }
 
@@ -905,7 +909,7 @@ namespace CommonScript.Runtime.Internal
 
         public static ExecutionContext new_ExecutionContext(int[] rawBytes, System.Collections.Generic.Dictionary<string, System.Func<object, object[], object>> extensions, object appCtx)
         {
-            ExecutionContext ec = new ExecutionContext(null, new_GlobalValues(), extensions, new Dictionary<string, int>(), null, null, null, null, null, null, null, null, null, null, null, null, 1, 1, new Dictionary<int, ExecutionTask>(), appCtx);
+            ExecutionContext ec = new ExecutionContext(null, new_GlobalValues(), extensions, new Dictionary<string, int>(), null, null, null, null, null, null, null, null, null, null, null, null, null, null, 1, 1, new Dictionary<int, ExecutionTask>(), appCtx);
             string err = ParseRawData(rawBytes, ec);
             if (err == null)
             {
@@ -923,6 +927,13 @@ namespace CommonScript.Runtime.Internal
                 while (i < ec.functions.Length)
                 {
                     ec.functionsAsValues[i] = buildFunctionFromInfo(ec.functions[i]);
+                    i += 1;
+                }
+                ec.statelessLambdasAsValues = new Value[ec.lambdas.Length];
+                i = 1;
+                while (i < ec.lambdas.Length)
+                {
+                    ec.statelessLambdasAsValues[i] = buildFunctionFromInfo(ec.lambdas[i]);
                     i += 1;
                 }
                 ec.classRefValues = new Value[ec.classes.Length];
@@ -1634,6 +1645,7 @@ namespace CommonScript.Runtime.Internal
                 return null;
             }
             ec.functions = ent.functionsById.ToArray();
+            ec.lambdas = ent.lambdasById.ToArray();
             ec.enums = ent.enumsById.ToArray();
             ec.classes = ent.classesById.ToArray();
             ec.byteCode = byteCodeAcc.ToArray();
@@ -3036,6 +3048,11 @@ namespace CommonScript.Runtime.Internal
                                 value = fp.ctx;
                                 overrideReturnValueWithContext = false;
                                 break;
+                            case 7:
+                                doInvoke = true;
+                                value = fp.ctx;
+                                overrideReturnValueWithContext = false;
+                                break;
                             case 5:
                                 classDef = fp.func.classParent;
                                 valueArr = classDef.initialValues;
@@ -3893,10 +3910,21 @@ namespace CommonScript.Runtime.Internal
                         break;
                     case 63:
                         // OP_PUSH_LAMBDA;
-                        frame.pc = pc;
-                        frame.valueStackSize = valueStackSize;
-                        task.stack = frame;
-                        return ExRes_HardCrash(task, "LARMBDAR");
+                        value = ec.statelessLambdasAsValues[row.firstArg];
+                        if (value == null)
+                        {
+                            frame.pc = pc;
+                            frame.valueStackSize = valueStackSize;
+                            task.stack = frame;
+                            return ExRes_HardCrash(task, "TODO: lambda closures");
+                        }
+                        else
+                        {
+                            row.valueCache = value;
+                            row.op = 44;
+                            pc -= 1;
+                        }
+                        break;
                     case 41:
                         // OP_PUSH_NULL;
                         row.valueCache = globalValues.nullValue;

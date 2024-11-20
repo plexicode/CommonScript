@@ -5,6 +5,8 @@ struct ExecutionContext {
     Dictionary<string, int> significantFunctions;
     Array<FunctionInfo> functions;
     Array<Value> functionsAsValues;
+    Array<FunctionInfo> lambdas;
+    Array<Value> statelessLambdasAsValues;
     Array<ClassInfo> classes;
     Array<Value> classRefValues;
     Array<EnumInfo> enums;
@@ -33,8 +35,10 @@ ExecutionContext new_ExecutionContext(
         new Dictionary<string, int>(),
         null, // functions
         null, // functionsAsValues
+        null, // lambdas
+        null, // statelessLambdasAsValues
         null, // classes,
-        null, // class ref values,
+        null, // class ref values
         null, // enums
         null, // byteCode
         null, // tryDescriptors
@@ -63,6 +67,11 @@ ExecutionContext new_ExecutionContext(
         ec.functionsAsValues = new Array<Value>(ec.functions.Size());
         for (i = 1; i < ec.functions.Size(); i += 1) {
             ec.functionsAsValues[i] = buildFunctionFromInfo(ec.functions[i]);
+        }
+
+        ec.statelessLambdasAsValues = new Array<Value>(ec.lambdas.Size());
+        for (i = 1; i < ec.lambdas.Size(); i += 1) {
+            ec.statelessLambdasAsValues[i] = buildFunctionFromInfo(ec.lambdas[i]);
         }
 
         ec.classRefValues = new Array<Value>(ec.classes.Size());

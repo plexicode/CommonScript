@@ -47,6 +47,7 @@ string ParseRawData(Array<int> rawBytes, ExecutionContext ec) {
     if (mtd == null || stringById == null || ent == null) return null;
 
     ec.functions = Core.ListToArray(ent.functionsById);
+    ec.lambdas = Core.ListToArray(ent.lambdasById);
     ec.enums = Core.ListToArray(ent.enumsById);
     ec.classes = Core.ListToArray(ent.classesById);
     ec.byteCode = Core.ListToArray(byteCodeAcc);

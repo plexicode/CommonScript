@@ -26,10 +26,13 @@ namespace CommonScript.Compiler
                 // If deferring main to an included module, that would go here.
                 bool checkForMain = m.id == rootId;
 
-                foreach (string entityFqName in deterministicKeyOrder)
-                {
-                    AbstractEntity tle = m.flattenedEntities[entityFqName];
+                AbstractEntity[] orderedEntities = [
+                    .. deterministicKeyOrder.Select(k => m.flattenedEntities[k]),
+                    .. m.lambdaEntities,
+                ];
 
+                foreach (AbstractEntity tle in orderedEntities)
+                {
                     switch (tle.type)
                     {
                         case EntityType.CONST: break;
@@ -49,6 +52,10 @@ namespace CommonScript.Compiler
                                     mainFunc = (FunctionEntity)func;
                                 }
                             }
+                            break;
+
+                        case EntityType.LAMBDA_ENTITY:
+                            lambdas.Add((LambdaEntity)tle);
                             break;
 
                         case EntityType.FIELD:
@@ -76,8 +83,6 @@ namespace CommonScript.Compiler
                             throw new NotImplementedException();
                     }
                 }
-
-                lambdas.AddRange(m.lambdaEntities);
             }
 
             List<AbstractEntity> finalOrder = new List<AbstractEntity>();
@@ -168,6 +173,11 @@ namespace CommonScript.Compiler
             for (int i = 1; i < bundle.functionById.Count; i++)
             {
                 BundleFunctionInfo fn = bundle.functionById[i];
+                allByteCode.AddRange(fn.code);
+            }
+            for (int i = 1; i < bundle.lambdaById.Count; i++)
+            {
+                BundleFunctionInfo fn = bundle.lambdaById[i];
                 allByteCode.AddRange(fn.code);
             }
 

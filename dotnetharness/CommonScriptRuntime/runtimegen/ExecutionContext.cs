@@ -10,6 +10,8 @@ namespace CommonScript.Runtime.Internal
         public System.Collections.Generic.Dictionary<string, int> significantFunctions;
         public FunctionInfo[] functions;
         public Value[] functionsAsValues;
+        public FunctionInfo[] lambdas;
+        public Value[] statelessLambdasAsValues;
         public ClassInfo[] classes;
         public Value[] classRefValues;
         public EnumInfo[] enums;
@@ -25,7 +27,7 @@ namespace CommonScript.Runtime.Internal
         public System.Collections.Generic.Dictionary<int, ExecutionTask> tasks;
         public object appCtx;
 
-        public ExecutionContext(string errMsg, GlobalValues globalValues, System.Collections.Generic.Dictionary<string, System.Func<object, object[], object>> extensions, System.Collections.Generic.Dictionary<string, int> significantFunctions, FunctionInfo[] functions, Value[] functionsAsValues, ClassInfo[] classes, Value[] classRefValues, EnumInfo[] enums, ByteCodeRow[] byteCode, TryDescriptor[] tryDescriptors, Token[] tokensById, string[] stringsById, System.Collections.Generic.Dictionary<int, int>[] switchIntLookupsByPc, System.Collections.Generic.Dictionary<string, int>[] switchStrLookupsByPc, NameLookup nameLookup, int nextTaskId, int nextRefId, System.Collections.Generic.Dictionary<int, ExecutionTask> tasks, object appCtx)
+        public ExecutionContext(string errMsg, GlobalValues globalValues, System.Collections.Generic.Dictionary<string, System.Func<object, object[], object>> extensions, System.Collections.Generic.Dictionary<string, int> significantFunctions, FunctionInfo[] functions, Value[] functionsAsValues, FunctionInfo[] lambdas, Value[] statelessLambdasAsValues, ClassInfo[] classes, Value[] classRefValues, EnumInfo[] enums, ByteCodeRow[] byteCode, TryDescriptor[] tryDescriptors, Token[] tokensById, string[] stringsById, System.Collections.Generic.Dictionary<int, int>[] switchIntLookupsByPc, System.Collections.Generic.Dictionary<string, int>[] switchStrLookupsByPc, NameLookup nameLookup, int nextTaskId, int nextRefId, System.Collections.Generic.Dictionary<int, ExecutionTask> tasks, object appCtx)
         {
             this.errMsg = errMsg;
             this.globalValues = globalValues;
@@ -33,6 +35,8 @@ namespace CommonScript.Runtime.Internal
             this.significantFunctions = significantFunctions;
             this.functions = functions;
             this.functionsAsValues = functionsAsValues;
+            this.lambdas = lambdas;
+            this.statelessLambdasAsValues = statelessLambdasAsValues;
             this.classes = classes;
             this.classRefValues = classRefValues;
             this.enums = enums;

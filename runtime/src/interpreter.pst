@@ -190,8 +190,7 @@ ExecutionResult RunInterpreterImpl(ExecutionTask task) {
             case OP_PUSH_FLOAT: Core.EmitComment("OP_PUSH_FLOAT"); @import("ops/op_push_float.pst"); break;
             case OP_PUSH_FUNC_PTR: Core.EmitComment("OP_PUSH_FUNC_PTR"); @import("ops/op_push_func_ptr.pst"); break;
             case OP_PUSH_INT: Core.EmitComment("OP_PUSH_INT"); @import("ops/op_push_int.pst"); break;
-            case OP_PUSH_LAMBDA: Core.EmitComment("OP_PUSH_LAMBDA"); @import("ops/op_push_lambda.pst");
-                // break;
+            case OP_PUSH_LAMBDA: Core.EmitComment("OP_PUSH_LAMBDA"); @import("ops/op_push_lambda.pst"); break;
             case OP_PUSH_NULL: Core.EmitComment("OP_PUSH_NULL"); @import("ops/op_push_null.pst"); break;
             case OP_PUSH_STRING: Core.EmitComment("OP_PUSH_STRING"); @import("ops/op_push_string.pst"); break;
             case OP_PUSH_THIS: Core.EmitComment("OP_PUSH_THIS"); @import("ops/op_push_this.pst"); break;
