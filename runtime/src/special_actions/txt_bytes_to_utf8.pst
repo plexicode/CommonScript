@@ -1,0 +1,22 @@
+valueStackSize -= 1;
+value = valueStack[valueStackSize];
+
+if (value.type != Type.LIST) {
+    errorId = ExceptionTypeId.INVALID_ARGUMENT;
+    errorMsg = "List expected";
+    @import("macros/throw.pst");
+}
+intArray1 = convertListToByteArray((ListImpl) value.internalValue);
+if (intArray1 == null) {
+    errorId = ExceptionTypeId.INVALID_ARGUMENT;
+    errorMsg = "Byte list includes non-byte values";
+    @import("macros/throw.pst");
+}
+
+str1 = Core.Utf8BytesToString(intArray1);
+if (str1 == null) {
+    errorId = ExceptionTypeId.INVALID_ARGUMENT;
+    errorMsg = "Byte list is not valid UTF-8";
+    @import("macros/throw.pst");
+}
+output = buildString(globalValues, str1, false);

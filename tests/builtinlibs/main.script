@@ -1,4 +1,5 @@
 import math;
+import base64;
 import testlib -> *;
 
 function main(args) {
@@ -27,5 +28,27 @@ function runTest() {
     assertStrEqual(0, math.abs(0));
     assertStrEqual(3, math.abs(-3));
     assertStrEqual(3, math.abs(3));
-    print('ALL DONE');
+
+    msg = "Hello, World!";
+    msgB64 = base64.stringToBase64(msg);
+    assertStrEqual('SGVsbG8sIFdvcmxkIQ==', msgB64);
+
+    msg = base64.base64ToUtf8String(msgB64);
+    assertStrEqual("Hello, World!", msg);
+
+    msg = [1, 2, 3, 4, 5, 6, 7, 253, 254, 255];
+    msgB64 = base64.bytesToBase64(msg);
+    assertStrEqual('AQIDBAUGB/3+/w==', msgB64);
+
+    webB64 = base64.bytesToBase64(msg, true);
+    assertStrEqual('AQIDBAUGB_3-_w==', webB64);
+
+    msg = base64.base64ToBytes(msgB64);
+    assertStrEqual('1 2 3 4 5 6 7 253 254 255', msg.join(' '));
+
+    // TOOD: needs to be fixed in the Pastel layer to accept web-safe base64.
+    // msg = base64.base64ToBytes(webB64);
+    // assertStrEqual('1 2 3 4 5 6 7 253 254 255', msg.join(' '));
+
+    print("ALL DONE");
 }

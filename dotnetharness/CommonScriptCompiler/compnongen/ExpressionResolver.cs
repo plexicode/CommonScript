@@ -766,7 +766,7 @@ namespace CommonScript.Compiler
         private Expression SecondPass_ExtensionInvocation(Expression expr)
         {
             this.ResolveExpressionArraySecondPass(expr.args);
-            int argc;
+            int argc = -1;
             if (SpecialActionUtil.IsSpecialActionAndNotExtension(expr.strVal))
             {
                 argc = SpecialActionUtil.GetSpecialActionArgc(expr.strVal);
@@ -782,7 +782,8 @@ namespace CommonScript.Compiler
                         {
                             return expr;
                         }
-                        throw new NotImplementedException();
+                        Errors.ThrowError(expr.firstToken, "Extension is not registered: " + expr.strVal);
+                        break;
                 }
             }
 

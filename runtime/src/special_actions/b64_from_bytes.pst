@@ -1,0 +1,20 @@
+valueStackSize -= 2;
+value = valueStack[valueStackSize];
+if (value.type != Type.LIST) {
+    errorId = ExceptionTypeId.INVALID_ARGUMENT;
+    errorMsg = "List expected";
+    @import("macros/throw.pst");
+}
+intArray1 = convertListToByteArray((ListImpl) value.internalValue);
+if (intArray1 == null) {
+    errorId = ExceptionTypeId.INVALID_ARGUMENT;
+    errorMsg = "Byte list includes non-byte values";
+    @import("macros/throw.pst");
+}
+bool1 = (bool)valueStack[valueStackSize + 1].internalValue;
+
+str1 = buildBase64String(intArray1);
+if (bool1) {
+    str1 = str1.Replace("+", "-").Replace("/", "_");
+}
+output = buildString(globalValues, str1, false);

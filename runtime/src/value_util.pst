@@ -237,3 +237,40 @@ Value doExponent(GlobalValues g, double left, double right) {
 
     return new Value(Type.FLOAT, Core.Pow(left, right));
 }
+
+Value buildIntegerListValue(ExecutionContext ec, Array<int> ints) {
+    int sz = ints.Size();
+    GlobalValues g = ec.globalValues;
+    Array<Value> vals = new Array<Value>(sz);
+    int n = 0;
+    Value val = null;
+    for (int i = 0; i < sz; i += 1) {
+        n = ints[i];
+        if (n < INT_CACHE_RANGE && n > -INT_CACHE_RANGE) {
+            if (n < 0) {
+                val = g.negIntegers[-n];
+            } else {
+                val = g.posIntegers[n];
+            }
+        } else {
+            val = new Value(Type.INTEGER, n);
+        }
+        vals[i] = val;
+    }
+    return buildList(ec, vals, false, sz);
+}
+
+Array<int> convertListToByteArray(ListImpl list) {
+    int sz = list.length;
+    Array<int> bytesOut = new Array<int>(sz);
+    int val = 0;
+    Value value = null;
+    for (int i = 0; i < sz; i += 1) {
+        value = list.items[i];
+        if (value.type != Type.INTEGER) return null;
+        val = (int) value.internalValue;
+        if (val < 0 || val >= 256) return null;
+        bytesOut[i] = val;
+    }
+    return bytesOut;
+}

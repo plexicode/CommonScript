@@ -15,14 +15,14 @@ namespace CommonScript.Compiler
                 "@public function floor(n) { return $math_floor(n); }",
                 "@public function getUnixTime() { return $unix_time(0); }",
                 "@public function getUnixTimeFloat() { return $unix_time(1); }",
-                
+
                 "function map(a, f) { o = []; s = a.length; for (i = 0; i < s; i++) o.add(f(a[i])); return o; }",
                 "function filter(a, f) { o = []; s = a.length; for (i = 0; i < s; i++) { v = a[i]; if (f(v) == true) o.add(v); } return o; }",
 
                 // TODO: throw an error instead of return if the size is too small without an acc.
                 // Because reduce is an internally-private reference, use it as its own singleton to indicate no value passed in. null is a valid default accumulator value.
                 "function reduce(a, f, c = reduce) { s = a.length; if (c == reduce) { if (s < 1) thrw(2, 'List must have at least one item.'); c = a[0]; i = 1; } else i = 0; while (i < s) { c = f(c, a[i]); i++; } return c; }",
-                
+
                 "@public class Exception { field message; field trace = []; constructor(msg = null) { this.message = (msg ?? '') + ''; } }",
                 template.Replace("#", "Fatal"),
                 template.Replace("#", "FieldNotFound"),
@@ -89,7 +89,6 @@ namespace CommonScript.Compiler
             return BUILTIN_MODULES.ContainsKey(moduleId);
         }
 
-
         private static readonly Dictionary<string, string> BUILTIN_MODULES = new Dictionary<string, string>()
         {
             { "random", string.Join('\n', [
@@ -118,6 +117,14 @@ namespace CommonScript.Compiler
                 "@public function abs(val) { return val < 0 ? -val : val; }",
                 "@public function sign(val) { return val == 0 ? 0 : val < 0 ? -1 : 1; }",
                 "@public function sqrt(val) { return val ** .5; }",
+                "",
+            ]) },
+            { "base64", string.Join('\n', [
+                "@public function base64ToBytes(b64str) { return $b64_to_bytes(b64str); }",
+                "@public function base64ToUtf8String(b64str) { return $txt_bytes_to_utf8($b64_to_bytes(b64str)); }",
+                "@public function bytesToBase64(bytes, web=false) { return $b64_from_bytes(bytes, web == true); }",
+                "@public function stringToBase64(str, web=false) { return $b64_from_bytes($txt_utf8_to_bytes(str), web == true); }",
+                "",
             ]) },
         };
     }

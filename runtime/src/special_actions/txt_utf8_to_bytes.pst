@@ -1,0 +1,4 @@
+valueStackSize -= 1;
+value = valueStack[valueStackSize];
+intArray1 = stringUtil_getFlatValue(value).ToUtf8Bytes();
+output = buildIntegerListValue(ec, intArray1);

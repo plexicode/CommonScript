@@ -1,0 +1,16 @@
+valueStackSize -= 1;
+value = valueStack[valueStackSize];
+if (value.type != Type.STRING) {
+    errorId = ExceptionTypeId.INVALID_ARGUMENT;
+    errorMsg = "String expected";
+    @import("macros/throw.pst");
+}
+
+intArray1 = Core.Base64ToBytes(stringUtil_getFlatValue(value));
+if (intArray1 == null) {
+    errorId = ExceptionTypeId.INVALID_ARGUMENT;
+    errorMsg = "String contains non-base64 characters.";
+    @import("macros/throw.pst");
+}
+
+output = buildIntegerListValue(ec, intArray1);

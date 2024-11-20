@@ -199,6 +199,38 @@ namespace CommonScript.Runtime.Internal
             return new Value(3, value);
         }
 
+        public static Value buildIntegerListValue(ExecutionContext ec, int[] ints)
+        {
+            int sz = ints.Length;
+            GlobalValues g = ec.globalValues;
+            Value[] vals = new Value[sz];
+            int n = 0;
+            Value val = null;
+            int i = 0;
+            while (i < sz)
+            {
+                n = ints[i];
+                if (n < 1200 && n > -1200)
+                {
+                    if (n < 0)
+                    {
+                        val = g.negIntegers[-n];
+                    }
+                    else
+                    {
+                        val = g.posIntegers[n];
+                    }
+                }
+                else
+                {
+                    val = new Value(3, n);
+                }
+                vals[i] = val;
+                i += 1;
+            }
+            return buildList(ec, vals, false, sz);
+        }
+
         public static Value buildList(ExecutionContext ec, Value[] values, bool copyValues, int lengthOrNegativeOne)
         {
             int id = ec.nextRefId;
@@ -236,6 +268,31 @@ namespace CommonScript.Runtime.Internal
                 g.commonStrings[rawValue] = v;
             }
             return v;
+        }
+
+        public static int[] convertListToByteArray(ListImpl list)
+        {
+            int sz = list.length;
+            int[] bytesOut = new int[sz];
+            int val = 0;
+            Value value = null;
+            int i = 0;
+            while (i < sz)
+            {
+                value = list.items[i];
+                if (value.type != 3)
+                {
+                    return null;
+                }
+                val = (int)value.internalValue;
+                if (val < 0 || val >= 256)
+                {
+                    return null;
+                }
+                bytesOut[i] = val;
+                i += 1;
+            }
+            return bytesOut;
         }
 
         public static StringImpl convertToStringImpl(GlobalValues g, Value v)
@@ -4217,6 +4274,48 @@ namespace CommonScript.Runtime.Internal
                         output = globalValues.nullValue;
                         switch (row.firstArg)
                         {
+                            case 16:
+                                valueStackSize -= 2;
+                                value = valueStack[valueStackSize];
+                                if (value.type != 9)
+                                {
+                                    errorId = 4;
+                                    errorMsg = "List expected";
+                                    return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+                                }
+                                intArray1 = convertListToByteArray((ListImpl)value.internalValue);
+                                if (intArray1 == null)
+                                {
+                                    errorId = 4;
+                                    errorMsg = "Byte list includes non-byte values";
+                                    return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+                                }
+                                bool1 = (bool)valueStack[valueStackSize + 1].internalValue;
+                                str1 = buildBase64String(intArray1);
+                                if (bool1)
+                                {
+                                    str1 = str1.Replace("+", "-").Replace("/", "_");
+                                }
+                                output = buildString(globalValues, str1, false);
+                                break;
+                            case 17:
+                                valueStackSize -= 1;
+                                value = valueStack[valueStackSize];
+                                if (value.type != 5)
+                                {
+                                    errorId = 4;
+                                    errorMsg = "String expected";
+                                    return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+                                }
+                                intArray1 = System.Convert.FromBase64String(stringUtil_getFlatValue(value)).Select(b => (int)b).ToArray();
+                                if (intArray1 == null)
+                                {
+                                    errorId = 4;
+                                    errorMsg = "String contains non-base64 characters.";
+                                    return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+                                }
+                                output = buildIntegerListValue(ec, intArray1);
+                                break;
                             case 6:
                                 valueStackSize -= 2;
                                 left = valueStack[valueStackSize];
@@ -4490,6 +4589,42 @@ namespace CommonScript.Runtime.Internal
                                     output = buildInteger(globalValues, (int)float1);
                                 }
                                 break;
+                            case 18:
+                                valueStackSize -= 1;
+                                value = valueStack[valueStackSize];
+                                if (value.type != 9)
+                                {
+                                    errorId = 4;
+                                    errorMsg = "List expected";
+                                    return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+                                }
+                                intArray1 = convertListToByteArray((ListImpl)value.internalValue);
+                                if (intArray1 == null)
+                                {
+                                    errorId = 4;
+                                    errorMsg = "Byte list includes non-byte values";
+                                    return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+                                }
+                                str1 = System.Text.Encoding.UTF8.GetString((intArray1).Select(v => (byte)v).ToArray());
+                                if (str1 == null)
+                                {
+                                    errorId = 4;
+                                    errorMsg = "Byte list is not valid UTF-8";
+                                    return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+                                }
+                                output = buildString(globalValues, str1, false);
+                                break;
+                            case 19:
+                                valueStackSize -= 1;
+                                value = valueStack[valueStackSize];
+                                intArray1 = PST_stringToUtf8Bytes(stringUtil_getFlatValue(value));
+                                output = buildIntegerListValue(ec, intArray1);
+                                break;
+                            default:
+                                frame.pc = pc;
+                                frame.valueStackSize = valueStackSize;
+                                task.stack = frame;
+                                return ExRes_HardCrash(task, "ACTION NOT IMPLEMENTED");
                         }
                         if (valueStackSize == valueStackCapacity)
                         {
