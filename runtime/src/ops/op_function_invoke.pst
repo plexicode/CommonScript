@@ -86,6 +86,7 @@ switch (fp.funcType) {
 
             case PrimitiveMethods.STRING_GET_CODE_POINT: @import("builtinmethods/string_get_code_point.pst"); break;
             case PrimitiveMethods.STRING_LOWER: @import("builtinmethods/string_lower.pst"); break;
+            case PrimitiveMethods.STRING_REPLACE: @import("builtinmethods/string_replace.pst"); break;
             case PrimitiveMethods.STRING_SPLIT: @import("builtinmethods/string_split.pst"); break;
             case PrimitiveMethods.STRING_TO_UNICODE_POINTS: @import("builtinmethods/string_to_unicode_points.pst"); break;
             case PrimitiveMethods.STRING_TRIM: @import("builtinmethods/string_trim.pst"); break;

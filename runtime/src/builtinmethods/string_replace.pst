@@ -1,0 +1,19 @@
+left = args[0];
+right = args[1];
+if (left.type != Type.STRING || right.type != Type.STRING) {
+    return ThrowErrorImpl(
+        task,
+        ExceptionTypeId.INVALID_ARGUMENT,
+        "string.replace(searchVal, newValue) requires a string arguments");
+}
+str1 = stringUtil_getFlatValue(fp.ctx);
+strArr = str1.Split(stringUtil_getFlatValue(left));
+if (strArr.Size() == 1) {
+    output = fp.ctx;
+} else {
+    str1 = strArr.Join(stringUtil_getFlatValue(right));
+    output = buildString(globalValues, str1, false);
+}
+
+// clear array reference due to somewhat high risk of sizable long-term leak
+strArr = null;
