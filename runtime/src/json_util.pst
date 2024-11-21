@@ -13,5 +13,8 @@ Value json_util_parse(ExecutionContext ec, string rawValue, Array<int> errOut) {
 }
 
 string json_util_serialize(Value obj, bool useIndent) {
-    return "{ \"ohno\": \"TODO\" }";
+    Array<object> args = new Array<object>(2);
+    args[0] = obj;
+    args[1] = useIndent;
+    return (string) Core.ExtensibleCallbackInvoke("jsonSerialize", args);
 }

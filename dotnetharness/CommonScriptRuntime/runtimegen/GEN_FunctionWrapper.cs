@@ -23,6 +23,16 @@ namespace CommonScript.Runtime.Internal
 
         private static Dictionary<string, System.Func<object[], object>> PST_ExtCallbacks = new Dictionary<string, System.Func<object[], object>>();
 
+        private static readonly string[] PST_SplitSep = new string[1];
+
+        private static string[] PST_StringSplit(string value, string sep)
+        {
+            if (sep.Length == 1) return value.Split(sep[0]);
+            if (sep.Length == 0) return value.ToCharArray().Select<char, string>(c => "" + c).ToArray();
+            PST_SplitSep[0] = sep;
+            return value.Split(PST_SplitSep, System.StringSplitOptions.None);
+        }
+
         public static void PST_ParseFloat(string strValue, double[] output)
         {
             double num = 0.0;
@@ -46,16 +56,6 @@ namespace CommonScript.Runtime.Internal
             T val = list[lastIndex];
             list.RemoveAt(lastIndex);
             return val;
-        }
-
-        private static readonly string[] PST_SplitSep = new string[1];
-
-        private static string[] PST_StringSplit(string value, string sep)
-        {
-            if (sep.Length == 1) return value.Split(sep[0]);
-            if (sep.Length == 0) return value.ToCharArray().Select<char, string>(c => "" + c).ToArray();
-            PST_SplitSep[0] = sep;
-            return value.Split(PST_SplitSep, System.StringSplitOptions.None);
         }
 
         private static string PST_FloatToString(double value)
@@ -876,7 +876,10 @@ namespace CommonScript.Runtime.Internal
 
         public static string json_util_serialize(Value obj, bool useIndent)
         {
-            return "{ \"ohno\": \"TODO\" }";
+            object[] args = new object[2];
+            args[0] = obj;
+            args[1] = useIndent;
+            return (string)(PST_ExtCallbacks.ContainsKey("jsonSerialize") ? PST_ExtCallbacks["jsonSerialize"].Invoke(args) : null);
         }
 
         public static void List_add(ListImpl o, Value v)
@@ -1956,6 +1959,7 @@ namespace CommonScript.Runtime.Internal
             object[] objArr = null;
             Value[] keys = null;
             Value[] values = null;
+            string[] strArr = null;
             System.Func<object, object[], object> extensionFunc = null;
             System.Collections.Generic.Dictionary<string, int> opMap = null;
             System.Collections.Generic.Dictionary<string, FunctionInfo> str2FuncDef = null;
@@ -3535,6 +3539,26 @@ namespace CommonScript.Runtime.Internal
                                         break;
                                     case 30:
                                         output = stringUtil_changeCase(fp.ctx, false);
+                                        break;
+                                    case 31:
+                                        left = args[0];
+                                        right = args[1];
+                                        if (left.type != 5 || right.type != 5)
+                                        {
+                                            return ThrowErrorImpl(task, 4, "string.replace(searchVal, newValue) requires a string arguments");
+                                        }
+                                        str1 = stringUtil_getFlatValue(fp.ctx);
+                                        strArr = PST_StringSplit(str1, stringUtil_getFlatValue(left));
+                                        if (strArr.Length == 1)
+                                        {
+                                            output = fp.ctx;
+                                        }
+                                        else
+                                        {
+                                            str1 = string.Join(stringUtil_getFlatValue(right), strArr);
+                                            output = buildString(globalValues, str1, false);
+                                        }
+                                        strArr = null;
                                         break;
                                     case 32:
                                         value1 = args[0];

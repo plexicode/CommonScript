@@ -4,11 +4,14 @@ import math;
 import testlib -> *;
 
 function main(args) {
-    runTest();
+    mathTest();
+    base64Test();
+    jsonTest();
+
+    print("ALL DONE");
 }
 
-function runTest() {
-
+function mathTest() {
     assertFloatEqual(0.8414709848078965, math.sin(1));
     assertFloatEqual(0.5403023058681398, math.cos(1));
     assertFloatEqual(1.5574077246549023, math.tan(1));
@@ -29,7 +32,9 @@ function runTest() {
     assertStrEqual(0, math.abs(0));
     assertStrEqual(3, math.abs(-3));
     assertStrEqual(3, math.abs(3));
+}
 
+function base64Test() {
     msg = "Hello, World!";
     msgB64 = base64.stringToBase64(msg);
     assertStrEqual('SGVsbG8sIFdvcmxkIQ==', msgB64);
@@ -50,14 +55,39 @@ function runTest() {
     // TOOD: needs to be fixed in the Pastel layer to accept web-safe base64.
     // msg = base64.base64ToBytes(webB64);
     // assertStrEqual('1 2 3 4 5 6 7 253 254 255', msg.join(' '));
+}
 
-    // TODO: implement JSON methods for real.
+function jsonTest() {
+    value = { "foo": 42, "items": [true, null, false, 3.5, ["shiver", "me", "timbers", { "ahoy": "matey" }]] };
+    expected = '
+{
+  "foo": 42,
+  "items": [
+    true,
+    null,
+    false,
+    3.5,
+    [
+      "shiver",
+      "me",
+      "timbers",
+      {
+        "ahoy": "matey"
+      }
+    ]
+  ]
+}'.trim();
 
-    v = { "foo": 42 };
-    encoded = json.jsonSerialize(v);
-    // assertStrEqual(encoded, '{ "foo": 42 }');
+    expected = expected.replace('\r\n', '\n'); // windows-ification of the newline should not fail the test
+
+    encoded = json.jsonSerialize(value, true);
+    assertStrEqual(encoded, expected);
     roundtrip = json.jsonParse(encoded);
-    // assertStrEqual(roundtrip['foo'], 42);
 
-    print("ALL DONE");
+    // spot check
+    assertStrEqual(roundtrip['items'][4][3]['ahoy'], 'matey');
+
+    // round-and-a-half trip?
+    expectedNoSpace = expected.replace('\n', '').replace(' ', '');
+    assertStrEqual(json.jsonSerialize(roundtrip), expectedNoSpace);
 }

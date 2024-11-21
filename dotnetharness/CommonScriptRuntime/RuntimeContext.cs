@@ -19,6 +19,11 @@ namespace CommonScript.Runtime
                 int[] errOut = (int[])args[2];
                 return JsonUtil.Parse((ExecutionContext)args[0], args[1].ToString(), errOut);
             });
+
+            FunctionWrapper.PST_RegisterExtensibleCallback("jsonSerialize", (object[] args) =>
+            {
+                return JsonUtil.Serialize((Value)args[0], (bool)args[1]);
+            });
         }
 
         private object execContext;
