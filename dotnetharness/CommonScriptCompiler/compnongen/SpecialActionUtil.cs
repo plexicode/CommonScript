@@ -22,11 +22,14 @@ namespace CommonScript.Compiler
         public const int SORT_END = 3;
         public const int SORT_GET_NEXT_CMP = 4;
         public const int SORT_PROCEED = 5;
+        public const int TXT_BYTES_TO_STRING = 23;
         public const int TXT_BYTES_TO_UTF8 = 18;
+        public const int TXT_IS_VALID_ENC = 22;
+        public const int TXT_STRING_TO_BYTES = 24;
         public const int TXT_UTF8_TO_BYTES = 19;
         public const int UNIX_TIME = 1;
 
-        // Next ID: 22
+        // Next ID: 25
     }
 
     internal static class SpecialActionUtil
@@ -52,7 +55,10 @@ namespace CommonScript.Compiler
             { "sort_get_next_cmp", SpecialActionCodes.SORT_GET_NEXT_CMP },
             { "sort_proceed", SpecialActionCodes.SORT_PROCEED },
             { "sort_start", SpecialActionCodes.SORT_START },
+            { "txt_bytes_to_string", SpecialActionCodes.TXT_BYTES_TO_STRING },
             { "txt_bytes_to_utf8", SpecialActionCodes.TXT_BYTES_TO_UTF8 },
+            { "txt_is_valid_enc", SpecialActionCodes.TXT_IS_VALID_ENC },
+            { "txt_string_to_bytes", SpecialActionCodes.TXT_STRING_TO_BYTES},
             { "txt_utf8_to_bytes", SpecialActionCodes.TXT_UTF8_TO_BYTES },
             { "unix_time", SpecialActionCodes.UNIX_TIME },
         };
@@ -78,7 +84,10 @@ namespace CommonScript.Compiler
             { "sort_get_next_cmp", 2 },
             { "sort_proceed", 2 },
             { "sort_start", 2 },
+            { "txt_bytes_to_string", 2 },
             { "txt_bytes_to_utf8", 1 },
+            { "txt_is_valid_enc", 1 },
+            { "txt_string_to_bytes", 2 },
             { "txt_utf8_to_bytes", 1 },
             { "unix_time", 1 },
         };

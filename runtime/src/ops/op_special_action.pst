@@ -19,7 +19,10 @@ switch (row.firstArg) {
     case SPECIAL_ACTION_SORT_PROCEED: @import("special_actions/sort_proceed.pst"); break;
     case SPECIAL_ACTION_SORT_START: @import("special_actions/sort_start.pst"); break;
     case SPECIAL_ACTION_UNIX_TIME: @import("special_actions/unix_time.pst"); break;
+    case SPECIAL_ACTION_TXT_BYTES_TO_STRING: @import("special_actions/txt_bytes_to_string.pst"); break;
     case SPECIAL_ACTION_TXT_BYTES_TO_UTF8: @import("special_actions/txt_bytes_to_utf8.pst"); break;
+    case SPECIAL_ACTION_TXT_IS_VALID_ENC: @import("special_actions/txt_is_valid_enc.pst"); break;
+    case SPECIAL_ACTION_TXT_STRING_TO_BYTES: @import("special_actions/txt_string_to_bytes.pst"); break;
     case SPECIAL_ACTION_TXT_UTF8_TO_BYTES: @import("special_actions/txt_utf8_to_bytes.pst"); break;
     default:
         @import("macros/saveframe.pst");

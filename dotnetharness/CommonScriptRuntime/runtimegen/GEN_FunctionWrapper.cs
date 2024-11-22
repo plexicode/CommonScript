@@ -4668,6 +4668,48 @@ namespace CommonScript.Runtime.Internal
                                     output = buildInteger(globalValues, (int)float1);
                                 }
                                 break;
+                            case 23:
+                                valueStackSize -= 2;
+                                value = valueStack[valueStackSize];
+                                str1 = stringUtil_getFlatValue(valueStack[valueStackSize + 1]);
+                                if (value.type != 9)
+                                {
+                                    errorId = 4;
+                                    errorMsg = "List expected";
+                                    return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+                                }
+                                intArray1 = convertListToByteArray((ListImpl)value.internalValue);
+                                if (intArray1 == null)
+                                {
+                                    errorId = 4;
+                                    errorMsg = "Byte list includes non-byte values";
+                                    return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+                                }
+                                bool1 = true;
+                                if (str1 == "utf8")
+                                {
+                                    str1 = System.Text.Encoding.UTF8.GetString((intArray1).Select(v => (byte)v).ToArray());
+                                    if (str1 == null)
+                                    {
+                                        bool1 = false;
+                                    }
+                                }
+                                else
+                                {
+                                    errorId = 4;
+                                    errorMsg = "Encoding not implemented.";
+                                    return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+                                }
+                                if (bool1)
+                                {
+                                    output = buildString(globalValues, str1, false);
+                                }
+                                else
+                                {
+                                    output = VALUE_NULL;
+                                }
+                                str1 = null;
+                                break;
                             case 18:
                                 valueStackSize -= 1;
                                 value = valueStack[valueStackSize];
@@ -4692,6 +4734,36 @@ namespace CommonScript.Runtime.Internal
                                     return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
                                 }
                                 output = buildString(globalValues, str1, false);
+                                break;
+                            case 22:
+                                valueStackSize -= 1;
+                                str1 = stringUtil_getFlatValue(valueStack[valueStackSize]);
+                                if (str1 == "utf8")
+                                {
+                                    output = VALUE_TRUE;
+                                }
+                                else
+                                {
+                                    output = VALUE_FALSE;
+                                }
+                                break;
+                            case 24:
+                                valueStackSize -= 2;
+                                str1 = stringUtil_getFlatValue(valueStack[valueStackSize]);
+                                str2 = stringUtil_getFlatValue(valueStack[valueStackSize + 1]);
+                                if (str2 == "utf8")
+                                {
+                                    intArray1 = PST_stringToUtf8Bytes(str1);
+                                }
+                                else
+                                {
+                                    errorId = 4;
+                                    errorMsg = "Encoding not implemented.";
+                                    return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+                                }
+                                output = buildIntegerListValue(ec, intArray1);
+                                intArray1 = null;
+                                str1 = null;
                                 break;
                             case 19:
                                 valueStackSize -= 1;

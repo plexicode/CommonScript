@@ -2,11 +2,13 @@ import base64;
 import json;
 import math;
 import testlib -> *;
+import textencoding;
 
 function main(args) {
     mathTest();
     base64Test();
     jsonTest();
+    textEncodingTest();
 
     print("ALL DONE");
 }
@@ -90,4 +92,16 @@ function jsonTest() {
     // round-and-a-half trip?
     expectedNoSpace = expected.replace('\n', '').replace(' ', '');
     assertStrEqual(json.jsonSerialize(roundtrip), expectedNoSpace);
+}
+
+function textEncodingTest() {
+    text = 'ABC';
+
+    bytes = textencoding.textToBytes(text, 'utf8');
+    assertStrEqual('65 66 67', bytes.join(' '));
+
+    roundTrip = textencoding.bytesToText(bytes, 'utf-8');
+    assertStrEqual('ABC', roundTrip);
+
+    // TODO: UTF-16, UTF-32, BE/LE, w+w/o BOM
 }

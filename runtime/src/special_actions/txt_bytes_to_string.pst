@@ -1,0 +1,37 @@
+valueStackSize -= 2;
+value = valueStack[valueStackSize];
+str1 = stringUtil_getFlatValue(valueStack[valueStackSize + 1]);
+
+if (value.type != Type.LIST) {
+    errorId = ExceptionTypeId.INVALID_ARGUMENT;
+    errorMsg = "List expected";
+    @import("macros/throw.pst");
+}
+
+intArray1 = convertListToByteArray((ListImpl) value.internalValue);
+if (intArray1 == null) {
+    errorId = ExceptionTypeId.INVALID_ARGUMENT;
+    errorMsg = "Byte list includes non-byte values";
+    @import("macros/throw.pst");
+}
+
+bool1 = true;
+if (Core.StringEquals(str1, "utf8")) {
+    str1 = Core.Utf8BytesToString(intArray1);
+    if (str1 == null) {
+        bool1 = false;
+    }
+} else {
+    errorId = ExceptionTypeId.INVALID_ARGUMENT;
+    errorMsg = "Encoding not implemented.";
+    @import("macros/throw.pst");
+}
+
+if (bool1) {
+    output = buildString(globalValues, str1, false);
+} else {
+    output = VALUE_NULL;
+}
+
+// avoid memory leak
+str1 = null;
