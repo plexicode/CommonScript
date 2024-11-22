@@ -121,9 +121,9 @@ namespace CommonScript.Compiler
             ]) },
             { "base64", string.Join('\n', [
                 "@public function base64ToBytes(b64str) { return $b64_to_bytes(b64str); }",
-                "@public function base64ToUtf8String(b64str) { return $txt_bytes_to_utf8($b64_to_bytes(b64str)); }",
+                "@public function base64ToUtf8String(b64str) { return $txt_bytes_to_string($b64_to_bytes(b64str),'utf8'); }",
                 "@public function bytesToBase64(bytes, web=false) { return $b64_from_bytes(bytes, web == true); }",
-                "@public function stringToBase64(str, web=false) { return $b64_from_bytes($txt_utf8_to_bytes(str), web == true); }",
+                "@public function stringToBase64(str, web=false) { return $b64_from_bytes($txt_string_to_bytes(str,'utf8'), web == true); }",
                 "",
             ]) },
             { "json", string.Join('\n', [

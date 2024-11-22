@@ -4710,31 +4710,6 @@ namespace CommonScript.Runtime.Internal
                                 }
                                 str1 = null;
                                 break;
-                            case 18:
-                                valueStackSize -= 1;
-                                value = valueStack[valueStackSize];
-                                if (value.type != 9)
-                                {
-                                    errorId = 4;
-                                    errorMsg = "List expected";
-                                    return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
-                                }
-                                intArray1 = convertListToByteArray((ListImpl)value.internalValue);
-                                if (intArray1 == null)
-                                {
-                                    errorId = 4;
-                                    errorMsg = "Byte list includes non-byte values";
-                                    return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
-                                }
-                                str1 = System.Text.Encoding.UTF8.GetString((intArray1).Select(v => (byte)v).ToArray());
-                                if (str1 == null)
-                                {
-                                    errorId = 4;
-                                    errorMsg = "Byte list is not valid UTF-8";
-                                    return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
-                                }
-                                output = buildString(globalValues, str1, false);
-                                break;
                             case 22:
                                 valueStackSize -= 1;
                                 str1 = stringUtil_getFlatValue(valueStack[valueStackSize]);
@@ -4764,12 +4739,6 @@ namespace CommonScript.Runtime.Internal
                                 output = buildIntegerListValue(ec, intArray1);
                                 intArray1 = null;
                                 str1 = null;
-                                break;
-                            case 19:
-                                valueStackSize -= 1;
-                                value = valueStack[valueStackSize];
-                                intArray1 = PST_stringToUtf8Bytes(stringUtil_getFlatValue(value));
-                                output = buildIntegerListValue(ec, intArray1);
                                 break;
                             default:
                                 frame.pc = pc;
