@@ -15,12 +15,50 @@ namespace CommonScript.Runtime
             return sb.ToString();
         }
 
+        private static readonly char[] HEX_CHARS = "0123456789ABCDEF".ToCharArray();
+
         private static string SerializeString(string rawValue, Dictionary<string, string> valueCache)
         {
             string output;
             if (!valueCache.TryGetValue(rawValue, out output))
             {
-                output = JsonSerializer.Serialize(rawValue, typeof(string));
+                StringBuilder sb = new StringBuilder();
+                sb.Append('"');
+                char[] chars = rawValue.ToCharArray();
+                char c;
+                int length = chars.Length;
+                for (int i = 0; i < length; i++)
+                {
+                    c = chars[i];
+                    switch (c)
+                    {
+                        case '"': sb.Append("\\\""); break;
+                        case '\\': sb.Append("\\\\"); break;
+                        case '\b': sb.Append("\\b"); break;
+                        case '\f': sb.Append("\\f"); break;
+                        case '\n': sb.Append("\\n"); break;
+                        case '\r': sb.Append("\\r"); break;
+                        case '\t': sb.Append("\\t"); break;
+                        default:
+                            if (c < 32)
+                            {
+                                sb.Append("\\u");
+                                int h4 = c;
+                                sb.Append(HEX_CHARS[(h4 >> 12) & 15]);
+                                sb.Append(HEX_CHARS[(h4 >> 8) & 15]);
+                                sb.Append(HEX_CHARS[(h4 >> 4) & 15]);
+                                sb.Append(HEX_CHARS[h4 & 15]);
+                            }
+                            else
+                            {
+                                sb.Append(c);
+                            }
+                            break;
+                    }
+                }
+                sb.Append('"');
+                output = sb.ToString();
+
                 valueCache[rawValue] = output;
             }
             return output;
