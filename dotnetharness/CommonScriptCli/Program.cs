@@ -93,24 +93,21 @@ namespace CommonScriptCli
             }
 
             RuntimeContext rt = new RuntimeContext(CLI_LANG_NAME, CLI_LANG_VER, byteCode, extensions, args.UserRuntimeArgs);
-            TaskResult taskResult = rt.StartMainTask();
-            while (taskResult.Status != TaskResultStatus.DONE)
+            CanonicalEventLoop eventLoop = new CanonicalEventLoop(rt);
+            TaskResult taskResult = eventLoop.StartEventLoop();
+
+            switch (taskResult.Status)
             {
-                switch (taskResult.Status)
-                {
-                    case TaskResultStatus.ERROR:
-                        Console.WriteLine(taskResult.ErrorMessage);
-                        return;
+                case TaskResultStatus.ERROR:
+                    Console.WriteLine(taskResult.ErrorMessage);
+                    break;
 
-                    case TaskResultStatus.SLEEP:
-                        System.Threading.Thread.Sleep(taskResult.SleepMillis);
-                        taskResult = rt.MainTask.Resume();
-                        break;
+                case TaskResultStatus.DONE:
+                    break;
 
-                    case TaskResultStatus.SUSPEND:
-                        Console.WriteLine("TODO: suspend should not happen in vanilla CLI mode (until it should).");
-                        return;
-                }
+                default:
+                    // Event Loop will not produce non-process-ending results.
+                    throw new InvalidOperationException();
             }
         }
     }

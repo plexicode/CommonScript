@@ -54,6 +54,14 @@ namespace CommonScript.Runtime
             this.MainTask = new RuntimeTask(this.execContext, mainTaskObj);
         }
 
+        public bool HasActiveTasks
+        {
+            get
+            {
+                return ((ExecutionContext)this.execContext).tasks.Count > 0;
+            }
+        }
+
         public TaskResult StartMainTask()
         {
             return this.MainTask.Resume();
