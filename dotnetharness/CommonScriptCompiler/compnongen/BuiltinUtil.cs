@@ -16,6 +16,9 @@ namespace CommonScript.Compiler
                 "@public function getUnixTime() { return $unix_time(0); }",
                 "@public function getUnixTimeFloat() { return $unix_time(1); }",
 
+                "@public function delayInvoke(fn, sec) { $delay_invoke(fn, 1.0*sec); }",
+                "@public function sleep(sec) { $sleep(1.0*sec); }",
+
                 "function map(a, f) { o = []; s = a.length; for (i = 0; i < s; i++) o.add(f(a[i])); return o; }",
                 "function filter(a, f) { o = []; s = a.length; for (i = 0; i < s; i++) { v = a[i]; if (f(v) == true) o.add(v); } return o; }",
 

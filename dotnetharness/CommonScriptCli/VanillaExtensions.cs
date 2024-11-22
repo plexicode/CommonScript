@@ -9,13 +9,23 @@ namespace CommonScriptCli
     {
         public static Dictionary<string, Func<object, object[], object>> BuildExtensionSet()
         {
-            Dictionary<string, Func<object, object[], object>> output = new Dictionary<string, Func<object, object[], object>>();
+            Dictionary<string, Func<object, object[], object>> output = [];
 
             output["io_stdout"] = (object task, object[] args) =>
             {
                 string val = ValueConverter.RTValueToReadableString(args[0]);
                 System.Console.WriteLine(val);
                 return null;
+            };
+
+            output["delay_invoke"] = (object task, object[] args) =>
+            {
+                throw new NotImplementedException();
+            };
+
+            output["sleep"] = (object task, object[] args) =>
+            {
+                throw new NotImplementedException();
             };
 
             return output;

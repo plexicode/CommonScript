@@ -775,7 +775,9 @@ namespace CommonScript.Compiler
             {
                 switch (expr.strVal)
                 {
+                    case "delay_invoke": argc = 2; break;
                     case "io_stdout": argc = 1; break;
+                    case "sleep": argc = 1; break;
 
                     default:
                         if (this.resolver.isValidRegisteredExtension(expr.strVal))
