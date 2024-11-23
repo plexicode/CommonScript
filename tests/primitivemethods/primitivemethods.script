@@ -4,6 +4,7 @@ function main(args) {
     stringTests();
     listTests();
     dictTests();
+    functionTests();
 
     print("ALL DONE");
 }
@@ -150,4 +151,15 @@ function dictTests() {
     assertStrEqual(a.contains('x'), false);
     a['k'] = false;
     assertStrEqual(a.contains('k'), true);
+}
+
+function funcTestTestFunc(a, b, c) {
+    return a + b * c;
+}
+
+function functionTests() {
+    res = funcTestTestFunc(1, 2, 3);
+    assertStrEqual(res, 7);
+    res2 = funcTestTestFunc.invoke([2, 2, 3]);
+    assertStrEqual(res2, 8);
 }

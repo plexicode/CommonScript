@@ -642,6 +642,7 @@ namespace CommonScript.Runtime.Internal
             injectNameLookup(fpMap, 7, 10, tryGetNameId(stringsToId, "merge"), 1, 2);
             injectNameLookup(fpMap, 8, 10, tryGetNameId(stringsToId, "remove"), 1, 1);
             injectNameLookup(fpMap, 9, 10, tryGetNameId(stringsToId, "values"), 0, 0);
+            injectNameLookup(fpMap, 44, 11, tryGetNameId(stringsToId, "invoke"), 1, 1);
             injectNameLookup(fpMap, 10, 9, tryGetNameId(stringsToId, "add"), 1, 1);
             injectNameLookup(fpMap, 11, 9, tryGetNameId(stringsToId, "clear"), 0, 0);
             injectNameLookup(fpMap, 12, 9, tryGetNameId(stringsToId, "clone"), 0, 0);
@@ -3004,6 +3005,17 @@ namespace CommonScript.Runtime.Internal
                                     output = new Value(11, new FunctionPointer(4, fp.argcMin, fp.argcMax, fp.pcOrId, null, value));
                                 }
                                 break;
+                            case 11:
+                                fp = primitiveMethodLookup[j][11];
+                                if (fp == null)
+                                {
+                                    output = null;
+                                }
+                                else
+                                {
+                                    output = new Value(11, new FunctionPointer(4, fp.argcMin, fp.argcMax, fp.pcOrId, null, value));
+                                }
+                                break;
                             case 12:
                                 instance1 = (Instance)value.internalValue;
                                 if (!instance1.classDef.nameToOffset.ContainsKey(name))
@@ -3209,6 +3221,33 @@ namespace CommonScript.Runtime.Internal
                                 task.stack = frame;
                                 switch (fp.pcOrId)
                                 {
+                                    case 44:
+                                        if (args[0].type != 9)
+                                        {
+                                            errorId = 4;
+                                            errorMsg = "function.invoke(args) requires an array of arguments";
+                                            return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+                                        }
+                                        listImpl1 = (ListImpl)args[0].internalValue;
+                                        argc = listImpl1.length;
+                                        args = new Value[argc];
+                                        i = 0;
+                                        while (i < listImpl1.length)
+                                        {
+                                            args[i] = listImpl1.items[i];
+                                            i += 1;
+                                        }
+                                        doInvoke = true;
+                                        fp = (FunctionPointer)fp.ctx.internalValue;
+                                        value = fp.ctx;
+                                        overrideReturnValueWithContext = false;
+                                        if (args.Length < fp.argcMin || args.Length > fp.argcMax)
+                                        {
+                                            errorId = 5;
+                                            errorMsg = "Incorrect number of arguments.";
+                                            return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+                                        }
+                                        break;
                                     case 40:
                                         output = buildString(globalValues, buildBase64String((int[])fp.ctx.internalValue), false);
                                         break;

@@ -123,6 +123,26 @@ switch (value.type) {
 
         break;
 
+    case Type.FUNCTION:
+        fp = primitiveMethodLookup[j][Type.FUNCTION];
+        if (fp == null) {
+            output = null;
+        } else {
+            output = new Value(
+                Type.FUNCTION,
+                new FunctionPointer(
+                    FunctionPointerType.PRIMITIVE_METHOD,
+                    fp.argcMin,
+                    fp.argcMax,
+                    fp.pcOrId,
+                    null,
+                    value
+                )
+            );
+        }
+
+        break;
+
     case Type.INSTANCE:
         instance1 = (Instance) value.internalValue;
         if (!instance1.classDef.nameToOffset.Contains(name)) {

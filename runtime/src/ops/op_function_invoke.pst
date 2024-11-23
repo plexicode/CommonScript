@@ -63,6 +63,31 @@ switch (fp.funcType) {
         @import("macros/saveframe.pst");
 
         switch (fp.pcOrId) {
+
+            case PrimitiveMethods.FUNCTION_INVOKE:
+                if (args[0].type != Type.LIST) {
+                    errorId = ExceptionTypeId.INVALID_ARGUMENT;
+                    errorMsg = "function.invoke(args) requires an array of arguments";
+                    @import("macros/throw.pst");
+                }
+                listImpl1 = (ListImpl) args[0].internalValue;
+                argc = listImpl1.length;
+                args = new Array<Value>(argc);
+                for (i = 0; i < listImpl1.length; i += 1) {
+                    args[i] = listImpl1.items[i];
+                }
+                doInvoke = true;
+                fp = (FunctionPointer) fp.ctx.internalValue;
+                value = fp.ctx;
+                overrideReturnValueWithContext = false;
+                if (args.Size() < fp.argcMin || args.Size() > fp.argcMax) {
+                    // Do the check again now that the args are different.
+                    errorId = ExceptionTypeId.INVOCATION;
+                    errorMsg = "Incorrect number of arguments.";
+                    @import("macros/throw.pst");
+                }
+                break;
+
             case PrimitiveMethods.BYTEBUF_TO_BASE_64: @import("builtinmethods/bytebuf_to_base_64.pst"); break;
 
             case PrimitiveMethods.DICT_CONTAINS: @import("builtinmethods/dict_contains.pst"); break;

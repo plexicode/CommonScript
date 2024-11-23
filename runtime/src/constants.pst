@@ -135,4 +135,5 @@ enum PrimitiveMethods {
     BYTEBUF_GET_INT_BE = 41,
     BYTEBUF_GET_INT_LE = 42,
     BYTEBUF_TO_STRING = 43,
+    FUNCTION_INVOKE = 44,
 }
