@@ -12,15 +12,18 @@ if (ec.extensions.Contains(name)) {
 
     extensionFunc = ec.extensions[name];
     value = (Value) extensionFunc((object) task, objArr);
-    objArr = null;
-    if (task.suspendRequested) {
-        frame.pc += 1; // won't increment the PC before returning, so do it now.
-        task.suspendRequested = false;
-        return ExRes_Suspend(task, task.sleepMillis >= 0, task.sleepMillis);
-    }
+    objArr = null; // memory leak protection
+    
     if (value == null) value = globalValues.nullValue;
     valueStack[valueStackSize] = value;
     valueStackSize += 1;
+
+    if (task.suspendRequested) {    
+        // won't increment the PC before returning, so do it now.
+        frame.pc += 2; 
+        task.suspendRequested = false;
+        return ExRes_Suspend(task, task.sleepMillis >= 0, task.sleepMillis);
+    }
 } else {
     errorId = ExceptionTypeId.INVOCATION;
     errorMsg = Core.StringConcatAll("There is no extension function named '", name, "'.");
