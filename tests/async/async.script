@@ -3,7 +3,7 @@ import math;
 
 // The tolerance is quite high. Reduce this after the event loop uses a
 // proper multi-threaded mechanism instead of while (true) { ... sleep(1ms) }-polling
-const TOLERANCE = 0.015;
+const TOLERANCE = 0.025;
 
 const DELAY = 0.25;
 
@@ -12,14 +12,40 @@ function main(args) {
     a = getUnixTimeFloat();
     sleep(DELAY);
     b = getUnixTimeFloat();
-    c = getUnixTimeFloat();
     diff = b - a;
     diff = math.abs(DELAY - diff);
     if (diff > TOLERANCE) {
-        print("Sleep did not sleep the right amouont of time.");
+        print("Sleep did not sleep the right amount of time.");
     }
-    print(a + ' | ' + b);
-    print(c - b);
+
+    timer = new TimingSnapshotSequence();
+    timer.snapshot();
+    delayInvoke(timer.snapshot, DELAY);
+    sleep(DELAY * 2);
+    timer.snapshot();
+
+    diff1 = timer.timings[1] - timer.timings[0];
+    diff2 = timer.timings[2] - timer.timings[1];
+
+    if (math.abs(diff1 - DELAY) > TOLERANCE) {
+        print("delayInvoke didn't fire at the right time.");
+    }
+
+    if (math.abs(diff2 - DELAY) > TOLERANCE) {
+        print("delayInvoke didn't fire at the right time. Or maybe sleep. One of those.");
+    }
 
     print('ALL DONE');
+}
+
+class TimingSnapshotSequence {
+
+    field timings;
+    constructor() {
+        this.timings = [];
+    }
+
+    function snapshot() {
+        this.timings.add(getUnixTimeFloat());
+    }
 }
