@@ -1,0 +1,15 @@
+dictImpl1 = (DictImpl) fp.ctx.internalValue;
+output = VALUE_FALSE;
+value = args[0];
+if (dictImpl1.keyType == value.type) {
+
+    if (value.type == Type.STRING && dictImpl1.strKeyLookup != null) {
+        if (dictImpl1.strKeyLookup.Contains(stringUtil_getFlatValue(value))) {
+            output = VALUE_TRUE;
+        }
+    } else if (value.type == Type.INTEGER && dictImpl1.intKeyLookup != null) {
+        if (dictImpl1.intKeyLookup.Contains((int)value.internalValue)) {
+            output = VALUE_TRUE;
+        }
+    }
+}

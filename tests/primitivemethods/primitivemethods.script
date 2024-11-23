@@ -3,6 +3,9 @@ import testlib -> *;
 function main(args) {
     stringTests();
     listTests();
+    dictTests();
+
+    print("ALL DONE");
 }
 
 function stringTests() {
@@ -121,8 +124,6 @@ function listTests() {
     assertStrEqual(items.findReverse(ptr1, -2, 5), 6);
     assertStrEqual(items.findReverse(ptr1, 6, 5), 6);
     assertStrEqual(items.findReverse(ptr1, 5, 5), -1);
-
-    print("ALL DONE");
 }
 
 function getLength(x) { return x.length; }
@@ -132,4 +133,21 @@ function funnySort(a, b) {
     isRightEven = b % 2 == 0;
     if (isLeftEven != isRightEven) return isLeftEven ? -1 : 1;
     return a - b;
+}
+
+function dictTests() {
+    a = {};
+    assertStrEqual(a.contains(1), false);
+    a[2] = '';
+    assertStrEqual(a.contains(1), false);
+    assertStrEqual(a.contains(2), true);
+    assertStrEqual(a.contains(''), false);
+
+    a = {};
+    assertStrEqual(a.contains('k'), false);
+    a['k'] = 1;
+    assertStrEqual(a.contains('k'), true);
+    assertStrEqual(a.contains('x'), false);
+    a['k'] = false;
+    assertStrEqual(a.contains('k'), true);
 }
