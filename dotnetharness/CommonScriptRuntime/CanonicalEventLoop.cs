@@ -51,6 +51,10 @@ namespace CommonScript.Runtime
                     switch (result.Status)
                     {
                         case TaskResultStatus.DONE:
+                            // If there are no more active tasks, then this done should serve as the whole result.
+                            if (!this.runtimeContext.HasActiveTasks) return result;
+                            break;
+
                         case TaskResultStatus.ERROR:
                             return result;
 
