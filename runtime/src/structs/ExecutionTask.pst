@@ -14,35 +14,42 @@ ExecutionTask createNewTask(ExecutionContext ec, Value fpValue, Array<Value> arg
     int pc = 0;
     int argc = args.Size();
     int argcMax = argc;
+    Value context = null;
     switch (fp.funcType) {
         case FunctionPointerType.REGULAR:
+        case FunctionPointerType.INSTANCE_METHOD:
+        case FunctionPointerType.STATIC_METHOD:
             pc = fp.pcOrId;
             if (argc < fp.argcMin || argc > fp.argcMax) {
                 // Invalid argument count
                 return null;
             }
             argcMax = fp.argcMax;
-
             break;
+
         default:
             // TODO: support others
             return null;
     }
-    
+
+    if (fp.funcType == FunctionPointerType.INSTANCE_METHOD) {
+        context = ((FunctionPointer)((Value)fpValue).internalValue).ctx;
+    }
+
     Array<Value> argsClone = new Array<Value>(argc);
     for (int i = 0; i < argc; i += 1) {
         argsClone[i] = args[i];
     }
 
     StackFrame frame = new StackFrame(
-        null, 
-        pc, 
+        null,
+        pc,
         argsClone,
         argc,
         0,
         0,
         new Dictionary<string, Value>(),
-        null,
+        context,
         false,
         null,
         false
@@ -60,12 +67,12 @@ ExecutionTask createMainTask(ExecutionContext ec, Array<string> cliArgs) {
     finalizeExecutionContext(ec);
 
     Value mainFn = ec.functionsAsValues[ec.significantFunctions["main"]];
-    
-    Value args = ec.globalValues.nullValue; 
+
+    Value args = ec.globalValues.nullValue;
     Array<Value> argList = new Array<Value>(1);
     Array<Value> argValues = new Array<Value>(cliArgs.Size());
     for (int i = 0; i < cliArgs.Size(); i += 1) {
-        // this array has a lifetime equivalent of main() so just mark it as 
+        // this array has a lifetime equivalent of main() so just mark it as
         // a common string as it will survive permanently in memory no matter what.
         argValues[i] = buildString(ec.globalValues, cliArgs[i], true);
     }

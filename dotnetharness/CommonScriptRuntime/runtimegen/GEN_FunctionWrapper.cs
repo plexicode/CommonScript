@@ -378,6 +378,7 @@ namespace CommonScript.Runtime.Internal
             int pc = 0;
             int argc = args.Length;
             int argcMax = argc;
+            Value context = null;
             switch (fp.funcType)
             {
                 case 1:
@@ -388,8 +389,28 @@ namespace CommonScript.Runtime.Internal
                     }
                     argcMax = fp.argcMax;
                     break;
+                case 2:
+                    pc = fp.pcOrId;
+                    if (argc < fp.argcMin || argc > fp.argcMax)
+                    {
+                        return null;
+                    }
+                    argcMax = fp.argcMax;
+                    break;
+                case 3:
+                    pc = fp.pcOrId;
+                    if (argc < fp.argcMin || argc > fp.argcMax)
+                    {
+                        return null;
+                    }
+                    argcMax = fp.argcMax;
+                    break;
                 default:
                     return null;
+            }
+            if (fp.funcType == 2)
+            {
+                context = ((FunctionPointer)((Value)fpValue).internalValue).ctx;
             }
             Value[] argsClone = new Value[argc];
             int i = 0;
@@ -398,7 +419,7 @@ namespace CommonScript.Runtime.Internal
                 argsClone[i] = args[i];
                 i += 1;
             }
-            StackFrame frame = new StackFrame(null, pc, argsClone, argc, 0, 0, new Dictionary<string, Value>(), null, false, null, false);
+            StackFrame frame = new StackFrame(null, pc, argsClone, argc, 0, 0, new Dictionary<string, Value>(), context, false, null, false);
             ExecutionTask task = new ExecutionTask(ec.nextTaskId, ec, frame, false, 0, new Value[1], null);
             ec.nextTaskId += 1;
             ec.tasks[task.taskId] = task;
