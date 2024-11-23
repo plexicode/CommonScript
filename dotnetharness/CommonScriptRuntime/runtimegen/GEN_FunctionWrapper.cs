@@ -1762,6 +1762,11 @@ namespace CommonScript.Runtime.Internal
             return "OK";
         }
 
+        public static object PUBLIC_createTaskForFunction(object ecCtx, object fpValueNoArgs)
+        {
+            return createNewTask((ExecutionContext)ecCtx, (Value)fpValueNoArgs, new Value[0]);
+        }
+
         public static object PUBLIC_getApplicationContextFromTask(object taskObj)
         {
             ExecutionTask task = (ExecutionTask)taskObj;
@@ -1772,6 +1777,11 @@ namespace CommonScript.Runtime.Internal
         {
             ExecutionContext ec = (ExecutionContext)ecObj;
             return ec.errMsg;
+        }
+
+        public static object PUBLIC_getExecutionContextFromTask(object taskObj)
+        {
+            return ((ExecutionTask)taskObj).execCtx;
         }
 
         public static string[] PUBLIC_getTaskResultError(object resObj, bool includeStackTrace)
@@ -3081,18 +3091,18 @@ namespace CommonScript.Runtime.Internal
                             extensionFunc = ec.extensions[name];
                             value = (Value)(extensionFunc((object)task, objArr));
                             objArr = null;
-                            if (task.suspendRequested)
-                            {
-                                frame.pc += 1;
-                                task.suspendRequested = false;
-                                return ExRes_Suspend(task, task.sleepMillis >= 0, task.sleepMillis);
-                            }
                             if (value == null)
                             {
                                 value = globalValues.nullValue;
                             }
                             valueStack[valueStackSize] = value;
                             valueStackSize += 1;
+                            if (task.suspendRequested)
+                            {
+                                frame.pc += 2;
+                                task.suspendRequested = false;
+                                return ExRes_Suspend(task, task.sleepMillis >= 0, task.sleepMillis);
+                            }
                         }
                         else
                         {

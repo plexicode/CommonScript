@@ -1,0 +1,25 @@
+import testlib -> *;
+import math;
+
+// The tolerance is quite high. Reduce this after the event loop uses a
+// proper multi-threaded mechanism instead of while (true) { ... sleep(1ms) }-polling
+const TOLERANCE = 0.015;
+
+const DELAY = 0.25;
+
+function main(args) {
+
+    a = getUnixTimeFloat();
+    sleep(DELAY);
+    b = getUnixTimeFloat();
+    c = getUnixTimeFloat();
+    diff = b - a;
+    diff = math.abs(DELAY - diff);
+    if (diff > TOLERANCE) {
+        print("Sleep did not sleep the right amouont of time.");
+    }
+    print(a + ' | ' + b);
+    print(c - b);
+
+    print('ALL DONE');
+}

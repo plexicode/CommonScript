@@ -51,7 +51,7 @@ namespace CommonScript.Runtime
 
             // This needs to be in pastel-generated code.
             object mainTaskObj = FunctionWrapper.createMainTask((ExecutionContext)this.execContext, cliArgs.ToArray());
-            this.MainTask = new RuntimeTask(this.execContext, mainTaskObj);
+            this.MainTask = new RuntimeTask(mainTaskObj);
         }
 
         public bool HasActiveTasks
@@ -65,6 +65,17 @@ namespace CommonScript.Runtime
         public TaskResult StartMainTask()
         {
             return this.MainTask.Resume();
+        }
+
+        public RuntimeTask CreateTaskWithFunctionPointer(object fp)
+        {
+            object taskObj = FunctionWrapper.PUBLIC_createTaskForFunction(this.execContext, fp);
+            return new RuntimeTask(taskObj);
+        }
+
+        public RuntimeTask GetTaskFromNativePtr(object rtTask)
+        {
+            return new RuntimeTask(rtTask);
         }
     }
 }

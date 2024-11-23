@@ -12,9 +12,10 @@ namespace CommonScript.Runtime
         private List<QueueItem> timedQueue = [];
         private List<RuntimeTask> readyQueue = [];
 
+        private static readonly DateTime PST_UnixEpoch = new DateTime(1970, 1, 1);
         private static long NowMillis()
         {
-            return DateTime.Now.Ticks / 10000;
+            return (long)DateTime.UtcNow.Subtract(PST_UnixEpoch).TotalMilliseconds;
         }
 
         private class QueueItem
@@ -60,7 +61,7 @@ namespace CommonScript.Runtime
                             break;
 
                         case TaskResultStatus.SLEEP:
-                            this.QueueTask(nextTask, FunctionWrapper.PUBLIC_getTaskResultSleepAmount(result) / 1000.0);
+                            this.QueueTask(nextTask, result.SleepMillis / 1000.0);
                             break;
 
                         default:

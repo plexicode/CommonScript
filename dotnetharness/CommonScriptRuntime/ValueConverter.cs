@@ -19,6 +19,11 @@ namespace CommonScript.Runtime
             return FunctionWrapper.PUBLIC_valueToString(rtVal);
         }
 
+        public static double RTValueToFloat(object rtVal)
+        {
+            return (double)((Value)rtVal).internalValue;
+        }
+
         public static object NativeValueToRTValue(object execCtxObj, object value)
         {
             ExecutionContext ec = CastExecCtx(execCtxObj);

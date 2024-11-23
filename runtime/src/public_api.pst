@@ -26,6 +26,17 @@ int PUBLIC_getTaskResultSleepAmount(object resObj) {
     return result.sleepMillis;
 }
 
+object PUBLIC_getExecutionContextFromTask(object taskObj) {
+    return ((ExecutionTask)taskObj).execCtx;
+}
+
+object PUBLIC_createTaskForFunction(object ecCtx, object fpValueNoArgs) {
+    return createNewTask(
+        (ExecutionContext) ecCtx,
+        (Value) fpValueNoArgs, 
+        new Array<Value>(0));
+}
+
 Array<string> PUBLIC_getTaskResultError(object resObj, bool includeStackTrace) {
     ExecutionResult result = (ExecutionResult) resObj;
     List<string> o = new List<string>();

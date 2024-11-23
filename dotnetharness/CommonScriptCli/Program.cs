@@ -26,7 +26,7 @@ namespace CommonScriptCli
 #endif
         }
 
-        private static CompilationResult PerformCompilation(ParsedArgs args, string[] extensionFunctionNames)
+        private static CompilationResult PerformCompilation(ParsedArgs args, ICollection<string> extensionFunctionNames)
         {
             CompilationEngine engine = new CompilationEngine(CLI_LANG_NAME, CLI_LANG_VER, extensionFunctionNames);
 
@@ -75,9 +75,9 @@ namespace CommonScriptCli
         private static void MainImpl(string[] cliArgs)
         {
             ParsedArgs args = ParsedArgs.ParseArgs(cliArgs);
-            Dictionary<string, Func<object, object[], object>> extensions = VanillaExtensions.BuildExtensionSet();
+            VanillaExtensionSet extensions = new VanillaExtensionSet();
 
-            CompilationResult result = PerformCompilation(args, [.. extensions.Keys]);
+            CompilationResult result = PerformCompilation(args, extensions.ExtensionIds);
 
             if (result.ErrorMessage != null)
             {
@@ -92,8 +92,10 @@ namespace CommonScriptCli
                 return;
             }
 
-            RuntimeContext rt = new RuntimeContext(CLI_LANG_NAME, CLI_LANG_VER, byteCode, extensions, args.UserRuntimeArgs);
+            RuntimeContext rt = new RuntimeContext(CLI_LANG_NAME, CLI_LANG_VER, byteCode, extensions.GetExtensionsLookup(), args.UserRuntimeArgs);
             CanonicalEventLoop eventLoop = new CanonicalEventLoop(rt);
+            extensions.SetEventLoop(eventLoop, rt);
+
             TaskResult taskResult = eventLoop.StartEventLoop();
 
             switch (taskResult.Status)
