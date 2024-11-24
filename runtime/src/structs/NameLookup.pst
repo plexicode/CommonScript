@@ -31,7 +31,7 @@ void generateNameLookup(ExecutionContext ec) {
     injectNameLookup(fpMap, PrimitiveMethods.DICT_CONTAINS, Type.DICTIONARY, tryGetNameId(stringsToId, "contains"), 1, 1);
     injectNameLookup(fpMap, PrimitiveMethods.DICT_GET, Type.DICTIONARY, tryGetNameId(stringsToId, "get"), 1, 2);
     injectNameLookup(fpMap, PrimitiveMethods.DICT_KEYS, Type.DICTIONARY, tryGetNameId(stringsToId, "keys"), 0, 0);
-    injectNameLookup(fpMap, PrimitiveMethods.DICT_MAP_KVP, Type.DICTIONARY, tryGetNameId(stringsToId, "mapKvp"), 1, 1);
+    injectNameLookup(fpMap, PrimitiveMethods.DICT_MAP_KVP, Type.DICTIONARY, tryGetNameId(stringsToId, "map"), 1, 1);
     injectNameLookup(fpMap, PrimitiveMethods.DICT_MERGE, Type.DICTIONARY, tryGetNameId(stringsToId, "merge"), 1, 2);
     injectNameLookup(fpMap, PrimitiveMethods.DICT_REMOVE, Type.DICTIONARY, tryGetNameId(stringsToId, "remove"), 1, 1);
     injectNameLookup(fpMap, PrimitiveMethods.DICT_VALUES, Type.DICTIONARY, tryGetNameId(stringsToId, "values"), 0, 0);

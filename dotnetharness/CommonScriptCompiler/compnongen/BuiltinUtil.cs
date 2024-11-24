@@ -21,6 +21,18 @@ namespace CommonScript.Compiler
 
                 "function map(a, f) { o = []; s = a.length; for (i = 0; i < s; i++) o.add(f(a[i])); return o; }",
                 "function filter(a, f) { o = []; s = a.length; for (i = 0; i < s; i++) { v = a[i]; if (f(v) == true) o.add(v); } return o; }",
+                "function kvpMap(d, f) {",
+                    "k=d.keys();",
+                    "s=k.length;",
+                    "if (s>0) {",
+                        "v=d.values();",
+                        "o=[];",
+                        "for (i=0;i<s;i++){",
+                            "k[i]=f(k[i],v[i]);",
+                        "}",
+                    "}",
+                    "return k;",
+                "}",
 
                 // TODO: throw an error instead of return if the size is too small without an acc.
                 // Because reduce is an internally-private reference, use it as its own singleton to indicate no value passed in. null is a valid default accumulator value.

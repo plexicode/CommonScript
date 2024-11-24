@@ -532,7 +532,7 @@ let generateNameLookup = function(ec) {
 	injectNameLookup(fpMap, 3, 10, tryGetNameId(stringsToId, "contains"), 1, 1);
 	injectNameLookup(fpMap, 4, 10, tryGetNameId(stringsToId, "get"), 1, 2);
 	injectNameLookup(fpMap, 5, 10, tryGetNameId(stringsToId, "keys"), 0, 0);
-	injectNameLookup(fpMap, 6, 10, tryGetNameId(stringsToId, "mapKvp"), 1, 1);
+	injectNameLookup(fpMap, 6, 10, tryGetNameId(stringsToId, "map"), 1, 1);
 	injectNameLookup(fpMap, 7, 10, tryGetNameId(stringsToId, "merge"), 1, 2);
 	injectNameLookup(fpMap, 8, 10, tryGetNameId(stringsToId, "remove"), 1, 1);
 	injectNameLookup(fpMap, 9, 10, tryGetNameId(stringsToId, "values"), 0, 0);
@@ -1481,7 +1481,7 @@ let ParseRawData = function(rawBytes, ec) {
 	let i = 1;
 	while (i <= mtd[1]) {
 		let fnName = ec[4][i][4];
-		if (fnName == "map" || fnName == "filter" || fnName == "reduce" || fnName == "thrw" || fnName == "sort" || fnName == "sortK") {
+		if (fnName == "map" || fnName == "filter" || fnName == "kvpMap" || fnName == "reduce" || fnName == "thrw" || fnName == "sort" || fnName == "sortK") {
 			ec[3][fnName] = i;
 		}
 		i += 1;
@@ -2760,6 +2760,15 @@ let RunInterpreterImpl = function(task) {
 							case 5:
 								dictImpl1 = fp[5][1];
 								output = buildList(ec, dictImpl1[4], true, dictImpl1[2]);
+								break;
+							case 6:
+								value16[0] = fp[5];
+								value16[1] = args[0];
+								args = value16;
+								argc += 1;
+								fp = ec[5][ec[3]["kvpMap"]][1];
+								doInvoke = true;
+								overrideReturnValueWithContext = false;
 								break;
 							case 8:
 								output = dictionaryRemove(fp[5][1], args[0]);

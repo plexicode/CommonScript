@@ -2,6 +2,6 @@ value16[0] = fp.ctx;
 value16[1] = args[0];
 args = value16;
 argc += 1;
-fp = (FunctionPointer) ec.functionsAsValues[ec.significantFunctions["map"]].internalValue;
+fp = (FunctionPointer) ec.functionsAsValues[ec.significantFunctions["kvpMap"]].internalValue;
 doInvoke = true;
 overrideReturnValueWithContext = false;

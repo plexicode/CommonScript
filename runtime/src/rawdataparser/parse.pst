@@ -59,6 +59,7 @@ string ParseRawData(Array<int> rawBytes, ExecutionContext ec) {
         string fnName = ec.functions[i].name;
         if (fnName == "map" || 
             fnName == "filter" || 
+            fnName == "kvpMap" ||
             fnName == "reduce" || 
             fnName == "thrw" || 
             fnName == "sort" || 

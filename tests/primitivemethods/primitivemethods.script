@@ -199,6 +199,9 @@ function dictTests() {
     assertStrEqual(dict.get('c'), null);
     assertStrEqual(dict.get('d', 'D'), 'D');
 
+    kvplist = dict.map((k, v) => k + '|' + v );
+    assertStrEqual(kvplist.join(', '), 'a|1, b|2');
+
     dict.clear();
     assertStrEqual(dict.keys().join(' '), '');
 }

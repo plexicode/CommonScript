@@ -702,7 +702,7 @@ namespace CommonScript.Runtime.Internal
             injectNameLookup(fpMap, 3, 10, tryGetNameId(stringsToId, "contains"), 1, 1);
             injectNameLookup(fpMap, 4, 10, tryGetNameId(stringsToId, "get"), 1, 2);
             injectNameLookup(fpMap, 5, 10, tryGetNameId(stringsToId, "keys"), 0, 0);
-            injectNameLookup(fpMap, 6, 10, tryGetNameId(stringsToId, "mapKvp"), 1, 1);
+            injectNameLookup(fpMap, 6, 10, tryGetNameId(stringsToId, "map"), 1, 1);
             injectNameLookup(fpMap, 7, 10, tryGetNameId(stringsToId, "merge"), 1, 2);
             injectNameLookup(fpMap, 8, 10, tryGetNameId(stringsToId, "remove"), 1, 1);
             injectNameLookup(fpMap, 9, 10, tryGetNameId(stringsToId, "values"), 0, 0);
@@ -1864,7 +1864,7 @@ namespace CommonScript.Runtime.Internal
             while (i <= mtd.builtinCount)
             {
                 string fnName = ec.functions[i].name;
-                if (fnName == "map" || fnName == "filter" || fnName == "reduce" || fnName == "thrw" || fnName == "sort" || fnName == "sortK")
+                if (fnName == "map" || fnName == "filter" || fnName == "kvpMap" || fnName == "reduce" || fnName == "thrw" || fnName == "sort" || fnName == "sortK")
                 {
                     ec.significantFunctions[fnName] = i;
                 }
@@ -3419,6 +3419,15 @@ namespace CommonScript.Runtime.Internal
                                     case 5:
                                         dictImpl1 = (DictImpl)fp.ctx.internalValue;
                                         output = buildList(ec, dictImpl1.keys, true, dictImpl1.size);
+                                        break;
+                                    case 6:
+                                        value16[0] = fp.ctx;
+                                        value16[1] = args[0];
+                                        args = value16;
+                                        argc += 1;
+                                        fp = (FunctionPointer)ec.functionsAsValues[ec.significantFunctions["kvpMap"]].internalValue;
+                                        doInvoke = true;
+                                        overrideReturnValueWithContext = false;
                                         break;
                                     case 8:
                                         output = dictionaryRemove((DictImpl)fp.ctx.internalValue, args[0]);
