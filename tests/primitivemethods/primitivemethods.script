@@ -194,6 +194,11 @@ function dictTests() {
 
     dict = { 'a': 1, 'b': 2 };
     assertStrEqual(dict.keys().join(' '), 'a b');
+    assertStrEqual(dict.get('a'), 1);
+    assertStrEqual(dict.get('b', 'B'), 2);
+    assertStrEqual(dict.get('c'), null);
+    assertStrEqual(dict.get('d', 'D'), 'D');
+
     dict.clear();
     assertStrEqual(dict.keys().join(' '), '');
 }

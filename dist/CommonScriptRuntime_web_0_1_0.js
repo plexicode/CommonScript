@@ -2750,6 +2750,28 @@ let RunInterpreterImpl = function(task) {
 									}
 								}
 								break;
+							case 4:
+								dictImpl1 = fp[5][1];
+								if (argc == 2) {
+									output = args[1];
+								} else {
+									output = VALUE_NULL;
+								}
+								value = args[0];
+								if (dictImpl1[1] == value[0]) {
+									if (value[0] == 5 && dictImpl1[7] != null) {
+										str1 = stringUtil_getFlatValue(value);
+										if (dictImpl1[7][str1] !== undefined) {
+											output = dictImpl1[5][dictImpl1[7][str1]];
+										}
+									} else if (value[0] == 3 && dictImpl1[6] != null) {
+										i = value[1];
+										if (dictImpl1[6][i] !== undefined) {
+											output = dictImpl1[5][dictImpl1[6][i]];
+										}
+									}
+								}
+								break;
 							case 5:
 								dictImpl1 = fp[5][1];
 								output = buildList(ec, dictImpl1[4], true, dictImpl1[2]);

@@ -3385,6 +3385,37 @@ namespace CommonScript.Runtime.Internal
                                             }
                                         }
                                         break;
+                                    case 4:
+                                        dictImpl1 = (DictImpl)fp.ctx.internalValue;
+                                        if (argc == 2)
+                                        {
+                                            output = args[1];
+                                        }
+                                        else
+                                        {
+                                            output = VALUE_NULL;
+                                        }
+                                        value = args[0];
+                                        if (dictImpl1.keyType == value.type)
+                                        {
+                                            if (value.type == 5 && dictImpl1.strKeyLookup != null)
+                                            {
+                                                str1 = stringUtil_getFlatValue(value);
+                                                if (dictImpl1.strKeyLookup.ContainsKey(str1))
+                                                {
+                                                    output = dictImpl1.values[dictImpl1.strKeyLookup[str1]];
+                                                }
+                                            }
+                                            else if (value.type == 3 && dictImpl1.intKeyLookup != null)
+                                            {
+                                                i = (int)value.internalValue;
+                                                if (dictImpl1.intKeyLookup.ContainsKey(i))
+                                                {
+                                                    output = dictImpl1.values[dictImpl1.intKeyLookup[i]];
+                                                }
+                                            }
+                                        }
+                                        break;
                                     case 5:
                                         dictImpl1 = (DictImpl)fp.ctx.internalValue;
                                         output = buildList(ec, dictImpl1.keys, true, dictImpl1.size);

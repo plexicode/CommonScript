@@ -92,6 +92,7 @@ switch (fp.funcType) {
 
             case PrimitiveMethods.DICT_CLEAR: @import("builtinmethods/dict_clear.pst"); break;
             case PrimitiveMethods.DICT_CONTAINS: @import("builtinmethods/dict_contains.pst"); break;
+            case PrimitiveMethods.DICT_GET: @import("builtinmethods/dict_get.pst"); break;
             case PrimitiveMethods.DICT_KEYS: @import("builtinmethods/dict_keys.pst"); break;
             case PrimitiveMethods.DICT_REMOVE: @import("builtinmethods/dict_remove.pst"); break;
             case PrimitiveMethods.DICT_VALUES: @import("builtinmethods/dict_values.pst"); break;

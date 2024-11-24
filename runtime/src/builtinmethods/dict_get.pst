@@ -1,0 +1,21 @@
+dictImpl1 = (DictImpl) fp.ctx.internalValue;
+
+if (argc == 2) output = args[1];
+else output = VALUE_NULL;
+
+value = args[0];
+
+if (dictImpl1.keyType == value.type) {
+
+    if (value.type == Type.STRING && dictImpl1.strKeyLookup != null) {
+        str1 = stringUtil_getFlatValue(value);
+        if (dictImpl1.strKeyLookup.Contains(str1)) {
+            output = dictImpl1.values[dictImpl1.strKeyLookup[str1]];
+        }
+    } else if (value.type == Type.INTEGER && dictImpl1.intKeyLookup != null) {
+        i = (int)value.internalValue;
+        if (dictImpl1.intKeyLookup.Contains(i)) {
+            output = dictImpl1.values[dictImpl1.intKeyLookup[i]];
+        }
+    }
+}
