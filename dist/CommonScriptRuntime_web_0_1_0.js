@@ -13,13 +13,21 @@ if (!window.getCommonScript) {
     const CommonScript = (() => {
 
   //
-const [bubbleException, buildAsciiStringImpl, buildBase64String, buildFloat, buildFunctionFromInfo, buildInteger, buildList, buildString, convertToStringImpl, createClassInfo, createMainTask, createNewTask, createStringFromUnicodeArray, DictImpl_ensureCapacity, exceptionCatcherRouteException, ExRes_Done, ExRes_HardCrash, ExRes_Suspend, finalizeExecutionContext, FunctionPointer_cloneWithNewType, generateNameLookup, generateStackTrace, generateTryDescriptors, getExceptionMessage, getGlobalsFromTask, increaseValueStackCapacity, injectNameLookup, isValueEqual, List_add, List_expandCapacity, List_get, List_join, List_pop, List_removeAt, List_set, new_ByteCodeRow, new_ExecutionContext, new_ExecutionResult, new_GlobalValues, ParseRaw_entitiesSection_classMemberResolver, ParseRaw_entitiesSection_parseClasses, ParseRaw_entitiesSection_parseEnums, ParseRaw_entitiesSection_parseFunctions, ParseRaw_parseEntityData, ParseRaw_parseMetadata, ParseRaw_parseStringData, ParseRaw_parseTokenData, ParseRaw_popByteCodeRows, ParseRaw_popBytes, ParseRaw_popFixedLenString, ParseRaw_popInt, ParseRaw_popLenString, ParseRaw_popSingleByte, ParseRawData, PUBLIC_getApplicationContextFromTask, PUBLIC_getExecutionContextError, PUBLIC_getTaskResultError, PUBLIC_getTaskResultSleepAmount, PUBLIC_getTaskResultStatus, PUBLIC_initializeExecutionContext, PUBLIC_listValueAdd, PUBLIC_requestTaskSuspension, PUBLIC_startMainTask, PUBLIC_unwrapInteger, PUBLIC_unwrapNativeHandle, PUBLIC_valueToString, PUBLIC_wrapBoolean, PUBLIC_wrapInteger, PUBLIC_wrapNativeHandle, PUBLIC_wrapString, RunInterpreter, RunInterpreterImpl, Sort_buildTaskList, Sort_end, Sort_getNextCmp, Sort_proceedWithCmpResult, Sort_start, stringFlatten, stringUtil_changeCase, stringUtil_split, stringUtil_trim, ThrowError, ThrowErrorImpl, tryGetNameId, valueArrayIncreaseCapacity, valueToHumanString] = (() => {
+const [PASTEL_regCallback, bubbleException, buildAsciiStringImpl, buildBase64String, buildFloat, buildFunctionFromInfo, buildInteger, buildIntegerListValue, buildList, buildString, buildStringDictionary, convertListToByteArray, convertToStringImpl, createClassInfo, createMainTask, createNewTask, createStringFromUnicodeArray, DictImpl_ensureCapacity, doExponent, exceptionCatcherRouteException, ExRes_Done, ExRes_HardCrash, ExRes_Suspend, finalizeExecutionContext, FunctionPointer_cloneWithNewType, generateNameLookup, generateStackTrace, generateTryDescriptors, getExceptionMessage, getGlobalsFromTask, increaseValueStackCapacity, injectNameLookup, isValueEqual, json_util_parse, json_util_serialize, List_add, List_expandCapacity, List_get, List_join, List_pop, List_removeAt, List_set, new_ByteCodeRow, new_ExecutionContext, new_ExecutionResult, new_GlobalValues, ParseRaw_entitiesSection_classMemberResolver, ParseRaw_entitiesSection_parseClasses, ParseRaw_entitiesSection_parseEnums, ParseRaw_entitiesSection_parseFunctions, ParseRaw_parseEntityData, ParseRaw_parseMetadata, ParseRaw_parseStringData, ParseRaw_parseTokenData, ParseRaw_popByteCodeRows, ParseRaw_popBytes, ParseRaw_popFixedLenString, ParseRaw_popInt, ParseRaw_popLenString, ParseRaw_popSingleByte, ParseRawData, PUBLIC_createTaskForFunction, PUBLIC_getApplicationContextFromTask, PUBLIC_getExecutionContextError, PUBLIC_getExecutionContextFromTask, PUBLIC_getTaskResultError, PUBLIC_getTaskResultSleepAmount, PUBLIC_getTaskResultStatus, PUBLIC_initializeExecutionContext, PUBLIC_listValueAdd, PUBLIC_requestTaskSuspension, PUBLIC_startMainTask, PUBLIC_unwrapInteger, PUBLIC_unwrapNativeHandle, PUBLIC_valueToString, PUBLIC_wrapBoolean, PUBLIC_wrapInteger, PUBLIC_wrapNativeHandle, PUBLIC_wrapString, RunInterpreter, RunInterpreterImpl, Sort_buildTaskList, Sort_end, Sort_getNextCmp, Sort_proceedWithCmpResult, Sort_start, stringFlatten, stringUtil_changeCase, stringUtil_getFlatValue, stringUtil_split, stringUtil_trim, ThrowError, ThrowErrorImpl, tryGetNameId, valueArrayIncreaseCapacity, valueToHumanString] = (() => {
 let PST$stringToUtf8Bytes = s => Array.from(new TextEncoder().encode(s));
 
 let PST$createNewArray = s => {
 	let o = [];
 	while (s --> 0) o.push(null);
 	return o;
+};
+
+let PST$floatParseHelper = (o, s) => {
+	o[0] = -1;
+	let t = parseFloat(s);
+	if (isNaN(t) || !isFinite(t)) return;
+	o[0] = 1;
+	o[1] = t;
 };
 
 let PST$extCallbacks = {};
@@ -36,7 +44,7 @@ let bubbleException = function(task, exceptionValue) {
 			return true;
 		}
 		let pc = frame[1];
-		let td = ec[10][pc];
+		let td = ec[12][pc];
 		if (td != null) {
 			keepGoing = false;
 			if (pc < td[1]) {
@@ -111,6 +119,9 @@ let buildFloat = function(v) {
 
 let buildFunctionFromInfo = function(fn) {
 	let fp = [1, fn[0], fn[1], fn[2], fn, null];
+	if (fn[4] == null) {
+		fp[0] = 7;
+	}
 	return [11, fp];
 };
 
@@ -125,9 +136,33 @@ let buildInteger = function(g, value) {
 	return [3, value];
 };
 
+let buildIntegerListValue = function(ec, ints) {
+	let sz = ints.length;
+	let g = ec[1];
+	let vals = PST$createNewArray(sz);
+	let n = 0;
+	let val = null;
+	let i = 0;
+	while (i < sz) {
+		n = ints[i];
+		if (n < 1200 && n > -1200) {
+			if (n < 0) {
+				val = g[4][-n];
+			} else {
+				val = g[3][n];
+			}
+		} else {
+			val = [3, n];
+		}
+		vals[i] = val;
+		i += 1;
+	}
+	return buildList(ec, vals, false, sz);
+};
+
 let buildList = function(ec, values, copyValues, lengthOrNegativeOne) {
-	let id = ec[17];
-	ec[17] += 1;
+	let id = ec[19];
+	ec[19] += 1;
 	let size = lengthOrNegativeOne;
 	if (size == -1) {
 		size = values.length;
@@ -155,6 +190,39 @@ let buildString = function(g, rawValue, isCommon) {
 		g[6][rawValue] = v;
 	}
 	return v;
+};
+
+let buildStringDictionary = function(ec, keys, values) {
+	let dict = [ec[19], 5, keys.length, keys.length, keys, values, null, {}];
+	ec[19] += 1;
+	let lookup = dict[7];
+	let i = 0;
+	while (i < keys.length) {
+		lookup[stringUtil_getFlatValue(keys[i])] = i;
+		i += 1;
+	}
+	return [10, dict];
+};
+
+let convertListToByteArray = function(list) {
+	let sz = list[1];
+	let bytesOut = PST$createNewArray(sz);
+	let val = 0;
+	let value = null;
+	let i = 0;
+	while (i < sz) {
+		value = list[3][i];
+		if (value[0] != 3) {
+			return null;
+		}
+		val = value[1];
+		if (val < 0 || val >= 256) {
+			return null;
+		}
+		bytesOut[i] = val;
+		i += 1;
+	}
+	return bytesOut;
 };
 
 let convertToStringImpl = function(g, v) {
@@ -191,13 +259,20 @@ let createClassInfo = function(id, parentId, name, ctor, newFields, newMemberInf
 };
 
 let createMainTask = function(ec, cliArgs) {
-	if (ec[16] != 1) {
+	if (ec[18] != 1) {
 		return null;
 	}
 	finalizeExecutionContext(ec);
 	let mainFn = ec[5][ec[3]["main"]];
 	let args = ec[1][0];
 	let argList = PST$createNewArray(1);
+	let argValues = PST$createNewArray(cliArgs.length);
+	let i = 0;
+	while (i < cliArgs.length) {
+		argValues[i] = buildString(ec[1], cliArgs[i], true);
+		i += 1;
+	}
+	argList[0] = buildList(ec, argValues, false, -1);
 	return createNewTask(ec, mainFn, argList);
 };
 
@@ -209,8 +284,23 @@ let createNewTask = function(ec, fpValue, args) {
 	let pc = 0;
 	let argc = args.length;
 	let argcMax = argc;
+	let context = null;
 	switch (fp[0]) {
 		case 1:
+			pc = fp[3];
+			if (argc < fp[1] || argc > fp[2]) {
+				return null;
+			}
+			argcMax = fp[2];
+			break;
+		case 2:
+			pc = fp[3];
+			if (argc < fp[1] || argc > fp[2]) {
+				return null;
+			}
+			argcMax = fp[2];
+			break;
+		case 3:
 			pc = fp[3];
 			if (argc < fp[1] || argc > fp[2]) {
 				return null;
@@ -220,16 +310,19 @@ let createNewTask = function(ec, fpValue, args) {
 		default:
 			return null;
 	}
+	if (fp[0] == 2) {
+		context = fpValue[1][5];
+	}
 	let argsClone = PST$createNewArray(argc);
 	let i = 0;
 	while (i < argc) {
 		argsClone[i] = args[i];
 		i += 1;
 	}
-	let frame = [null, pc, argsClone, argc, 0, 0, {}, null, false, null, false];
-	let task = [ec[16], ec, frame, false, 0, PST$createNewArray(1), null];
-	ec[16] += 1;
-	ec[18][task[0]] = task;
+	let frame = [null, pc, argsClone, argc, 0, 0, {}, context, false, null, false];
+	let task = [ec[18], ec, frame, false, 0, PST$createNewArray(1), null];
+	ec[18] += 1;
+	ec[20][task[0]] = task;
 	return task;
 };
 
@@ -286,6 +379,22 @@ let DictImpl_ensureCapacity = function(dict) {
 	dict[4] = newKeys;
 	dict[5] = newValues;
 	dict[3] = newCapacity;
+};
+
+let doExponent = function(g, left, right) {
+	if (left == 0) {
+		if (right == 0) {
+			return g[0];
+		}
+		return g[7];
+	}
+	if (left == 1) {
+		return g[8];
+	}
+	if (left < 0 && right % 1 != 0) {
+		return g[0];
+	}
+	return [4, Math.pow(left, right)];
 };
 
 let exceptionCatcherRouteException = function(exceptionInstance, args, outBuffer) {
@@ -346,17 +455,17 @@ let ExRes_Suspend = function(task, useSleep, sleepMillis) {
 };
 
 let finalizeExecutionContext = function(ec) {
-	let byteCode = ec[9];
-	let length = ec[9].length;
+	let byteCode = ec[11];
+	let length = ec[11].length;
 	let row = null;
 	let i = 0;
 	while (i < length) {
 		row = byteCode[i];
 		if (row[4] != 0) {
-			row[5] = ec[12][row[4]];
+			row[5] = ec[14][row[4]];
 		}
 		if (row[6] != 0) {
-			row[7] = ec[11][row[6]];
+			row[7] = ec[13][row[6]];
 		}
 		i += 1;
 	}
@@ -370,9 +479,9 @@ let generateNameLookup = function(ec) {
 	let lookup = [0, null];
 	let stringsToId = {};
 	let i = 1;
-	let sz = ec[12].length;
+	let sz = ec[14].length;
 	while (i < sz) {
-		stringsToId[ec[12][i]] = i;
+		stringsToId[ec[14][i]] = i;
 		i += 1;
 	}
 	if (stringsToId["length"] !== undefined) {
@@ -394,6 +503,7 @@ let generateNameLookup = function(ec) {
 	injectNameLookup(fpMap, 7, 10, tryGetNameId(stringsToId, "merge"), 1, 2);
 	injectNameLookup(fpMap, 8, 10, tryGetNameId(stringsToId, "remove"), 1, 1);
 	injectNameLookup(fpMap, 9, 10, tryGetNameId(stringsToId, "values"), 0, 0);
+	injectNameLookup(fpMap, 44, 11, tryGetNameId(stringsToId, "invoke"), 1, 1);
 	injectNameLookup(fpMap, 10, 9, tryGetNameId(stringsToId, "add"), 1, 1);
 	injectNameLookup(fpMap, 11, 9, tryGetNameId(stringsToId, "clear"), 0, 0);
 	injectNameLookup(fpMap, 12, 9, tryGetNameId(stringsToId, "clone"), 0, 0);
@@ -429,7 +539,7 @@ let generateNameLookup = function(ec) {
 		}
 		i += 1;
 	}
-	ec[15] = lookup;
+	ec[17] = lookup;
 };
 
 let generateStackTrace = function(task) {
@@ -437,7 +547,7 @@ let generateStackTrace = function(task) {
 	let ec = task[1];
 	let trace = [];
 	while (frame != null) {
-		let invokeToken = ec[9][frame[1]][7];
+		let invokeToken = ec[11][frame[1]][7];
 		if (invokeToken != null) {
 			let info = [invokeToken[0], " Line ", invokeToken[1] + '', " Col ", invokeToken[2] + ''].join('');
 			trace.push(info);
@@ -457,12 +567,12 @@ let generateStackTrace = function(task) {
 };
 
 let generateTryDescriptors = function(ec) {
-	let bc = ec[9];
+	let bc = ec[11];
 	let sz = bc.length;
-	ec[10] = PST$createNewArray(sz);
+	ec[12] = PST$createNewArray(sz);
 	let i = 0;
 	while (i < sz) {
-		ec[10][i] = null;
+		ec[12][i] = null;
 		let row = bc[i];
 		if (row[0] == 62) {
 			let pcTry = i + row[1][0];
@@ -473,7 +583,7 @@ let generateTryDescriptors = function(ec) {
 			pcEnd -= 1;
 			let j = pcTry;
 			while (j < pcEnd) {
-				ec[10][j] = td;
+				ec[12][j] = td;
 				j += 1;
 			}
 		}
@@ -590,6 +700,28 @@ let isValueEqual = function(a, b) {
 	}
 };
 
+let json_util_parse = function(ec, rawValue, errOut) {
+	errOut[0] = 0;
+	errOut[1] = 0;
+	errOut[2] = 0;
+	let args = PST$createNewArray(3);
+	args[0] = ec;
+	args[1] = rawValue;
+	args[2] = errOut;
+	let resultObj = (PST$extCallbacks["jsonParse"] || ((o) => null))(args);
+	if (errOut[0] == 1) {
+		return null;
+	}
+	return resultObj;
+};
+
+let json_util_serialize = function(obj, useIndent) {
+	let args = PST$createNewArray(2);
+	args[0] = obj;
+	args[1] = useIndent;
+	return (PST$extCallbacks["jsonSerialize"] || ((o) => null))(args);
+};
+
 let List_add = function(o, v) {
 	if (o[2] == o[1]) {
 		List_expandCapacity(o);
@@ -689,7 +821,7 @@ let new_ByteCodeRow = function(op, args, stringId, tokenId) {
 };
 
 let new_ExecutionContext = function(rawBytes, extensions, appCtx) {
-	let ec = [null, new_GlobalValues(), extensions, {}, null, null, null, null, null, null, null, null, null, null, null, null, 1, 1, {}, appCtx];
+	let ec = [null, new_GlobalValues(), extensions, {}, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 1, 1, {}, appCtx];
 	let err = ParseRawData(rawBytes, ec);
 	if (err == null) {
 		ec[0] = "CORRUPT_EXECUTABLE";
@@ -706,13 +838,19 @@ let new_ExecutionContext = function(rawBytes, extensions, appCtx) {
 		ec[7] = PST$createNewArray(ec[6].length);
 		i = 1;
 		while (i < ec[6].length) {
-			ec[7][i] = [13, ec[6][i]];
+			ec[7][i] = buildFunctionFromInfo(ec[6][i]);
 			i += 1;
 		}
-		ec[13] = PST$createNewArray(ec[9].length);
-		ec[14] = PST$createNewArray(ec[9].length);
+		ec[9] = PST$createNewArray(ec[8].length);
+		i = 1;
+		while (i < ec[8].length) {
+			ec[9][i] = [13, ec[8][i]];
+			i += 1;
+		}
+		ec[15] = PST$createNewArray(ec[11].length);
+		ec[16] = PST$createNewArray(ec[11].length);
+		generateNameLookup(ec);
 	}
-	generateNameLookup(ec);
 	return ec;
 };
 
@@ -926,7 +1064,7 @@ let ParseRaw_entitiesSection_parseEnums = function(rdp, enumCount) {
 	return enums;
 };
 
-let ParseRaw_entitiesSection_parseFunctions = function(rdp, fnCount, byteCodeOut) {
+let ParseRaw_entitiesSection_parseFunctions = function(rdp, fnCount, byteCodeOut, isLambda) {
 	let functions = [];
 	functions.push(null);
 	let i = 0;
@@ -942,9 +1080,12 @@ let ParseRaw_entitiesSection_parseFunctions = function(rdp, fnCount, byteCodeOut
 		if (argcMax < argcMin) {
 			return null;
 		}
-		let fnName = ParseRaw_popLenString(rdp);
-		if (fnName == null) {
-			return null;
+		let fnName = null;
+		if (!isLambda) {
+			fnName = ParseRaw_popLenString(rdp);
+			if (fnName == null) {
+				return null;
+			}
 		}
 		if (!ParseRaw_popInt(rdp)) {
 			return null;
@@ -980,8 +1121,16 @@ let ParseRaw_parseEntityData = function(rdp, byteCodeOut, globalValues) {
 		return null;
 	}
 	let classCount = rdp[3];
-	let functions = ParseRaw_entitiesSection_parseFunctions(rdp, fnCount, byteCodeOut);
+	if (!ParseRaw_popInt(rdp)) {
+		return null;
+	}
+	let lambdaCount = rdp[3];
+	let functions = ParseRaw_entitiesSection_parseFunctions(rdp, fnCount, byteCodeOut, false);
 	if (functions == null) {
+		return null;
+	}
+	let lambdas = ParseRaw_entitiesSection_parseFunctions(rdp, lambdaCount, byteCodeOut, true);
+	if (lambdas == null) {
 		return null;
 	}
 	let enums = ParseRaw_entitiesSection_parseEnums(rdp, enumCount);
@@ -996,7 +1145,7 @@ let ParseRaw_parseEntityData = function(rdp, byteCodeOut, globalValues) {
 	if (!ok) {
 		return null;
 	}
-	return [functions, enums, classes];
+	return [functions, lambdas, enums, classes];
 };
 
 let ParseRaw_parseMetadata = function(rdp) {
@@ -1268,11 +1417,12 @@ let ParseRawData = function(rawBytes, ec) {
 		return null;
 	}
 	ec[4] = [...(ent[0])];
-	ec[8] = [...(ent[1])];
-	ec[6] = [...(ent[2])];
-	ec[9] = [...(byteCodeAcc)];
-	ec[11] = tokensById;
-	ec[12] = stringById;
+	ec[6] = [...(ent[1])];
+	ec[10] = [...(ent[2])];
+	ec[8] = [...(ent[3])];
+	ec[11] = [...(byteCodeAcc)];
+	ec[13] = tokensById;
+	ec[14] = stringById;
 	ec[3]["main"] = mtd[0];
 	let i = 1;
 	while (i <= mtd[1]) {
@@ -1286,14 +1436,22 @@ let ParseRawData = function(rawBytes, ec) {
 	return "OK";
 };
 
+let PUBLIC_createTaskForFunction = function(ecCtx, fpValueNoArgs) {
+	return createNewTask(ecCtx, fpValueNoArgs, PST$createNewArray(0));
+};
+
 let PUBLIC_getApplicationContextFromTask = function(taskObj) {
 	let task = taskObj;
-	return task[1][19];
+	return task[1][21];
 };
 
 let PUBLIC_getExecutionContextError = function(ecObj) {
 	let ec = ecObj;
 	return ec[0];
+};
+
+let PUBLIC_getExecutionContextFromTask = function(taskObj) {
+	return taskObj[1];
 };
 
 let PUBLIC_getTaskResultError = function(resObj, includeStackTrace) {
@@ -1399,11 +1557,11 @@ let RunInterpreterImpl = function(task) {
 	let ec = task[1];
 	let frame = task[2];
 	let nextFrame = null;
-	let byteCode = ec[9];
+	let byteCode = ec[11];
 	let row = null;
 	let globalValues = ec[1];
 	let td = null;
-	let nameLookup = ec[15];
+	let nameLookup = ec[17];
 	let LENGTH_ID = nameLookup[0];
 	let primitiveMethodLookup = nameLookup[1];
 	let pc = frame[1];
@@ -1433,6 +1591,7 @@ let RunInterpreterImpl = function(task) {
 	let name = null;
 	let float1 = 0.0;
 	let float2 = 0.0;
+	let float3 = 0.0;
 	let object1 = null;
 	let value = null;
 	let value1 = null;
@@ -1455,6 +1614,7 @@ let RunInterpreterImpl = function(task) {
 	let objArr = null;
 	let keys = null;
 	let values = null;
+	let strArr = null;
 	let extensionFunc = null;
 	let opMap = null;
 	let str2FuncDef = null;
@@ -1468,6 +1628,7 @@ let RunInterpreterImpl = function(task) {
 	let VALUE_NULL = globalValues[0];
 	let value16 = PST$createNewArray(16);
 	let intBuffer16 = PST$createNewArray(16);
+	let floatBuffer16 = PST$createNewArray(16);
 	while (true) {
 		row = byteCode[pc];
 		switch (row[0]) {
@@ -1622,6 +1783,7 @@ let RunInterpreterImpl = function(task) {
 					opMap["*"] = 3;
 					opMap["/"] = 4;
 					opMap["%"] = 5;
+					opMap["**"] = 20;
 					opMap["&&"] = 6;
 					opMap["||"] = 7;
 					opMap["=="] = 8;
@@ -1839,27 +2001,39 @@ let RunInterpreterImpl = function(task) {
 				valueStackSize -= 2;
 				left = valueStack[valueStackSize];
 				right = valueStack[valueStackSize + 1];
-				switch ((left[0] * 20 + row[2]) * 16 + right[0]) {
-					case 995:
+				switch ((left[0] * 21 + row[2]) * 16 + right[0]) {
+					case 1331:
+						value = doExponent(globalValues, 0.0 + left[1], 0.0 + right[1]);
+						break;
+					case 1667:
+						value = doExponent(globalValues, left[1], 0.0 + right[1]);
+						break;
+					case 1332:
+						value = doExponent(globalValues, 0.0 + left[1], right[1]);
+						break;
+					case 1668:
+						value = doExponent(globalValues, left[1], right[1]);
+						break;
+					case 1043:
 						int1 = left[1];
 						int2 = right[1];
 						value = buildInteger(globalValues, int1 - int2);
 						break;
-					case 1011:
+					case 1059:
 						int1 = left[1];
 						int2 = right[1];
 						value = buildInteger(globalValues, int1 * int2);
 						break;
-					case 1331:
+					case 1395:
 						value = [4, left[1] * right[1]];
 						break;
-					case 1012:
+					case 1060:
 						value = [4, left[1] * right[1]];
 						break;
-					case 1332:
+					case 1396:
 						value = [4, left[1] * right[1]];
 						break;
-					case 1027:
+					case 1075:
 						int1 = left[1];
 						int2 = right[1];
 						if (int2 == 0) {
@@ -1869,7 +2043,7 @@ let RunInterpreterImpl = function(task) {
 						}
 						value = buildInteger(globalValues, Math.floor(int1 / int2));
 						break;
-					case 1347:
+					case 1411:
 						float1 = left[1];
 						if (float1 == 0) {
 							errorId = 10;
@@ -1878,7 +2052,7 @@ let RunInterpreterImpl = function(task) {
 						}
 						value = [4, float1 / right[1]];
 						break;
-					case 1028:
+					case 1076:
 						int1 = left[1];
 						if (int1 == 0) {
 							errorId = 10;
@@ -1887,7 +2061,7 @@ let RunInterpreterImpl = function(task) {
 						}
 						value = [4, int1 / right[1]];
 						break;
-					case 1348:
+					case 1412:
 						float1 = left[1];
 						if (float1 == 0) {
 							errorId = 10;
@@ -1896,7 +2070,7 @@ let RunInterpreterImpl = function(task) {
 						}
 						value = [4, float1 / right[1]];
 						break;
-					case 1043:
+					case 1091:
 						int1 = left[1];
 						int2 = right[1];
 						if (int2 <= 0) {
@@ -1910,7 +2084,7 @@ let RunInterpreterImpl = function(task) {
 						}
 						value = buildInteger(globalValues, int1);
 						break;
-					case 1364:
+					case 1428:
 						if (left[0] == 3) {
 							float1 = 0.0 + left[1];
 						} else {
@@ -1932,7 +2106,7 @@ let RunInterpreterImpl = function(task) {
 						}
 						value = [4, float1];
 						break;
-					case 1363:
+					case 1427:
 						if (left[0] == 3) {
 							float1 = 0.0 + left[1];
 						} else {
@@ -1953,39 +2127,39 @@ let RunInterpreterImpl = function(task) {
 							float1 += float2;
 						}
 						value = [4, float1];
+						break;
+					case 1092:
+						if (left[0] == 3) {
+							float1 = 0.0 + left[1];
+						} else {
+							float1 = left[1];
+						}
+						if (right[0] == 3) {
+							float2 = 0.0 + right[1];
+						} else {
+							float2 = right[1];
+						}
+						if (float2 <= 0) {
+							errorId = 10;
+							errorMsg = "Modulo only applicable to positive divisors.";
+							return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+						}
+						float1 = float1 % float2;
+						if (float1 < 0) {
+							float1 += float2;
+						}
+						value = [4, float1];
+						break;
+					case 1380:
+						value = [4, left[1] - right[1]];
 						break;
 					case 1044:
-						if (left[0] == 3) {
-							float1 = 0.0 + left[1];
-						} else {
-							float1 = left[1];
-						}
-						if (right[0] == 3) {
-							float2 = 0.0 + right[1];
-						} else {
-							float2 = right[1];
-						}
-						if (float2 <= 0) {
-							errorId = 10;
-							errorMsg = "Modulo only applicable to positive divisors.";
-							return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
-						}
-						float1 = float1 % float2;
-						if (float1 < 0) {
-							float1 += float2;
-						}
-						value = [4, float1];
-						break;
-					case 1316:
 						value = [4, left[1] - right[1]];
 						break;
-					case 996:
+					case 1379:
 						value = [4, left[1] - right[1]];
 						break;
-					case 1315:
-						value = [4, left[1] - right[1]];
-						break;
-					case 1651:
+					case 1731:
 						if (left[0] == 5) {
 							value2 = left;
 							stringImpl1 = left[1];
@@ -2009,7 +2183,7 @@ let RunInterpreterImpl = function(task) {
 							value = [5, stringImpl2];
 						}
 						break;
-					case 1013:
+					case 1061:
 						if (left[0] == 5) {
 							value2 = left;
 							stringImpl1 = left[1];
@@ -2131,8 +2305,8 @@ let RunInterpreterImpl = function(task) {
 					}
 					int1 = keys[0][0];
 				}
-				dictImpl1 = [ec[17], int1, sz, int2, keys, values, null, null];
-				ec[17] += 1;
+				dictImpl1 = [ec[19], int1, sz, int2, keys, values, null, null];
+				ec[19] += 1;
 				if (dictImpl1[1] == 3) {
 					dictImpl1[6] = {};
 					i = 0;
@@ -2174,15 +2348,15 @@ let RunInterpreterImpl = function(task) {
 						valueStackCapacity = valueStack.length;
 					}
 				}
-				valueStack[valueStackSize] = [9, [ec[17], sz, sz, args]];
+				valueStack[valueStackSize] = [9, [ec[19], sz, sz, args]];
 				valueStackSize += 1;
-				ec[17] += 1;
+				ec[19] += 1;
 				args = null;
 				break;
 			case 14:
 				// OP_CTOR_REF;
 				int1 = row[2];
-				row[8] = ec[6][int1][4];
+				row[8] = ec[8][int1][4];
 				row[0] = 44;
 				pc -= 1;
 				break;
@@ -2247,6 +2421,14 @@ let RunInterpreterImpl = function(task) {
 						break;
 					case 10:
 						fp = primitiveMethodLookup[j][10];
+						if (fp == null) {
+							output = null;
+						} else {
+							output = [11, [4, fp[1], fp[2], fp[3], null, value]];
+						}
+						break;
+					case 11:
+						fp = primitiveMethodLookup[j][11];
 						if (fp == null) {
 							output = null;
 						} else {
@@ -2349,16 +2531,16 @@ let RunInterpreterImpl = function(task) {
 					extensionFunc = ec[2][name];
 					value = extensionFunc(task, objArr);
 					objArr = null;
-					if (task[3]) {
-						frame[1] += 1;
-						task[3] = false;
-						return ExRes_Suspend(task, task[4] >= 0, task[4]);
-					}
 					if (value == null) {
 						value = globalValues[0];
 					}
 					valueStack[valueStackSize] = value;
 					valueStackSize += 1;
+					if (task[3]) {
+						frame[1] += 2;
+						task[3] = false;
+						return ExRes_Suspend(task, task[4] >= 0, task[4]);
+					}
 				} else {
 					errorId = 5;
 					errorMsg = ["There is no extension function named '", name, "'."].join('');
@@ -2405,6 +2587,11 @@ let RunInterpreterImpl = function(task) {
 						value = fp[5];
 						overrideReturnValueWithContext = false;
 						break;
+					case 7:
+						doInvoke = true;
+						value = fp[5];
+						overrideReturnValueWithContext = false;
+						break;
 					case 5:
 						classDef = fp[4][3];
 						valueArr = classDef[10];
@@ -2415,8 +2602,8 @@ let RunInterpreterImpl = function(task) {
 							values[i] = valueArr[i];
 							i += 1;
 						}
-						instance1 = [ec[17], classDef, values];
-						ec[17] += 1;
+						instance1 = [ec[19], classDef, values];
+						ec[19] += 1;
 						value = [12, instance1];
 						doInvoke = true;
 						overrideReturnValueWithContext = true;
@@ -2431,8 +2618,48 @@ let RunInterpreterImpl = function(task) {
 						frame[4] = valueStackSize;
 						task[2] = frame;
 						switch (fp[3]) {
+							case 44:
+								if (args[0][0] != 9) {
+									errorId = 4;
+									errorMsg = "function.invoke(args) requires an array of arguments";
+									return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+								}
+								listImpl1 = args[0][1];
+								argc = listImpl1[1];
+								args = PST$createNewArray(argc);
+								i = 0;
+								while (i < listImpl1[1]) {
+									args[i] = listImpl1[3][i];
+									i += 1;
+								}
+								doInvoke = true;
+								fp = fp[5][1];
+								value = fp[5];
+								overrideReturnValueWithContext = false;
+								if (args.length < fp[1] || args.length > fp[2]) {
+									errorId = 5;
+									errorMsg = "Incorrect number of arguments.";
+									return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+								}
+								break;
 							case 40:
 								output = buildString(globalValues, buildBase64String(fp[5][1]), false);
+								break;
+							case 3:
+								dictImpl1 = fp[5][1];
+								output = VALUE_FALSE;
+								value = args[0];
+								if (dictImpl1[1] == value[0]) {
+									if (value[0] == 5 && dictImpl1[7] != null) {
+										if (dictImpl1[7][stringUtil_getFlatValue(value)] !== undefined) {
+											output = VALUE_TRUE;
+										}
+									} else if (value[0] == 3 && dictImpl1[6] != null) {
+										if (dictImpl1[6][value[1]] !== undefined) {
+											output = VALUE_TRUE;
+										}
+									}
+								}
 								break;
 							case 5:
 								dictImpl1 = fp[5][1];
@@ -2752,6 +2979,22 @@ let RunInterpreterImpl = function(task) {
 							case 30:
 								output = stringUtil_changeCase(fp[5], false);
 								break;
+							case 31:
+								left = args[0];
+								right = args[1];
+								if (left[0] != 5 || right[0] != 5) {
+									return ThrowErrorImpl(task, 4, "string.replace(searchVal, newValue) requires a string arguments");
+								}
+								str1 = stringUtil_getFlatValue(fp[5]);
+								strArr = str1.split(stringUtil_getFlatValue(left));
+								if (strArr.length == 1) {
+									output = fp[5];
+								} else {
+									str1 = strArr.join(stringUtil_getFlatValue(right));
+									output = buildString(globalValues, str1, false);
+								}
+								strArr = null;
+								break;
 							case 32:
 								value1 = args[0];
 								if (value1[0] != 5) {
@@ -2760,9 +3003,9 @@ let RunInterpreterImpl = function(task) {
 								str1 = valueToHumanString(value1);
 								valueArr = stringUtil_split(globalValues, fp[5], str1);
 								sz = valueArr.length;
-								output = [9, [ec[17], sz, sz, valueArr]];
+								output = [9, [ec[19], sz, sz, valueArr]];
 								valueArr = null;
-								ec[17] += 1;
+								ec[19] += 1;
 								break;
 							case 36:
 								stringImpl1 = fp[5][1];
@@ -2957,6 +3200,23 @@ let RunInterpreterImpl = function(task) {
 				// OP_JUMP;
 				pc += row[2];
 				break;
+			case 25:
+				// OP_MATH_FLOOR;
+				value = valueStack[valueStackSize - 1];
+				if (value[0] == 4) {
+					float1 = value[1];
+					int1 = float1;
+					if (int1 > float1) {
+						int1 -= 1;
+					}
+					valueStack[valueStackSize - 1] = buildInteger(globalValues, int1);
+				} else if (value[0] == 3) {
+				} else {
+					errorId = 4;
+					errorMsg = "floor can only take in a numeric value.";
+					return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+				}
+				break;
 			case 26:
 				// OP_NEGATIVE_SIGN;
 				value = valueStack[valueStackSize - 1];
@@ -3056,7 +3316,7 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 35:
 				// OP_PUSH_BASE_CTOR;
-				value = ec[6][row[2]][4];
+				value = ec[8][row[2]][4];
 				fp = FunctionPointer_cloneWithNewType(value[1], 6);
 				row[8] = [11, fp];
 				row[0] = 44;
@@ -3073,7 +3333,7 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 37:
 				// OP_PUSH_CLASS_REF;
-				classDef = ec[6][row[2]];
+				classDef = ec[8][row[2]];
 				if (classDef[6]) {
 					row[8] = classDef[13];
 					row[0] = 44;
@@ -3120,6 +3380,20 @@ let RunInterpreterImpl = function(task) {
 				row[8] = buildInteger(globalValues, row[2]);
 				row[0] = 44;
 				pc -= 1;
+				break;
+			case 63:
+				// OP_PUSH_LAMBDA;
+				value = ec[7][row[2]];
+				if (value == null) {
+					frame[1] = pc;
+					frame[4] = valueStackSize;
+					task[2] = frame;
+					return ExRes_HardCrash(task, "TODO: lambda closures");
+				} else {
+					row[8] = value;
+					row[0] = 44;
+					pc -= 1;
+				}
 				break;
 			case 41:
 				// OP_PUSH_NULL;
@@ -3169,7 +3443,7 @@ let RunInterpreterImpl = function(task) {
 				break;
 			case 46:
 				// OP_RETURN;
-				if (ec[10][pc] != null) {
+				if (ec[12][pc] != null) {
 					frame[1] = pc;
 					frame[4] = valueStackSize;
 					task[2] = frame;
@@ -3334,7 +3608,7 @@ let RunInterpreterImpl = function(task) {
 						}
 					}
 					sz = valueList.length;
-					output = [9, [ec[17], sz, sz, [...(valueList)]]];
+					output = [9, [ec[19], sz, sz, [...(valueList)]]];
 				}
 				valueStack[valueStackSize] = output;
 				valueStackSize += 1;
@@ -3343,6 +3617,43 @@ let RunInterpreterImpl = function(task) {
 				// OP_SPECIAL_ACTION;
 				output = globalValues[0];
 				switch (row[2]) {
+					case 16:
+						valueStackSize -= 2;
+						value = valueStack[valueStackSize];
+						if (value[0] != 9) {
+							errorId = 4;
+							errorMsg = "List expected";
+							return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+						}
+						intArray1 = convertListToByteArray(value[1]);
+						if (intArray1 == null) {
+							errorId = 4;
+							errorMsg = "Byte list includes non-byte values";
+							return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+						}
+						bool1 = valueStack[valueStackSize + 1][1];
+						str1 = buildBase64String(intArray1);
+						if (bool1) {
+							str1 = str1.split("+").join("-").split("/").join("_");
+						}
+						output = buildString(globalValues, str1, false);
+						break;
+					case 17:
+						valueStackSize -= 1;
+						value = valueStack[valueStackSize];
+						if (value[0] != 5) {
+							errorId = 4;
+							errorMsg = "String expected";
+							return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+						}
+						intArray1 = atob(stringUtil_getFlatValue(value)).split(',').map(n => parseInt(n));
+						if (intArray1 == null) {
+							errorId = 4;
+							errorMsg = "String contains non-base64 characters.";
+							return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+						}
+						output = buildIntegerListValue(ec, intArray1);
+						break;
 					case 6:
 						valueStackSize -= 2;
 						left = valueStack[valueStackSize];
@@ -3401,6 +3712,138 @@ let RunInterpreterImpl = function(task) {
 							output = globalValues[8];
 						}
 						break;
+					case 20:
+						valueStackSize -= 2;
+						str1 = stringUtil_getFlatValue(valueStack[valueStackSize]);
+						valueArr = valueStack[valueStackSize + 1][1][3];
+						output = json_util_parse(ec, str1, intBuffer16);
+						i = 0;
+						while (i < 3) {
+							valueArr[i] = buildInteger(globalValues, intBuffer16[i]);
+							i += 1;
+						}
+						break;
+					case 21:
+						valueStackSize -= 2;
+						value = valueStack[valueStackSize];
+						bool1 = valueStack[valueStackSize + 1][1];
+						str1 = json_util_serialize(value, bool1);
+						output = buildString(globalValues, str1, false);
+						break;
+					case 8:
+						valueStackSize -= 1;
+						value = valueStack[valueStackSize];
+						if (value[0] == 4) {
+							float1 = value[1];
+						} else {
+							float1 = 0.0 + value[1];
+						}
+						output = buildFloat(Math.acos(float1));
+						break;
+					case 9:
+						valueStackSize -= 1;
+						value = valueStack[valueStackSize];
+						if (value[0] == 4) {
+							float1 = value[1];
+						} else {
+							float1 = 0.0 + value[1];
+						}
+						output = buildFloat(Math.asin(float1));
+						break;
+					case 10:
+						valueStackSize -= 2;
+						value = valueStack[valueStackSize];
+						right = valueStack[valueStackSize + 1];
+						if (value[0] == 4) {
+							float1 = value[1];
+						} else {
+							float1 = 0.0 + value[1];
+						}
+						if (right[0] == 1) {
+							float2 = 1.0;
+						} else if (right[0] == 4) {
+							float2 = right[1];
+						} else {
+							float2 = 0.0 + right[1];
+						}
+						output = buildFloat(Math.atan2(float1, float2));
+						break;
+					case 11:
+						valueStackSize -= 1;
+						value = valueStack[valueStackSize];
+						if (value[0] == 4) {
+							float1 = value[1];
+						} else {
+							float1 = 0.0 + value[1];
+						}
+						output = buildFloat(Math.cos(float1));
+						break;
+					case 12:
+						valueStackSize -= 2;
+						value = valueStack[valueStackSize];
+						i = valueStack[valueStackSize + 1][1];
+						if (value[0] == 4) {
+							float1 = value[1];
+						} else {
+							float1 = 0.0 + value[1];
+						}
+						if (float1 <= 0) {
+							output = VALUE_NULL;
+						} else {
+							if (i == 0) {
+								bool1 = true;
+								float2 = 10.0;
+							} else if (i > 0) {
+								bool1 = true;
+								float2 = 2.0;
+							} else {
+								bool1 = false;
+								float2 = 2.718281828459;
+							}
+							float3 = Math.log(float1) / Math.log(float2);
+							if (bool1) {
+								int1 = float1 + 0.0000000000015;
+								if (float1 != int1 && Math.pow(float2, int1) == float1) {
+									float3 = 0.0 + int1;
+								}
+							}
+							output = buildFloat(float3);
+						}
+						break;
+					case 13:
+						valueStackSize -= 1;
+						value = valueStack[valueStackSize];
+						if (value[0] == 4) {
+							float1 = value[1];
+						} else {
+							float1 = 0.0 + value[1];
+						}
+						output = buildFloat(Math.sin(float1));
+						break;
+					case 14:
+						valueStackSize -= 1;
+						value = valueStack[valueStackSize];
+						if (value[0] == 4) {
+							float1 = value[1];
+						} else {
+							float1 = 0.0 + value[1];
+						}
+						output = buildFloat(Math.tan(float1));
+						break;
+					case 15:
+						valueStackSize -= 1;
+						value = valueStack[valueStackSize];
+						if (value[0] == 5) {
+							PST$floatParseHelper(floatBuffer16, stringUtil_getFlatValue(value));
+							output = VALUE_NULL;
+							if (floatBuffer16[0] > 0) {
+								int1 = Math.floor(floatBuffer16[1]);
+								output = buildInteger(globalValues, int1);
+							}
+						} else {
+							output = VALUE_NULL;
+						}
+						break;
 					case 7:
 						output = buildFloat(Math.random());
 						break;
@@ -3433,6 +3876,68 @@ let RunInterpreterImpl = function(task) {
 							output = buildInteger(globalValues, Math.floor(float1));
 						}
 						break;
+					case 23:
+						valueStackSize -= 2;
+						value = valueStack[valueStackSize];
+						str1 = stringUtil_getFlatValue(valueStack[valueStackSize + 1]);
+						if (value[0] != 9) {
+							errorId = 4;
+							errorMsg = "List expected";
+							return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+						}
+						intArray1 = convertListToByteArray(value[1]);
+						if (intArray1 == null) {
+							errorId = 4;
+							errorMsg = "Byte list includes non-byte values";
+							return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+						}
+						bool1 = true;
+						if (str1 === "utf8") {
+							str1 = new TextDecoder().decode(new Uint8Array(intArray1));
+							if (str1 == null) {
+								bool1 = false;
+							}
+						} else {
+							errorId = 4;
+							errorMsg = "Encoding not implemented.";
+							return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+						}
+						if (bool1) {
+							output = buildString(globalValues, str1, false);
+						} else {
+							output = VALUE_NULL;
+						}
+						str1 = null;
+						break;
+					case 22:
+						valueStackSize -= 1;
+						str1 = stringUtil_getFlatValue(valueStack[valueStackSize]);
+						if (str1 === "utf8") {
+							output = VALUE_TRUE;
+						} else {
+							output = VALUE_FALSE;
+						}
+						break;
+					case 24:
+						valueStackSize -= 2;
+						str1 = stringUtil_getFlatValue(valueStack[valueStackSize]);
+						str2 = stringUtil_getFlatValue(valueStack[valueStackSize + 1]);
+						if (str2 === "utf8") {
+							intArray1 = PST$stringToUtf8Bytes(str1);
+						} else {
+							errorId = 4;
+							errorMsg = "Encoding not implemented.";
+							return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+						}
+						output = buildIntegerListValue(ec, intArray1);
+						intArray1 = null;
+						str1 = null;
+						break;
+					default:
+						frame[1] = pc;
+						frame[4] = valueStackSize;
+						task[2] = frame;
+						return ExRes_HardCrash(task, "ACTION NOT IMPLEMENTED");
 				}
 				if (valueStackSize == valueStackCapacity) {
 					valueStack = increaseValueStackCapacity(task);
@@ -3517,10 +4022,10 @@ let RunInterpreterImpl = function(task) {
 				pc -= row[1][0];
 				row = byteCode[pc];
 				if (switchIntLookup != null) {
-					ec[13][pc] = switchIntLookup;
+					ec[15][pc] = switchIntLookup;
 					row[0] = 57;
 				} else {
-					ec[14][pc] = switchStrLookup;
+					ec[16][pc] = switchStrLookup;
 					row[0] = 58;
 				}
 				pc -= 1;
@@ -3530,7 +4035,7 @@ let RunInterpreterImpl = function(task) {
 				valueStackSize -= 1;
 				value = valueStack[valueStackSize];
 				i = value[1];
-				switchIntLookup = ec[13][pc];
+				switchIntLookup = ec[15][pc];
 				if (switchIntLookup[i] !== undefined) {
 					pc += switchIntLookup[i];
 				} else {
@@ -3546,7 +4051,7 @@ let RunInterpreterImpl = function(task) {
 					stringFlatten(stringImpl1);
 				}
 				str1 = stringImpl1[3];
-				switchStrLookup = ec[14][pc];
+				switchStrLookup = ec[16][pc];
 				if (switchStrLookup[str1] !== undefined) {
 					pc += switchStrLookup[str1];
 				} else {
@@ -3562,8 +4067,8 @@ let RunInterpreterImpl = function(task) {
 					instance1 = value[1];
 					int1 = 0;
 					i = 1;
-					while (i < ec[6].length && int1 == 0) {
-						if (ec[6][i][3] == "Exception") {
+					while (i < ec[8].length && int1 == 0) {
+						if (ec[8][i][3] == "Exception") {
 							int1 = i;
 						}
 						i += 1;
@@ -3825,6 +4330,14 @@ let stringUtil_changeCase = function(orig, isUpper) {
 	return [5, buildAsciiStringImpl(s2)];
 };
 
+let stringUtil_getFlatValue = function(val) {
+	let si = val[1];
+	if (si[1]) {
+		stringFlatten(si);
+	}
+	return si[3];
+};
+
 let stringUtil_split = function(g, str, sep) {
 	let si = str[1];
 	if (si[1]) {
@@ -3986,8 +4499,7 @@ let valueToHumanString = function(value) {
 	}
 	return "TODO: to string for type: " + (value[0] + '');
 };
-
-return [bubbleException, buildAsciiStringImpl, buildBase64String, buildFloat, buildFunctionFromInfo, buildInteger, buildList, buildString, convertToStringImpl, createClassInfo, createMainTask, createNewTask, createStringFromUnicodeArray, DictImpl_ensureCapacity, exceptionCatcherRouteException, ExRes_Done, ExRes_HardCrash, ExRes_Suspend, finalizeExecutionContext, FunctionPointer_cloneWithNewType, generateNameLookup, generateStackTrace, generateTryDescriptors, getExceptionMessage, getGlobalsFromTask, increaseValueStackCapacity, injectNameLookup, isValueEqual, List_add, List_expandCapacity, List_get, List_join, List_pop, List_removeAt, List_set, new_ByteCodeRow, new_ExecutionContext, new_ExecutionResult, new_GlobalValues, ParseRaw_entitiesSection_classMemberResolver, ParseRaw_entitiesSection_parseClasses, ParseRaw_entitiesSection_parseEnums, ParseRaw_entitiesSection_parseFunctions, ParseRaw_parseEntityData, ParseRaw_parseMetadata, ParseRaw_parseStringData, ParseRaw_parseTokenData, ParseRaw_popByteCodeRows, ParseRaw_popBytes, ParseRaw_popFixedLenString, ParseRaw_popInt, ParseRaw_popLenString, ParseRaw_popSingleByte, ParseRawData, PUBLIC_getApplicationContextFromTask, PUBLIC_getExecutionContextError, PUBLIC_getTaskResultError, PUBLIC_getTaskResultSleepAmount, PUBLIC_getTaskResultStatus, PUBLIC_initializeExecutionContext, PUBLIC_listValueAdd, PUBLIC_requestTaskSuspension, PUBLIC_startMainTask, PUBLIC_unwrapInteger, PUBLIC_unwrapNativeHandle, PUBLIC_valueToString, PUBLIC_wrapBoolean, PUBLIC_wrapInteger, PUBLIC_wrapNativeHandle, PUBLIC_wrapString, RunInterpreter, RunInterpreterImpl, Sort_buildTaskList, Sort_end, Sort_getNextCmp, Sort_proceedWithCmpResult, Sort_start, stringFlatten, stringUtil_changeCase, stringUtil_split, stringUtil_trim, ThrowError, ThrowErrorImpl, tryGetNameId, valueArrayIncreaseCapacity, valueToHumanString];
+return [PST$registerExtensibleCallback, bubbleException, buildAsciiStringImpl, buildBase64String, buildFloat, buildFunctionFromInfo, buildInteger, buildIntegerListValue, buildList, buildString, buildStringDictionary, convertListToByteArray, convertToStringImpl, createClassInfo, createMainTask, createNewTask, createStringFromUnicodeArray, DictImpl_ensureCapacity, doExponent, exceptionCatcherRouteException, ExRes_Done, ExRes_HardCrash, ExRes_Suspend, finalizeExecutionContext, FunctionPointer_cloneWithNewType, generateNameLookup, generateStackTrace, generateTryDescriptors, getExceptionMessage, getGlobalsFromTask, increaseValueStackCapacity, injectNameLookup, isValueEqual, json_util_parse, json_util_serialize, List_add, List_expandCapacity, List_get, List_join, List_pop, List_removeAt, List_set, new_ByteCodeRow, new_ExecutionContext, new_ExecutionResult, new_GlobalValues, ParseRaw_entitiesSection_classMemberResolver, ParseRaw_entitiesSection_parseClasses, ParseRaw_entitiesSection_parseEnums, ParseRaw_entitiesSection_parseFunctions, ParseRaw_parseEntityData, ParseRaw_parseMetadata, ParseRaw_parseStringData, ParseRaw_parseTokenData, ParseRaw_popByteCodeRows, ParseRaw_popBytes, ParseRaw_popFixedLenString, ParseRaw_popInt, ParseRaw_popLenString, ParseRaw_popSingleByte, ParseRawData, PUBLIC_createTaskForFunction, PUBLIC_getApplicationContextFromTask, PUBLIC_getExecutionContextError, PUBLIC_getExecutionContextFromTask, PUBLIC_getTaskResultError, PUBLIC_getTaskResultSleepAmount, PUBLIC_getTaskResultStatus, PUBLIC_initializeExecutionContext, PUBLIC_listValueAdd, PUBLIC_requestTaskSuspension, PUBLIC_startMainTask, PUBLIC_unwrapInteger, PUBLIC_unwrapNativeHandle, PUBLIC_valueToString, PUBLIC_wrapBoolean, PUBLIC_wrapInteger, PUBLIC_wrapNativeHandle, PUBLIC_wrapString, RunInterpreter, RunInterpreterImpl, Sort_buildTaskList, Sort_end, Sort_getNextCmp, Sort_proceedWithCmpResult, Sort_start, stringFlatten, stringUtil_changeCase, stringUtil_getFlatValue, stringUtil_split, stringUtil_trim, ThrowError, ThrowErrorImpl, tryGetNameId, valueArrayIncreaseCapacity, valueToHumanString];
 })();
 
   //
