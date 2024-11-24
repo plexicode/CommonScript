@@ -26,3 +26,51 @@ void DictImpl_ensureCapacity(DictImpl dict) {
     dict.values = newValues;
     dict.capacity = newCapacity;
 }
+
+// Returns the removed value or null
+Value dictionaryRemove(DictImpl dict, Value key) {
+    if (dict.keyType != key.type || dict.size == 0) return null;
+    int index = 0;
+    if (key.type == Type.INTEGER) {
+        int iKey = (int) key.internalValue;
+        if (!dict.intKeyLookup.Contains(iKey)) return null;
+        index = dict.intKeyLookup[iKey];
+        dict.intKeyLookup.Remove(iKey);
+    } else if (key.type == Type.STRING) {
+        string sKey = stringUtil_getFlatValue(key);
+        if (!dict.strKeyLookup.Contains(sKey)) return null;
+        index = dict.strKeyLookup[sKey];
+        dict.strKeyLookup.Remove(sKey);
+    } else {
+        return null;
+    }
+
+    int sz = dict.size - 1;
+    dict.size = sz;
+    Value output = dict.values[index];
+
+    if (sz == 0) {
+        // reset to initial state.
+        dict.intKeyLookup = null;
+        dict.strKeyLookup = null;
+        dict.keyType = Type.NULL;
+        dict.keys = null;
+        dict.values = null;
+    } else {
+        if (index < sz) {
+            Value lastKey = dict.keys[sz];
+            dict.keys[index] = lastKey;
+            dict.values[index] = dict.values[sz];
+
+            if (key.type == Type.INTEGER) {
+                dict.intKeyLookup[(int) lastKey.internalValue] = index;
+            } else {
+                dict.strKeyLookup[stringUtil_getFlatValue(lastKey)] = index;
+            }
+        }
+        dict.values[sz] = null;
+        dict.keys[sz] = null;
+    }
+
+    return output;
+}

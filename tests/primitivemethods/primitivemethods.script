@@ -151,6 +151,40 @@ function dictTests() {
     assertStrEqual(a.contains('x'), false);
     a['k'] = false;
     assertStrEqual(a.contains('k'), true);
+
+    // Internally, dictionaries are a pair of key and value arrays with a
+    // key-to-index lookup.
+    // When a kvp is removed that isn't at the end of the array, the last entry
+    // is moved to take its place.
+
+    dict = {};
+    dict[1] = 'A';
+    dict[2] = 'B';
+    dict[3] = 'C';
+    dict[4] = 'D';
+    assertStrEqual(dict.keys().join(' '), '1 2 3 4');
+    dict.remove(2);
+    assertStrEqual(dict.keys().join(' '), '1 4 3');
+    dict.remove(3);
+    assertStrEqual(dict.keys().join(' '), '1 4');
+    dict.remove(1);
+    assertStrEqual(dict.keys().join(' '), '4');
+    dict.remove(4);
+    assertStrEqual(dict.keys().join(' '), '');
+
+    dict['A'] = 1;
+    dict['B'] = 2;
+    dict['C'] = 3;
+    dict['D'] = 4;
+    assertStrEqual(dict.keys().join(' '), 'A B C D');
+    dict.remove('B');
+    assertStrEqual(dict.keys().join(' '), 'A D C');
+    dict.remove('C');
+    assertStrEqual(dict.keys().join(' '), 'A D');
+    dict.remove('A');
+    assertStrEqual(dict.keys().join(' '), 'D');
+    dict.remove('D');
+    assertStrEqual(dict.keys().join(' '), '');
 }
 
 function funcTestTestFunc(a, b, c) {

@@ -3,7 +3,7 @@ if (row.firstArg == 0) {
     value = valueStack[valueStackSize];
     left = valueStack[valueStackSize + 1];
     right = valueStack[valueStackSize + 2];
-} else { 
+} else {
     // incremental assignment will have these on the stack in a different order...
     left = valueStack[valueStackSize];
     right = valueStack[valueStackSize + 1];
@@ -39,16 +39,20 @@ switch (left.type * Type.MAX + right.type) {
         str1 = stringImpl1.nativeStr;
 
         dictImpl1 = (DictImpl) left.internalValue;
-        if (dictImpl1.size == dictImpl1.capacity) DictImpl_ensureCapacity(dictImpl1);
 
         if (dictImpl1.keyType == Type.NULL) {
             dictImpl1.keyType = Type.STRING;
             dictImpl1.strKeyLookup = new Dictionary<string, int>();
             dictImpl1.strKeyLookup[str1] = 0;
+            dictImpl1.keys = new Array<Value>(4);
+            dictImpl1.values = new Array<Value>(4);
+            dictImpl1.capacity = 4;
             dictImpl1.keys[0] = right;
             dictImpl1.values[0] = value;
             dictImpl1.size = 1;
         } else if (dictImpl1.keyType == Type.STRING) {
+            if (dictImpl1.size == dictImpl1.capacity) DictImpl_ensureCapacity(dictImpl1);
+
             if (dictImpl1.strKeyLookup.Contains(str1)) {
                 dictImpl1.values[dictImpl1.strKeyLookup[str1]] = value;
             } else {
@@ -70,16 +74,20 @@ switch (left.type * Type.MAX + right.type) {
         int1 = (int) right.internalValue;
 
         dictImpl1 = (DictImpl) left.internalValue;
-        if (dictImpl1.size == dictImpl1.capacity) DictImpl_ensureCapacity(dictImpl1);
 
         if (dictImpl1.keyType == Type.NULL) {
             dictImpl1.keyType = Type.INTEGER;
             dictImpl1.intKeyLookup = new Dictionary<int, int>();
             dictImpl1.intKeyLookup[int1] = 0;
+            dictImpl1.keys = new Array<Value>(4);
+            dictImpl1.values = new Array<Value>(4);
+            dictImpl1.capacity = 4;
             dictImpl1.keys[0] = right;
             dictImpl1.values[0] = value;
             dictImpl1.size = 1;
         } else {
+            if (dictImpl1.size == dictImpl1.capacity) DictImpl_ensureCapacity(dictImpl1);
+
             if (dictImpl1.intKeyLookup.Contains(int1)) {
                 dictImpl1.values[dictImpl1.intKeyLookup[int1]] = value;
             } else {

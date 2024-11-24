@@ -1,0 +1,6 @@
+output = dictionaryRemove((DictImpl) fp.ctx.internalValue, args[0]);
+if (output == null) {
+    errorId = ExceptionTypeId.KEY_NOT_FOUND;
+    errorMsg = "Dictionary does not have that key";
+    @import("macros/throw.pst");
+}

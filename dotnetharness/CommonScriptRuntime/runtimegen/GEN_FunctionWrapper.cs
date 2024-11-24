@@ -492,6 +492,70 @@ namespace CommonScript.Runtime.Internal
             dict.capacity = newCapacity;
         }
 
+        public static Value dictionaryRemove(DictImpl dict, Value key)
+        {
+            if (dict.keyType != key.type || dict.size == 0)
+            {
+                return null;
+            }
+            int index = 0;
+            if (key.type == 3)
+            {
+                int iKey = (int)key.internalValue;
+                if (!dict.intKeyLookup.ContainsKey(iKey))
+                {
+                    return null;
+                }
+                index = dict.intKeyLookup[iKey];
+                dict.intKeyLookup.Remove(iKey);
+            }
+            else if (key.type == 5)
+            {
+                string sKey = stringUtil_getFlatValue(key);
+                if (!dict.strKeyLookup.ContainsKey(sKey))
+                {
+                    return null;
+                }
+                index = dict.strKeyLookup[sKey];
+                dict.strKeyLookup.Remove(sKey);
+            }
+            else
+            {
+                return null;
+            }
+            int sz = dict.size - 1;
+            dict.size = sz;
+            Value output = dict.values[index];
+            if (sz == 0)
+            {
+                dict.intKeyLookup = null;
+                dict.strKeyLookup = null;
+                dict.keyType = 1;
+                dict.keys = null;
+                dict.values = null;
+            }
+            else
+            {
+                if (index < sz)
+                {
+                    Value lastKey = dict.keys[sz];
+                    dict.keys[index] = lastKey;
+                    dict.values[index] = dict.values[sz];
+                    if (key.type == 3)
+                    {
+                        dict.intKeyLookup[(int)lastKey.internalValue] = index;
+                    }
+                    else
+                    {
+                        dict.strKeyLookup[stringUtil_getFlatValue(lastKey)] = index;
+                    }
+                }
+                dict.values[sz] = null;
+                dict.keys[sz] = null;
+            }
+            return output;
+        }
+
         public static Value doExponent(GlobalValues g, double left, double right)
         {
             if (left == 0)
@@ -2119,21 +2183,24 @@ namespace CommonScript.Runtime.Internal
                                 }
                                 str1 = stringImpl1.nativeStr;
                                 dictImpl1 = (DictImpl)left.internalValue;
-                                if (dictImpl1.size == dictImpl1.capacity)
-                                {
-                                    DictImpl_ensureCapacity(dictImpl1);
-                                }
                                 if (dictImpl1.keyType == 1)
                                 {
                                     dictImpl1.keyType = 5;
                                     dictImpl1.strKeyLookup = new Dictionary<string, int>();
                                     dictImpl1.strKeyLookup[str1] = 0;
+                                    dictImpl1.keys = new Value[4];
+                                    dictImpl1.values = new Value[4];
+                                    dictImpl1.capacity = 4;
                                     dictImpl1.keys[0] = right;
                                     dictImpl1.values[0] = value;
                                     dictImpl1.size = 1;
                                 }
                                 else if (dictImpl1.keyType == 5)
                                 {
+                                    if (dictImpl1.size == dictImpl1.capacity)
+                                    {
+                                        DictImpl_ensureCapacity(dictImpl1);
+                                    }
                                     if (dictImpl1.strKeyLookup.ContainsKey(str1))
                                     {
                                         dictImpl1.values[dictImpl1.strKeyLookup[str1]] = value;
@@ -2157,30 +2224,36 @@ namespace CommonScript.Runtime.Internal
                             case 163:
                                 int1 = (int)right.internalValue;
                                 dictImpl1 = (DictImpl)left.internalValue;
-                                if (dictImpl1.size == dictImpl1.capacity)
-                                {
-                                    DictImpl_ensureCapacity(dictImpl1);
-                                }
                                 if (dictImpl1.keyType == 1)
                                 {
                                     dictImpl1.keyType = 3;
                                     dictImpl1.intKeyLookup = new Dictionary<int, int>();
                                     dictImpl1.intKeyLookup[int1] = 0;
+                                    dictImpl1.keys = new Value[4];
+                                    dictImpl1.values = new Value[4];
+                                    dictImpl1.capacity = 4;
                                     dictImpl1.keys[0] = right;
                                     dictImpl1.values[0] = value;
                                     dictImpl1.size = 1;
                                 }
-                                else if (dictImpl1.intKeyLookup.ContainsKey(int1))
-                                {
-                                    dictImpl1.values[dictImpl1.intKeyLookup[int1]] = value;
-                                }
                                 else
                                 {
-                                    i = dictImpl1.size;
-                                    dictImpl1.size = i + 1;
-                                    dictImpl1.keys[i] = right;
-                                    dictImpl1.values[i] = value;
-                                    dictImpl1.intKeyLookup[int1] = i;
+                                    if (dictImpl1.size == dictImpl1.capacity)
+                                    {
+                                        DictImpl_ensureCapacity(dictImpl1);
+                                    }
+                                    if (dictImpl1.intKeyLookup.ContainsKey(int1))
+                                    {
+                                        dictImpl1.values[dictImpl1.intKeyLookup[int1]] = value;
+                                    }
+                                    else
+                                    {
+                                        i = dictImpl1.size;
+                                        dictImpl1.size = i + 1;
+                                        dictImpl1.keys[i] = right;
+                                        dictImpl1.values[i] = value;
+                                        dictImpl1.intKeyLookup[int1] = i;
+                                    }
                                 }
                                 break;
                             default:
@@ -3275,29 +3348,20 @@ namespace CommonScript.Runtime.Internal
                                         break;
                                     case 5:
                                         dictImpl1 = (DictImpl)fp.ctx.internalValue;
-                                        keys = dictImpl1.keys;
-                                        sz = dictImpl1.size;
-                                        valueArr = new Value[sz];
-                                        i = 0;
-                                        while (i < sz)
+                                        output = buildList(ec, dictImpl1.keys, true, dictImpl1.size);
+                                        break;
+                                    case 8:
+                                        output = dictionaryRemove((DictImpl)fp.ctx.internalValue, args[0]);
+                                        if (output == null)
                                         {
-                                            valueArr[i] = keys[i];
-                                            i += 1;
+                                            errorId = 6;
+                                            errorMsg = "Dictionary does not have that key";
+                                            return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
                                         }
-                                        output = buildList(ec, valueArr, false, valueArr.Length);
                                         break;
                                     case 9:
                                         dictImpl1 = (DictImpl)fp.ctx.internalValue;
-                                        values = dictImpl1.values;
-                                        sz = dictImpl1.size;
-                                        valueArr = new Value[sz];
-                                        i = 0;
-                                        while (i < sz)
-                                        {
-                                            valueArr[i] = values[i];
-                                            i += 1;
-                                        }
-                                        output = buildList(ec, valueArr, false, valueArr.Length);
+                                        output = buildList(ec, dictImpl1.values, true, dictImpl1.size);
                                         break;
                                     case 10:
                                         listImpl1 = (ListImpl)fp.ctx.internalValue;

@@ -1,9 +1,3 @@
 
 dictImpl1 = (DictImpl) fp.ctx.internalValue;
-keys = dictImpl1.keys;
-sz = dictImpl1.size;
-valueArr = new Array<Value>(sz);
-for (i = 0; i < sz; i += 1) {
-    valueArr[i] = keys[i];
-}
-output = buildList(ec, valueArr, false, valueArr.Size());
+output = buildList(ec, dictImpl1.keys, true, dictImpl1.size);
