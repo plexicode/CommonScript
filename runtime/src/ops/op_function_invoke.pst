@@ -91,6 +91,7 @@ switch (fp.funcType) {
             case PrimitiveMethods.BYTEBUF_TO_BASE_64: @import("builtinmethods/bytebuf_to_base_64.pst"); break;
 
             case PrimitiveMethods.DICT_CLEAR: @import("builtinmethods/dict_clear.pst"); break;
+            case PrimitiveMethods.DICT_CLONE: @import("builtinmethods/dict_clone.pst"); break;
             case PrimitiveMethods.DICT_CONTAINS: @import("builtinmethods/dict_contains.pst"); break;
             case PrimitiveMethods.DICT_GET: @import("builtinmethods/dict_get.pst"); break;
             case PrimitiveMethods.DICT_KEYS: @import("builtinmethods/dict_keys.pst"); break;

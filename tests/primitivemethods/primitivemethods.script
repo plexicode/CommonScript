@@ -202,6 +202,13 @@ function dictTests() {
     kvplist = dict.map((k, v) => k + '|' + v );
     assertStrEqual(kvplist.join(', '), 'a|1, b|2');
 
+    dict2 = dict.clone();
+    dict2['c'] = 3;
+    assertStrEqual(dict.keys().join(' '), 'a b');
+    assertStrEqual(dict.values().join(' '), '1 2');
+    assertStrEqual(dict2.keys().join(' '), 'a b c');
+    assertStrEqual(dict2.values().join(' '), '1 2 3');
+
     dict.clear();
     assertStrEqual(dict.keys().join(' '), '');
 }

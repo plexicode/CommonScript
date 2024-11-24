@@ -74,3 +74,32 @@ Value dictionaryRemove(DictImpl dict, Value key) {
 
     return output;
 }
+
+DictImpl DictImpl_clone(ExecutionContext ec, DictImpl original) {
+    DictImpl output = new DictImpl(ec.nextRefId, original.keyType, original.size, 0, null, null, null, null);
+    ec.nextRefId += 1;
+    int sz = output.size;
+    if (sz > 0) {
+        output.capacity = sz;
+        output.keys = new Array<Value>(sz);
+        output.values = new Array<Value>(sz);
+        bool isInt = original.keyType == Type.INTEGER;
+        if (isInt) {
+            output.intKeyLookup = new Dictionary<int, int>();
+        } else {
+            output.strKeyLookup = new Dictionary<string, int>();
+        }
+        Value key = null;
+        for (int i = 0; i < sz; i += 1) {
+            key = original.keys[i];
+            output.keys[i] = key;
+            output.values[i] = original.values[i];
+            if (isInt) {
+                output.intKeyLookup[(int)key.internalValue] = i;
+            } else {
+                output.strKeyLookup[stringUtil_getFlatValue(key)] = i;
+            }
+        }
+    }
+    return output;
+}

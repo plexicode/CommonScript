@@ -464,6 +464,46 @@ namespace CommonScript.Runtime.Internal
             return new Value(5, new StringImpl(sz, false, uchars, finalString, null, null));
         }
 
+        public static DictImpl DictImpl_clone(ExecutionContext ec, DictImpl original)
+        {
+            DictImpl output = new DictImpl(ec.nextRefId, original.keyType, original.size, 0, null, null, null, null);
+            ec.nextRefId += 1;
+            int sz = output.size;
+            if (sz > 0)
+            {
+                output.capacity = sz;
+                output.keys = new Value[sz];
+                output.values = new Value[sz];
+                bool isInt = original.keyType == 3;
+                if (isInt)
+                {
+                    output.intKeyLookup = new Dictionary<int, int>();
+                }
+                else
+                {
+                    output.strKeyLookup = new Dictionary<string, int>();
+                }
+                Value key = null;
+                int i = 0;
+                while (i < sz)
+                {
+                    key = original.keys[i];
+                    output.keys[i] = key;
+                    output.values[i] = original.values[i];
+                    if (isInt)
+                    {
+                        output.intKeyLookup[(int)key.internalValue] = i;
+                    }
+                    else
+                    {
+                        output.strKeyLookup[stringUtil_getFlatValue(key)] = i;
+                    }
+                    i += 1;
+                }
+            }
+            return output;
+        }
+
         public static void DictImpl_ensureCapacity(DictImpl dict)
         {
             int size = dict.size;
@@ -3362,6 +3402,9 @@ namespace CommonScript.Runtime.Internal
                                             dictImpl1.size = 0;
                                         }
                                         output = VALUE_NULL;
+                                        break;
+                                    case 2:
+                                        output = new Value(10, DictImpl_clone(ec, (DictImpl)fp.ctx.internalValue));
                                         break;
                                     case 3:
                                         dictImpl1 = (DictImpl)fp.ctx.internalValue;
