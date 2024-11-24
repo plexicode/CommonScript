@@ -1,0 +1,14 @@
+value = args[1];
+if (value.type != Type.INTEGER) {
+    errorId = ExceptionTypeId.INVALID_ARGUMENT;
+    errorMsg = "List index must be an integer.";
+    @import("macros/throw.pst");
+}
+
+if (!List_insert((ListImpl) fp.ctx.internalValue, args[0], (int) value.internalValue)) {
+    errorId = ExceptionTypeId.OUT_OF_RANGE;
+    errorMsg = "Index is out of range.";
+    @import("macros/throw.pst");
+}
+
+output = VALUE_NULL;

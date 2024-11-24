@@ -68,3 +68,15 @@ Value List_join(GlobalValues g, Value v, string sep) {
     string val = output.Join(sep);
     return buildString(g, val, false);
 }
+
+bool List_insert(ListImpl list, Value value, int index) {
+    if (index < 0) index += list.length;
+    if (index < 0 || index > list.length) return false;
+    if (list.capacity == list.length) List_expandCapacity(list);
+    for (int i = list.length - 1; i >= index; i -= 1) {
+        list.items[i + 1] = list.items[i];
+    }
+    list.items[index] = value;
+    list.length += 1;
+    return true;
+}

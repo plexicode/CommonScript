@@ -101,6 +101,7 @@ switch (fp.funcType) {
             case PrimitiveMethods.LIST_FILTER: @import("builtinmethods/list_filter.pst"); break;
             case PrimitiveMethods.LIST_FIND: @import("builtinmethods/list_find.pst"); break;
             case PrimitiveMethods.LIST_FIND_REVERSE: @import("builtinmethods/list_find_reverse.pst"); break;
+            case PrimitiveMethods.LIST_INSERT: @import("builtinmethods/list_insert.pst"); break;
             case PrimitiveMethods.LIST_JOIN: @import("builtinmethods/list_join.pst"); break;
             case PrimitiveMethods.LIST_MAP: @import("builtinmethods/list_map.pst"); break;
             case PrimitiveMethods.LIST_POP: @import("builtinmethods/list_pop.pst"); break;

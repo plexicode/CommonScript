@@ -90,6 +90,13 @@ function listTests() {
     assertStrEqual(items.remove(-1), 5);
     assertStrEqual(items.join(' '), '1 2 4');
     assertStrEqual(items.length, 3);
+    items.insert('zero', 0);
+    assertStrEqual(items.join(' '), 'zero 1 2 4');
+    assertStrEqual(items.length, 4);
+    items.insert('three', 3);
+    assertStrEqual(items.join(' '), 'zero 1 2 three 4');
+    assertStrEqual(items.length, 5);
+
 
     ptr1 = [];
     ptr2 = {};

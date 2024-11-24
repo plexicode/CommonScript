@@ -713,6 +713,7 @@ namespace CommonScript.Runtime.Internal
             injectNameLookup(fpMap, 14, 9, tryGetNameId(stringsToId, "filter"), 1, 1);
             injectNameLookup(fpMap, 15, 9, tryGetNameId(stringsToId, "find"), 1, 3);
             injectNameLookup(fpMap, 16, 9, tryGetNameId(stringsToId, "findReverse"), 1, 3);
+            injectNameLookup(fpMap, 45, 9, tryGetNameId(stringsToId, "insert"), 2, 2);
             injectNameLookup(fpMap, 17, 9, tryGetNameId(stringsToId, "join"), 0, 1);
             injectNameLookup(fpMap, 18, 9, tryGetNameId(stringsToId, "map"), 1, 1);
             injectNameLookup(fpMap, 19, 9, tryGetNameId(stringsToId, "pop"), 0, 0);
@@ -1009,6 +1010,31 @@ namespace CommonScript.Runtime.Internal
                 return null;
             }
             return o.items[index];
+        }
+
+        public static bool List_insert(ListImpl list, Value value, int index)
+        {
+            if (index < 0)
+            {
+                index += list.length;
+            }
+            if (index < 0 || index > list.length)
+            {
+                return false;
+            }
+            if (list.capacity == list.length)
+            {
+                List_expandCapacity(list);
+            }
+            int i = list.length - 1;
+            while (i >= index)
+            {
+                list.items[i + 1] = list.items[i];
+                i -= 1;
+            }
+            list.items[index] = value;
+            list.length += 1;
+            return true;
         }
 
         public static Value List_join(GlobalValues g, Value v, string sep)
@@ -3526,6 +3552,22 @@ namespace CommonScript.Runtime.Internal
                                             }
                                             i -= 1;
                                         }
+                                        break;
+                                    case 45:
+                                        value = args[1];
+                                        if (value.type != 3)
+                                        {
+                                            errorId = 4;
+                                            errorMsg = "List index must be an integer.";
+                                            return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+                                        }
+                                        if (!List_insert((ListImpl)fp.ctx.internalValue, args[0], (int)value.internalValue))
+                                        {
+                                            errorId = 8;
+                                            errorMsg = "Index is out of range.";
+                                            return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+                                        }
+                                        output = VALUE_NULL;
                                         break;
                                     case 17:
                                         str1 = "";

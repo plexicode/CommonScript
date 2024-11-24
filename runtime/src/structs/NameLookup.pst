@@ -45,6 +45,7 @@ void generateNameLookup(ExecutionContext ec) {
     injectNameLookup(fpMap, PrimitiveMethods.LIST_FILTER, Type.LIST, tryGetNameId(stringsToId, "filter"), 1, 1);
     injectNameLookup(fpMap, PrimitiveMethods.LIST_FIND, Type.LIST, tryGetNameId(stringsToId, "find"), 1, 3);
     injectNameLookup(fpMap, PrimitiveMethods.LIST_FIND_REVERSE, Type.LIST, tryGetNameId(stringsToId, "findReverse"), 1, 3);
+    injectNameLookup(fpMap, PrimitiveMethods.LIST_INSERT, Type.LIST, tryGetNameId(stringsToId, "insert"), 2, 2);
     injectNameLookup(fpMap, PrimitiveMethods.LIST_JOIN, Type.LIST, tryGetNameId(stringsToId, "join"), 0, 1);
     injectNameLookup(fpMap, PrimitiveMethods.LIST_MAP, Type.LIST, tryGetNameId(stringsToId, "map"), 1, 1);
     injectNameLookup(fpMap, PrimitiveMethods.LIST_POP, Type.LIST, tryGetNameId(stringsToId, "pop"), 0, 0);
