@@ -1,0 +1,10 @@
+dictImpl1 = (DictImpl) fp.ctx.internalValue;
+if (dictImpl1.size > 0) {
+    dictImpl1.keyType = Type.NULL;
+    dictImpl1.keys = null;
+    dictImpl1.values = null;
+    dictImpl1.intKeyLookup = null;
+    dictImpl1.strKeyLookup = null;
+    dictImpl1.size = 0;
+}
+output = VALUE_NULL;

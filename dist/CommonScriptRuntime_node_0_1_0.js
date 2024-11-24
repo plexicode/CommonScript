@@ -2710,6 +2710,18 @@ let RunInterpreterImpl = function(task) {
 							case 40:
 								output = buildString(globalValues, buildBase64String(fp[5][1]), false);
 								break;
+							case 1:
+								dictImpl1 = fp[5][1];
+								if (dictImpl1[2] > 0) {
+									dictImpl1[1] = 1;
+									dictImpl1[4] = null;
+									dictImpl1[5] = null;
+									dictImpl1[6] = null;
+									dictImpl1[7] = null;
+									dictImpl1[2] = 0;
+								}
+								output = VALUE_NULL;
+								break;
 							case 3:
 								dictImpl1 = fp[5][1];
 								output = VALUE_FALSE;

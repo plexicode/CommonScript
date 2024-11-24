@@ -3350,6 +3350,19 @@ namespace CommonScript.Runtime.Internal
                                     case 40:
                                         output = buildString(globalValues, buildBase64String((int[])fp.ctx.internalValue), false);
                                         break;
+                                    case 1:
+                                        dictImpl1 = (DictImpl)fp.ctx.internalValue;
+                                        if (dictImpl1.size > 0)
+                                        {
+                                            dictImpl1.keyType = 1;
+                                            dictImpl1.keys = null;
+                                            dictImpl1.values = null;
+                                            dictImpl1.intKeyLookup = null;
+                                            dictImpl1.strKeyLookup = null;
+                                            dictImpl1.size = 0;
+                                        }
+                                        output = VALUE_NULL;
+                                        break;
                                     case 3:
                                         dictImpl1 = (DictImpl)fp.ctx.internalValue;
                                         output = VALUE_FALSE;

@@ -97,7 +97,6 @@ function listTests() {
     assertStrEqual(items.join(' '), 'zero 1 2 three 4');
     assertStrEqual(items.length, 5);
 
-
     ptr1 = [];
     ptr2 = {};
     items = ['a', 'b', 'cat', true, false, null, ptr1, ptr2, 3.25, 7, -1, 0];
@@ -191,6 +190,11 @@ function dictTests() {
     dict.remove('A');
     assertStrEqual(dict.keys().join(' '), 'D');
     dict.remove('D');
+    assertStrEqual(dict.keys().join(' '), '');
+
+    dict = { 'a': 1, 'b': 2 };
+    assertStrEqual(dict.keys().join(' '), 'a b');
+    dict.clear();
     assertStrEqual(dict.keys().join(' '), '');
 }
 
