@@ -828,6 +828,7 @@ namespace CommonScript.Compiler
                 case ExpressionType.FUNCTION_REFERENCE:
                 case ExpressionType.DOT_FIELD:
                 case ExpressionType.BASE_CTOR_REFERENCE:
+                case ExpressionType.INDEX:
                     break;
 
                 default:
