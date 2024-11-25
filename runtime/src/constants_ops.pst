@@ -7,6 +7,7 @@ const int OP_BIN_OP_ADD = 5;
 const int OP_BIN_OP_BIT_MATH = 6;
 const int OP_BIN_OP_COMPARE = 7;
 const int OP_BIN_OP_EQUAL = 8;
+const int OP_BIN_OP_IS = 64;
 const int OP_BIN_OP_MATH = 9;
 const int OP_BITWISE_NOT = 10;
 const int OP_BOOLEAN_NOT = 11;

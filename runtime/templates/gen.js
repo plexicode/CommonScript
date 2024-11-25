@@ -1906,6 +1906,8 @@ let RunInterpreterImpl = function(task) {
 				} else if (str1 == "&" || str1 == "|" || str1 == "^" || str1 == "<<" || str1 == ">>" || str1 == ">>>") {
 					row[2] = opMap[str1];
 					row[0] = 6;
+				} else if (str1 == "is") {
+					row[0] = 64;
 				} else {
 					row[2] = opMap[str1];
 					row[0] = 9;
@@ -2088,6 +2090,32 @@ let RunInterpreterImpl = function(task) {
 					valueStack[valueStackSize] = globalValues[2];
 				}
 				valueStackSize += 1;
+				break;
+			case 64:
+				// OP_BIN_OP_IS;
+				valueStackSize -= 1;
+				left = valueStack[valueStackSize - 1];
+				right = valueStack[valueStackSize];
+				if (right[0] != 13) {
+					errorId = 4;
+					errorMsg = "'is' operator can only be used with class names.";
+					return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+				}
+				if (left[0] != 12) {
+					output = VALUE_FALSE;
+				} else {
+					classDef = right[1];
+					instance1 = left[1];
+					output = VALUE_FALSE;
+					while (classDef != null) {
+						if (instance1[1][0] == classDef[0]) {
+							output = VALUE_TRUE;
+							classDef = null;
+						}
+						classDef = classDef[2];
+					}
+				}
+				valueStack[valueStackSize - 1] = output;
 				break;
 			case 9:
 				// OP_BIN_OP_MATH;

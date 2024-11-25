@@ -99,7 +99,7 @@ namespace CommonScript.Compiler
         private Expression ParseInequality()
         {
             Expression root = this.ParseBitshift();
-            if (this.tokens.doesNextInclulde4("<", ">", "<=", ">="))
+            if (this.tokens.doesNextInclude5("<", ">", "<=", ">=", "is"))
             {
                 Token op = this.tokens.pop();
                 Expression right = this.ParseBitshift();

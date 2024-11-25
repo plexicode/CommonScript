@@ -15,6 +15,15 @@ function test() {
         new depLib.GrandParent(5)
     ];
 
+    assertStrEqual(things[0] is Child, true);
+    assertStrEqual(things[0] is Parent, true);
+    assertStrEqual(things[0] is Exception, false);
+    assertStrEqual(things[0] is depLib.GrandParent, true);
+    assertStrEqual(things is Child, false);
+    assertStrEqual(null is Child, false);
+    assertStrEqual(things[1] is Parent, true);
+    assertStrEqual(things[1] is Child, false);
+    
     assertStrEqual(child.initTest, 42);
 
     assertStrEqual(things[0].name + '|' + things[0].value, "child|30");

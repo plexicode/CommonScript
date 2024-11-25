@@ -13,6 +13,7 @@
         public const int OP_BIN_OP_BIT_MATH = 6;
         public const int OP_BIN_OP_COMPARE = 7;
         public const int OP_BIN_OP_EQUAL = 8;
+        public const int OP_BIN_OP_IS = 64;
         public const int OP_BIN_OP_MATH = 9;
         public const int OP_BITWISE_NOT = 10;
         public const int OP_BOOLEAN_NOT = 11;
@@ -69,6 +70,6 @@
         public const int OP_TRY_CATCH_ROUTER = 61;
         public const int OP_TRY_INFO = 62;
 
-        // NEXT: 64
+        // NEXT: 65
     }
 }

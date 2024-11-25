@@ -121,6 +121,7 @@ ExecutionResult RunInterpreterImpl(ExecutionTask task) {
     DictImpl dictImpl1 = null;
     Instance instance1 = null;
     ClassInfo classDef = null;
+    ClassInfo classDef2 = null;
 
     Array<Value> args = null;
     Array<Value> valueArr = null;
@@ -158,6 +159,7 @@ ExecutionResult RunInterpreterImpl(ExecutionTask task) {
             case OP_BIN_OP_ADD: Core.EmitComment("OP_BIN_OP_ADD"); @import("ops/op_bin_op_add.pst"); break;
             case OP_BIN_OP_COMPARE: Core.EmitComment("OP_BIN_OP_COMPARE"); @import("ops/op_bin_op_compare.pst"); break;
             case OP_BIN_OP_EQUAL: Core.EmitComment("OP_BIN_OP_EQUAL"); @import("ops/op_bin_op_equal.pst"); break;
+            case OP_BIN_OP_IS: Core.EmitComment("OP_BIN_OP_IS"); @import("ops/op_bin_op_is.pst"); break;
             case OP_BIN_OP_MATH: Core.EmitComment("OP_BIN_OP_MATH"); @import("ops/op_bin_op_math.pst"); break;
             case OP_BIN_OP_BIT_MATH: Core.EmitComment("OP_BIN_OP_BIT_MATH"); @import("ops/op_bin_op_bit_math.pst"); break;
             case OP_BITWISE_NOT: Core.EmitComment("OP_BITWISE_NOT"); @import("ops/op_bitwise_not.pst"); break;

@@ -1,0 +1,28 @@
+valueStackSize -= 1;
+left = valueStack[valueStackSize - 1];
+right = valueStack[valueStackSize];
+
+if (right.type != Type.CLASS) {
+    errorId = ExceptionTypeId.INVALID_ARGUMENT;
+    errorMsg = "'is' operator can only be used with class names.";
+    @import("macros/throw.pst");
+}
+
+if (left.type != Type.INSTANCE) {
+    output = VALUE_FALSE;
+} else {
+    classDef2 = (ClassInfo) right.internalValue;
+    instance1 = (Instance) left.internalValue;
+    classDef = instance1.classDef;
+    output = VALUE_FALSE;
+    while (classDef != null) {
+        if (classDef2.id == classDef.id) {
+            output = VALUE_TRUE;
+            classDef = null;
+        } else {
+            classDef = classDef.parent;
+        }
+    }
+}
+
+valueStack[valueStackSize - 1] = output;

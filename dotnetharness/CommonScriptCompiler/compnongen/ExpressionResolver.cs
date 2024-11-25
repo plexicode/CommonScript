@@ -415,12 +415,17 @@ namespace CommonScript.Compiler
 
         private Expression SecondPass_BinaryOp(Expression expr)
         {
-            expr.left = this.ResolveExpressionSecondPass(expr.left);
-            expr.right = this.ResolveExpressionSecondPass(expr.right);
-
             Token firstToken = expr.firstToken;
             Token opToken = expr.opToken;
             string op = opToken.Value;
+
+            expr.left = this.ResolveExpressionSecondPass(expr.left);
+            if (expr.right.type == ExpressionType.CLASS_REFERENCE && op == "is")
+            {
+                expr.right.boolVal = true;
+            }
+            expr.right = this.ResolveExpressionSecondPass(expr.right);
+
 
             // TODO: resolve constants
             if (Resolver.IsExpressionConstant(expr.left) && Resolver.IsExpressionConstant(expr.right))

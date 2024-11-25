@@ -2115,6 +2115,7 @@ namespace CommonScript.Runtime.Internal
             DictImpl dictImpl1 = null;
             Instance instance1 = null;
             ClassInfo classDef = null;
+            ClassInfo classDef2 = null;
             Value[] args = null;
             Value[] valueArr = null;
             int[] intArray1 = null;
@@ -2381,6 +2382,10 @@ namespace CommonScript.Runtime.Internal
                             row.firstArg = opMap[str1];
                             row.op = 6;
                         }
+                        else if (str1 == "is")
+                        {
+                            row.op = 64;
+                        }
                         else
                         {
                             row.firstArg = opMap[str1];
@@ -2607,6 +2612,42 @@ namespace CommonScript.Runtime.Internal
                             valueStack[valueStackSize] = globalValues.falseValue;
                         }
                         valueStackSize += 1;
+                        break;
+                    case 64:
+                        // OP_BIN_OP_IS;
+                        valueStackSize -= 1;
+                        left = valueStack[valueStackSize - 1];
+                        right = valueStack[valueStackSize];
+                        if (right.type != 13)
+                        {
+                            errorId = 4;
+                            errorMsg = "'is' operator can only be used with class names.";
+                            return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+                        }
+                        if (left.type != 12)
+                        {
+                            output = VALUE_FALSE;
+                        }
+                        else
+                        {
+                            classDef2 = (ClassInfo)right.internalValue;
+                            instance1 = (Instance)left.internalValue;
+                            classDef = instance1.classDef;
+                            output = VALUE_FALSE;
+                            while (classDef != null)
+                            {
+                                if (classDef2.id == classDef.id)
+                                {
+                                    output = VALUE_TRUE;
+                                    classDef = null;
+                                }
+                                else
+                                {
+                                    classDef = classDef.parent;
+                                }
+                            }
+                        }
+                        valueStack[valueStackSize - 1] = output;
                         break;
                     case 9:
                         // OP_BIN_OP_MATH;

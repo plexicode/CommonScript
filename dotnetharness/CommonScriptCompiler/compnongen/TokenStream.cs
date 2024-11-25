@@ -106,6 +106,12 @@ namespace CommonScript.Compiler
             return next == val1 || next == val2 || next == val3 || next == val4;
         }
 
+        public bool doesNextInclude5(string val1, string val2, string val3, string val4, string val5)
+        {
+            string next = this.peekValue();
+            return next == val1 || next == val2 || next == val3 || next == val4 || next == val5;
+        }
+
         public Token popKeyword(string value)
         {
             Token next = this.pop();

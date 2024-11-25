@@ -39,6 +39,8 @@ if (str1 == "+") {
 } else if (str1 == "&" || str1 == "|" || str1 == "^" || str1 == "<<" || str1 == ">>" || str1 == ">>>") {
     row.firstArg = opMap[str1];
     row.op = OP_BIN_OP_BIT_MATH;
+} else if (str1 == "is") {
+    row.op = OP_BIN_OP_IS;
 } else {
     row.firstArg = opMap[str1];
     row.op = OP_BIN_OP_MATH;
