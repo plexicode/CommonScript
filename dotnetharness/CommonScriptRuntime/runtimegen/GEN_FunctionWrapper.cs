@@ -4952,19 +4952,45 @@ namespace CommonScript.Runtime.Internal
                             case 15:
                                 valueStackSize -= 1;
                                 value = valueStack[valueStackSize];
+                                output = VALUE_NULL;
                                 if (value.type == 5)
                                 {
                                     PST_ParseFloat(stringUtil_getFlatValue(value), floatBuffer16);
-                                    output = VALUE_NULL;
                                     if (floatBuffer16[0] > 0)
                                     {
                                         int1 = (int)floatBuffer16[1];
                                         output = buildInteger(globalValues, int1);
                                     }
                                 }
-                                else
+                                break;
+                            case 25:
+                                valueStackSize -= 1;
+                                value = valueStack[valueStackSize];
+                                output = VALUE_NULL;
+                                if (value.type == 5)
                                 {
+                                    PST_ParseFloat(stringUtil_getFlatValue(value), floatBuffer16);
                                     output = VALUE_NULL;
+                                    if (floatBuffer16[0] > 0)
+                                    {
+                                        float1 = floatBuffer16[1];
+                                        if (float1 == 0.0)
+                                        {
+                                            output = globalValues.floatsBy4x[0];
+                                        }
+                                        else if (float1 == 1.0)
+                                        {
+                                            output = globalValues.floatsBy4x[4];
+                                        }
+                                        else if (float1 == 0.5)
+                                        {
+                                            output = globalValues.floatsBy4x[2];
+                                        }
+                                        else
+                                        {
+                                            output = buildFloat(float1);
+                                        }
+                                    }
                                 }
                                 break;
                             case 7:

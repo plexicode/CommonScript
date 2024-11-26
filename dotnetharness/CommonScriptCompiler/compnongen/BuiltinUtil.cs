@@ -12,6 +12,7 @@ namespace CommonScript.Compiler
                 // TODO: o == null ? 'null' : (o + '')
                 "@public function print(o) { return $io_stdout(o); }",
                 "@public function tryParseInt(s) { return $parse_int(s); }",
+                "@public function tryParseFloat(s) { return $parse_float(s); }",
                 "@public function floor(n) { return $math_floor(n); }",
                 "@public function getUnixTime() { return $unix_time(0); }",
                 "@public function getUnixTimeFloat() { return $unix_time(1); }",

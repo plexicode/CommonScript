@@ -17,6 +17,7 @@ namespace CommonScript.Compiler
         public const int MATH_SIN = 13;
         public const int MATH_TAN = 14;
         public const int PARSE_INT = 15;
+        public const int PARSE_FLOAT = 25;
         public const int RANDOM_FLOAT = 7;
         public const int SORT_START = 2;
         public const int SORT_END = 3;
@@ -27,7 +28,7 @@ namespace CommonScript.Compiler
         public const int TXT_STRING_TO_BYTES = 24;
         public const int UNIX_TIME = 1;
 
-        // Next ID: 25
+        // Next ID: 26
     }
 
     internal static class SpecialActionUtil
@@ -47,6 +48,7 @@ namespace CommonScript.Compiler
             { "math_log", SpecialActionCodes.MATH_LOG },
             { "math_sin", SpecialActionCodes.MATH_SIN },
             { "math_tan", SpecialActionCodes.MATH_TAN },
+            { "parse_float", SpecialActionCodes.PARSE_FLOAT },
             { "parse_int", SpecialActionCodes.PARSE_INT },
             { "random_float", SpecialActionCodes.RANDOM_FLOAT },
             { "sort_end", SpecialActionCodes.SORT_END },
@@ -74,6 +76,7 @@ namespace CommonScript.Compiler
             { "math_log", 2 },
             { "math_sin", 1 },
             { "math_tan", 1 },
+            { "parse_float", 1 },
             { "parse_int", 1 },
             { "random_float", 0 },
             { "sort_end", 1 },

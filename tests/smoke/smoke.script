@@ -18,6 +18,25 @@ function main(args) {
     byteBufTest();
     inlineIncrementTest();
     typeofTest();
+    parseNumsTest();
+}
+
+const INTENTIONAL_PADDING = ' ';
+
+function parseNumsTest() {
+
+    assertStrEqual(tryParseInt('42' + INTENTIONAL_PADDING), 42);
+    assertStrEqual(tryParseInt(INTENTIONAL_PADDING + '-5'), -5);
+    assertStrEqual(tryParseInt('100.001'), 100);
+    assertStrEqual(tryParseInt('Infinity'), null);
+
+    // NOTE: only test with clean summations of inverse powers
+    // of 2 to prevent "0.29999999997" or "0.800000000002" nonsense
+    assertStrEqual(tryParseFloat(INTENTIONAL_PADDING + '42.5'), 42.5);
+    assertStrEqual(tryParseFloat('-5' + INTENTIONAL_PADDING), -5.0);
+    assertStrEqual(tryParseFloat('100.125'), 100.125);
+    assertStrEqual(tryParseFloat('Infinity'), null);
+    assertStrEqual(tryParseFloat('.75'), 0.75);
 }
 
 function typeofTest() {
