@@ -1708,6 +1708,7 @@ let RunInterpreterImpl = function(task) {
 	let dictImpl1 = null;
 	let instance1 = null;
 	let classDef = null;
+	let classDef2 = null;
 	let args = null;
 	let valueArr = null;
 	let intArray1 = null;
@@ -2119,15 +2120,17 @@ let RunInterpreterImpl = function(task) {
 				if (left[0] != 12) {
 					output = VALUE_FALSE;
 				} else {
-					classDef = right[1];
+					classDef2 = right[1];
 					instance1 = left[1];
+					classDef = instance1[1];
 					output = VALUE_FALSE;
 					while (classDef != null) {
-						if (instance1[1][0] == classDef[0]) {
+						if (classDef2[0] == classDef[0]) {
 							output = VALUE_TRUE;
 							classDef = null;
+						} else {
+							classDef = classDef[2];
 						}
-						classDef = classDef[2];
 					}
 				}
 				valueStack[valueStackSize - 1] = output;
@@ -4021,15 +4024,34 @@ let RunInterpreterImpl = function(task) {
 					case 15:
 						valueStackSize -= 1;
 						value = valueStack[valueStackSize];
+						output = VALUE_NULL;
 						if (value[0] == 5) {
 							PST$floatParseHelper(floatBuffer16, stringUtil_getFlatValue(value));
-							output = VALUE_NULL;
 							if (floatBuffer16[0] > 0) {
 								int1 = Math.floor(floatBuffer16[1]);
 								output = buildInteger(globalValues, int1);
 							}
-						} else {
+						}
+						break;
+					case 25:
+						valueStackSize -= 1;
+						value = valueStack[valueStackSize];
+						output = VALUE_NULL;
+						if (value[0] == 5) {
+							PST$floatParseHelper(floatBuffer16, stringUtil_getFlatValue(value));
 							output = VALUE_NULL;
+							if (floatBuffer16[0] > 0) {
+								float1 = floatBuffer16[1];
+								if (float1 == 0.0) {
+									output = globalValues[9][0];
+								} else if (float1 == 1.0) {
+									output = globalValues[9][4];
+								} else if (float1 == 0.5) {
+									output = globalValues[9][2];
+								} else {
+									output = buildFloat(float1);
+								}
+							}
 						}
 						break;
 					case 7:
@@ -4317,6 +4339,44 @@ let RunInterpreterImpl = function(task) {
 						locals = frame[6];
 					}
 				}
+				break;
+			case 65:
+				// OP_TYPEOF;
+				switch (valueStack[valueStackSize - 1][0]) {
+					case 1:
+						str1 = "null";
+						break;
+					case 3:
+						str1 = "int";
+						break;
+					case 4:
+						str1 = "float";
+						break;
+					case 2:
+						str1 = "bool";
+						break;
+					case 5:
+						str1 = "string";
+						break;
+					case 11:
+						str1 = "function";
+						break;
+					case 9:
+						str1 = "list";
+						break;
+					case 10:
+						str1 = "dict";
+						break;
+					case 12:
+						str1 = "object";
+						break;
+					default:
+						frame[1] = pc;
+						frame[4] = valueStackSize;
+						task[2] = frame;
+						return ExRes_HardCrash(task, "Unknown type?");
+				}
+				valueStack[valueStackSize - 1] = buildString(globalValues, str1, true);
 				break;
 			default:
 				frame[1] = pc;
