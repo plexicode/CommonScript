@@ -5305,6 +5305,45 @@ namespace CommonScript.Runtime.Internal
                             }
                         }
                         break;
+                    case 65:
+                        // OP_TYPEOF;
+                        switch (valueStack[valueStackSize - 1].type)
+                        {
+                            case 1:
+                                str1 = "null";
+                                break;
+                            case 3:
+                                str1 = "int";
+                                break;
+                            case 4:
+                                str1 = "float";
+                                break;
+                            case 2:
+                                str1 = "bool";
+                                break;
+                            case 5:
+                                str1 = "string";
+                                break;
+                            case 11:
+                                str1 = "function";
+                                break;
+                            case 9:
+                                str1 = "list";
+                                break;
+                            case 10:
+                                str1 = "dict";
+                                break;
+                            case 12:
+                                str1 = "object";
+                                break;
+                            default:
+                                frame.pc = pc;
+                                frame.valueStackSize = valueStackSize;
+                                task.stack = frame;
+                                return ExRes_HardCrash(task, "Unknown type?");
+                        }
+                        valueStack[valueStackSize - 1] = buildString(globalValues, str1, true);
+                        break;
                     default:
                         frame.pc = pc;
                         frame.valueStackSize = valueStackSize;

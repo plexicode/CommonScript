@@ -69,7 +69,8 @@
         public const int OP_TRY_FINALLY_END = 60;
         public const int OP_TRY_CATCH_ROUTER = 61;
         public const int OP_TRY_INFO = 62;
+        public const int OP_TYPEOF = 65;
 
-        // NEXT: 65
+        // NEXT: 66
     }
 }

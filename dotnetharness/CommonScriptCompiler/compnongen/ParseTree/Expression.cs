@@ -35,9 +35,10 @@ namespace CommonScript.Compiler
         STRING_CONST = 28,
         TERNARY = 29,
         THIS = 30,
+        TYPEOF = 33,
         VARIABLE = 31,
 
-        MAX_VALUE = 33,
+        MAX_VALUE = 34,
     }
 
     internal class Expression
@@ -370,6 +371,13 @@ namespace CommonScript.Compiler
             sliceExpr.opToken = bracketToken;
             sliceExpr.args = new Expression[] { start, end, step };
             return sliceExpr;
+        }
+        
+        public static Expression createTypeof(Token typeofToken, Expression root)
+        {
+            Expression typeofExpr = new Expression(typeofToken, ExpressionType.TYPEOF);
+            typeofExpr.root = root;
+            return typeofExpr;
         }
     }
 }

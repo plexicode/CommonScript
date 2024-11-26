@@ -17,6 +17,19 @@ function main(args) {
     unixTimeTest();
     byteBufTest();
     inlineIncrementTest();
+    typeofTest();
+}
+
+function typeofTest() {
+    assertStrEqual(typeof 1, 'int');
+    assertStrEqual(typeof 1.0, 'float');
+    assertStrEqual(typeof true, 'bool');
+    assertStrEqual(typeof null, 'null');
+    assertStrEqual(typeof '', 'string');
+    assertStrEqual(typeof [], 'list');
+    assertStrEqual(typeof {}, 'dict');
+    assertStrEqual(typeof new Exception(), 'object');
+    assertStrEqual(typeof assertStrEqual, 'function');
 }
 
 function opTests() {

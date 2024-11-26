@@ -49,6 +49,7 @@ namespace CommonScript.Compiler
                 "function", "class", "field", "property", "constructor", "const", "enum",
                 "base", "this",
                 "null", "false", "true", "new",
+                "typeof",
                 "if", "else", "for", "while", "do", "break", "continue", "switch", "case", "default", "yield", "return",
                 "throw", "try", "catch", "finally",
                 "import", "namespace",

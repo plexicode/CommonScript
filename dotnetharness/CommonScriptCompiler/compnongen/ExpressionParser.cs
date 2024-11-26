@@ -195,9 +195,19 @@ namespace CommonScript.Compiler
                 case '~':
                     if (next == "~") return this.ParseNegatePrefix();
                     break;
+                case 't':
+                    if (next == "typeof") return this.ParseTypeofPrefix();
+                    break;
             }
 
             return this.ParseUnarySuffix();
+        }
+
+        private Expression ParseTypeofPrefix()
+        {
+            Token typeofToken = this.tokens.popKeyword("typeof");
+            Expression root = this.ParseUnaryPrefix();
+            return Expression.createTypeof(typeofToken, root);
         }
 
         private Expression ParseNegatePrefix()

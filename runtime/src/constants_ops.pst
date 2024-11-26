@@ -63,6 +63,7 @@ const int OP_THROW = 59;
 const int OP_TRY_FINALLY_END = 60;
 const int OP_TRY_CATCH_ROUTER = 61;
 const int OP_TRY_INFO = 62;
+const int OP_TYPEOF = 65;
 
 const int SPECIAL_ACTION_B64_FROM_BYTES = 16;
 const int SPECIAL_ACTION_B64_TO_BYTES = 17;

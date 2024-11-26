@@ -215,6 +215,7 @@ ExecutionResult RunInterpreterImpl(ExecutionTask task) {
             case OP_THROW: Core.EmitComment("OP_THROW"); @import("ops/op_throw.pst"); break;
             case OP_TRY_CATCH_ROUTER: Core.EmitComment("OP_TRY_CATCH_ROUTER"); @import("ops/op_try_catch_router.pst"); break;
             case OP_TRY_FINALLY_END: Core.EmitComment("OP_TRY_FINALLY_END"); @import("ops/op_try_finally_end.pst"); break;
+            case OP_TYPEOF: Core.EmitComment("OP_TYPEOF"); @import("ops/op_typeof.pst"); break;
 
             default:
                 @import("macros/saveframe.pst");

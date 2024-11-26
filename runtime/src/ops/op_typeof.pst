@@ -1,0 +1,16 @@
+switch (valueStack[valueStackSize - 1].type) {
+    case Type.NULL: str1 = "null"; break;
+    case Type.INTEGER: str1 = "int"; break;
+    case Type.FLOAT: str1 = "float"; break;
+    case Type.BOOLEAN: str1 = "bool"; break;
+    case Type.STRING: str1 = "string"; break;
+    case Type.FUNCTION: str1 = "function"; break;
+    case Type.LIST: str1 = "list"; break;
+    case Type.DICTIONARY: str1 = "dict"; break;
+    case Type.INSTANCE: str1 = "object"; break;
+    default:
+        @import("macros/saveframe.pst");
+        return ExRes_HardCrash(task, "Unknown type?");
+}
+
+valueStack[valueStackSize - 1] = buildString(globalValues, str1, true);

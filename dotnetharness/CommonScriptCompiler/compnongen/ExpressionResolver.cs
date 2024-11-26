@@ -40,6 +40,7 @@ namespace CommonScript.Compiler
                 case ExpressionType.STRING_CONST: return this.FirstPass_StringConstant(expr);
                 case ExpressionType.TERNARY: return this.FirstPass_Ternary(expr);
                 case ExpressionType.THIS: return this.FirstPass_This(expr);
+                case ExpressionType.TYPEOF: return this.FirstPass_TypeOf(expr);
                 case ExpressionType.VARIABLE: return this.FirstPass_Variable(expr);
 
                 case ExpressionType.EXTENSION_REFERENCE:
@@ -84,6 +85,7 @@ namespace CommonScript.Compiler
                 case ExpressionType.STRING_CONST: return this.SecondPass_StringConstant(expr);
                 case ExpressionType.TERNARY: return this.SecondPass_Ternary(expr);
                 case ExpressionType.THIS: return this.SecondPass_ThisConstant(expr);
+                case ExpressionType.TYPEOF: return this.SecondPass_TypeOf(expr);
                 case ExpressionType.VARIABLE: return this.SecondPass_Variable(expr);
                 default:
                     Errors.ThrowNotImplemented(expr.firstToken, "second pass for this type");
@@ -318,6 +320,12 @@ namespace CommonScript.Compiler
         private Expression FirstPass_This(Expression thisExpr)
         {
             return thisExpr;
+        }
+
+        private Expression FirstPass_TypeOf(Expression typeofExpr)
+        {
+            typeofExpr.root = this.ResolveExpressionFirstPass(typeofExpr.root);
+            return typeofExpr;
         }
 
         private static AbstractEntity FindLocallyReferencedEntity(Dictionary<string, AbstractEntity> lookup, string name)
@@ -983,6 +991,36 @@ namespace CommonScript.Compiler
         {
             if (this.resolver.activeEntity.nestParent == null) throw new NotImplementedException();
             return thisExpr;
+        }
+
+        private Expression SecondPass_TypeOf(Expression typeofExpr)
+        {
+            typeofExpr.root = this.ResolveExpressionSecondPass(typeofExpr.root);
+            string stringConst = null;
+            switch (typeofExpr.root.type)
+            {
+                case ExpressionType.INTEGER_CONST: stringConst = "int"; break;
+                case ExpressionType.FLOAT_CONST: stringConst = "float"; break;
+                case ExpressionType.NULL_CONST: stringConst = "null"; break;
+                case ExpressionType.BOOL_CONST: stringConst = "bool"; break;
+                case ExpressionType.STRING_CONST: stringConst = "string"; break;
+                case ExpressionType.FUNCTION_REFERENCE: stringConst = "function"; break;
+
+                case ExpressionType.LIST_DEFINITION:
+                    if (typeofExpr.root.values.Length == 0) stringConst = "list";
+                    break;
+
+                case ExpressionType.DICTIONARY_DEFINITION:
+                    if (typeofExpr.root.keys.Length == 0) stringConst = "dict";
+                    break;
+            }
+
+            if (stringConst != null)
+            {
+                return Expression.createStringConstant(typeofExpr.firstToken, stringConst);
+            }
+
+            return typeofExpr;
         }
 
         private Expression SecondPass_Variable(Expression varExpr)

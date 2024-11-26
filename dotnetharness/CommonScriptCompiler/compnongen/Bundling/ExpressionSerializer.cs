@@ -36,6 +36,7 @@ namespace CommonScript.Compiler
                 case ExpressionType.STRING_CONST: return serializeStringConstant(expr);
                 case ExpressionType.TERNARY: return serializeTernary(expr);
                 case ExpressionType.THIS: return serializeThis(expr);
+                case ExpressionType.TYPEOF: return serializeTypeOf(expr);
                 case ExpressionType.VARIABLE: return serializeVariable(expr);
                 default:
                     throw new NotImplementedException();
@@ -384,6 +385,14 @@ namespace CommonScript.Compiler
         private static ByteCodeBuffer serializeThis(Expression thisKeyword)
         {
             return ByteCode.create0(OpCodes.OP_PUSH_THIS, thisKeyword.firstToken, null);
+        }
+
+        private static ByteCodeBuffer serializeTypeOf(Expression typeOfExpr)
+        {
+            ByteCodeBuffer root = serializeExpression(typeOfExpr.root);
+            return ByteCode.join2(
+                root,
+                ByteCode.create0(OpCodes.OP_TYPEOF, typeOfExpr.firstToken, null));
         }
 
         private static ByteCodeBuffer serializeVariable(Expression v)
