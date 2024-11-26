@@ -14,9 +14,9 @@ namespace CommonScript.Compiler
 
 
 #if DEBUG 
-        private static readonly bool isDebug = true;
+        internal static readonly bool IS_DEBUG = true;
 #else
-        private static readonly bool isDebug = false;
+        internal static readonly bool IS_DEBUG = false;
 #endif
 
         public CompilationEngine(string languageId, string version, ICollection<string> extensions)
@@ -56,7 +56,7 @@ namespace CommonScript.Compiler
                     if (sources[i].ContainsKey(moduleId))
                     {
                         found = true;
-                        if (isDebug)
+                        if (IS_DEBUG)
                         {
                             if (isUserCode) comp.ProvideFilesForUserModuleCompilation(moduleId, sources[i][moduleId]);
                             else comp.ProvideFilesForBuiltinLibraryModuleCompilation(moduleId, sources[i][moduleId]);
@@ -68,7 +68,7 @@ namespace CommonScript.Compiler
                                 if (isUserCode) comp.ProvideFilesForUserModuleCompilation(moduleId, sources[i][moduleId]);
                                 else comp.ProvideFilesForBuiltinLibraryModuleCompilation(moduleId, sources[i][moduleId]);
                             }
-                            catch (Exception ex)
+                            catch (ParserException ex)
                             {
                                 return new CompilationResult(null, ex.Message);
                             }

@@ -6,24 +6,22 @@ namespace CommonScript.Compiler
     {
         public static void ThrowError(Token token, string msg)
         {
-            string fullMsg = "[" + token.File + " Line " + token.Line + " Col " + token.Col + "] " + msg;
-            throw new Exception(fullMsg);
+            throw new ParserException(token, msg);
         }
 
         public static void ThrowEof(string file, string msg)
         {
-            string fullMsg = "[" + file + "] " + msg;
-            throw new Exception(fullMsg);
+            throw new ParserException(file, msg);
         }
 
         public static void ThrowGeneralError(string msg)
         {
-            throw new Exception(msg);
+            throw new ParserException(msg);
         }
 
-        public static void ThrowNotImplemented(Token token, string msg)
+        public static void ThrowNotImplemented(Token token, string? msg)
         {
-            ThrowError(token, "Not implemented: " + msg);
+            ThrowError(token, ("***NOT IMPLEMENTED*** " + msg).Trim());
         }
     }
 }

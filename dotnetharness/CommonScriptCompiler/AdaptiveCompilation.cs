@@ -40,8 +40,24 @@ namespace CommonScript.Compiler
 
         public CompilationResult GetCompilation()
         {
-            if (!this.isDone) throw new InvalidOperationException();
+            if (CompilationEngine.IS_DEBUG)
+            {
+                return this.GetCompilationImpl();
+            }
 
+            try
+            {
+                return this.GetCompilationImpl();
+            }
+            catch (ParserException ex)
+            {
+                return new CompilationResult(null, ex.Message);
+            }
+        }
+
+        private CompilationResult GetCompilationImpl()
+        {
+            if (!this.isDone) throw new InvalidOperationException();
             CompilerContext.EnsureDependenciesFulfilled(this.genCompiler);
             byte[] output = CompilerContext.CompleteCompilation(this.genCompiler);
             return new CompilationResult(output, null);
