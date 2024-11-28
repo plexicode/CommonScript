@@ -43,11 +43,9 @@ class StandaloneClass {
     field dynC = ['C'];
 
     @static constructor() {
-        print("Static ctor start");
         assertStrEqual(StandaloneClass.staA, null);
         assertStrEqual(StandaloneClass.staB, 2);
         StandaloneClass.staD = staticLog('hello', 'set-D');
-        print("Static ctor end");
     }
 
     @static function foo() {

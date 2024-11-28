@@ -57,6 +57,11 @@ ExecutionResult RunInterpreter(ExecutionTask task) {
         result = RunInterpreterImpl(task);
         reinvoke = result.type == ExecutionResultType.THROW_REINVOKE;
     }
+
+    if (result.type != ExecutionResultType.SUSPEND && result.type != ExecutionResultType.SLEEP) {
+        task.execCtx.tasks.Remove(task.taskId);
+    }
+
     return result;
 }
 

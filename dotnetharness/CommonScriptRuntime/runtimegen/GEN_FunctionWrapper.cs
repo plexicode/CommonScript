@@ -2056,6 +2056,10 @@ namespace CommonScript.Runtime.Internal
                 result = RunInterpreterImpl(task);
                 reinvoke = result.type == 5;
             }
+            if (result.type != 3 && result.type != 4)
+            {
+                task.execCtx.tasks.Remove(task.taskId);
+            }
             return result;
         }
 
