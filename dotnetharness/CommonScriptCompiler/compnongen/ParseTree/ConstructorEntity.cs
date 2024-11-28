@@ -5,11 +5,11 @@
         public Expression[] baseCtorArgValues;
 
         public ConstructorEntity(
-            Token ctorToken, 
-            Token[] args, 
-            Expression[] argDefaultValues, 
-            Expression[] baseArgs, 
-            Statement[] code, 
+            Token ctorToken,
+            Token[] args,
+            Expression[] argDefaultValues,
+            Expression[] baseArgs,
+            Statement[] code,
             bool isStatic)
             : base(ctorToken, EntityType.CONSTRUCTOR)
         {
@@ -18,6 +18,7 @@
             this.argDefaultValues = argDefaultValues;
             this.code = code;
             this.baseCtorArgValues = baseArgs;
+            this.isStatic = isStatic;
         }
     }
 }

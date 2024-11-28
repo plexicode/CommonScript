@@ -102,7 +102,7 @@ namespace CommonScript.Compiler
                 FieldEntity[] fields = siblings.Keys
                     .OrderBy(k => k)
                     .Select(k => siblings[k])
-                    .Where(e => e.type == EntityType.FIELD)
+                    .Where(e => e.type == EntityType.FIELD && e.isStatic == ctorEnt.isStatic)
                     .Cast<FieldEntity>()
                     .Where(e => e.defaultValue != null)
                     .ToArray();
@@ -138,17 +138,21 @@ namespace CommonScript.Compiler
 
             this.statementResolver.ResolveStatementArrayFirstPass(funcDef.code);
 
-            List<Statement> flattened = new List<Statement>();
-            flattened.AddRange(preBaseFieldInit);
-            flattened.AddRange(baseCtorInvocation);
-            flattened.AddRange(postBaseFieldInit);
-            flattened.AddRange(funcDef.code);
+            List<Statement> flattened = [
+                .. preBaseFieldInit,
+                .. baseCtorInvocation,
+                .. postBaseFieldInit,
+                .. funcDef.code,
+            ];
 
-            if (flattened.Count == 0 || flattened[flattened.Count - 1].type != StatementType.RETURN)
+            Statement lastStatement = flattened.Count == 0 ? null : flattened[flattened.Count - 1];
+            bool autoReturnNeeded = lastStatement == null ||
+                (lastStatement.type != StatementType.RETURN && lastStatement.type != StatementType.THROW);
+            if (autoReturnNeeded)
             {
                 flattened.Add(Statement.createReturn(null, Expression.createNullConstant(null)));
             }
-            funcDef.code = flattened.ToArray();
+            funcDef.code = [.. flattened];
 
             this.resolver.activeEntity = null;
             this.resolver.breakContext = null;
@@ -157,7 +161,10 @@ namespace CommonScript.Compiler
         private static Statement ConvertFieldDefaultValueIntoSetter(FieldEntity fld)
         {
             if (fld.opToken == null) throw new InvalidOperationException(); // only applicable to default-value-based fields.
-            Expression target = Expression.createDotField(Expression.createThisReference(null), null, fld.simpleName);
+            Expression root = fld.isStatic
+                ? Expression.createClassReference(null, fld.nestParent)
+                : Expression.createThisReference(null);
+            Expression target = Expression.createDotField(root, null, fld.simpleName);
             Token equal = fld.opToken;
             return Statement.createAssignment(target, equal, fld.defaultValue);
         }

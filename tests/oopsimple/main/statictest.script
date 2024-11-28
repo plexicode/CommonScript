@@ -1,0 +1,56 @@
+import testlib -> *;
+
+function staticTest() {
+    RefHolder.logger = [];
+
+    staticLog(StandaloneClass.foo(), '5');
+    assertListEqual(['set-C', 'set-D', '5'], RefHolder.logger);
+    staticLog(StandaloneClass.foo(), '5');
+    assertListEqual(['set-C', 'set-D', '5', '5'], RefHolder.logger);
+
+
+    assertStrEqual(StandaloneClass.staA, null);
+    assertStrEqual(StandaloneClass.staB, 2);
+    assertListEqual([1], StandaloneClass.staC);
+    assertStrEqual(StandaloneClass.staD, 'hello');
+
+    inst = new StandaloneClass();
+    assertStrEqual(null, inst.dynA);
+    assertStrEqual(3, inst.dynB);
+    assertListEqual(['C'], inst.dynC);
+
+    // should not be re-invoked
+    assertListEqual(['set-C', 'set-D', '5', '5'], RefHolder.logger);
+}
+
+function staticLog(value, msg) {
+    RefHolder.logger.add(msg);
+    return value;
+}
+
+class RefHolder {
+    @static field logger;
+}
+
+class StandaloneClass {
+    @static field staA;
+    @static field staB = 2;
+    @static field staC = staticLog([1], 'set-C');
+    @static field staD;
+
+    field dynA = null;
+    field dynB = 3;
+    field dynC = ['C'];
+
+    @static constructor() {
+        print("Static ctor start");
+        assertStrEqual(StandaloneClass.staA, null);
+        assertStrEqual(StandaloneClass.staB, 2);
+        StandaloneClass.staD = staticLog('hello', 'set-D');
+        print("Static ctor end");
+    }
+
+    @static function foo() {
+        return 'foo';
+    }
+}

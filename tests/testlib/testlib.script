@@ -1,6 +1,6 @@
 
 // Compares the stringified-value of each value and prints an error if they don't match.
-@public 
+@public
 function assertStrEqual(a, b) {
     if (a + '' != b + '') {
         print("ERR: " + a + " is not the same as " + b + "!");
@@ -14,5 +14,20 @@ function assertFloatEqual(expected, actual) {
     diff = diff < 0 ? -diff : diff;
     if (diff > 0.000000001) {
         assertStrEqual(expected, actual); // fail
+    }
+}
+
+@public
+function assertListEqual(expected, actual) {
+    tExp = typeof expected;
+    tAct = typeof actual;
+    if (tExp != 'list') return print("Cannot use List Equal for non-lists");
+    if (tAct != 'list') return assertStrEqual(expected, actual);
+    if (tExp.length != tAct.length) {
+        print("Different list lengths!");
+        return;
+    }
+    for (i = 0; i < tExp.length; i++) {
+        assertStrEqual(tExp[i], tAct[i]);
     }
 }

@@ -84,13 +84,16 @@ namespace CommonScript.Compiler
 
             Statement[] code = this.statementParser.ParseCodeBlock(true);
 
-            return new ConstructorEntity(
+            AbstractEntity ctor = new ConstructorEntity(
                 ctorKeyword,
                 args.ToArray(),
                 argValues.ToArray(),
                 baseArgs,
                 code,
                 annotations.ContainsKey("static"));
+
+            ctor.annotations = annotations;
+            return ctor;
         }
 
         public AbstractEntity ParseConst()
