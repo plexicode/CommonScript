@@ -2,11 +2,6 @@ import testlib -> *;
 
 function main(args) {
 
-    // TODO: default arg values
-    // TODO: nested in each other
-    // TODO: lambdas as default args
-    // TODO: lambdas in non-basic-function (constructors, field values, etc)
-    // TODO: lambda with multiple statements
     // TODO: lambdas that throw
 
     fn1 = () => "hello";
@@ -15,12 +10,48 @@ function main(args) {
     fn4 = (a, b) => "hello" + a + " " + b;
     fn5 = (a, b = 3) => "hello" + a + " " + b;
 
+    fn6 = (a, b) => {
+        c = a + b;
+        if (c == 5) return true;
+        return false;
+    };
+
+    // nested lambda
+    fn7 = (a) => {
+        f = (b, c) => c * b + 1;
+        return f(a, 7);
+    };
+
     assertStrEqual(fn1(), "hello");
     assertStrEqual(fn2(2), "hello2");
     assertStrEqual(fn3(3), "hello3");
     assertStrEqual(fn4(4, 5), "hello4 5");
     assertStrEqual(fn5(6), "hello6 3");
     assertStrEqual(fn5(7, 8), "hello7 8");
+    assertStrEqual(fn6(2, 3), true);
+    assertStrEqual(fn6(3, 4), false);
+    assertStrEqual(lambdaInArg(5), 10);
+    assertStrEqual(lambdaInArg(6, () => 3), 18);
+    assertStrEqual(fn7(3), 22);
+    assertStrEqual(new LambdaWrap().fnmem1(3, 4), 11);
+    assertStrEqual(new LambdaWrap().outVal, 27);
 
     print("ALL DONE");
+}
+
+// testing lambda as a default argument
+function lambdaInArg(x, y = () => 2) {
+    return x * y();
+}
+
+// testing lambdas in non-basic-function areas
+class LambdaWrap {
+
+    field fnmem1 = (a, b) => a + b * 2;
+    field outVal;
+
+    constructor() {
+        ctorLamb = (x) => 3 * x;
+        this.outVal = ctorLamb(9);
+    }
 }
