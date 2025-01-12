@@ -259,11 +259,8 @@ namespace CommonScript.Compiler
 
                 case EntityType.FUNCTION:
                 case EntityType.CONSTRUCTOR:
-                    bundleFunction((FunctionLikeEntity)entity, bundle, entity.nestParent != null && entity.nestParent.type == EntityType.CLASS);
-                    break;
-
                 case EntityType.LAMBDA_ENTITY:
-                    bundleFunction((FunctionLikeEntity)entity, bundle, false);
+                    bundleFunction((FunctionLikeEntity)entity, bundle);
                     break;
 
                 case EntityType.PROPERTY:
@@ -323,7 +320,7 @@ namespace CommonScript.Compiler
             bundle.enumById.Add(bei);
         }
 
-        private static void bundleFunction(FunctionLikeEntity entity, CompilationBundle bundle, bool isMethod)
+        private static void bundleFunction(FunctionLikeEntity entity, CompilationBundle bundle)
         {
             bool isLambda = entity.type == EntityType.LAMBDA_ENTITY;
             ByteCodeBuffer buffer = null;
