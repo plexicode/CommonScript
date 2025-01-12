@@ -195,7 +195,6 @@ namespace CommonScript.Compiler
 
                 case ExpressionType.ENUM_REFERENCE:
                     EnumEntity enumRef = (EnumEntity)dotField.root.objPtr;
-                    int index = -1;
                     // TODO: ew, gross, figure out a way to cache and stash a dictionary somewhere on the entity.
                     // Otherwise this could potentitially turn problematic in the off chance there's an enum with a
                     // few hundred members in it (e.g. generated code).

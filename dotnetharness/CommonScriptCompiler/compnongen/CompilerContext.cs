@@ -17,7 +17,6 @@ namespace CommonScript.Compiler
         public Dictionary<string, List<string>> depIdsByModuleId;
         public Dictionary<string, List<FileContext>> filesByModuleId;
         public List<string> finalCompilationOrder = null;
-        public List<string> requests;
         public Dictionary<string, bool> unfulfilledDependencies;
         public Dictionary<string, CompiledModule> compiledModulesById = null;
         public string extensionVersionId;
@@ -397,7 +396,7 @@ namespace CommonScript.Compiler
             activeEntityBucket[child.simpleName] = child;
         }
 
-        private static AbstractEntity ParseClass(
+        private static ClassEntity ParseClass(
             CompilerContext ctx,
             FileContext file,
             string namespacePrefix)
@@ -434,9 +433,9 @@ namespace CommonScript.Compiler
                 Expression[] baseArgs = null;
                 if (classDef.baseClassTokens != null)
                 {
-                    baseArgs = new Expression[0];
+                    baseArgs = [];
                 }
-                AbstractEntity ctor = new ConstructorEntity(classToken, new Token[0], new Expression[0], baseArgs, new Statement[0], false);
+                AbstractEntity ctor = new ConstructorEntity(classToken, [], [], baseArgs, [], false);
                 AttachEntityToParseTree(ctor, classDef, classDef.fileContext, classDef.fqName, classDef.classMembers, new Dictionary<string, Token>());
             }
 

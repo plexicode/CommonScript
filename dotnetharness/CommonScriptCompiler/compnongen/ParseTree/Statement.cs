@@ -42,8 +42,6 @@
         public SwitchChunk[] switchChunks;
         public CatchChunk[] catchChunks;
 
-        public Expression[] args;
-
         private Statement(Token firstToken, StatementType type)
         {
             this.firstToken = firstToken;

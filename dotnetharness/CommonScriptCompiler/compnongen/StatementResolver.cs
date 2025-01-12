@@ -73,12 +73,9 @@ namespace CommonScript.Compiler
                 case StatementType.THROW: return SecondPass_ThrowStatement(s);
                 case StatementType.TRY: return SecondPass_TryStatement(s);
                 case StatementType.WHILE_LOOP: return SecondPass_WhileLoop(s);
-
-                default:
-                    throw new NotImplementedException();
             }
 
-            return s;
+            throw new NotImplementedException();
         }
 
         private Statement FirstPass_Assignment(Statement assign)
@@ -89,7 +86,7 @@ namespace CommonScript.Compiler
             if (assign.assignTarget.type == ExpressionType.VARIABLE)
             {
                 // register that this variable was assigned to in this variable scope
-                ((FunctionLikeEntity) this.resolver.activeEntity).variableScope[assign.assignTarget.strVal] = true;
+                ((FunctionLikeEntity)this.resolver.activeEntity).variableScope[assign.assignTarget.strVal] = true;
             }
 
             return assign;
@@ -192,7 +189,7 @@ namespace CommonScript.Compiler
             {
                 if (cc.exceptionVarName != null)
                 {
-                    ((FunctionLikeEntity) this.resolver.activeEntity).variableScope[cc.exceptionVarName.Value] = true;
+                    ((FunctionLikeEntity)this.resolver.activeEntity).variableScope[cc.exceptionVarName.Value] = true;
                 }
 
                 if (cc.ExceptionNames.Length > 0)
@@ -204,7 +201,7 @@ namespace CommonScript.Compiler
                 else
                 {
                     cc.IsCatchAll = true;
-                    cc.ClassDefinitions = new AbstractEntity[0];
+                    cc.ClassDefinitions = [];
                 }
 
                 this.ResolveStatementArrayFirstPass(cc.Code);

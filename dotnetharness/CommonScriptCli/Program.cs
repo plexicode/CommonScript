@@ -7,8 +7,8 @@ namespace CommonScriptCli
 {
     internal class Program
     {
-        private static string CLI_LANG_NAME = "BasicCommonScript";
-        private static string CLI_LANG_VER = "0.1.0";
+        private static readonly string CLI_LANG_NAME = "BasicCommonScript";
+        private static readonly string CLI_LANG_VER = "0.1.0";
 
         static void Main(string[] args)
         {

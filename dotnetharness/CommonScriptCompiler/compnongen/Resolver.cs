@@ -8,7 +8,6 @@ namespace CommonScript.Compiler
     {
         public Dictionary<string, AbstractEntity> nestedEntities;
         public Dictionary<string, AbstractEntity> enumsByMemberFqName;
-        public Dictionary<string, AbstractEntity> builtinRefs;
         public Dictionary<string, AbstractEntity> flattenedEntities;
         public Dictionary<string, AbstractEntity> flattenedEntitiesAndEnumValues;
         public Dictionary<string, AbstractEntity> flattenedEntitiesNoEnumParents;

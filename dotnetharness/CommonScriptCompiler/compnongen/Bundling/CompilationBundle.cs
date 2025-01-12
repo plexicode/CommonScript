@@ -4,8 +4,6 @@ namespace CommonScript.Compiler
 {
     internal class CompilationBundle
     {
-        public List<string> nameById;
-        public Dictionary<string, int> nameToId;
         public string[] stringById = null;
         public List<ByteCodeRow[]> byteCodeById;
         public List<BundleFunctionInfo> functionById;

@@ -4,7 +4,7 @@
     {
         public Token CatchToken;
         public Token[][] ExceptionNames;
-        public AbstractEntity[] ClassDefinitions;
+        public ClassEntity[] ClassDefinitions;
         public Token exceptionVarName;
         public Statement[] Code;
         public bool IsCatchAll;
