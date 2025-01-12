@@ -16,8 +16,8 @@ namespace CommonScript.Compiler
             List<EnumEntity> enums = new List<EnumEntity>();
             List<ClassEntity> classes = new List<ClassEntity>();
             List<FieldEntity> fields = new List<FieldEntity>();
-            List<LambdaEntity> lambdas = new List<LambdaEntity>();
-            FunctionEntity mainFunc = null;
+            List<FunctionLikeEntity> lambdas = new List<FunctionLikeEntity>();
+            FunctionLikeEntity mainFunc = null;
 
             foreach (CompiledModule m in deterministicOrder)
             {
@@ -49,13 +49,13 @@ namespace CommonScript.Compiler
                                 if (checkForMain && tle.simpleName == "main")
                                 {
                                     if (mainFunc != null) Errors.ThrowError(tle.firstToken, "There are multiple functions named main in the root module.");
-                                    mainFunc = (FunctionEntity)func;
+                                    mainFunc = func;
                                 }
                             }
                             break;
 
                         case EntityType.LAMBDA_ENTITY:
-                            lambdas.Add((LambdaEntity)tle);
+                            lambdas.Add((FunctionLikeEntity)tle);
                             break;
 
                         case EntityType.FIELD:
@@ -72,7 +72,7 @@ namespace CommonScript.Compiler
                             break;
 
                         case EntityType.CONSTRUCTOR:
-                            functions.Add((ConstructorEntity)tle);
+                            functions.Add((FunctionLikeEntity)tle);
                             break;
 
                         case EntityType.NAMESPACE:

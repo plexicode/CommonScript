@@ -46,17 +46,21 @@ namespace CommonScript.Compiler
             return entity;
         }
 
-        public AbstractEntity ParseFunctionDefinition(Dictionary<string, Token> annotations)
+        public AbstractEntity ParseFunctionDefinition(
+            Dictionary<string, Token> annotations,
+            ClassEntity optionalParentClass)
         {
             Token functionKeyword = this.tokens.popKeyword("function");
             Token nameToken = this.tokens.popName("function name");
+            bool isStatic = annotations.ContainsKey("@static");
             List<Token> args = new List<Token>();
             List<Expression> argValues = new List<Expression>();
             this.ParseArgDefinitionList(args, argValues);
 
             Statement[] code = this.statementParser.ParseCodeBlock(true);
 
-            AbstractEntity entity = new FunctionEntity(functionKeyword, nameToken, args.ToArray(), argValues.ToArray(), code);
+            AbstractEntity entity = FunctionLikeEntity.BuildMethodOrStandalone(
+                functionKeyword, nameToken, args, argValues, code, isStatic, optionalParentClass);
             entity.annotations = annotations;
             return entity;
         }
@@ -84,10 +88,10 @@ namespace CommonScript.Compiler
 
             Statement[] code = this.statementParser.ParseCodeBlock(true);
 
-            AbstractEntity ctor = new ConstructorEntity(
+            AbstractEntity ctor = FunctionLikeEntity.BuildConstructor(
                 ctorKeyword,
-                args.ToArray(),
-                argValues.ToArray(),
+                args,
+                argValues,
                 baseArgs,
                 code,
                 annotations.ContainsKey("static"));

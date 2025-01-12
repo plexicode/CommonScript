@@ -11,7 +11,7 @@ namespace CommonScript.Compiler
         public Dictionary<string, AbstractEntity> flattenedEntities;
         public Dictionary<string, AbstractEntity> flattenedEntitiesAndEnumValues;
         public Dictionary<string, AbstractEntity> flattenedEntitiesNoEnumParents;
-        public List<LambdaEntity> lambdas = [];
+        public List<FunctionLikeEntity> lambdas = [];
 
         public AbstractEntity activeEntity = null;
         public AbstractEntity[] entityList = null;
@@ -90,11 +90,11 @@ namespace CommonScript.Compiler
 
         public void Resolve()
         {
-            List<FunctionEntity> functions = new List<FunctionEntity>();
+            List<FunctionLikeEntity> functions = new List<FunctionLikeEntity>();
             List<ClassEntity> classes = new List<ClassEntity>();
             List<ConstEntity> constants = new List<ConstEntity>();
             List<EnumEntity> enums = new List<EnumEntity>();
-            List<ConstructorEntity> constructors = new List<ConstructorEntity>();
+            List<FunctionLikeEntity> constructors = new List<FunctionLikeEntity>();
             List<FieldEntity> fields = new List<FieldEntity>();
 
             AbstractEntity[] entities = this.flattenedEntities.Values.ToArray();
@@ -113,7 +113,7 @@ namespace CommonScript.Compiler
                 }
                 else if (tle.type == EntityType.FUNCTION)
                 {
-                    functions.Add((FunctionEntity)tle);
+                    functions.Add((FunctionLikeEntity)tle);
                 }
                 else if (tle.type == EntityType.CLASS)
                 {
@@ -121,7 +121,7 @@ namespace CommonScript.Compiler
                 }
                 else if (tle.type == EntityType.CONSTRUCTOR)
                 {
-                    constructors.Add((ConstructorEntity)tle);
+                    constructors.Add((FunctionLikeEntity)tle);
                 }
                 else if (tle.type == EntityType.FIELD)
                 {
@@ -182,7 +182,7 @@ namespace CommonScript.Compiler
             }
         }
 
-        internal void ReportNewLambda(LambdaEntity lamb)
+        internal void ReportNewLambda(FunctionLikeEntity lamb)
         {
             this.lambdas.Add(lamb);
         }

@@ -10,7 +10,7 @@ namespace CommonScript.Compiler
         public Dictionary<string, AbstractEntity> nestedEntities;
         public Dictionary<string, AbstractEntity> flattenedEntities;
         public Dictionary<string, AbstractEntity> entitiesNoEnumParents;
-        public List<LambdaEntity> lambdaEntities;
+        public List<FunctionLikeEntity> lambdaEntities;
 
         public CompiledModule(string id)
         {
@@ -19,7 +19,7 @@ namespace CommonScript.Compiler
             this.textResources = new Dictionary<string, string>();
         }
 
-        public void AddLambdas(IList<LambdaEntity> lambdas)
+        public void AddLambdas(IList<FunctionLikeEntity> lambdas)
         {
             this.lambdaEntities = [.. lambdas];
         }

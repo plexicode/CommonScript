@@ -315,7 +315,7 @@ namespace CommonScript.Compiler
 
         private static ByteCodeBuffer serializeLambda(Expression lambda)
         {
-            LambdaEntity lambdaEntity = (LambdaEntity)lambda.objPtr;
+            FunctionLikeEntity lambdaEntity = (FunctionLikeEntity)lambda.objPtr;
             return ByteCode.create1(OpCodes.OP_PUSH_LAMBDA, lambda.firstToken, null, lambdaEntity.serializationIndex);
         }
 

@@ -282,6 +282,8 @@ namespace CommonScript.Compiler
             expressionParser.statementParser = statementParser;
             expressionParser.entityParser = entityParser;
 
+            ClassEntity wrappingClass = nestParent as ClassEntity;
+
             while (keepChecking)
             {
                 Token firstToken = tokens.peek();
@@ -292,7 +294,7 @@ namespace CommonScript.Compiler
                 switch (nextToken)
                 {
                     case "function":
-                        entity = entityParser.ParseFunctionDefinition(annotationTokens);
+                        entity = entityParser.ParseFunctionDefinition(annotationTokens, wrappingClass);
                         break;
 
                     case "namespace":
@@ -435,7 +437,7 @@ namespace CommonScript.Compiler
                 {
                     baseArgs = [];
                 }
-                AbstractEntity ctor = new ConstructorEntity(classToken, [], [], baseArgs, [], false);
+                AbstractEntity ctor = FunctionLikeEntity.BuildConstructor(classToken, [], [], baseArgs, [], false);
                 AttachEntityToParseTree(ctor, classDef, classDef.fileContext, classDef.fqName, classDef.classMembers, new Dictionary<string, Token>());
             }
 

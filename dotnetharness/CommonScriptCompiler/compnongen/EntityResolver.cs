@@ -87,11 +87,11 @@ namespace CommonScript.Compiler
             List<Statement> baseCtorInvocation = new List<Statement>();
 
             bool isCtor = funcDef.type == EntityType.CONSTRUCTOR;
-            ConstructorEntity ctorEnt = null;
+            FunctionLikeEntity ctorEnt = null;
 
             if (isCtor)
             {
-                ctorEnt = (ConstructorEntity)funcDef;
+                ctorEnt = funcDef;
 
                 Dictionary<string, AbstractEntity> siblings = funcDef.nestParent.getMemberLookup();
                 // TODO: this is wrong. The fields should be processed in the order that they appear in the code itself.
