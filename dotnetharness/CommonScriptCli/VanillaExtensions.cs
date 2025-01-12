@@ -4,17 +4,18 @@ using System.Collections.Generic;
 
 namespace CommonScriptCli
 {
-#pragma warning disable CS8603 // Possible null reference return.
     internal class VanillaExtensionSet
     {
         private Dictionary<string, Func<object, object[], object>> lookup;
         private CanonicalEventLoop eventLoop;
         private RuntimeContext rtCtx;
 
+#pragma warning disable CS8618 // too disruptive to check the nullable in extension methods even though it's impossible to get into that state when configured properly
         public VanillaExtensionSet()
         {
             this.lookup = this.BuildExtensionSet();
         }
+#pragma warning restore CS8618
 
         public void SetEventLoop(CanonicalEventLoop eventLoop, RuntimeContext rtCtx)
         {
@@ -33,6 +34,7 @@ namespace CommonScriptCli
         {
             Dictionary<string, Func<object, object[], object>> output = [];
 
+#pragma warning disable CS8603 // null return values are expected and okay
             output["io_stdout"] = (object task, object[] args) =>
             {
                 string val = ValueConverter.RTValueToReadableString(args[0]);
@@ -56,9 +58,9 @@ namespace CommonScriptCli
                 rtTask.RequestTimedSuspend((int)(delaySec * 1000));
                 return null;
             };
+#pragma warning restore CS8603 // Possible null reference return.
 
             return output;
         }
     }
-#pragma warning restore CS8603 // Possible null reference return.
 }
