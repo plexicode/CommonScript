@@ -152,17 +152,20 @@ namespace CommonScript.Compiler
 
             for (int i = 0; i < functions.Count; i++)
             {
+                this.entityResolver.ResetAutoVarId();
                 this.entityResolver.ResolveFunctionFirstPass(functions[i]);
             }
 
             for (int i = 0; i < constructors.Count; i++)
             {
+                this.entityResolver.ResetAutoVarId();
                 this.entityResolver.ResolveFunctionFirstPass(constructors[i]);
             }
 
             // At this point, all lambdas have been repoerted.
             for (int i = 0; i < lambdas.Count; i++) // DO NOT CHANGE TO FOR-EACH. This count can grow as a result of nested lambdas.
             {
+                this.entityResolver.ResetAutoVarId();
                 this.entityResolver.ResolveFunctionFirstPass(lambdas[i]);
             }
 

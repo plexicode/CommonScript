@@ -3269,6 +3269,15 @@ namespace CommonScript.Runtime.Internal
                             return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
                         }
                         break;
+                    case 66:
+                        // OP_ENSURE_LIST;
+                        if (valueStack[valueStackSize - 1].type != 9)
+                        {
+                            errorId = 9;
+                            errorMsg = "Expected a list here.";
+                            return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+                        }
+                        break;
                     case 17:
                         // OP_ENSURE_INT_OR_STRING;
                         i = valueStack[valueStackSize - 1].type;

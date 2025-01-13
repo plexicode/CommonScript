@@ -38,7 +38,7 @@ namespace CommonScript.Compiler
                 case StatementType.BREAK: return FirstPass_Break(s);
                 case StatementType.CONTINUE: return FirstPass_Continue(s);
                 case StatementType.DO_WHILE_LOOP: return FirstPass_DoWhileLoop(s);
-                case StatementType.FOR_EACH_LOOP: throw new NotImplementedException();
+                case StatementType.FOR_EACH_LOOP: return FirstPass_ForEachLoop(s);
                 case StatementType.FOR_LOOP: return FirstPass_ForLoop(s);
                 case StatementType.IF_STATEMENT: return FirstPass_IfStatement(s);
                 case StatementType.SWITCH_STATEMENT: return FirstPass_SwitchStatement(s);
@@ -67,6 +67,7 @@ namespace CommonScript.Compiler
                 case StatementType.DO_WHILE_LOOP: return SecondPass_DoWhileLoop(s);
                 case StatementType.EXPRESSION_AS_STATEMENT: return SecondPass_ExpressionAsStatement(s);
                 case StatementType.FOR_LOOP: return SecondPass_ForLoop(s);
+                case StatementType.FOR_EACH_LOOP: return SecondPass_ForEachLoop(s);
                 case StatementType.IF_STATEMENT: return SecondPass_IfStatement(s);
                 case StatementType.RETURN: return SecondPass_Return(s);
                 case StatementType.SWITCH_STATEMENT: return SecondPass_SwitchStatement(s);
@@ -132,6 +133,15 @@ namespace CommonScript.Compiler
             this.resolver.breakContext = oldBreakContext;
             doWhileLoop.condition = this.expressionResolver.ResolveExpressionFirstPass(doWhileLoop.condition);
             return doWhileLoop;
+        }
+
+        private Statement FirstPass_ForEachLoop(Statement forEachLoop)
+        {
+            forEachLoop.autoId = this.entityResolver.GetNextAutoVarId();
+            forEachLoop.expression = this.expressionResolver.ResolveExpressionFirstPass(forEachLoop.expression);
+            ((FunctionLikeEntity)this.resolver.activeEntity).variableScope[forEachLoop.varToken.Value] = true;
+            this.ResolveStatementArrayFirstPass(forEachLoop.code);
+            return forEachLoop;
         }
 
         private Statement FirstPass_ForLoop(Statement forLoop)
@@ -296,6 +306,13 @@ namespace CommonScript.Compiler
             this.ResolveStatementArraySecondPass(forLoop.code);
             this.resolver.breakContext = oldBreakContext;
             return forLoop;
+        }
+
+        private Statement SecondPass_ForEachLoop(Statement forEachLoop)
+        {
+            forEachLoop.expression = this.expressionResolver.ResolveExpressionSecondPass(forEachLoop.expression);
+            this.ResolveStatementArraySecondPass(forEachLoop.code);
+            return forEachLoop;
         }
 
         private Statement SecondPass_IfStatement(Statement ifStatement)

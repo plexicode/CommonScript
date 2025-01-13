@@ -175,6 +175,7 @@ ExecutionResult RunInterpreterImpl(ExecutionTask task) {
             case OP_DOT_FIELD: Core.EmitComment("OP_DOT_FIELD"); @import("ops/op_dot_field.pst"); break;
             case OP_ENSURE_BOOL: Core.EmitComment("OP_ENSURE_BOOL"); @import("ops/op_ensure_bool.pst"); break;
             case OP_ENSURE_INT: Core.EmitComment("OP_ENSURE_INT"); @import("ops/op_ensure_int.pst"); break;
+            case OP_ENSURE_LIST: Core.EmitComment("OP_ENSURE_LIST"); @import("ops/op_ensure_list.pst"); break;
             case OP_ENSURE_INT_OR_STRING: Core.EmitComment("OP_ENSURE_INT_OR_STRING"); @import("ops/op_ensure_int_or_string.pst"); break;
             case OP_ENSURE_STRING: Core.EmitComment("OP_ENSURE_STRING"); @import("ops/op_ensure_string.pst"); break;
             case OP_EXT_INVOKE: Core.EmitComment("OP_EXT_INVOKE"); @import("ops/op_ext_invoke.pst"); break;

@@ -24,6 +24,7 @@
         public const int OP_ENSURE_BOOL = 16;
         public const int OP_ENSURE_INT_OR_STRING = 17;
         public const int OP_ENSURE_INT = 18;
+        public const int OP_ENSURE_LIST = 66;
         public const int OP_ENSURE_STRING = 19;
         public const int OP_EXT_INVOKE = 20;
         public const int OP_FUNCTION_INVOKE = 21;
@@ -71,6 +72,6 @@
         public const int OP_TRY_INFO = 62;
         public const int OP_TYPEOF = 65;
 
-        // NEXT: 66
+        // NEXT: 67
     }
 }

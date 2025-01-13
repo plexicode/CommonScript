@@ -43,7 +43,7 @@ namespace CommonScript.Compiler
                     case "break": return this.ParseBreakContinue();
                     case "continue": return this.ParseBreakContinue();
                     case "do": return this.ParseDoWhileLoop();
-                    case "for": return this.ParseForLoop();
+                    case "for": return this.ParseAnyForLoop();
                     case "if": return this.ParseIfStatement();
                     case "return": return this.ParseReturn();
                     case "switch": return this.ParseSwitch();
@@ -162,7 +162,7 @@ namespace CommonScript.Compiler
                 return this.ParseForEachLoop();
             }
 
-            return this.ParseForLoop();
+            return this.ParseTraditionalForLoop();
         }
 
         private Statement ParseForEachLoop()
@@ -177,7 +177,7 @@ namespace CommonScript.Compiler
             return Statement.createForEachLoop(forToken, varToken, listExpr, code);
         }
 
-        private Statement ParseForLoop()
+        private Statement ParseTraditionalForLoop()
         {
             Token forToken = this.tokens.popKeyword("for");
             this.tokens.popExpected("(");

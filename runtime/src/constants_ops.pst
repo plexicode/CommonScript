@@ -18,6 +18,7 @@ const int OP_DOT_FIELD = 15;
 const int OP_ENSURE_BOOL = 16;
 const int OP_ENSURE_INT_OR_STRING = 17;
 const int OP_ENSURE_INT = 18;
+const int OP_ENSURE_LIST = 66;
 const int OP_ENSURE_STRING = 19;
 const int OP_EXT_INVOKE = 20;
 const int OP_FUNCTION_INVOKE = 21;

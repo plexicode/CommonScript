@@ -1,0 +1,5 @@
+if (valueStack[valueStackSize - 1].type != Type.LIST) {
+    errorId = ExceptionTypeId.TYPE;
+    errorMsg = "Expected a list here.";
+    @import("macros/throw.pst");
+}

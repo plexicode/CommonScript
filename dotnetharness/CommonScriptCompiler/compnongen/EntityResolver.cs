@@ -9,10 +9,21 @@ namespace CommonScript.Compiler
         private Resolver resolver;
         public ExpressionResolver expressionResolver;
         public StatementResolver statementResolver;
+        private int autoVarId = 0;
 
         public EntityResolver(Resolver resolver)
         {
             this.resolver = resolver;
+        }
+
+        public void ResetAutoVarId()
+        {
+            this.autoVarId = 0;
+        }
+
+        public int GetNextAutoVarId()
+        {
+            return autoVarId++;
         }
 
         public static void DetermineMemberOffsets(ClassEntity classDef)

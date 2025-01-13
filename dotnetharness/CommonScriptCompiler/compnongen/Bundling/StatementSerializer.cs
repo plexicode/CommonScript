@@ -28,6 +28,7 @@ namespace CommonScript.Compiler
                 case StatementType.DO_WHILE_LOOP: return serializeDoWhileLoop(stmnt);
                 case StatementType.EXPRESSION_AS_STATEMENT: return serializeExpressionStatement(stmnt);
                 case StatementType.FOR_LOOP: return serializeForLoop(stmnt);
+                case StatementType.FOR_EACH_LOOP: return serializeForEachLoop(stmnt);
                 case StatementType.IF_STATEMENT: return serializeIfStatement(stmnt);
                 case StatementType.RETURN: return serializeReturn(stmnt);
                 case StatementType.SWITCH_STATEMENT: return serializeSwitchStatement(stmnt);
@@ -158,7 +159,6 @@ namespace CommonScript.Compiler
             Statement[] init = forLoop.forInit;
             Statement[] step = forLoop.forStep;
 
-
             ByteCodeBuffer bufInit = serializeCodeBlock(init);
             ByteCodeBuffer bufStep = serializeCodeBlock(step);
             ByteCodeBuffer bufBody = serializeCodeBlock(code);
@@ -179,8 +179,59 @@ namespace CommonScript.Compiler
                 finalizeBreakContinue(bufBody, bufStep.length + 1, true, 0),
                 bufStep,
                 ByteCode.create1(OpCodes.OP_JUMP, null, null, -(1 + bodySize + stepSize + 1 + conditionSize)));
+        }
 
-            throw new NotImplementedException();
+        private static ByteCodeBuffer serializeForEachLoop(Statement forEachLoop)
+        {
+            string loopExpr = "@fe" + forEachLoop.autoId;
+            string iteratorVar = "@fi" + forEachLoop.autoId;
+
+            ByteCodeBuffer setup = ByteCode.join5(
+                ExpressionSerializer.serializeExpression(forEachLoop.expression),
+                ByteCode.create0(OpCodes.OP_ENSURE_LIST, forEachLoop.expression.firstToken, null),
+                ByteCode.create0(OpCodes.OP_ASSIGN_VAR, null, loopExpr),
+                ByteCode.create1(OpCodes.OP_PUSH_INT, null, null, 0),
+                ByteCode.create0(OpCodes.OP_ASSIGN_VAR, null, iteratorVar)
+            );
+
+            ByteCodeBuffer bufBody = serializeCodeBlock(forEachLoop.code);
+
+            ByteCodeBuffer increment = ByteCode.join4(
+                ByteCode.create0(OpCodes.OP_PUSH_VAR, null, iteratorVar),
+                ByteCode.create1(OpCodes.OP_PUSH_INT, null, null, 1),
+                ByteCode.create0(OpCodes.OP_BIN_OP, null, "+"),
+                ByteCode.create0(OpCodes.OP_ASSIGN_VAR, null, iteratorVar)
+            );
+
+            ByteCodeBuffer doAssign = ByteCode.join4(
+                ByteCode.create0(OpCodes.OP_PUSH_VAR, null, loopExpr),
+                ByteCode.create0(OpCodes.OP_PUSH_VAR, null, iteratorVar),
+                ByteCode.create0(OpCodes.OP_INDEX, null, null),
+                ByteCode.create0(OpCodes.OP_ASSIGN_VAR, forEachLoop.varToken, forEachLoop.varToken.Value)
+            );
+
+            ByteCodeBuffer lengthCheck = ByteCode.join5(
+                ByteCode.create0(OpCodes.OP_PUSH_VAR, null, iteratorVar),
+                ByteCode.create0(OpCodes.OP_PUSH_VAR, null, loopExpr),
+                ByteCode.create0(OpCodes.OP_DOT_FIELD, null, "length"),
+                ByteCode.create0(OpCodes.OP_BIN_OP, null, ">="),
+                ByteCode.create1(OpCodes.OP_POP_AND_JUMP_IF_TRUE, null, null, doAssign.length + bufBody.length + increment.length + 1)
+            );
+
+            bufBody = finalizeBreakContinue(bufBody, 5, true, 0);
+
+            int reverseJumpDistance = -1 - increment.length - bufBody.length - doAssign.length - lengthCheck.length;
+
+            ByteCodeBuffer fullCode = ByteCode.join6(
+                setup,
+                lengthCheck,
+                doAssign,
+                bufBody,
+                increment,
+                ByteCode.create1(OpCodes.OP_JUMP, null, null, reverseJumpDistance)
+            );
+
+            return fullCode;
         }
 
         private static ByteCodeBuffer serializeIfStatement(Statement ifStmnt)
@@ -387,6 +438,11 @@ namespace CommonScript.Compiler
             return ByteCode.join3(condBuf, jumpBuf, caseBuf);
         }
 
+        // All breaks and continues default to jumping to the end of the buffer in
+        // its current state. The additional break and continue offset are the
+        // distance from the end.
+        // For example, if this is a loop and the last instruction is a reverse JUMP,
+        // then the break offset will be 0 and the continue offset will be -1.
         private static ByteCodeBuffer finalizeBreakContinue(ByteCodeBuffer originalBuffer, int additionalBreakOffset, bool allowContinue, int additionalContinueOffset)
         {
             ByteCodeRow[] rows = ByteCode.flatten(originalBuffer);

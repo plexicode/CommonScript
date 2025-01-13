@@ -42,6 +42,8 @@
         public SwitchChunk[] switchChunks;
         public CatchChunk[] catchChunks;
 
+        public int autoId = 0;
+
         private Statement(Token firstToken, StatementType type)
         {
             this.firstToken = firstToken;
