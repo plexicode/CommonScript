@@ -1,0 +1,9 @@
+valueStackSize -= 2;
+value = valueStack[valueStackSize];
+stringUtil_getFlatValue(value); // just ensure the string is flattened as the uchars field will be used.
+intArray1 = ((StringImpl) value.internalValue).uChars;
+listImpl1 = (ListImpl) valueStack[valueStackSize + 1].internalValue;
+
+xmlUtil_parse(globalValues, intArray1, listImpl1.items);
+
+output = VALUE_NULL;

@@ -1,0 +1,23 @@
+/*
+    Upon error:
+        dataOut[0] -> 0
+        dataOut[1] -> string of error message if unsuccessful
+        dataOut[2] -> line of error
+        dataOut[3] -> column of error
+
+    Upon success:
+        dataOut[0] -> 1
+        dataOut[1] -> a data sequence of parsed values (see below)
+        dataOut[2] -> (ignored)
+        dataOut[3] -> (ignored)
+
+*/
+int xmlUtil_parse(GlobalValues globals, Array<int> chars, Array<Value> dataOut) {
+
+    dataOut[0] = globals.intZero;
+    dataOut[1] = buildString(globals, "XML Parsing is not implemented yet.", false);
+    dataOut[2] = globals.intZero;
+    dataOut[3] = globals.intZero;
+
+    return 0;
+}

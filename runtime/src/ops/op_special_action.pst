@@ -19,10 +19,11 @@ switch (row.firstArg) {
     case SPECIAL_ACTION_SORT_GET_NEXT_CMP: @import("special_actions/sort_get_next_cmp.pst"); break;
     case SPECIAL_ACTION_SORT_PROCEED: @import("special_actions/sort_proceed.pst"); break;
     case SPECIAL_ACTION_SORT_START: @import("special_actions/sort_start.pst"); break;
-    case SPECIAL_ACTION_UNIX_TIME: @import("special_actions/unix_time.pst"); break;
     case SPECIAL_ACTION_TXT_BYTES_TO_STRING: @import("special_actions/txt_bytes_to_string.pst"); break;
     case SPECIAL_ACTION_TXT_IS_VALID_ENC: @import("special_actions/txt_is_valid_enc.pst"); break;
     case SPECIAL_ACTION_TXT_STRING_TO_BYTES: @import("special_actions/txt_string_to_bytes.pst"); break;
+    case SPECIAL_ACTION_UNIX_TIME: @import("special_actions/unix_time.pst"); break;
+    case SPECIAL_ACTION_XML_PARSE: @import("special_actions/xml_parse.pst"); break;
     default:
         @import("macros/saveframe.pst");
         return ExRes_HardCrash(task, "ACTION NOT IMPLEMENTED");

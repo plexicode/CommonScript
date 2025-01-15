@@ -5031,17 +5031,6 @@ namespace CommonScript.Runtime.Internal
                                 valueStackSize -= 2;
                                 output = Sort_start(valueStack[valueStackSize], valueStack[valueStackSize + 1]);
                                 break;
-                            case 1:
-                                float1 = PST_CurrentTime;
-                                if (row.secondArg == 1)
-                                {
-                                    output = buildFloat(float1);
-                                }
-                                else
-                                {
-                                    output = buildInteger(globalValues, (int)float1);
-                                }
-                                break;
                             case 23:
                                 valueStackSize -= 2;
                                 value = valueStack[valueStackSize];
@@ -5113,6 +5102,26 @@ namespace CommonScript.Runtime.Internal
                                 output = buildIntegerListValue(ec, intArray1);
                                 intArray1 = null;
                                 str1 = null;
+                                break;
+                            case 1:
+                                float1 = PST_CurrentTime;
+                                if (row.secondArg == 1)
+                                {
+                                    output = buildFloat(float1);
+                                }
+                                else
+                                {
+                                    output = buildInteger(globalValues, (int)float1);
+                                }
+                                break;
+                            case 26:
+                                valueStackSize -= 2;
+                                value = valueStack[valueStackSize];
+                                stringUtil_getFlatValue(value);
+                                intArray1 = ((StringImpl)value.internalValue).uChars;
+                                listImpl1 = (ListImpl)valueStack[valueStackSize + 1].internalValue;
+                                xmlUtil_parse(globalValues, intArray1, listImpl1.items);
+                                output = VALUE_NULL;
                                 break;
                             default:
                                 frame.pc = pc;
@@ -5828,6 +5837,15 @@ namespace CommonScript.Runtime.Internal
                     break;
             }
             return "TODO: to string for type: " + value.type.ToString();
+        }
+
+        public static int xmlUtil_parse(GlobalValues globals, int[] chars, Value[] dataOut)
+        {
+            dataOut[0] = globals.intZero;
+            dataOut[1] = buildString(globals, "XML Parsing is not implemented yet.", false);
+            dataOut[2] = globals.intZero;
+            dataOut[3] = globals.intZero;
+            return 0;
         }
     }
 }

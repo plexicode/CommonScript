@@ -27,8 +27,9 @@ namespace CommonScript.Compiler
         public const int TXT_IS_VALID_ENC = 22;
         public const int TXT_STRING_TO_BYTES = 24;
         public const int UNIX_TIME = 1;
+        public const int XML_PARSE = 26;
 
-        // Next ID: 26
+        // Next ID: 27
     }
 
     internal static class SpecialActionUtil
@@ -59,6 +60,7 @@ namespace CommonScript.Compiler
             { "txt_is_valid_enc", SpecialActionCodes.TXT_IS_VALID_ENC },
             { "txt_string_to_bytes", SpecialActionCodes.TXT_STRING_TO_BYTES},
             { "unix_time", SpecialActionCodes.UNIX_TIME },
+            { "xml_parse", SpecialActionCodes.XML_PARSE },
         };
 
         private static readonly Dictionary<string, int> SPECIAL_ACTION_ARGC = new Dictionary<string, int>()
@@ -87,6 +89,7 @@ namespace CommonScript.Compiler
             { "txt_is_valid_enc", 1 },
             { "txt_string_to_bytes", 2 },
             { "unix_time", 1 },
+            { "xml_parse", 2 },
         };
 
         public static bool IsSpecialActionAndNotExtension(string name)

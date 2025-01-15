@@ -36,3 +36,4 @@
 @import("public_api.pst");
 @import("string_util.pst");
 @import("value_util.pst");
+@import("xml_util.pst");
