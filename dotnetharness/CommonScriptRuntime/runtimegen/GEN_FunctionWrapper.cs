@@ -140,11 +140,11 @@ namespace CommonScript.Runtime.Internal
             int j = 0;
             while (j < 26)
             {
-                chars[j] = ((char)((int)'A' + j)).ToString();
-                chars[j + 26] = ((char)((int)'a' + j)).ToString();
+                chars[j] = ((char)(65 + j)).ToString();
+                chars[j + 26] = ((char)(97 + j)).ToString();
                 if (j < 10)
                 {
-                    chars[j + 52] = ((char)((int)'0' + j)).ToString();
+                    chars[j + 52] = ((char)(48 + j)).ToString();
                 }
                 j += 1;
             }
@@ -462,6 +462,31 @@ namespace CommonScript.Runtime.Internal
                 return g.commonStrings[finalString];
             }
             return new Value(5, new StringImpl(sz, false, uchars, finalString, null, null));
+        }
+
+        public static Value createStringFromUnicodeArraySegment(GlobalValues g, int[] buffer, int start, int length)
+        {
+            if (length == buffer.Length)
+            {
+                return createStringFromUnicodeArray(g, buffer, true);
+            }
+            int[] newBuf = new int[length];
+            int i = 0;
+            while (i < length)
+            {
+                newBuf[i] = buffer[start + i];
+                i += 1;
+            }
+            return createStringFromUnicodeArray(g, newBuf, false);
+        }
+
+        public static int decToInt(int charCode)
+        {
+            if (charCode >= 48 && charCode <= 57)
+            {
+                return charCode - 48;
+            }
+            return -1;
         }
 
         public static DictImpl DictImpl_clone(ExecutionContext ec, DictImpl original)
@@ -878,6 +903,23 @@ namespace CommonScript.Runtime.Internal
         public static GlobalValues getGlobalsFromTask(object taskObj)
         {
             return ((ExecutionTask)taskObj).execCtx.globalValues;
+        }
+
+        public static int hexToInt(int charCode)
+        {
+            if (charCode >= 48 && charCode <= 57)
+            {
+                return charCode - 48;
+            }
+            if (charCode >= 97 && charCode <= 122)
+            {
+                return charCode + -87;
+            }
+            if (charCode >= 65 && charCode <= 90)
+            {
+                return charCode + -55;
+            }
+            return -1;
         }
 
         public static Value[] increaseValueStackCapacity(ExecutionTask task)
@@ -5120,7 +5162,7 @@ namespace CommonScript.Runtime.Internal
                                 stringUtil_getFlatValue(value);
                                 intArray1 = ((StringImpl)value.internalValue).uChars;
                                 listImpl1 = (ListImpl)valueStack[valueStackSize + 1].internalValue;
-                                xmlUtil_parse(globalValues, intArray1, listImpl1.items);
+                                xmlUtil_parse(ec, intArray1, listImpl1.items);
                                 output = VALUE_NULL;
                                 break;
                             default:
@@ -5839,12 +5881,564 @@ namespace CommonScript.Runtime.Internal
             return "TODO: to string for type: " + value.type.ToString();
         }
 
-        public static int xmlUtil_parse(GlobalValues globals, int[] chars, Value[] dataOut)
+        public static bool xml_ensureMore(XmlParseContext ctx)
         {
+            if (xml_hasMore(ctx))
+            {
+                return true;
+            }
+            xml_setError(ctx, "Unexpected end of XML document.");
+            return false;
+        }
+
+        public static int xml_getEntity(System.Collections.Generic.List<int> chars, int start, int end)
+        {
+            int length = end - start;
+            int i = 0;
+            int digit = 0;
+            if (chars[start] == 35 && length > 2)
+            {
+                int value = 0;
+                if (chars[start + 1] == 120)
+                {
+                    if (length > 2 && length <= 6)
+                    {
+                        i = 2;
+                        while (i < length)
+                        {
+                            digit = hexToInt(chars[start + i]);
+                            if (digit == -1)
+                            {
+                                return -1;
+                            }
+                            value = value * 16 + digit;
+                            i += 1;
+                        }
+                    }
+                }
+                else if (length > 1 && length <= 5)
+                {
+                    i = 1;
+                    while (i < length)
+                    {
+                        digit = decToInt(chars[start + i]);
+                        if (digit == -1)
+                        {
+                            return -1;
+                        }
+                        value = value * 10 + digit;
+                        i += 1;
+                    }
+                }
+                return value;
+            }
+            if (length > 4)
+            {
+                return -1;
+            }
+            int flatVal = 0;
+            i = 0;
+            while (i < 4)
+            {
+                flatVal = flatVal << 2;
+                if (i < length)
+                {
+                    int c = chars[start + i];
+                    if (c >= 65 && c <= 90)
+                    {
+                        c += 32;
+                    }
+                    if (c > 127)
+                    {
+                        return -1;
+                    }
+                    flatVal = flatVal | c;
+                }
+                i += 1;
+            }
+            switch (flatVal)
+            {
+                case 8000:
+                    return 60;
+                case 8128:
+                    return 62;
+                case 8144:
+                    return 38;
+                case 8188:
+                    return 34;
+                case 8191:
+                    return 39;
+            }
+            return -1;
+        }
+
+        public static bool xml_hasMore(XmlParseContext ctx)
+        {
+            return ctx.index < ctx.length;
+        }
+
+        public static int xml_isValidNameChar(int c)
+        {
+            if (c < 128)
+            {
+                if (c >= 65 && c <= 90)
+                {
+                    return 1;
+                }
+                if (c >= 97 && c <= 122)
+                {
+                    return 1;
+                }
+                if (c == 58)
+                {
+                    return 1;
+                }
+                if (c == 45)
+                {
+                    return 2;
+                }
+                if (c == 46)
+                {
+                    return 2;
+                }
+                if (c >= 48 && c <= 57)
+                {
+                    return 2;
+                }
+            }
+            else
+            {
+                if (c == 183)
+                {
+                    return 2;
+                }
+                if (c >= 768 && c <= 879)
+                {
+                    return 2;
+                }
+                if (c >= 8255 && c <= 8256)
+                {
+                    return 2;
+                }
+                if (c >= 192 && c <= 214)
+                {
+                    return 1;
+                }
+                if (c >= 216 && c <= 246)
+                {
+                    return 1;
+                }
+                if (c >= 248 && c <= 767)
+                {
+                    return 1;
+                }
+                if (c >= 880 && c <= 893)
+                {
+                    return 1;
+                }
+                if (c >= 895 && c <= 8191)
+                {
+                    return 1;
+                }
+                if (c >= 8204 && c <= 8205)
+                {
+                    return 1;
+                }
+                if (c >= 8304 && c <= 8591)
+                {
+                    return 1;
+                }
+                if (c >= 11264 && c <= 12271)
+                {
+                    return 1;
+                }
+                if (c >= 12289 && c <= 55295)
+                {
+                    return 1;
+                }
+                if (c >= 63744 && c <= 64975)
+                {
+                    return 1;
+                }
+                if (c >= 65008 && c <= 65533)
+                {
+                    return 1;
+                }
+                if (c >= 65536 && c <= 983039)
+                {
+                    return 1;
+                }
+            }
+            return 0;
+        }
+
+        public static int xml_peekChar(XmlParseContext ctx)
+        {
+            if (ctx.index >= ctx.length)
+            {
+                return -1;
+            }
+            return ctx.chars[ctx.index];
+        }
+
+        public static void xml_performEntitySwaps(System.Collections.Generic.List<int> chars)
+        {
+            int i = 0;
+            while (i < chars.Count)
+            {
+                if (chars[i] == 38)
+                {
+                    int j = 0;
+                    while (j < 10)
+                    {
+                        if (i + j < chars.Count && chars[i + j] == 45)
+                        {
+                            int end = i + j;
+                            int newChar = xml_getEntity(chars, i + 1, end);
+                            if (newChar != -1)
+                            {
+                                int k = i;
+                                while (k < end)
+                                {
+                                    chars[k] = -1;
+                                    k += 1;
+                                }
+                                chars[end] = newChar;
+                            }
+                            j = 10;
+                        }
+                        j++;
+                    }
+                }
+                i++;
+            }
+        }
+
+        public static int xml_popChar(XmlParseContext ctx)
+        {
+            int val = -1;
+            if (ctx.index < ctx.length)
+            {
+                val = ctx.chars[ctx.index];
+                if (val == 10)
+                {
+                    ctx.line += 1;
+                    ctx.col = 0;
+                }
+                else
+                {
+                    ctx.col += 1;
+                }
+                ctx.index += 1;
+            }
+            return val;
+        }
+
+        public static bool xml_popCloseTag(XmlParseContext ctx, int tagNameStart, int tagNameEnd)
+        {
+            if (xml_popChar(ctx) != 60)
+            {
+                return false;
+            }
+            if (xml_popChar(ctx) != 47)
+            {
+                return false;
+            }
+            int length = tagNameEnd - tagNameStart;
+            int i = 0;
+            while (i < length)
+            {
+                if (xml_popChar(ctx) != ctx.chars[tagNameStart + i])
+                {
+                    return false;
+                }
+                i += 1;
+            }
+            xml_skipWhitespace(ctx);
+            return xml_popChar(ctx) == 62;
+        }
+
+        public static int xml_popElement(XmlParseContext ctx)
+        {
+            if (60 != xml_popChar(ctx))
+            {
+                xml_setError(ctx, "Expected '<' here");
+                return 0;
+            }
+            xml_skipWhitespace(ctx);
+            int tagNameStart = ctx.index;
+            Value tagName = xml_popWord(ctx);
+            int tagNameEnd = ctx.index;
+            xml_skipWhitespace(ctx);
+            if (ctx.hasError || !xml_ensureMore(ctx))
+            {
+                return 0;
+            }
+            ctx.buffer.Add(ctx.globals.intOne);
+            ctx.buffer.Add(tagName);
+            int attributeSizeIndex = ctx.buffer.Count;
+            ctx.buffer.Add(ctx.globals.intZero);
+            int attributeCount = 0;
+            while (xml_hasMore(ctx) && xml_peekChar(ctx) != 62 && xml_peekChar(ctx) != 47)
+            {
+                Value attrName = xml_popWord(ctx);
+                xml_skipWhitespace(ctx);
+                if (ctx.hasError || !xml_ensureMore(ctx))
+                {
+                    return 0;
+                }
+                if (xml_popChar(ctx) != 61)
+                {
+                    xml_setError(ctx, "Expected '=' here");
+                    return 0;
+                }
+                xml_skipWhitespace(ctx);
+                if (ctx.hasError || !xml_ensureMore(ctx))
+                {
+                    return 0;
+                }
+                Value attrValue = xml_popQuotedValue(ctx);
+                xml_skipWhitespace(ctx);
+                if (ctx.hasError || !xml_ensureMore(ctx))
+                {
+                    return 0;
+                }
+                attributeCount += 1;
+                ctx.buffer.Add(attrName);
+                ctx.buffer.Add(attrValue);
+            }
+            ctx.buffer[attributeSizeIndex] = buildInteger(ctx.globals, attributeCount);
+            int childCountIndex = ctx.buffer.Count;
+            ctx.buffer.Add(ctx.globals.intZero);
+            if (xml_peekChar(ctx) == 47)
+            {
+                xml_popChar(ctx);
+                if (xml_popChar(ctx) != 62)
+                {
+                    xml_setError(ctx, "Expected '>' here.");
+                    return 0;
+                }
+                xml_skipWhitespace(ctx);
+                return 0;
+            }
+            if (xml_popChar(ctx) != 62)
+            {
+                if (!xml_ensureMore(ctx))
+                {
+                    return 0;
+                }
+                xml_setError(ctx, "Expected '>' here.");
+                return 0;
+            }
+            bool insideElement = true;
+            int childCount = 0;
+            while (insideElement && ctx.index < ctx.length)
+            {
+                if (xml_peekChar(ctx) == 60)
+                {
+                    if (xml_tryPopCloseTagFor(ctx, tagNameStart, tagNameEnd))
+                    {
+                        insideElement = false;
+                    }
+                    else
+                    {
+                        childCount += 1;
+                        xml_popElement(ctx);
+                        if (ctx.hasError)
+                        {
+                            return 0;
+                        }
+                    }
+                }
+                else
+                {
+                    int textStart = ctx.index;
+                    xml_popTextValue(ctx);
+                    int textEnd = ctx.index;
+                    Value textVal = createStringFromUnicodeArraySegment(ctx.globals, ctx.chars, textStart, textEnd - textStart);
+                    ctx.buffer.Add(textVal);
+                    childCount += 1;
+                }
+            }
+            ctx.buffer[childCountIndex] = buildInteger(ctx.globals, childCount);
+            return 0;
+        }
+
+        public static Value xml_popQuotedValue(XmlParseContext ctx)
+        {
+            if (!xml_ensureMore(ctx))
+            {
+                return null;
+            }
+            if (xml_peekChar(ctx) != 34)
+            {
+                Value word = xml_popWord(ctx);
+                if (!ctx.hasError)
+                {
+                    xml_skipWhitespace(ctx);
+                }
+                return word;
+            }
+            xml_popChar(ctx);
+            int indexStart = ctx.index;
+            System.Collections.Generic.List<int> chars = new List<int>();
+            while (ctx.index < ctx.length && xml_peekChar(ctx) != 34)
+            {
+                chars.Add(xml_popChar(ctx));
+            }
+            if (!xml_ensureMore(ctx))
+            {
+                return null;
+            }
+            xml_popChar(ctx);
+            xml_performEntitySwaps(chars);
+            int j = 0;
+            int i = 0;
+            while (i < chars.Count)
+            {
+                int c = chars[i];
+                if (c != -1)
+                {
+                    chars[j] = c;
+                    j += 1;
+                }
+                i += 1;
+            }
+            while (chars.Count > j)
+            {
+                PST_ListPop(chars);
+            }
+            int[] charArr = chars.ToArray();
+            return createStringFromUnicodeArraySegment(ctx.globals, charArr, 0, charArr.Length);
+        }
+
+        public static int xml_popTextValue(XmlParseContext ctx)
+        {
+            int indexStart = ctx.index;
+            while (ctx.index < ctx.length && ctx.chars[ctx.index] != 60)
+            {
+                xml_popChar(ctx);
+            }
+            return 0;
+        }
+
+        public static Value xml_popWord(XmlParseContext ctx)
+        {
+            if (!xml_hasMore(ctx))
+            {
+                xml_setError(ctx, "Unexpected end of XML document.");
+                return null;
+            }
+            int startIndex = ctx.index;
+            int validity = xml_isValidNameChar(xml_popChar(ctx));
+            if (validity == 0)
+            {
+                xml_setError(ctx, "Unexpected character.");
+                return null;
+            }
+            if (validity == 2)
+            {
+                xml_setError(ctx, "Character is not valid for the first character of a name.");
+                return null;
+            }
+            while (ctx.index < ctx.length && validity > 0)
+            {
+                validity = xml_isValidNameChar(xml_peekChar(ctx));
+                if (validity > 0)
+                {
+                    xml_popChar(ctx);
+                }
+            }
+            int length = ctx.index - startIndex;
+            return createStringFromUnicodeArraySegment(ctx.globals, ctx.chars, startIndex, length);
+        }
+
+        public static int xml_setError(XmlParseContext ctx, string msg)
+        {
+            ctx.hasError = false;
+            ctx.errorMessage = msg;
+            return 0;
+        }
+
+        public static int xml_skipVersionHeaderIfPresent(XmlParseContext ctx)
+        {
+            return 0;
+        }
+
+        public static int xml_skipWhitespace(XmlParseContext ctx)
+        {
+            while (ctx.index < ctx.length)
+            {
+                int c = ctx.chars[ctx.index];
+                if (c != 32 && c != 10 && c != 13 && c != 9)
+                {
+                    return 0;
+                }
+                if (c == 10)
+                {
+                    ctx.col = 0;
+                    ctx.line += 1;
+                }
+                else
+                {
+                    ctx.col += 1;
+                }
+                ctx.index += 1;
+            }
+            return 0;
+        }
+
+        public static bool xml_tryPopCloseTagFor(XmlParseContext ctx, int tagNameStart, int tagNameEnd)
+        {
+            int tagNameLen = tagNameEnd - tagNameStart;
+            int col = ctx.col;
+            int line = ctx.line;
+            int index = ctx.index;
+            if (xml_popCloseTag(ctx, tagNameStart, tagNameEnd))
+            {
+                return true;
+            }
+            ctx.col = col;
+            ctx.line = line;
+            ctx.index = index;
+            return false;
+        }
+
+        public static int xmlUtil_parse(ExecutionContext ec, int[] chars, Value[] dataOut)
+        {
+            GlobalValues globals = ec.globalValues;
             dataOut[0] = globals.intZero;
             dataOut[1] = buildString(globals, "XML Parsing is not implemented yet.", false);
             dataOut[2] = globals.intZero;
             dataOut[3] = globals.intZero;
+            XmlParseContext ctx = new XmlParseContext(1, 1, false, "", 0, chars, chars.Length, new List<Value>(), globals);
+            xml_skipWhitespace(ctx);
+            if (!ctx.hasError)
+            {
+                xml_skipVersionHeaderIfPresent(ctx);
+            }
+            xml_skipWhitespace(ctx);
+            if (!ctx.hasError)
+            {
+                xml_popElement(ctx);
+            }
+            xml_skipWhitespace(ctx);
+            if (xml_hasMore(ctx))
+            {
+                ctx.hasError = true;
+                ctx.errorMessage = "Unexpected data at end of root element.";
+            }
+            if (ctx.hasError)
+            {
+                dataOut[1] = buildString(globals, ctx.errorMessage, false);
+                dataOut[2] = buildInteger(globals, ctx.line);
+                dataOut[3] = buildInteger(globals, ctx.col);
+            }
+            else
+            {
+                dataOut[0] = globals.intOne;
+                dataOut[1] = buildList(ec, ctx.buffer.ToArray(), true, -1);
+            }
             return 0;
         }
     }

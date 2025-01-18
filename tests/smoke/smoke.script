@@ -21,15 +21,21 @@ function main(args) {
     typeofTest();
     parseNumsTest();
     xmlTest();
+
+    print("ALL DONE");
 }
 
 function xmlTest() {
-    TODO = "XML Parse Error: XML Parsing is not implemented yet.";
-    try {
-        foo = xml.parseXml('<a></a>');
-    } catch (ex) {
-        assertStrEqual(ex.message.trim(), TODO);
-    }
+    doc = xml.parseXml('<a attr1="123" attr2="456">Text 1<b>Hello</b>Text 2</a>');
+    assertStrEqual(doc.name, 'a');
+    assertStrEqual(doc.children.length, 3);
+    assertStrEqual(doc.children[0].value, 'Text 1');
+    assertStrEqual(doc.attributes['attr1'], '123');
+    assertStrEqual(doc.attributes['attr2'], '456');
+    assertStrEqual(doc.children[1].name, 'b');
+    assertStrEqual(doc.children[1].children.length, 1);
+    assertStrEqual(doc.children[1].children[0].value, 'Hello');
+    assertStrEqual(doc.children[2].value, 'Text 2');
 }
 
 const INTENTIONAL_PADDING = ' ';
@@ -222,8 +228,6 @@ function indexingTests() {
         stuff += ptr[0];
     }
     assertStrEqual(stuff, '0123456789');
-
-    print("ALL DONE");
 }
 
 function comparisonTests() {

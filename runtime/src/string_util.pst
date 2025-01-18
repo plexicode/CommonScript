@@ -69,6 +69,18 @@ Value stringUtil_changeCase(Value orig, bool isUpper) {
     return new Value(Type.STRING, buildAsciiStringImpl(s2));
 }
 
+Value createStringFromUnicodeArraySegment(GlobalValues g, Array<int> buffer, int start, int length) {
+    if (length == buffer.Size()) {
+        return createStringFromUnicodeArray(g, buffer, true);
+    }
+
+    Array<int> newBuf = new Array<int>(length);
+    for (int i = 0; i < length; i += 1) {
+        newBuf[i] = buffer[start + i];
+    }
+    return createStringFromUnicodeArray(g, newBuf, false);
+}
+
 Value createStringFromUnicodeArray(GlobalValues g, Array<int> buffer, bool copyBuffer) {
     Array<int> uchars = buffer;
     int sz = buffer.Size();
@@ -84,8 +96,8 @@ Value createStringFromUnicodeArray(GlobalValues g, Array<int> buffer, bool copyB
             uchars[i] = buffer[i];
         }
     }
-    
-    // TODO: this is WRONG and needs to be part of the proper unicode/surrogate pair rework 
+
+    // TODO: this is WRONG and needs to be part of the proper unicode/surrogate pair rework
     List<string> sb = new List<string>();
     for (int j = 0; j < sz; j += 1) {
         sb.Add(Core.CharToString(Core.Chr(uchars[j])));
@@ -94,6 +106,6 @@ Value createStringFromUnicodeArray(GlobalValues g, Array<int> buffer, bool copyB
     if (g.commonStrings.Contains(finalString)) return g.commonStrings[finalString];
 
     return new Value(
-        Type.STRING, 
+        Type.STRING,
         new StringImpl(sz, false, uchars, finalString, null, null));
 }

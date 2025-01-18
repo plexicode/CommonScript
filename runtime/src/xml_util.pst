@@ -1,3 +1,51 @@
+
+const int XML_LT = Core.Ord('<');
+const int XML_GT = Core.Ord('>');
+const int XML_AMP = Core.Ord('&');
+const int XML_QUOT = Core.Ord('"');
+const int XML_APOS = Core.Ord('\'');
+const int XML_EQ = Core.Ord('=');
+const int XML_SP = Core.Ord(' ');
+const int XML_NL = Core.Ord('\n');
+const int XML_CR = Core.Ord('\r');
+const int XML_TAB = Core.Ord('\t');
+const int XML_A = Core.Ord('A');
+const int XML_Z = Core.Ord('Z');
+const int XML_a = Core.Ord('a');
+const int XML_g = Core.Ord('g');
+const int XML_l = Core.Ord('l');
+const int XML_m = Core.Ord('m');
+const int XML_o = Core.Ord('o');
+const int XML_p = Core.Ord('p');
+const int XML_q = Core.Ord('q');
+const int XML_s = Core.Ord('s');
+const int XML_t = Core.Ord('t');
+const int XML_u = Core.Ord('u');
+const int XML_x = Core.Ord('x');
+const int XML_z = Core.Ord('z');
+const int XML_0 = Core.Ord('0');
+const int XML_9 = Core.Ord('9');
+const int XML_DOT = Core.Ord('.');
+const int XML_QUES = Core.Ord('?');
+const int XML_BANG = Core.Ord('!');
+const int XML_COLON = Core.Ord(':');
+const int XML_SLASH = Core.Ord('/');
+const int XML_HYPHEN = Core.Ord('-');
+const int XML_SEMICOLON = Core.Ord('-');
+const int XML_OCTOTHORP = Core.Ord('#');
+
+struct XmlParseContext {
+    int line;
+    int col;
+    bool hasError;
+    string errorMessage;
+    int index;
+    Array<int> chars;
+    int length;
+    List<Value> buffer;
+    GlobalValues globals;
+}
+
 /*
     Upon error:
         dataOut[0] -> 0
@@ -11,13 +59,407 @@
         dataOut[2] -> (ignored)
         dataOut[3] -> (ignored)
 
+    When successfully parsed, a single flat list of values is placed in dataOut[1].
+    This list looks like this for each type of XML Node:
+        XML Element: [... 1, name, {attr count} {key, value}*, {child count}, ...{children}, ...]
+        XML Text: [... value ...] (just the string appears in the list)
 */
-int xmlUtil_parse(GlobalValues globals, Array<int> chars, Array<Value> dataOut) {
+int xmlUtil_parse(ExecutionContext ec, Array<int> chars, Array<Value> dataOut) {
 
+    GlobalValues globals = ec.globalValues;
     dataOut[0] = globals.intZero;
     dataOut[1] = buildString(globals, "XML Parsing is not implemented yet.", false);
     dataOut[2] = globals.intZero;
     dataOut[3] = globals.intZero;
 
+    XmlParseContext ctx = new XmlParseContext(1, 1, false, "", 0, chars, chars.Size(), new List<Value>(), globals);
+
+    xml_skipWhitespace(ctx);
+    if (!ctx.hasError) xml_skipVersionHeaderIfPresent(ctx);
+
+    xml_skipWhitespace(ctx);
+
+    if (!ctx.hasError) xml_popElement(ctx);
+
+    xml_skipWhitespace(ctx);
+
+    if (xml_hasMore(ctx)) {
+        ctx.hasError = true;
+        ctx.errorMessage = "Unexpected data at end of root element.";
+    }
+
+    if (ctx.hasError) {
+        dataOut[1] = buildString(globals, ctx.errorMessage, false);
+        dataOut[2] = buildInteger(globals, ctx.line);
+        dataOut[3] = buildInteger(globals, ctx.col);
+    } else {
+        dataOut[0] = globals.intOne;
+        dataOut[1] = buildList(ec, Core.ListToArray(ctx.buffer), true, -1);
+    }
+
     return 0;
+}
+
+int xml_skipVersionHeaderIfPresent(XmlParseContext ctx) {
+    // TODO: support this
+    return 0;
+}
+
+int xml_popChar(XmlParseContext ctx) {
+    int val = -1;
+    if (ctx.index < ctx.length) {
+        val = ctx.chars[ctx.index];
+        if (val == XML_NL) {
+            ctx.line += 1;
+            ctx.col = 0;
+        } else {
+            ctx.col += 1;
+        }
+        ctx.index += 1;
+    }
+    return val;
+}
+
+bool xml_hasMore(XmlParseContext ctx) {
+    return ctx.index < ctx.length;
+}
+
+int xml_peekChar(XmlParseContext ctx) {
+    if (ctx.index >= ctx.length) return -1;
+    return ctx.chars[ctx.index];
+}
+
+int xml_skipWhitespace(XmlParseContext ctx) {
+    while (ctx.index < ctx.length) {
+        int c = ctx.chars[ctx.index];
+        if (c != XML_SP && c != XML_NL && c != XML_CR && c != XML_TAB) return 0;
+        if (c == XML_NL) {
+            ctx.col = 0;
+            ctx.line += 1;
+        } else {
+            ctx.col += 1;
+        }
+        ctx.index += 1;
+    }
+    return 0;
+}
+
+// https://www.w3.org/TR/xml/#NT-NameStartChar
+// Returns 0 if the character is not a valid name character.
+// Returns 1 if the character is valid and okay to use as the first character of the name.
+// Returns 2 if the character is valid but not okay for the first character.
+int xml_isValidNameChar(int c) {
+    if (c < 128) {
+        if (c >= XML_A && c <= XML_Z) return 1;
+        if (c >= XML_a && c <= XML_z) return 1;
+        if (c == XML_COLON) return 1;
+        if (c == XML_HYPHEN) return 2;
+        if (c == XML_DOT) return 2;
+        if (c >= XML_0 && c <= XML_9) return 2;
+    } else {
+        if (c == 0xB7) return 2;
+        if (c >= 0x0300 && c <= 0x036F) return 2;
+        if (c >= 0x203F && c <= 0x2040) return 2;
+        if (c >= 0xC0 && c <= 0xD6) return 1;
+        if (c >= 0xD8 && c <= 0xF6) return 1;
+        if (c >= 0xF8 && c <= 0x2FF) return 1;
+        if (c >= 0x370 && c <= 0x37D) return 1;
+        if (c >= 0x37F && c <= 0x1FFF) return 1;
+        if (c >= 0x200C && c <= 0x200D) return 1;
+        if (c >= 0x2070 && c <= 0x218F) return 1;
+        if (c >= 0x2C00 && c <= 0x2FEF) return 1;
+        if (c >= 0x3001 && c <= 0xD7FF) return 1;
+        if (c >= 0xF900 && c <= 0xFDCF) return 1;
+        if (c >= 0xFDF0 && c <= 0xFFFD) return 1;
+        if (c >= 0x10000 && c <= 0xEFFFF) return 1;
+    }
+    return 0;
+}
+
+Value xml_popWord(XmlParseContext ctx) {
+    if (!xml_hasMore(ctx)) {
+        xml_setError(ctx, "Unexpected end of XML document.");
+        return null;
+    }
+
+    int startIndex = ctx.index;
+
+    int validity = xml_isValidNameChar(xml_popChar(ctx));
+    if (validity == 0) {
+        xml_setError(ctx, "Unexpected character.");
+        return null;
+    }
+    if (validity == 2) {
+        xml_setError(ctx, "Character is not valid for the first character of a name.");
+        return null;
+    }
+
+    while (ctx.index < ctx.length && validity > 0) {
+        validity = xml_isValidNameChar(xml_peekChar(ctx));
+        if (validity > 0) xml_popChar(ctx);
+    }
+
+    int length = ctx.index - startIndex;
+    return createStringFromUnicodeArraySegment(ctx.globals, ctx.chars, startIndex, length);
+}
+
+int xml_popElement(XmlParseContext ctx) {
+
+    if (XML_LT != xml_popChar(ctx)) {
+        xml_setError(ctx, "Expected '<' here");
+        return 0;
+    }
+
+    xml_skipWhitespace(ctx);
+
+    int tagNameStart = ctx.index;
+    Value tagName = xml_popWord(ctx);
+    int tagNameEnd = ctx.index;
+
+    xml_skipWhitespace(ctx);
+    if (ctx.hasError || !xml_ensureMore(ctx)) return 0;
+
+    ctx.buffer.Add(ctx.globals.intOne); // PUSH 1
+    ctx.buffer.Add(tagName); // PUSH tag name
+    int attributeSizeIndex = ctx.buffer.Size();
+    ctx.buffer.Add(ctx.globals.intZero); // PUSH dummy value for attribute count
+
+    int attributeCount = 0;
+    while (xml_hasMore(ctx) && xml_peekChar(ctx) != XML_GT && xml_peekChar(ctx) != XML_SLASH) {
+        Value attrName = xml_popWord(ctx);
+        xml_skipWhitespace(ctx);
+        if (ctx.hasError || !xml_ensureMore(ctx)) return 0;
+        if (xml_popChar(ctx) != XML_EQ) {
+            xml_setError(ctx, "Expected '=' here");
+            return 0;
+        }
+        xml_skipWhitespace(ctx);
+        if (ctx.hasError || !xml_ensureMore(ctx)) return 0;
+
+        Value attrValue = xml_popQuotedValue(ctx);
+        xml_skipWhitespace(ctx);
+        if (ctx.hasError || !xml_ensureMore(ctx)) return 0;
+
+        attributeCount += 1;
+        ctx.buffer.Add(attrName);
+        ctx.buffer.Add(attrValue);
+    }
+
+    ctx.buffer[attributeSizeIndex] = buildInteger(ctx.globals, attributeCount);
+
+    int childCountIndex = ctx.buffer.Size();
+    ctx.buffer.Add(ctx.globals.intZero);
+
+    if (xml_peekChar(ctx) == XML_SLASH) {
+        xml_popChar(ctx);
+        if (xml_popChar(ctx) != XML_GT) {
+            xml_setError(ctx, "Expected '>' here.");
+            return 0;
+        }
+        xml_skipWhitespace(ctx);
+        return 0;
+    }
+
+    if (xml_popChar(ctx) != XML_GT) {
+        if (!xml_ensureMore(ctx)) return 0;
+        xml_setError(ctx, "Expected '>' here.");
+        return 0;
+    }
+
+    bool insideElement = true;
+    int childCount = 0;
+
+    while (insideElement && ctx.index < ctx.length) {
+        if (xml_peekChar(ctx) == XML_LT) {
+            if (xml_tryPopCloseTagFor(ctx, tagNameStart, tagNameEnd)) {
+                insideElement = false;
+            } else {
+                childCount += 1;
+                xml_popElement(ctx);
+                if (ctx.hasError) return 0;
+            }
+        } else {
+            int textStart = ctx.index;
+            xml_popTextValue(ctx);
+            int textEnd = ctx.index;
+            Value textVal = createStringFromUnicodeArraySegment(ctx.globals, ctx.chars, textStart, textEnd - textStart);
+            ctx.buffer.Add(textVal);
+            childCount += 1;
+        }
+    }
+
+    ctx.buffer[childCountIndex] = buildInteger(ctx.globals, childCount);
+
+    return 0;
+}
+
+int xml_popTextValue(XmlParseContext ctx) {
+    int indexStart = ctx.index;
+    while (ctx.index < ctx.length && ctx.chars[ctx.index] != XML_LT) {
+        xml_popChar(ctx);
+    }
+    return 0;
+}
+
+bool xml_tryPopCloseTagFor(XmlParseContext ctx, int tagNameStart, int tagNameEnd) {
+    int tagNameLen = tagNameEnd - tagNameStart;
+    int col = ctx.col;
+    int line = ctx.line;
+    int index = ctx.index;
+
+    if (xml_popCloseTag(ctx, tagNameStart, tagNameEnd)) {
+        return true;
+    }
+
+    // reset on failure
+    ctx.col = col;
+    ctx.line = line;
+    ctx.index = index;
+
+    return false;
+}
+
+bool xml_popCloseTag(XmlParseContext ctx, int tagNameStart, int tagNameEnd) {
+    if (xml_popChar(ctx) != XML_LT) return false;
+    if (xml_popChar(ctx) != XML_SLASH) return false;
+    int length = tagNameEnd - tagNameStart;
+    for (int i = 0; i < length; i += 1) {
+        if (xml_popChar(ctx) != ctx.chars[tagNameStart + i]) return false;
+    }
+    xml_skipWhitespace(ctx);
+    return xml_popChar(ctx) == XML_GT;
+}
+
+bool xml_ensureMore(XmlParseContext ctx) {
+    if (xml_hasMore(ctx)) return true;
+    xml_setError(ctx, "Unexpected end of XML document.");
+    return false;
+}
+
+int xml_setError(XmlParseContext ctx, string msg) {
+    ctx.hasError = false;
+    ctx.errorMessage = msg;
+    return 0;
+}
+
+Value xml_popQuotedValue(XmlParseContext ctx) {
+    if (!xml_ensureMore(ctx)) return null;
+
+    if (xml_peekChar(ctx) != XML_QUOT) {
+        Value word = xml_popWord(ctx);
+        if (!ctx.hasError) xml_skipWhitespace(ctx);
+        return word;
+    }
+
+    xml_popChar(ctx);
+    int indexStart = ctx.index;
+    List<int> chars = new List<int>();
+    while (ctx.index < ctx.length && xml_peekChar(ctx) != XML_QUOT) {
+        chars.Add(xml_popChar(ctx));
+    }
+    if (!xml_ensureMore(ctx)) return null;
+    xml_popChar(ctx); // this will be a quote according to the loop condition
+
+    xml_performEntitySwaps(chars);
+
+    // Shift all characters down to close -1 gaps.
+    int j = 0;
+    for (int i = 0; i < chars.Size(); i += 1) {
+        int c = chars[i];
+        if (c != -1) {
+            chars[j] = c;
+            j += 1;
+        }
+    }
+
+    while (chars.Size() > j) {
+        chars.Pop();
+    }
+    Array<int> charArr = Core.ListToArray(chars);
+    return createStringFromUnicodeArraySegment(ctx.globals, charArr, 0, charArr.Size());
+}
+
+// The unicode chars list will get transformed from the literal input
+// to the &-entity-swapped version where -1's are injected in the new space created.
+// "3 &lt; 5" -> "3 ___< 5" (where '_' represents a -1)
+
+void xml_performEntitySwaps(List<int> chars) {
+    for (int i = 0; i < chars.Size(); i++) {
+        if (chars[i] == XML_AMP) {
+            for (int j = 0; j < 10; j++) {
+                if (i + j < chars.Size() && chars[i + j] == XML_SEMICOLON) {
+                    int end = i + j;
+                    int newChar = xml_getEntity(chars, i + 1, end);
+                    if (newChar != -1) {
+                        for (int k = i; k < end; k += 1) {
+                            chars[k] = -1;
+                        }
+                        chars[end] = newChar;
+                    }
+                    j = 10; // break loop
+                }
+            }
+        }
+    }
+}
+
+int hexToInt(int charCode) {
+    if (charCode >= XML_0 && charCode <= XML_9) return charCode - XML_0;
+    if (charCode >= XML_a && charCode <= XML_z) return charCode + (10 - XML_a); // parens for concise transpiler output
+    if (charCode >= XML_A && charCode <= XML_Z) return charCode + (10 - XML_A); 
+    return -1;
+}
+
+int decToInt(int charCode) {
+    if (charCode >= XML_0 && charCode <= XML_9) return charCode - XML_0;
+    return -1;
+}
+
+int xml_getEntity(List<int> chars, int start, int end) {
+    int length = end - start;
+    int i = 0;
+    int digit = 0;
+    if (chars[start] == XML_OCTOTHORP && length > 2) {
+        int value = 0;
+        if (chars[start + 1] == XML_x) {
+            if (length > 2 && length <= 6) {
+                for (i = 2; i < length; i += 1) {
+                    digit = hexToInt(chars[start + i]);
+                    if (digit == -1) return -1;
+                    value = value * 16 + digit;
+                }
+            }
+        } else {
+            if (length > 1 && length <= 5) {
+                for (i = 1; i < length; i += 1) {
+                    digit = decToInt(chars[start + i]);
+                    if (digit == -1) return -1;
+                    value = value * 10 + digit;
+                }
+            }
+        }
+        return value;
+    }
+
+    if (length > 4) return -1;
+    int flatVal = 0;
+    for (i = 0; i < 4; i += 1) {
+        flatVal = flatVal << 2;
+        if (i < length) {
+            int c = chars[start + i];
+            if (c >= XML_A && c <= XML_Z) c += XML_a - XML_A; // to lowercase
+            if (c > 127) return -1; // no non-lower-ascii
+            flatVal = flatVal | c;
+        }
+    }
+
+    switch (flatVal) {
+        case (XML_l << 6) | (XML_t << 4): return XML_LT;
+        case (XML_g << 6) | (XML_t << 4): return XML_GT;
+        case (XML_a << 6) | (XML_m << 4) | (XML_p << 2): return XML_AMP;
+        case (XML_q << 6) | (XML_u << 4) | (XML_o << 2) | XML_t: return XML_QUOT;
+        case (XML_a << 6) | (XML_p << 4) | (XML_o << 2) | XML_s: return XML_APOS;
+    }
+
+    return -1;
 }
