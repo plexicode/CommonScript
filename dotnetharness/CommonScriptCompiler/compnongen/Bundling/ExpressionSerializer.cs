@@ -267,7 +267,7 @@ namespace CommonScript.Compiler
                     // [returnValue, finalValue, root]
                     : ByteCode.join3(
                         ByteCode.create0(OpCodes.OP_STACK_DUPLICATE, null, null),
-                        // [root, returnValue, originalValule]
+                        // [root, returnValue, originalValue]
                         ByteCode.create1(OpCodes.OP_INT_INCR, ii.opToken, null, ii.opToken.Value == "++" ? 1 : -1),
                         // [root, returnValue, finalValue]
                         ByteCode.create0(OpCodes.OP_STACK_DO_SI_DUP_2, null, null)),

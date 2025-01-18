@@ -144,7 +144,7 @@ namespace CommonScript.Compiler
             ]) },
             { "json", string.Join('\n', [
                 "@public class JsonParseException:Exception { constructor(l, c):base('JSON parse error on line ' + l + ', col ' + c){} }",
-                "@public class JsonSerializationException:Exception { constructor():base('Value contained un-serialiazable valule.'){} }",
+                "@public class JsonSerializationException:Exception { constructor():base('Value contained un-serialiazable value.'){} }",
                 "@public function jsonParse(str) { return parseImpl(str, true); }",
                 "@public function tryJsonParse(str) { return parseImpl(str, false); }",
                 "function parseImpl(str, f) {",
@@ -226,7 +226,7 @@ namespace CommonScript.Compiler
                         "c=buf[++i[0]];", // children count
                         "i[0]++;",
                         "while (c-->0) {",
-                            "o.children.push(_build(i,buf));",
+                            "o.children.add(_build(i,buf));",
                         "}",
                     "}else{",
                         "o=new XmlText();",
