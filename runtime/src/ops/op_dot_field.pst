@@ -147,7 +147,7 @@ switch (value.type) {
         instance1 = (Instance) value.internalValue;
         if (!instance1.classDef.nameToOffset.Contains(name)) {
             errorId = ExceptionTypeId.FIELD_NOT_FOUND;
-            errorMsg = "Instance does not contain that field.";
+            errorMsg = Core.StringConcatAll("The class '", instance1.classDef.name, "' does not contain a field named '.", name, "'.");
             @import("macros/throw.pst");
         }
         int1 = instance1.classDef.nameToOffset[name];

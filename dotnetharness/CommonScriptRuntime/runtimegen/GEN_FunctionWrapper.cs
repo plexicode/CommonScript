@@ -3247,7 +3247,7 @@ namespace CommonScript.Runtime.Internal
                                 if (!instance1.classDef.nameToOffset.ContainsKey(name))
                                 {
                                     errorId = 3;
-                                    errorMsg = "Instance does not contain that field.";
+                                    errorMsg = string.Join("", new string[] { "The class '", instance1.classDef.name, "' does not contain a field named '.", name, "'." });
                                     return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
                                 }
                                 int1 = instance1.classDef.nameToOffset[name];
