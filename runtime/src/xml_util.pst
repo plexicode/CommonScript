@@ -31,7 +31,7 @@ const int XML_BANG = Core.Ord('!');
 const int XML_COLON = Core.Ord(':');
 const int XML_SLASH = Core.Ord('/');
 const int XML_HYPHEN = Core.Ord('-');
-const int XML_SEMICOLON = Core.Ord('-');
+const int XML_SEMICOLON = Core.Ord(';');
 const int XML_OCTOTHORP = Core.Ord('#');
 
 struct XmlParseContext {

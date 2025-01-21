@@ -3,10 +3,19 @@ import xml;
 
 function main(args) {
     basicTest();
-
     assertStrEqual(getXmlErr('<a></a>a'), 'XML Parse Error: Unexpected data at end of root element.');
+    entityTest();
 
     print("ALL DONE");
+}
+
+function entityTest() {
+    doc = xml.parseXml('
+        <a prop="value &lt; &gt; &quot; &apos; &amp; < > &">
+            TODO: entities as text nodes.
+        </a>
+    ');
+    assertStrEqual(doc.attributes['prop'], 'value < > " \' & < > &');
 }
 
 function basicTest() {

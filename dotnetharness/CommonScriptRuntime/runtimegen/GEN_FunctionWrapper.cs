@@ -6091,7 +6091,7 @@ namespace CommonScript.Runtime.Internal
                     int j = 0;
                     while (j < 10)
                     {
-                        if (i + j < chars.Count && chars[i + j] == 45)
+                        if (i + j < chars.Count && chars[i + j] == 59)
                         {
                             int end = i + j;
                             int newChar = xml_getEntity(chars, i + 1, end);
