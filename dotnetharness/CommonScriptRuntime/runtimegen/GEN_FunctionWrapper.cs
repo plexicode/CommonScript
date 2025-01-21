@@ -5881,6 +5881,29 @@ namespace CommonScript.Runtime.Internal
             return "TODO: to string for type: " + value.type.ToString();
         }
 
+        public static Value xml_convertCharsToString(GlobalValues globals, System.Collections.Generic.List<int> chars)
+        {
+            xml_performEntitySwaps(chars);
+            int j = 0;
+            int i = 0;
+            while (i < chars.Count)
+            {
+                int c = chars[i];
+                if (c != -1)
+                {
+                    chars[j] = c;
+                    j += 1;
+                }
+                i += 1;
+            }
+            while (chars.Count > j)
+            {
+                PST_ListPop(chars);
+            }
+            int[] charArr = chars.ToArray();
+            return createStringFromUnicodeArraySegment(globals, charArr, 0, charArr.Length);
+        }
+
         public static bool xml_ensureMore(XmlParseContext ctx)
         {
             if (xml_hasMore(ctx))
@@ -6255,7 +6278,14 @@ namespace CommonScript.Runtime.Internal
                     int textStart = ctx.index;
                     xml_popTextValue(ctx);
                     int textEnd = ctx.index;
-                    Value textVal = createStringFromUnicodeArraySegment(ctx.globals, ctx.chars, textStart, textEnd - textStart);
+                    System.Collections.Generic.List<int> textSpanChars = new List<int>();
+                    int i = textStart;
+                    while (i < textEnd)
+                    {
+                        textSpanChars.Add(ctx.chars[i]);
+                        i += 1;
+                    }
+                    Value textVal = xml_convertCharsToString(ctx.globals, textSpanChars);
                     ctx.buffer.Add(textVal);
                     childCount += 1;
                 }
@@ -6291,25 +6321,7 @@ namespace CommonScript.Runtime.Internal
                 return null;
             }
             xml_popChar(ctx);
-            xml_performEntitySwaps(chars);
-            int j = 0;
-            int i = 0;
-            while (i < chars.Count)
-            {
-                int c = chars[i];
-                if (c != -1)
-                {
-                    chars[j] = c;
-                    j += 1;
-                }
-                i += 1;
-            }
-            while (chars.Count > j)
-            {
-                PST_ListPop(chars);
-            }
-            int[] charArr = chars.ToArray();
-            return createStringFromUnicodeArraySegment(ctx.globals, charArr, 0, charArr.Length);
+            return xml_convertCharsToString(ctx.globals, chars);
         }
 
         public static int xml_popTextValue(XmlParseContext ctx)

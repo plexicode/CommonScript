@@ -282,7 +282,11 @@ int xml_popElement(XmlParseContext ctx) {
             int textStart = ctx.index;
             xml_popTextValue(ctx);
             int textEnd = ctx.index;
-            Value textVal = createStringFromUnicodeArraySegment(ctx.globals, ctx.chars, textStart, textEnd - textStart);
+            List<int> textSpanChars = new List<int>();
+            for (int i = textStart; i < textEnd; i += 1) {
+                textSpanChars.Add(ctx.chars[i]);
+            }
+            Value textVal = xml_convertCharsToString(ctx.globals, textSpanChars);
             ctx.buffer.Add(textVal);
             childCount += 1;
         }
@@ -360,6 +364,10 @@ Value xml_popQuotedValue(XmlParseContext ctx) {
     if (!xml_ensureMore(ctx)) return null;
     xml_popChar(ctx); // this will be a quote according to the loop condition
 
+    return xml_convertCharsToString(ctx.globals, chars);
+}
+
+Value xml_convertCharsToString(GlobalValues globals, List<int> chars) {
     xml_performEntitySwaps(chars);
 
     // Shift all characters down to close -1 gaps.
@@ -376,7 +384,7 @@ Value xml_popQuotedValue(XmlParseContext ctx) {
         chars.Pop();
     }
     Array<int> charArr = Core.ListToArray(chars);
-    return createStringFromUnicodeArraySegment(ctx.globals, charArr, 0, charArr.Size());
+    return createStringFromUnicodeArraySegment(globals, charArr, 0, charArr.Size());
 }
 
 // The unicode chars list will get transformed from the literal input
@@ -406,7 +414,7 @@ void xml_performEntitySwaps(List<int> chars) {
 int hexToInt(int charCode) {
     if (charCode >= XML_0 && charCode <= XML_9) return charCode - XML_0;
     if (charCode >= XML_a && charCode <= XML_z) return charCode + (10 - XML_a); // parens for concise transpiler output
-    if (charCode >= XML_A && charCode <= XML_Z) return charCode + (10 - XML_A); 
+    if (charCode >= XML_A && charCode <= XML_Z) return charCode + (10 - XML_A);
     return -1;
 }
 

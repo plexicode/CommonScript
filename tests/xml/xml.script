@@ -11,11 +11,12 @@ function main(args) {
 
 function entityTest() {
     doc = xml.parseXml('
-        <a prop="value &lt; &gt; &quot; &apos; &amp; < > &">
-            TODO: entities as text nodes.
+        <a prop="value &lt; &gt; &quot; &apos; &amp; < > & \'">
+            value &lt; &gt; &quot; &apos; &amp; &lt; > & \' "
         </a>
-    ');
-    assertStrEqual(doc.attributes['prop'], 'value < > " \' & < > &');
+    '); // TODO: the 2nd &lt; in the text node should be a <
+    assertStrEqual(doc.attributes['prop'], 'value < > " \' & < > & \'');
+    assertStrEqual(doc.children[0].value.trim(), 'value < > " \' & < > & \' "');
 }
 
 function basicTest() {
