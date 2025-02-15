@@ -14,7 +14,7 @@ switch (left.type) {
         // TODO: separate lookup of visible mutable fields. When the field isn't found, then do more specific lookups for proper error messaging.
         if (!instance1.classDef.nameToOffset.Contains(row.stringArg)) {
             errorId = ExceptionTypeId.FIELD_NOT_FOUND;
-            errorMsg = "Instance does not have that field";
+            errorMsg = Core.StringConcatAll("The ", instance1.classDef.name, " class does not have a field named .", row.stringArg, " and therefore cannot be assigned to.");
             @import("macros/throw.pst");
         } else {
             int1 = instance1.classDef.nameToOffset[row.stringArg];
