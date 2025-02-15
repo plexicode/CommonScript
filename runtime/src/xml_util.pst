@@ -83,7 +83,7 @@ int xmlUtil_parse(ExecutionContext ec, Array<int> chars, Array<Value> dataOut) {
 
     xml_skipWhitespace(ctx);
 
-    if (xml_hasMore(ctx)) {
+    if (!ctx.hasError && xml_hasMore(ctx)) {
         ctx.hasError = true;
         ctx.errorMessage = "Unexpected data at end of root element.";
     }
@@ -218,6 +218,10 @@ int xml_popElement(XmlParseContext ctx) {
 
     xml_skipWhitespace(ctx);
     if (ctx.hasError || !xml_ensureMore(ctx)) return 0;
+    if (tagName == null) {
+        xml_setError(ctx, "Invalid use of '<' character.");
+        return 0;
+    }
 
     ctx.buffer.Add(ctx.globals.intOne); // PUSH 1
     ctx.buffer.Add(tagName); // PUSH tag name
@@ -341,7 +345,7 @@ bool xml_ensureMore(XmlParseContext ctx) {
 }
 
 int xml_setError(XmlParseContext ctx, string msg) {
-    ctx.hasError = false;
+    ctx.hasError = true;
     ctx.errorMessage = msg;
     return 0;
 }

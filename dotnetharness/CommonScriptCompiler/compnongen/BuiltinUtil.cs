@@ -182,8 +182,11 @@ namespace CommonScript.Compiler
                 "",
             ]) },
             { "xml", string.Join('\n', [
+                // $xml_parse() returns a flat array of data.
+                // XML Element: [1, name, {attr count} {key, value}*, {child count}, ...{children} ]
+                // XML Text: [value]
                 "@public class XmlNode{}",
-                "@public class XmlElement:XmlNode {",
+                "@public class XmlElement:XmlNode{",
                     "field name;",
                     "field attributes;",
                     "field children=[];",
@@ -193,44 +196,41 @@ namespace CommonScript.Compiler
                     "field value;",
                     "constructor():base(){}",
                 "}",
-                "@public class XmlParseException:Exception {",
+                "@public class XmlParseException:Exception{",
                     "field line;field col;field err;",
-                    "constructor(e,l,c):base('XML Parse Error: '+e) {",
+                    "constructor(e,l,c):base('XML Parse Error: '+e){",
                         "this.err=e;",
                         "this.line=l;",
                         "this.col=c;",
                     "}",
                 "}",
-                "@public function parseXml(s) {",
+                "@public function parseXml(s){",
                     "o=[0,0,0,0];",
                     "$xml_parse(s+'',o);",
                     "if(o[0]==0)",
                         "throw new XmlParseException(o[1],o[2],o[3]);",
                     "return _build([0],o[1]);",
                 "}",
-                // $xml_parse() returns a flat array of data.
-                // XML Element: [1, name, {attr count} {key, value}*, {child count}, ...{children} ]
-                // XML Text: [value]
-                "function _build(i,buf){",
-                    "if (buf[i[0]] == 1) {",
+                "function _build(i,b){", // i -> integer pointer, b -> data buffer
+                    "if (b[i[0]] == 1) {",
+                        "i[0]++;",
                         "o=new XmlElement();",
-                        "o.name=buf[++i[0]];",
-                        "c=buf[++i[0]];", // attribute count
+                        "o.name=b[i[0]++];",
+                        "c=b[i[0]++];", // attribute count
                         "a={};",
                         "while (c-->0) {",
-                            "k=buf[++i[0]];",
-                            "v=buf[++i[0]];",
+                            "k=b[i[0]++];",
+                            "v=b[i[0]++];",
                             "a[k]=v;",
                         "}",
                         "o.attributes=a;",
-                        "c=buf[++i[0]];", // children count
-                        "i[0]++;",
+                        "c=b[i[0]++];", // children count
                         "while (c-->0) {",
-                            "o.children.add(_build(i,buf));",
+                            "o.children.add(_build(i,b));",
                         "}",
                     "}else{",
                         "o=new XmlText();",
-                        "o.value=buf[i[0]++];",
+                        "o.value=b[i[0]++];",
                     "}",
                     "return o;",
                 "}",

@@ -5875,6 +5875,9 @@ namespace CommonScript.Runtime.Internal
                 case 12:
                     Instance inst = (Instance)value.internalValue;
                     return string.Join("", new string[] { "Instance<", inst.classDef.name, ":", inst.id.ToString(), ">" });
+                case 9:
+                    ListImpl list = (ListImpl)value.internalValue;
+                    return string.Join("", new string[] { "List[size=", list.length.ToString(), "]" });
                 default:
                     break;
             }
@@ -6197,6 +6200,11 @@ namespace CommonScript.Runtime.Internal
             {
                 return 0;
             }
+            if (tagName == null)
+            {
+                xml_setError(ctx, "Invalid use of '<' character.");
+                return 0;
+            }
             ctx.buffer.Add(ctx.globals.intOne);
             ctx.buffer.Add(tagName);
             int attributeSizeIndex = ctx.buffer.Count;
@@ -6367,7 +6375,7 @@ namespace CommonScript.Runtime.Internal
 
         public static int xml_setError(XmlParseContext ctx, string msg)
         {
-            ctx.hasError = false;
+            ctx.hasError = true;
             ctx.errorMessage = msg;
             return 0;
         }
@@ -6435,7 +6443,7 @@ namespace CommonScript.Runtime.Internal
                 xml_popElement(ctx);
             }
             xml_skipWhitespace(ctx);
-            if (xml_hasMore(ctx))
+            if (!ctx.hasError && xml_hasMore(ctx))
             {
                 ctx.hasError = true;
                 ctx.errorMessage = "Unexpected data at end of root element.";

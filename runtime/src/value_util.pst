@@ -80,6 +80,9 @@ string valueToHumanString(Value value) {
         case Type.INSTANCE:
             Instance inst = (Instance) value.internalValue;
             return Core.StringConcatAll("Instance<", inst.classDef.name, ":", Core.IntToString(inst.id), ">");
+        case Type.LIST:
+            ListImpl list = (ListImpl) value.internalValue;
+            return Core.StringConcatAll("List[size=", Core.IntToString(list.length), "]");
         default:
             break;
     }

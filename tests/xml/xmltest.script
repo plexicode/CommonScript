@@ -2,8 +2,12 @@ import testlib -> *;
 import xml;
 
 function main(args) {
+
     basicTest();
     assertStrEqual(getXmlErr('<a></a>a'), 'XML Parse Error: Unexpected data at end of root element.');
+    foo = getXmlErr('<a> b <3 </a>');
+    assertStrEqual(foo, 'XML Parse Error: Character is not valid for the first character of a name.');
+
     entityTest();
 
     print("ALL DONE");
@@ -11,7 +15,7 @@ function main(args) {
 
 function entityTest() {
     doc = xml.parseXml('
-        <a prop="value &lt; &gt; &quot; &apos; &amp; < > & \'">
+        <a prop="value &lt; &gt; &quot; &apos; &amp; &lt; > & \'">
             value &lt; &gt; &quot; &apos; &amp; &lt; > & \' "
         </a>
     '); // TODO: the 2nd &lt; in the text node should be a <
@@ -33,7 +37,7 @@ function basicTest() {
 }
 
 function getXmlErr(str) {
-    err = 'NO ERROR!!';
+    err = 'No error occurred.';
     try {
         xml.parseXml(str);
     } catch (ex) {
