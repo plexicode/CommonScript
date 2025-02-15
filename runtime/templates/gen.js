@@ -1,4 +1,4 @@
-const [PASTEL_regCallback, bubbleException, buildAsciiStringImpl, buildBase64String, buildFloat, buildFunctionFromInfo, buildInteger, buildIntegerListValue, buildList, buildString, buildStringDictionary, convertListToByteArray, convertToStringImpl, createClassInfo, createMainTask, createNewTask, createStringFromUnicodeArray, DictImpl_clone, DictImpl_ensureCapacity, dictionaryRemove, doExponent, exceptionCatcherRouteException, ExRes_Done, ExRes_HardCrash, ExRes_Suspend, finalizeExecutionContext, FunctionPointer_cloneWithNewType, generateNameLookup, generateStackTrace, generateTryDescriptors, getExceptionMessage, getGlobalsFromTask, increaseValueStackCapacity, injectNameLookup, isValueEqual, json_util_parse, json_util_serialize, List_add, List_expandCapacity, List_get, List_insert, List_join, List_pop, List_removeAt, List_set, new_ByteCodeRow, new_ExecutionContext, new_ExecutionResult, new_GlobalValues, ParseRaw_entitiesSection_classMemberResolver, ParseRaw_entitiesSection_parseClasses, ParseRaw_entitiesSection_parseEnums, ParseRaw_entitiesSection_parseFunctions, ParseRaw_parseEntityData, ParseRaw_parseMetadata, ParseRaw_parseStringData, ParseRaw_parseTokenData, ParseRaw_popByteCodeRows, ParseRaw_popBytes, ParseRaw_popFixedLenString, ParseRaw_popInt, ParseRaw_popLenString, ParseRaw_popSingleByte, ParseRawData, PUBLIC_createTaskForFunction, PUBLIC_getApplicationContextFromTask, PUBLIC_getExecutionContextError, PUBLIC_getExecutionContextFromTask, PUBLIC_getTaskResultError, PUBLIC_getTaskResultSleepAmount, PUBLIC_getTaskResultStatus, PUBLIC_initializeExecutionContext, PUBLIC_listValueAdd, PUBLIC_requestTaskSuspension, PUBLIC_startMainTask, PUBLIC_unwrapInteger, PUBLIC_unwrapNativeHandle, PUBLIC_valueToString, PUBLIC_wrapBoolean, PUBLIC_wrapInteger, PUBLIC_wrapNativeHandle, PUBLIC_wrapString, RunInterpreter, RunInterpreterImpl, Sort_buildTaskList, Sort_end, Sort_getNextCmp, Sort_proceedWithCmpResult, Sort_start, stringFlatten, stringUtil_changeCase, stringUtil_getFlatValue, stringUtil_split, stringUtil_trim, ThrowError, ThrowErrorImpl, tryGetNameId, valueArrayIncreaseCapacity, valueToHumanString] = (() => {
+const [PASTEL_regCallback, bubbleException, buildAsciiStringImpl, buildBase64String, buildFloat, buildFunctionFromInfo, buildInteger, buildIntegerListValue, buildList, buildString, buildStringDictionary, convertListToByteArray, convertToStringImpl, createClassInfo, createMainTask, createNewTask, createStringFromUnicodeArray, createStringFromUnicodeArraySegment, decToInt, DictImpl_clone, DictImpl_ensureCapacity, dictionaryRemove, doExponent, exceptionCatcherRouteException, ExRes_Done, ExRes_HardCrash, ExRes_Suspend, finalizeExecutionContext, FunctionPointer_cloneWithNewType, generateNameLookup, generateStackTrace, generateTryDescriptors, getExceptionMessage, getGlobalsFromTask, hexToInt, increaseValueStackCapacity, injectNameLookup, isValueEqual, json_util_parse, json_util_serialize, List_add, List_expandCapacity, List_get, List_insert, List_join, List_pop, List_removeAt, List_set, new_ByteCodeRow, new_ExecutionContext, new_ExecutionResult, new_GlobalValues, ParseRaw_entitiesSection_classMemberResolver, ParseRaw_entitiesSection_parseClasses, ParseRaw_entitiesSection_parseEnums, ParseRaw_entitiesSection_parseFunctions, ParseRaw_parseEntityData, ParseRaw_parseMetadata, ParseRaw_parseStringData, ParseRaw_parseTokenData, ParseRaw_popByteCodeRows, ParseRaw_popBytes, ParseRaw_popFixedLenString, ParseRaw_popInt, ParseRaw_popLenString, ParseRaw_popSingleByte, ParseRawData, PUBLIC_createTaskForFunction, PUBLIC_getApplicationContextFromTask, PUBLIC_getExecutionContextError, PUBLIC_getExecutionContextFromTask, PUBLIC_getTaskResultError, PUBLIC_getTaskResultSleepAmount, PUBLIC_getTaskResultStatus, PUBLIC_initializeExecutionContext, PUBLIC_listValueAdd, PUBLIC_requestTaskSuspension, PUBLIC_startMainTask, PUBLIC_unwrapInteger, PUBLIC_unwrapNativeHandle, PUBLIC_valueToString, PUBLIC_wrapBoolean, PUBLIC_wrapInteger, PUBLIC_wrapNativeHandle, PUBLIC_wrapString, RunInterpreter, RunInterpreterImpl, Sort_buildTaskList, Sort_end, Sort_getNextCmp, Sort_proceedWithCmpResult, Sort_start, stringFlatten, stringUtil_changeCase, stringUtil_getFlatValue, stringUtil_split, stringUtil_trim, ThrowError, ThrowErrorImpl, tryGetNameId, valueArrayIncreaseCapacity, valueToHumanString, xml_convertCharsToString, xml_ensureMore, xml_getEntity, xml_hasMore, xml_isValidNameChar, xml_peekChar, xml_performEntitySwaps, xml_popChar, xml_popCloseTag, xml_popElement, xml_popQuotedValue, xml_popTextValue, xml_popWord, xml_setError, xml_skipVersionHeaderIfPresent, xml_skipWhitespace, xml_tryPopCloseTagFor, xmlUtil_parse] = (() => {
 let PST$stringToUtf8Bytes = s => Array.from(new TextEncoder().encode(s));
 
 let PST$createNewArray = s => {
@@ -73,10 +73,10 @@ let buildBase64String = function(rawBytes) {
 	let chars = PST$createNewArray(64);
 	let j = 0;
 	while (j < 26) {
-		chars[j] = String.fromCharCode("A".charCodeAt(0) + j);
-		chars[j + 26] = String.fromCharCode("a".charCodeAt(0) + j);
+		chars[j] = String.fromCharCode(65 + j);
+		chars[j + 26] = String.fromCharCode(97 + j);
 		if (j < 10) {
-			chars[j + 52] = String.fromCharCode("0".charCodeAt(0) + j);
+			chars[j + 52] = String.fromCharCode(48 + j);
 		}
 		j += 1;
 	}
@@ -340,6 +340,26 @@ let createStringFromUnicodeArray = function(g, buffer, copyBuffer) {
 		return g[6][finalString];
 	}
 	return [5, [sz, false, uchars, finalString, null, null]];
+};
+
+let createStringFromUnicodeArraySegment = function(g, buffer, start, length) {
+	if (length == buffer.length) {
+		return createStringFromUnicodeArray(g, buffer, true);
+	}
+	let newBuf = PST$createNewArray(length);
+	let i = 0;
+	while (i < length) {
+		newBuf[i] = buffer[start + i];
+		i += 1;
+	}
+	return createStringFromUnicodeArray(g, newBuf, false);
+};
+
+let decToInt = function(charCode) {
+	if (charCode >= 48 && charCode <= 57) {
+		return charCode - 48;
+	}
+	return -1;
 };
 
 let DictImpl_clone = function(ec, original) {
@@ -680,6 +700,19 @@ let getExceptionMessage = function(exceptionInstance, includeStackTrace) {
 
 let getGlobalsFromTask = function(taskObj) {
 	return (taskObj)[1][1];
+};
+
+let hexToInt = function(charCode) {
+	if (charCode >= 48 && charCode <= 57) {
+		return charCode - 48;
+	}
+	if (charCode >= 97 && charCode <= 122) {
+		return charCode + -87;
+	}
+	if (charCode >= 65 && charCode <= 90) {
+		return charCode + -55;
+	}
+	return -1;
 };
 
 let increaseValueStackCapacity = function(task) {
@@ -1635,6 +1668,9 @@ let RunInterpreter = function(task) {
 		result = RunInterpreterImpl(task);
 		reinvoke = result[0] == 5;
 	}
+	if (result[0] != 3 && result[0] != 4) {
+		delete task[1][20][task[0]];
+	}
 	return result;
 };
 
@@ -1733,7 +1769,7 @@ let RunInterpreterImpl = function(task) {
 						instance1 = left[1];
 						if (!(instance1[1][8][row[5]] !== undefined)) {
 							errorId = 3;
-							errorMsg = "Instance does not have that field";
+							errorMsg = ["The ", instance1[1][3], " class does not have a field named .", row[5], " and therefore cannot be assigned to."].join('');
 							return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 						} else {
 							int1 = instance1[1][8][row[5]];
@@ -2563,7 +2599,7 @@ let RunInterpreterImpl = function(task) {
 						instance1 = value[1];
 						if (!(instance1[1][8][name] !== undefined)) {
 							errorId = 3;
-							errorMsg = "Instance does not contain that field.";
+							errorMsg = ["The class '", instance1[1][3], "' does not contain a field named '.", name, "'."].join('');
 							return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 						}
 						int1 = instance1[1][8][name];
@@ -2617,6 +2653,14 @@ let RunInterpreterImpl = function(task) {
 				if (valueStack[valueStackSize - 1][0] != 3) {
 					errorId = 9;
 					errorMsg = "Expected an integer here.";
+					return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
+				}
+				break;
+			case 66:
+				// OP_ENSURE_LIST;
+				if (valueStack[valueStackSize - 1][0] != 9) {
+					errorId = 9;
+					errorMsg = "Expected a list here.";
 					return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
 				}
 				break;
@@ -4063,14 +4107,6 @@ let RunInterpreterImpl = function(task) {
 						valueStackSize -= 2;
 						output = Sort_start(valueStack[valueStackSize], valueStack[valueStackSize + 1]);
 						break;
-					case 1:
-						float1 = (Date.now ? Date.now() : new Date().getTime()) / 1000.0;
-						if (row[3] == 1) {
-							output = buildFloat(float1);
-						} else {
-							output = buildInteger(globalValues, Math.floor(float1));
-						}
-						break;
 					case 23:
 						valueStackSize -= 2;
 						value = valueStack[valueStackSize];
@@ -4127,6 +4163,23 @@ let RunInterpreterImpl = function(task) {
 						output = buildIntegerListValue(ec, intArray1);
 						intArray1 = null;
 						str1 = null;
+						break;
+					case 1:
+						float1 = (Date.now ? Date.now() : new Date().getTime()) / 1000.0;
+						if (row[3] == 1) {
+							output = buildFloat(float1);
+						} else {
+							output = buildInteger(globalValues, Math.floor(float1));
+						}
+						break;
+					case 26:
+						valueStackSize -= 2;
+						value = valueStack[valueStackSize];
+						stringUtil_getFlatValue(value);
+						intArray1 = value[1][2];
+						listImpl1 = valueStack[valueStackSize + 1][1];
+						xmlUtil_parse(ec, intArray1, listImpl1[3]);
+						output = VALUE_NULL;
 						break;
 					default:
 						frame[1] = pc;
@@ -4727,10 +4780,471 @@ let valueToHumanString = function(value) {
 		case 12:
 			let inst = value[1];
 			return ["Instance<", inst[1][3], ":", inst[0] + '', ">"].join('');
+		case 9:
+			let list = value[1];
+			return ["List[size=", list[1] + '', "]"].join('');
 		default:
 			break;
 	}
 	return "TODO: to string for type: " + (value[0] + '');
 };
-return [PST$registerExtensibleCallback, bubbleException, buildAsciiStringImpl, buildBase64String, buildFloat, buildFunctionFromInfo, buildInteger, buildIntegerListValue, buildList, buildString, buildStringDictionary, convertListToByteArray, convertToStringImpl, createClassInfo, createMainTask, createNewTask, createStringFromUnicodeArray, DictImpl_clone, DictImpl_ensureCapacity, dictionaryRemove, doExponent, exceptionCatcherRouteException, ExRes_Done, ExRes_HardCrash, ExRes_Suspend, finalizeExecutionContext, FunctionPointer_cloneWithNewType, generateNameLookup, generateStackTrace, generateTryDescriptors, getExceptionMessage, getGlobalsFromTask, increaseValueStackCapacity, injectNameLookup, isValueEqual, json_util_parse, json_util_serialize, List_add, List_expandCapacity, List_get, List_insert, List_join, List_pop, List_removeAt, List_set, new_ByteCodeRow, new_ExecutionContext, new_ExecutionResult, new_GlobalValues, ParseRaw_entitiesSection_classMemberResolver, ParseRaw_entitiesSection_parseClasses, ParseRaw_entitiesSection_parseEnums, ParseRaw_entitiesSection_parseFunctions, ParseRaw_parseEntityData, ParseRaw_parseMetadata, ParseRaw_parseStringData, ParseRaw_parseTokenData, ParseRaw_popByteCodeRows, ParseRaw_popBytes, ParseRaw_popFixedLenString, ParseRaw_popInt, ParseRaw_popLenString, ParseRaw_popSingleByte, ParseRawData, PUBLIC_createTaskForFunction, PUBLIC_getApplicationContextFromTask, PUBLIC_getExecutionContextError, PUBLIC_getExecutionContextFromTask, PUBLIC_getTaskResultError, PUBLIC_getTaskResultSleepAmount, PUBLIC_getTaskResultStatus, PUBLIC_initializeExecutionContext, PUBLIC_listValueAdd, PUBLIC_requestTaskSuspension, PUBLIC_startMainTask, PUBLIC_unwrapInteger, PUBLIC_unwrapNativeHandle, PUBLIC_valueToString, PUBLIC_wrapBoolean, PUBLIC_wrapInteger, PUBLIC_wrapNativeHandle, PUBLIC_wrapString, RunInterpreter, RunInterpreterImpl, Sort_buildTaskList, Sort_end, Sort_getNextCmp, Sort_proceedWithCmpResult, Sort_start, stringFlatten, stringUtil_changeCase, stringUtil_getFlatValue, stringUtil_split, stringUtil_trim, ThrowError, ThrowErrorImpl, tryGetNameId, valueArrayIncreaseCapacity, valueToHumanString];
+
+let xml_convertCharsToString = function(globals, chars) {
+	xml_performEntitySwaps(chars);
+	let j = 0;
+	let i = 0;
+	while (i < chars.length) {
+		let c = chars[i];
+		if (c != -1) {
+			chars[j] = c;
+			j += 1;
+		}
+		i += 1;
+	}
+	while (chars.length > j) {
+		chars.pop();
+	}
+	let charArr = [...(chars)];
+	return createStringFromUnicodeArraySegment(globals, charArr, 0, charArr.length);
+};
+
+let xml_ensureMore = function(ctx) {
+	if (xml_hasMore(ctx)) {
+		return true;
+	}
+	xml_setError(ctx, "Unexpected end of XML document.");
+	return false;
+};
+
+let xml_getEntity = function(chars, start, end) {
+	let length = end - start;
+	let i = 0;
+	let digit = 0;
+	if (chars[start] == 35 && length > 2) {
+		let value = 0;
+		if (chars[start + 1] == 120) {
+			if (length > 2 && length <= 6) {
+				i = 2;
+				while (i < length) {
+					digit = hexToInt(chars[start + i]);
+					if (digit == -1) {
+						return -1;
+					}
+					value = value * 16 + digit;
+					i += 1;
+				}
+			}
+		} else if (length > 1 && length <= 5) {
+			i = 1;
+			while (i < length) {
+				digit = decToInt(chars[start + i]);
+				if (digit == -1) {
+					return -1;
+				}
+				value = value * 10 + digit;
+				i += 1;
+			}
+		}
+		return value;
+	}
+	if (length > 4) {
+		return -1;
+	}
+	let flatVal = 0;
+	i = 0;
+	while (i < 4) {
+		flatVal = flatVal << 2;
+		if (i < length) {
+			let c = chars[start + i];
+			if (c >= 65 && c <= 90) {
+				c += 32;
+			}
+			if (c > 127) {
+				return -1;
+			}
+			flatVal = flatVal | c;
+		}
+		i += 1;
+	}
+	switch (flatVal) {
+		case 8000:
+			return 60;
+		case 8128:
+			return 62;
+		case 8144:
+			return 38;
+		case 8188:
+			return 34;
+		case 8191:
+			return 39;
+	}
+	return -1;
+};
+
+let xml_hasMore = function(ctx) {
+	return ctx[4] < ctx[6];
+};
+
+let xml_isValidNameChar = function(c) {
+	if (c < 128) {
+		if (c >= 65 && c <= 90) {
+			return 1;
+		}
+		if (c >= 97 && c <= 122) {
+			return 1;
+		}
+		if (c == 58) {
+			return 1;
+		}
+		if (c == 45) {
+			return 2;
+		}
+		if (c == 46) {
+			return 2;
+		}
+		if (c >= 48 && c <= 57) {
+			return 2;
+		}
+	} else {
+		if (c == 183) {
+			return 2;
+		}
+		if (c >= 768 && c <= 879) {
+			return 2;
+		}
+		if (c >= 8255 && c <= 8256) {
+			return 2;
+		}
+		if (c >= 192 && c <= 214) {
+			return 1;
+		}
+		if (c >= 216 && c <= 246) {
+			return 1;
+		}
+		if (c >= 248 && c <= 767) {
+			return 1;
+		}
+		if (c >= 880 && c <= 893) {
+			return 1;
+		}
+		if (c >= 895 && c <= 8191) {
+			return 1;
+		}
+		if (c >= 8204 && c <= 8205) {
+			return 1;
+		}
+		if (c >= 8304 && c <= 8591) {
+			return 1;
+		}
+		if (c >= 11264 && c <= 12271) {
+			return 1;
+		}
+		if (c >= 12289 && c <= 55295) {
+			return 1;
+		}
+		if (c >= 63744 && c <= 64975) {
+			return 1;
+		}
+		if (c >= 65008 && c <= 65533) {
+			return 1;
+		}
+		if (c >= 65536 && c <= 983039) {
+			return 1;
+		}
+	}
+	return 0;
+};
+
+let xml_peekChar = function(ctx) {
+	if (ctx[4] >= ctx[6]) {
+		return -1;
+	}
+	return ctx[5][ctx[4]];
+};
+
+let xml_performEntitySwaps = function(chars) {
+	let i = 0;
+	while (i < chars.length) {
+		if (chars[i] == 38) {
+			let j = 0;
+			while (j < 10) {
+				if (i + j < chars.length && chars[i + j] == 59) {
+					let end = i + j;
+					let newChar = xml_getEntity(chars, i + 1, end);
+					if (newChar != -1) {
+						let k = i;
+						while (k < end) {
+							chars[k] = -1;
+							k += 1;
+						}
+						chars[end] = newChar;
+					}
+					j = 10;
+				}
+				j++;
+			}
+		}
+		i++;
+	}
+};
+
+let xml_popChar = function(ctx) {
+	let val = -1;
+	if (ctx[4] < ctx[6]) {
+		val = ctx[5][ctx[4]];
+		if (val == 10) {
+			ctx[0] += 1;
+			ctx[1] = 0;
+		} else {
+			ctx[1] += 1;
+		}
+		ctx[4] += 1;
+	}
+	return val;
+};
+
+let xml_popCloseTag = function(ctx, tagNameStart, tagNameEnd) {
+	if (xml_popChar(ctx) != 60) {
+		return false;
+	}
+	if (xml_popChar(ctx) != 47) {
+		return false;
+	}
+	let length = tagNameEnd - tagNameStart;
+	let i = 0;
+	while (i < length) {
+		if (xml_popChar(ctx) != ctx[5][tagNameStart + i]) {
+			return false;
+		}
+		i += 1;
+	}
+	xml_skipWhitespace(ctx);
+	return xml_popChar(ctx) == 62;
+};
+
+let xml_popElement = function(ctx) {
+	if (60 != xml_popChar(ctx)) {
+		xml_setError(ctx, "Expected '<' here");
+		return 0;
+	}
+	xml_skipWhitespace(ctx);
+	let tagNameStart = ctx[4];
+	let tagName = xml_popWord(ctx);
+	let tagNameEnd = ctx[4];
+	xml_skipWhitespace(ctx);
+	if (ctx[2] || !xml_ensureMore(ctx)) {
+		return 0;
+	}
+	if (tagName == null) {
+		xml_setError(ctx, "Invalid use of '<' character.");
+		return 0;
+	}
+	ctx[7].push(ctx[8][8]);
+	ctx[7].push(tagName);
+	let attributeSizeIndex = ctx[7].length;
+	ctx[7].push(ctx[8][7]);
+	let attributeCount = 0;
+	while (xml_hasMore(ctx) && xml_peekChar(ctx) != 62 && xml_peekChar(ctx) != 47) {
+		let attrName = xml_popWord(ctx);
+		xml_skipWhitespace(ctx);
+		if (ctx[2] || !xml_ensureMore(ctx)) {
+			return 0;
+		}
+		if (xml_popChar(ctx) != 61) {
+			xml_setError(ctx, "Expected '=' here");
+			return 0;
+		}
+		xml_skipWhitespace(ctx);
+		if (ctx[2] || !xml_ensureMore(ctx)) {
+			return 0;
+		}
+		let attrValue = xml_popQuotedValue(ctx);
+		xml_skipWhitespace(ctx);
+		if (ctx[2] || !xml_ensureMore(ctx)) {
+			return 0;
+		}
+		attributeCount += 1;
+		ctx[7].push(attrName);
+		ctx[7].push(attrValue);
+	}
+	ctx[7][attributeSizeIndex] = buildInteger(ctx[8], attributeCount);
+	let childCountIndex = ctx[7].length;
+	ctx[7].push(ctx[8][7]);
+	if (xml_peekChar(ctx) == 47) {
+		xml_popChar(ctx);
+		if (xml_popChar(ctx) != 62) {
+			xml_setError(ctx, "Expected '>' here.");
+			return 0;
+		}
+		xml_skipWhitespace(ctx);
+		return 0;
+	}
+	if (xml_popChar(ctx) != 62) {
+		if (!xml_ensureMore(ctx)) {
+			return 0;
+		}
+		xml_setError(ctx, "Expected '>' here.");
+		return 0;
+	}
+	let insideElement = true;
+	let childCount = 0;
+	while (insideElement && ctx[4] < ctx[6]) {
+		if (xml_peekChar(ctx) == 60) {
+			if (xml_tryPopCloseTagFor(ctx, tagNameStart, tagNameEnd)) {
+				insideElement = false;
+			} else {
+				childCount += 1;
+				xml_popElement(ctx);
+				if (ctx[2]) {
+					return 0;
+				}
+			}
+		} else {
+			let textStart = ctx[4];
+			xml_popTextValue(ctx);
+			let textEnd = ctx[4];
+			let textSpanChars = [];
+			let i = textStart;
+			while (i < textEnd) {
+				textSpanChars.push(ctx[5][i]);
+				i += 1;
+			}
+			let textVal = xml_convertCharsToString(ctx[8], textSpanChars);
+			ctx[7].push(textVal);
+			childCount += 1;
+		}
+	}
+	ctx[7][childCountIndex] = buildInteger(ctx[8], childCount);
+	return 0;
+};
+
+let xml_popQuotedValue = function(ctx) {
+	if (!xml_ensureMore(ctx)) {
+		return null;
+	}
+	if (xml_peekChar(ctx) != 34) {
+		let word = xml_popWord(ctx);
+		if (!ctx[2]) {
+			xml_skipWhitespace(ctx);
+		}
+		return word;
+	}
+	xml_popChar(ctx);
+	let indexStart = ctx[4];
+	let chars = [];
+	while (ctx[4] < ctx[6] && xml_peekChar(ctx) != 34) {
+		chars.push(xml_popChar(ctx));
+	}
+	if (!xml_ensureMore(ctx)) {
+		return null;
+	}
+	xml_popChar(ctx);
+	return xml_convertCharsToString(ctx[8], chars);
+};
+
+let xml_popTextValue = function(ctx) {
+	let indexStart = ctx[4];
+	while (ctx[4] < ctx[6] && ctx[5][ctx[4]] != 60) {
+		xml_popChar(ctx);
+	}
+	return 0;
+};
+
+let xml_popWord = function(ctx) {
+	if (!xml_hasMore(ctx)) {
+		xml_setError(ctx, "Unexpected end of XML document.");
+		return null;
+	}
+	let startIndex = ctx[4];
+	let validity = xml_isValidNameChar(xml_popChar(ctx));
+	if (validity == 0) {
+		xml_setError(ctx, "Unexpected character.");
+		return null;
+	}
+	if (validity == 2) {
+		xml_setError(ctx, "Character is not valid for the first character of a name.");
+		return null;
+	}
+	while (ctx[4] < ctx[6] && validity > 0) {
+		validity = xml_isValidNameChar(xml_peekChar(ctx));
+		if (validity > 0) {
+			xml_popChar(ctx);
+		}
+	}
+	let length = ctx[4] - startIndex;
+	return createStringFromUnicodeArraySegment(ctx[8], ctx[5], startIndex, length);
+};
+
+let xml_setError = function(ctx, msg) {
+	ctx[2] = true;
+	ctx[3] = msg;
+	return 0;
+};
+
+let xml_skipVersionHeaderIfPresent = function(ctx) {
+	return 0;
+};
+
+let xml_skipWhitespace = function(ctx) {
+	while (ctx[4] < ctx[6]) {
+		let c = ctx[5][ctx[4]];
+		if (c != 32 && c != 10 && c != 13 && c != 9) {
+			return 0;
+		}
+		if (c == 10) {
+			ctx[1] = 0;
+			ctx[0] += 1;
+		} else {
+			ctx[1] += 1;
+		}
+		ctx[4] += 1;
+	}
+	return 0;
+};
+
+let xml_tryPopCloseTagFor = function(ctx, tagNameStart, tagNameEnd) {
+	let tagNameLen = tagNameEnd - tagNameStart;
+	let col = ctx[1];
+	let line = ctx[0];
+	let index = ctx[4];
+	if (xml_popCloseTag(ctx, tagNameStart, tagNameEnd)) {
+		return true;
+	}
+	ctx[1] = col;
+	ctx[0] = line;
+	ctx[4] = index;
+	return false;
+};
+
+let xmlUtil_parse = function(ec, chars, dataOut) {
+	let globals = ec[1];
+	dataOut[0] = globals[7];
+	dataOut[1] = buildString(globals, "XML Parsing is not implemented yet.", false);
+	dataOut[2] = globals[7];
+	dataOut[3] = globals[7];
+	let ctx = [1, 1, false, "", 0, chars, chars.length, [], globals];
+	xml_skipWhitespace(ctx);
+	if (!ctx[2]) {
+		xml_skipVersionHeaderIfPresent(ctx);
+	}
+	xml_skipWhitespace(ctx);
+	if (!ctx[2]) {
+		xml_popElement(ctx);
+	}
+	xml_skipWhitespace(ctx);
+	if (!ctx[2] && xml_hasMore(ctx)) {
+		ctx[2] = true;
+		ctx[3] = "Unexpected data at end of root element.";
+	}
+	if (ctx[2]) {
+		dataOut[1] = buildString(globals, ctx[3], false);
+		dataOut[2] = buildInteger(globals, ctx[0]);
+		dataOut[3] = buildInteger(globals, ctx[1]);
+	} else {
+		dataOut[0] = globals[8];
+		dataOut[1] = buildList(ec, [...(ctx[7])], true, -1);
+	}
+	return 0;
+};
+return [PST$registerExtensibleCallback, bubbleException, buildAsciiStringImpl, buildBase64String, buildFloat, buildFunctionFromInfo, buildInteger, buildIntegerListValue, buildList, buildString, buildStringDictionary, convertListToByteArray, convertToStringImpl, createClassInfo, createMainTask, createNewTask, createStringFromUnicodeArray, createStringFromUnicodeArraySegment, decToInt, DictImpl_clone, DictImpl_ensureCapacity, dictionaryRemove, doExponent, exceptionCatcherRouteException, ExRes_Done, ExRes_HardCrash, ExRes_Suspend, finalizeExecutionContext, FunctionPointer_cloneWithNewType, generateNameLookup, generateStackTrace, generateTryDescriptors, getExceptionMessage, getGlobalsFromTask, hexToInt, increaseValueStackCapacity, injectNameLookup, isValueEqual, json_util_parse, json_util_serialize, List_add, List_expandCapacity, List_get, List_insert, List_join, List_pop, List_removeAt, List_set, new_ByteCodeRow, new_ExecutionContext, new_ExecutionResult, new_GlobalValues, ParseRaw_entitiesSection_classMemberResolver, ParseRaw_entitiesSection_parseClasses, ParseRaw_entitiesSection_parseEnums, ParseRaw_entitiesSection_parseFunctions, ParseRaw_parseEntityData, ParseRaw_parseMetadata, ParseRaw_parseStringData, ParseRaw_parseTokenData, ParseRaw_popByteCodeRows, ParseRaw_popBytes, ParseRaw_popFixedLenString, ParseRaw_popInt, ParseRaw_popLenString, ParseRaw_popSingleByte, ParseRawData, PUBLIC_createTaskForFunction, PUBLIC_getApplicationContextFromTask, PUBLIC_getExecutionContextError, PUBLIC_getExecutionContextFromTask, PUBLIC_getTaskResultError, PUBLIC_getTaskResultSleepAmount, PUBLIC_getTaskResultStatus, PUBLIC_initializeExecutionContext, PUBLIC_listValueAdd, PUBLIC_requestTaskSuspension, PUBLIC_startMainTask, PUBLIC_unwrapInteger, PUBLIC_unwrapNativeHandle, PUBLIC_valueToString, PUBLIC_wrapBoolean, PUBLIC_wrapInteger, PUBLIC_wrapNativeHandle, PUBLIC_wrapString, RunInterpreter, RunInterpreterImpl, Sort_buildTaskList, Sort_end, Sort_getNextCmp, Sort_proceedWithCmpResult, Sort_start, stringFlatten, stringUtil_changeCase, stringUtil_getFlatValue, stringUtil_split, stringUtil_trim, ThrowError, ThrowErrorImpl, tryGetNameId, valueArrayIncreaseCapacity, valueToHumanString, xml_convertCharsToString, xml_ensureMore, xml_getEntity, xml_hasMore, xml_isValidNameChar, xml_peekChar, xml_performEntitySwaps, xml_popChar, xml_popCloseTag, xml_popElement, xml_popQuotedValue, xml_popTextValue, xml_popWord, xml_setError, xml_skipVersionHeaderIfPresent, xml_skipWhitespace, xml_tryPopCloseTagFor, xmlUtil_parse];
 })();
