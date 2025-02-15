@@ -2017,6 +2017,21 @@ namespace CommonScript.Runtime.Internal
             return new_ExecutionContext(rawBytes, extensions, appCtx);
         }
 
+        public static object PUBLIC_listGet(object listObj, int i)
+        {
+            return ((ListImpl)((Value)listObj).internalValue).items[i];
+        }
+
+        public static int PUBLIC_listLength(object listObj)
+        {
+            return ((ListImpl)((Value)listObj).internalValue).items.Length;
+        }
+
+        public static void PUBLIC_listSet(object listObj, int i, object valObj)
+        {
+            ((ListImpl)((Value)listObj).internalValue).items[i] = (Value)valObj;
+        }
+
         public static void PUBLIC_listValueAdd(object listObj, object wrappedValue)
         {
             ListImpl list = (ListImpl)((Value)listObj).internalValue;
@@ -2045,6 +2060,11 @@ namespace CommonScript.Runtime.Internal
         {
             ExecutionTask mainTask = createMainTask((ExecutionContext)ecObj, args);
             return RunInterpreter(mainTask);
+        }
+
+        public static double PUBLIC_unwrapFloat(object val)
+        {
+            return 1.0 * (double)((Value)val).internalValue;
         }
 
         public static int PUBLIC_unwrapInteger(object val)
@@ -2208,7 +2228,7 @@ namespace CommonScript.Runtime.Internal
                                 if (!instance1.classDef.nameToOffset.ContainsKey(row.stringArg))
                                 {
                                     errorId = 3;
-                                    errorMsg = "Instance does not have that field";
+                                    errorMsg = string.Join("", new string[] { "The ", instance1.classDef.name, " class does not have a field named .", row.stringArg, " and therefore cannot be assigned to." });
                                     return ThrowError(task, frame, pc, valueStackSize, errorId, errorMsg);
                                 }
                                 else

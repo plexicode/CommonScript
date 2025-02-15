@@ -33,7 +33,7 @@ object PUBLIC_getExecutionContextFromTask(object taskObj) {
 object PUBLIC_createTaskForFunction(object ecCtx, object fpValueNoArgs) {
     return createNewTask(
         (ExecutionContext) ecCtx,
-        (Value) fpValueNoArgs, 
+        (Value) fpValueNoArgs,
         new Array<Value>(0));
 }
 
@@ -84,6 +84,10 @@ int PUBLIC_unwrapInteger(object val) {
     return (int) Core.ForceParens((Value) val).internalValue;
 }
 
+double PUBLIC_unwrapFloat(object val) {
+    return 1.0 * (double) ((Value) val).internalValue;
+}
+
 object PUBLIC_unwrapNativeHandle(object val) {
     return Core.ForceParens((Value) val).internalValue;
 }
@@ -91,6 +95,18 @@ object PUBLIC_unwrapNativeHandle(object val) {
 void PUBLIC_listValueAdd(object listObj, object wrappedValue) {
     ListImpl list = (ListImpl) Core.ForceParens((Value) listObj).internalValue;
     List_add(list, (Value) wrappedValue);
+}
+
+object PUBLIC_listGet(object listObj, int i) {
+    return ((ListImpl)((Value) listObj).internalValue).items[i];
+}
+
+void PUBLIC_listSet(object listObj, int i, object valObj) {
+    ((ListImpl)((Value) listObj).internalValue).items[i] = (Value) valObj;
+}
+
+int PUBLIC_listLength(object listObj) {
+    return ((ListImpl)((Value) listObj).internalValue).items.Size();
 }
 
 void PUBLIC_requestTaskSuspension(object taskObj, bool withSleep, int sleepMillis) {

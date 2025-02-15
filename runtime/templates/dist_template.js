@@ -17,10 +17,12 @@ const CommonScript = (() => {
       wrapString: PUBLIC_wrapString,
       unwrapNativeHandle: PUBLIC_unwrapNativeHandle,
       unwrapInteger: PUBLIC_unwrapInteger,
+      unwrapFloat: PUBLIC_unwrapFloat,
       unwrapAppContext: PUBLIC_getApplicationContextFromTask,
       listAdd: PUBLIC_listValueAdd,
-      // listLength: PUBLIC_listLength,
-      // listGet: PUBLIC_listGet,
+      listLength: PUBLIC_listLength,
+      listGet: PUBLIC_listGet,
+      listSet: PUBLIC_listSet,
     }),
   });
 })();
