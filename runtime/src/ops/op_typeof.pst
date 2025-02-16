@@ -8,6 +8,7 @@ switch (valueStack[valueStackSize - 1].type) {
     case Type.LIST: str1 = "list"; break;
     case Type.DICTIONARY: str1 = "dict"; break;
     case Type.INSTANCE: str1 = "object"; break;
+    case Type.NATIVE_HANDLE: str1 = "native"; break;
     default:
         @import("macros/saveframe.pst");
         return ExRes_HardCrash(task, "Unknown type?");

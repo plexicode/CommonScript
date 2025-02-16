@@ -4443,6 +4443,9 @@ let RunInterpreterImpl = function(task) {
 					case 12:
 						str1 = "object";
 						break;
+					case 14:
+						str1 = "native";
+						break;
 					default:
 						frame[1] = pc;
 						frame[4] = valueStackSize;

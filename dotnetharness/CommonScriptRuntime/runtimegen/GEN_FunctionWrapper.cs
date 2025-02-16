@@ -5464,6 +5464,9 @@ namespace CommonScript.Runtime.Internal
                             case 12:
                                 str1 = "object";
                                 break;
+                            case 14:
+                                str1 = "native";
+                                break;
                             default:
                                 frame.pc = pc;
                                 frame.valueStackSize = valueStackSize;
