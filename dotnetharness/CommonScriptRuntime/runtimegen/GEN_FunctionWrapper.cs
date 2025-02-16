@@ -1958,7 +1958,20 @@ namespace CommonScript.Runtime.Internal
 
         public static object PUBLIC_createTaskForFunction(object ecCtx, object fpValueNoArgs)
         {
-            return createNewTask((ExecutionContext)ecCtx, (Value)fpValueNoArgs, new Value[0]);
+            return PUBLIC_createTaskForFunctionWithWrappedArgs(ecCtx, fpValueNoArgs, new object[0]);
+        }
+
+        public static object PUBLIC_createTaskForFunctionWithWrappedArgs(object ecCtx, object fpValue, object[] wrappedArgs)
+        {
+            int argc = wrappedArgs.Length;
+            Value[] args = new Value[argc];
+            int i = 0;
+            while (i < argc)
+            {
+                args[i] = (Value)wrappedArgs[i];
+                i += 1;
+            }
+            return createNewTask((ExecutionContext)ecCtx, (Value)fpValue, args);
         }
 
         public static object PUBLIC_getApplicationContextFromTask(object taskObj)
@@ -2056,10 +2069,15 @@ namespace CommonScript.Runtime.Internal
             }
         }
 
+        public static object PUBLIC_resumeTask(object taskObj)
+        {
+            return RunInterpreter((ExecutionTask)taskObj);
+        }
+
         public static object PUBLIC_startMainTask(object ecObj, string[] args)
         {
             ExecutionTask mainTask = createMainTask((ExecutionContext)ecObj, args);
-            return RunInterpreter(mainTask);
+            return PUBLIC_resumeTask(mainTask);
         }
 
         public static double PUBLIC_unwrapFloat(object val)

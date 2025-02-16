@@ -13,7 +13,11 @@ string PUBLIC_getExecutionContextError(object ecObj) {
 
 object PUBLIC_startMainTask(object ecObj, Array<string> args) {
     ExecutionTask mainTask = createMainTask((ExecutionContext) ecObj, args);
-    return RunInterpreter(mainTask);
+    return PUBLIC_resumeTask(mainTask);
+}
+
+object PUBLIC_resumeTask(object taskObj) {
+    return RunInterpreter((ExecutionTask) taskObj);
 }
 
 int PUBLIC_getTaskResultStatus(object resObj) {
@@ -31,10 +35,16 @@ object PUBLIC_getExecutionContextFromTask(object taskObj) {
 }
 
 object PUBLIC_createTaskForFunction(object ecCtx, object fpValueNoArgs) {
-    return createNewTask(
-        (ExecutionContext) ecCtx,
-        (Value) fpValueNoArgs,
-        new Array<Value>(0));
+    return PUBLIC_createTaskForFunctionWithWrappedArgs(ecCtx, fpValueNoArgs, new Array<object>(0));
+}
+
+object PUBLIC_createTaskForFunctionWithWrappedArgs(object ecCtx, object fpValue, Array<object> wrappedArgs) {
+    int argc = wrappedArgs.Size();
+    Array<Value> args = new Array<Value>(argc);
+    for (int i = 0; i < argc; i += 1) {
+        args[i] = (Value) wrappedArgs[i];
+    }
+    return createNewTask((ExecutionContext) ecCtx, (Value) fpValue, args);
 }
 
 Array<string> PUBLIC_getTaskResultError(object resObj, bool includeStackTrace) {

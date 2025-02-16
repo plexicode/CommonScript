@@ -2,7 +2,7 @@
   const CommonScript = (() => {
 
   //
-const [PASTEL_regCallback, bubbleException, buildAsciiStringImpl, buildBase64String, buildFloat, buildFunctionFromInfo, buildInteger, buildIntegerListValue, buildList, buildString, buildStringDictionary, convertListToByteArray, convertToStringImpl, createClassInfo, createMainTask, createNewTask, createStringFromUnicodeArray, createStringFromUnicodeArraySegment, decToInt, DictImpl_clone, DictImpl_ensureCapacity, dictionaryRemove, doExponent, exceptionCatcherRouteException, ExRes_Done, ExRes_HardCrash, ExRes_Suspend, finalizeExecutionContext, FunctionPointer_cloneWithNewType, generateNameLookup, generateStackTrace, generateTryDescriptors, getExceptionMessage, getGlobalsFromTask, hexToInt, increaseValueStackCapacity, injectNameLookup, isValueEqual, json_util_parse, json_util_serialize, List_add, List_expandCapacity, List_get, List_insert, List_join, List_pop, List_removeAt, List_set, new_ByteCodeRow, new_ExecutionContext, new_ExecutionResult, new_GlobalValues, ParseRaw_entitiesSection_classMemberResolver, ParseRaw_entitiesSection_parseClasses, ParseRaw_entitiesSection_parseEnums, ParseRaw_entitiesSection_parseFunctions, ParseRaw_parseEntityData, ParseRaw_parseMetadata, ParseRaw_parseStringData, ParseRaw_parseTokenData, ParseRaw_popByteCodeRows, ParseRaw_popBytes, ParseRaw_popFixedLenString, ParseRaw_popInt, ParseRaw_popLenString, ParseRaw_popSingleByte, ParseRawData, PUBLIC_createTaskForFunction, PUBLIC_getApplicationContextFromTask, PUBLIC_getExecutionContextError, PUBLIC_getExecutionContextFromTask, PUBLIC_getTaskResultError, PUBLIC_getTaskResultSleepAmount, PUBLIC_getTaskResultStatus, PUBLIC_initializeExecutionContext, PUBLIC_listGet, PUBLIC_listLength, PUBLIC_listSet, PUBLIC_listValueAdd, PUBLIC_requestTaskSuspension, PUBLIC_startMainTask, PUBLIC_unwrapFloat, PUBLIC_unwrapInteger, PUBLIC_unwrapNativeHandle, PUBLIC_valueToString, PUBLIC_wrapBoolean, PUBLIC_wrapInteger, PUBLIC_wrapNativeHandle, PUBLIC_wrapString, RunInterpreter, RunInterpreterImpl, Sort_buildTaskList, Sort_end, Sort_getNextCmp, Sort_proceedWithCmpResult, Sort_start, stringFlatten, stringUtil_changeCase, stringUtil_getFlatValue, stringUtil_split, stringUtil_trim, ThrowError, ThrowErrorImpl, tryGetNameId, valueArrayIncreaseCapacity, valueToHumanString, xml_convertCharsToString, xml_ensureMore, xml_getEntity, xml_hasMore, xml_isValidNameChar, xml_peekChar, xml_performEntitySwaps, xml_popChar, xml_popCloseTag, xml_popElement, xml_popQuotedValue, xml_popTextValue, xml_popWord, xml_setError, xml_skipVersionHeaderIfPresent, xml_skipWhitespace, xml_tryPopCloseTagFor, xmlUtil_parse] = (() => {
+const [PASTEL_regCallback, bubbleException, buildAsciiStringImpl, buildBase64String, buildFloat, buildFunctionFromInfo, buildInteger, buildIntegerListValue, buildList, buildString, buildStringDictionary, convertListToByteArray, convertToStringImpl, createClassInfo, createMainTask, createNewTask, createStringFromUnicodeArray, createStringFromUnicodeArraySegment, decToInt, DictImpl_clone, DictImpl_ensureCapacity, dictionaryRemove, doExponent, exceptionCatcherRouteException, ExRes_Done, ExRes_HardCrash, ExRes_Suspend, finalizeExecutionContext, FunctionPointer_cloneWithNewType, generateNameLookup, generateStackTrace, generateTryDescriptors, getExceptionMessage, getGlobalsFromTask, hexToInt, increaseValueStackCapacity, injectNameLookup, isValueEqual, json_util_parse, json_util_serialize, List_add, List_expandCapacity, List_get, List_insert, List_join, List_pop, List_removeAt, List_set, new_ByteCodeRow, new_ExecutionContext, new_ExecutionResult, new_GlobalValues, ParseRaw_entitiesSection_classMemberResolver, ParseRaw_entitiesSection_parseClasses, ParseRaw_entitiesSection_parseEnums, ParseRaw_entitiesSection_parseFunctions, ParseRaw_parseEntityData, ParseRaw_parseMetadata, ParseRaw_parseStringData, ParseRaw_parseTokenData, ParseRaw_popByteCodeRows, ParseRaw_popBytes, ParseRaw_popFixedLenString, ParseRaw_popInt, ParseRaw_popLenString, ParseRaw_popSingleByte, ParseRawData, PUBLIC_createTaskForFunction, PUBLIC_createTaskForFunctionWithWrappedArgs, PUBLIC_getApplicationContextFromTask, PUBLIC_getExecutionContextError, PUBLIC_getExecutionContextFromTask, PUBLIC_getTaskResultError, PUBLIC_getTaskResultSleepAmount, PUBLIC_getTaskResultStatus, PUBLIC_initializeExecutionContext, PUBLIC_listGet, PUBLIC_listLength, PUBLIC_listSet, PUBLIC_listValueAdd, PUBLIC_requestTaskSuspension, PUBLIC_resumeTask, PUBLIC_startMainTask, PUBLIC_unwrapFloat, PUBLIC_unwrapInteger, PUBLIC_unwrapNativeHandle, PUBLIC_valueToString, PUBLIC_wrapBoolean, PUBLIC_wrapInteger, PUBLIC_wrapNativeHandle, PUBLIC_wrapString, RunInterpreter, RunInterpreterImpl, Sort_buildTaskList, Sort_end, Sort_getNextCmp, Sort_proceedWithCmpResult, Sort_start, stringFlatten, stringUtil_changeCase, stringUtil_getFlatValue, stringUtil_split, stringUtil_trim, ThrowError, ThrowErrorImpl, tryGetNameId, valueArrayIncreaseCapacity, valueToHumanString, xml_convertCharsToString, xml_ensureMore, xml_getEntity, xml_hasMore, xml_isValidNameChar, xml_peekChar, xml_performEntitySwaps, xml_popChar, xml_popCloseTag, xml_popElement, xml_popQuotedValue, xml_popTextValue, xml_popWord, xml_setError, xml_skipVersionHeaderIfPresent, xml_skipWhitespace, xml_tryPopCloseTagFor, xmlUtil_parse] = (() => {
 let PST$stringToUtf8Bytes = s => Array.from(new TextEncoder().encode(s));
 
 let PST$createNewArray = s => {
@@ -1559,7 +1559,18 @@ let ParseRawData = function(rawBytes, ec) {
 };
 
 let PUBLIC_createTaskForFunction = function(ecCtx, fpValueNoArgs) {
-	return createNewTask(ecCtx, fpValueNoArgs, PST$createNewArray(0));
+	return PUBLIC_createTaskForFunctionWithWrappedArgs(ecCtx, fpValueNoArgs, PST$createNewArray(0));
+};
+
+let PUBLIC_createTaskForFunctionWithWrappedArgs = function(ecCtx, fpValue, wrappedArgs) {
+	let argc = wrappedArgs.length;
+	let args = PST$createNewArray(argc);
+	let i = 0;
+	while (i < argc) {
+		args[i] = wrappedArgs[i];
+		i += 1;
+	}
+	return createNewTask(ecCtx, fpValue, args);
 };
 
 let PUBLIC_getApplicationContextFromTask = function(taskObj) {
@@ -1638,9 +1649,13 @@ let PUBLIC_requestTaskSuspension = function(taskObj, withSleep, sleepMillis) {
 	}
 };
 
+let PUBLIC_resumeTask = function(taskObj) {
+	return RunInterpreter(taskObj);
+};
+
 let PUBLIC_startMainTask = function(ecObj, args) {
 	let mainTask = createMainTask(ecObj, args);
-	return RunInterpreter(mainTask);
+	return PUBLIC_resumeTask(mainTask);
 };
 
 let PUBLIC_unwrapFloat = function(val) {
@@ -5266,7 +5281,7 @@ let xmlUtil_parse = function(ec, chars, dataOut) {
 	}
 	return 0;
 };
-return [PST$registerExtensibleCallback, bubbleException, buildAsciiStringImpl, buildBase64String, buildFloat, buildFunctionFromInfo, buildInteger, buildIntegerListValue, buildList, buildString, buildStringDictionary, convertListToByteArray, convertToStringImpl, createClassInfo, createMainTask, createNewTask, createStringFromUnicodeArray, createStringFromUnicodeArraySegment, decToInt, DictImpl_clone, DictImpl_ensureCapacity, dictionaryRemove, doExponent, exceptionCatcherRouteException, ExRes_Done, ExRes_HardCrash, ExRes_Suspend, finalizeExecutionContext, FunctionPointer_cloneWithNewType, generateNameLookup, generateStackTrace, generateTryDescriptors, getExceptionMessage, getGlobalsFromTask, hexToInt, increaseValueStackCapacity, injectNameLookup, isValueEqual, json_util_parse, json_util_serialize, List_add, List_expandCapacity, List_get, List_insert, List_join, List_pop, List_removeAt, List_set, new_ByteCodeRow, new_ExecutionContext, new_ExecutionResult, new_GlobalValues, ParseRaw_entitiesSection_classMemberResolver, ParseRaw_entitiesSection_parseClasses, ParseRaw_entitiesSection_parseEnums, ParseRaw_entitiesSection_parseFunctions, ParseRaw_parseEntityData, ParseRaw_parseMetadata, ParseRaw_parseStringData, ParseRaw_parseTokenData, ParseRaw_popByteCodeRows, ParseRaw_popBytes, ParseRaw_popFixedLenString, ParseRaw_popInt, ParseRaw_popLenString, ParseRaw_popSingleByte, ParseRawData, PUBLIC_createTaskForFunction, PUBLIC_getApplicationContextFromTask, PUBLIC_getExecutionContextError, PUBLIC_getExecutionContextFromTask, PUBLIC_getTaskResultError, PUBLIC_getTaskResultSleepAmount, PUBLIC_getTaskResultStatus, PUBLIC_initializeExecutionContext, PUBLIC_listGet, PUBLIC_listLength, PUBLIC_listSet, PUBLIC_listValueAdd, PUBLIC_requestTaskSuspension, PUBLIC_startMainTask, PUBLIC_unwrapFloat, PUBLIC_unwrapInteger, PUBLIC_unwrapNativeHandle, PUBLIC_valueToString, PUBLIC_wrapBoolean, PUBLIC_wrapInteger, PUBLIC_wrapNativeHandle, PUBLIC_wrapString, RunInterpreter, RunInterpreterImpl, Sort_buildTaskList, Sort_end, Sort_getNextCmp, Sort_proceedWithCmpResult, Sort_start, stringFlatten, stringUtil_changeCase, stringUtil_getFlatValue, stringUtil_split, stringUtil_trim, ThrowError, ThrowErrorImpl, tryGetNameId, valueArrayIncreaseCapacity, valueToHumanString, xml_convertCharsToString, xml_ensureMore, xml_getEntity, xml_hasMore, xml_isValidNameChar, xml_peekChar, xml_performEntitySwaps, xml_popChar, xml_popCloseTag, xml_popElement, xml_popQuotedValue, xml_popTextValue, xml_popWord, xml_setError, xml_skipVersionHeaderIfPresent, xml_skipWhitespace, xml_tryPopCloseTagFor, xmlUtil_parse];
+return [PST$registerExtensibleCallback, bubbleException, buildAsciiStringImpl, buildBase64String, buildFloat, buildFunctionFromInfo, buildInteger, buildIntegerListValue, buildList, buildString, buildStringDictionary, convertListToByteArray, convertToStringImpl, createClassInfo, createMainTask, createNewTask, createStringFromUnicodeArray, createStringFromUnicodeArraySegment, decToInt, DictImpl_clone, DictImpl_ensureCapacity, dictionaryRemove, doExponent, exceptionCatcherRouteException, ExRes_Done, ExRes_HardCrash, ExRes_Suspend, finalizeExecutionContext, FunctionPointer_cloneWithNewType, generateNameLookup, generateStackTrace, generateTryDescriptors, getExceptionMessage, getGlobalsFromTask, hexToInt, increaseValueStackCapacity, injectNameLookup, isValueEqual, json_util_parse, json_util_serialize, List_add, List_expandCapacity, List_get, List_insert, List_join, List_pop, List_removeAt, List_set, new_ByteCodeRow, new_ExecutionContext, new_ExecutionResult, new_GlobalValues, ParseRaw_entitiesSection_classMemberResolver, ParseRaw_entitiesSection_parseClasses, ParseRaw_entitiesSection_parseEnums, ParseRaw_entitiesSection_parseFunctions, ParseRaw_parseEntityData, ParseRaw_parseMetadata, ParseRaw_parseStringData, ParseRaw_parseTokenData, ParseRaw_popByteCodeRows, ParseRaw_popBytes, ParseRaw_popFixedLenString, ParseRaw_popInt, ParseRaw_popLenString, ParseRaw_popSingleByte, ParseRawData, PUBLIC_createTaskForFunction, PUBLIC_createTaskForFunctionWithWrappedArgs, PUBLIC_getApplicationContextFromTask, PUBLIC_getExecutionContextError, PUBLIC_getExecutionContextFromTask, PUBLIC_getTaskResultError, PUBLIC_getTaskResultSleepAmount, PUBLIC_getTaskResultStatus, PUBLIC_initializeExecutionContext, PUBLIC_listGet, PUBLIC_listLength, PUBLIC_listSet, PUBLIC_listValueAdd, PUBLIC_requestTaskSuspension, PUBLIC_resumeTask, PUBLIC_startMainTask, PUBLIC_unwrapFloat, PUBLIC_unwrapInteger, PUBLIC_unwrapNativeHandle, PUBLIC_valueToString, PUBLIC_wrapBoolean, PUBLIC_wrapInteger, PUBLIC_wrapNativeHandle, PUBLIC_wrapString, RunInterpreter, RunInterpreterImpl, Sort_buildTaskList, Sort_end, Sort_getNextCmp, Sort_proceedWithCmpResult, Sort_start, stringFlatten, stringUtil_changeCase, stringUtil_getFlatValue, stringUtil_split, stringUtil_trim, ThrowError, ThrowErrorImpl, tryGetNameId, valueArrayIncreaseCapacity, valueToHumanString, xml_convertCharsToString, xml_ensureMore, xml_getEntity, xml_hasMore, xml_isValidNameChar, xml_peekChar, xml_performEntitySwaps, xml_popChar, xml_popCloseTag, xml_popElement, xml_popQuotedValue, xml_popTextValue, xml_popWord, xml_setError, xml_skipVersionHeaderIfPresent, xml_skipWhitespace, xml_tryPopCloseTagFor, xmlUtil_parse];
 })();
 
   //
@@ -5348,6 +5363,11 @@ let newEngineContextBuilder = (name, ver) => {
     task: Object.freeze({
         suspendTask: task => { PUBLIC_requestTaskSuspension(task, false, 0); },
         sleepTask: (task, millis) => { PUBLIC_requestTaskSuspension(task, true, millis); },
+        invokeFunction: (anyTaskRef, fn, wrappedArgs) => {
+          let ec = PUBLIC_getExecutionContextFromTask(anyTaskRef);
+          let newTask = PUBLIC_createTaskForFunctionWithWrappedArgs(ec, fn, wrappedArgs);
+          PUBLIC_resumeTask(newTask);
+        },
     }),
     runtimeValueConverter: Object.freeze({
       toReadableString: PUBLIC_valueToString,
