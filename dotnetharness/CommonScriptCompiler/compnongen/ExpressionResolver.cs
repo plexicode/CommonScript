@@ -45,11 +45,11 @@ namespace CommonScript.Compiler
                 case ExpressionType.VARIABLE: return this.FirstPass_Variable(expr);
 
                 case ExpressionType.EXTENSION_REFERENCE:
-                    Errors.ThrowError(expr.firstToken, "Extension method references must be invoked immediately.");
+                    FunctionWrapper.Errors_Throw(expr.firstToken, "Extension method references must be invoked immediately.");
                     break;
 
                 default:
-                    Errors.ThrowNotImplemented(expr.firstToken, "first pass for this type");
+                    FunctionWrapper.Errors_ThrowNotImplemented(expr.firstToken, "first pass for this type");
                     break;
             }
             return expr;
@@ -89,7 +89,7 @@ namespace CommonScript.Compiler
                 case ExpressionType.TYPEOF: return this.SecondPass_TypeOf(expr);
                 case ExpressionType.VARIABLE: return this.SecondPass_Variable(expr);
                 default:
-                    Errors.ThrowNotImplemented(expr.firstToken, "second pass for this type");
+                    FunctionWrapper.Errors_ThrowNotImplemented(expr.firstToken, "second pass for this type");
                     break;
             }
             return expr;
@@ -190,7 +190,7 @@ namespace CommonScript.Compiler
                     Expression output = LookupEngine.tryCreateModuleMemberReference(moduleRef, dotField.firstToken, fieldName);
                     if (output == null)
                     {
-                        Errors.ThrowError(dotField.opToken, "The module does not have a member named '" + fieldName + "'");
+                        FunctionWrapper.Errors_Throw(dotField.opToken, "The module does not have a member named '" + fieldName + "'");
                     }
                     return output;
 
@@ -206,14 +206,14 @@ namespace CommonScript.Compiler
                             return Expression.createEnumConstant(dotField.firstToken, enumRef, fieldName, enumRef.memberValues[i].intVal);
                         }
                     }
-                    Errors.ThrowError(dotField.opToken, "The enum " + enumRef.fqName + " does not have a member named '" + fieldName + "'");
+                    FunctionWrapper.Errors_Throw(dotField.opToken, "The enum " + enumRef.fqName + " does not have a member named '" + fieldName + "'");
                     break;
 
                 case ExpressionType.NAMESPACE_REFERENCE:
                     NamespaceEntity nsEntity = (NamespaceEntity)dotField.root.objPtr;
                     if (!nsEntity.nestedMembers.ContainsKey(fieldName))
                     {
-                        Errors.ThrowError(dotField.opToken, "There is no member of this namespace named '" + fieldName + "'.");
+                        FunctionWrapper.Errors_Throw(dotField.opToken, "There is no member of this namespace named '" + fieldName + "'.");
                     }
                     AbstractEntity referencedEntity = nsEntity.nestedMembers[fieldName];
                     return WrapEntityIntoReferenceExpression(dotField.firstToken, referencedEntity);
@@ -362,7 +362,7 @@ namespace CommonScript.Compiler
                     return Expression.createNamespaceReference(token, entity);
             }
 
-            Errors.ThrowError(token, "Not implemented!");
+            FunctionWrapper.Errors_Throw(token, "Not implemented!");
             return null;
         }
 
@@ -412,7 +412,7 @@ namespace CommonScript.Compiler
         }
         private static void ThrowOpNotDefinedError(Token throwToken, string op, ExpressionType left, ExpressionType right)
         {
-            Errors.ThrowError(throwToken, "The operation '" + SimpleExprToTypeName(left) + " " + op + " " + SimpleExprToTypeName(right) + "' is not defined.");
+            FunctionWrapper.Errors_Throw(throwToken, "The operation '" + SimpleExprToTypeName(left) + " " + op + " " + SimpleExprToTypeName(right) + "' is not defined.");
         }
 
         private Expression SecondPass_BaseCtorReference(Expression baseCtor)
@@ -448,8 +448,8 @@ namespace CommonScript.Compiler
                     {
                         if (isRightZero)
                         {
-                            if (op == "%") Errors.ThrowError(opToken, "Modulo by zero");
-                            Errors.ThrowError(opToken, "Division by zero");
+                            if (op == "%") FunctionWrapper.Errors_Throw(opToken, "Modulo by zero");
+                            FunctionWrapper.Errors_Throw(opToken, "Division by zero");
                         }
                     }
                 }
@@ -628,13 +628,13 @@ namespace CommonScript.Compiler
             {
                 ctorRef.root.boolVal = true;
                 ctorRef.root = this.ResolveExpressionSecondPass(ctorRef.root);
-                if (ctorRef.root.type != ExpressionType.CLASS_REFERENCE) Errors.ThrowError(ctorRef.root.firstToken, "This is not a valid class definition.");
+                if (ctorRef.root.type != ExpressionType.CLASS_REFERENCE) FunctionWrapper.Errors_Throw(ctorRef.root.firstToken, "This is not a valid class definition.");
                 ctorRef.objPtr = ctorRef.root.objPtr;
                 ctorRef.root = null;
                 return ctorRef;
             }
 
-            Errors.ThrowError(ctorRef.firstToken, "A constructor must be immediately invoked.");
+            FunctionWrapper.Errors_Throw(ctorRef.firstToken, "A constructor must be immediately invoked.");
             return ctorRef;
         }
 
@@ -646,7 +646,7 @@ namespace CommonScript.Compiler
             {
                 if (bwn.root.type != ExpressionType.INTEGER_CONST)
                 {
-                    Errors.ThrowError(bwn.firstToken, "Bitwise-NOT operator can only be applied on integers.");
+                    FunctionWrapper.Errors_Throw(bwn.firstToken, "Bitwise-NOT operator can only be applied on integers.");
                 }
                 return Expression.createIntegerConstant(bwn.firstToken, ~bwn.root.intVal);
             }
@@ -666,7 +666,7 @@ namespace CommonScript.Compiler
             {
                 if (bn.root.type != ExpressionType.BOOLEAN_NOT)
                 {
-                    Errors.ThrowError(bn.firstToken, "Boolean-NOT operator can only be applied to booleans.");
+                    FunctionWrapper.Errors_Throw(bn.firstToken, "Boolean-NOT operator can only be applied to booleans.");
                 }
                 return Expression.createBoolConstant(bn.firstToken, !bn.root.boolVal);
             }
@@ -678,7 +678,7 @@ namespace CommonScript.Compiler
         {
             if (!classRef.boolVal)
             {
-                Errors.ThrowError(classRef.firstToken, "A class reference must have a field or method referenced from it.");
+                FunctionWrapper.Errors_Throw(classRef.firstToken, "A class reference must have a field or method referenced from it.");
             }
             return classRef;
         }
@@ -707,17 +707,17 @@ namespace CommonScript.Compiler
                 }
                 else
                 {
-                    Errors.ThrowError(key.firstToken, "This type of expression cannot be used as a dictionary key. Dictionary keys must be constant integer or string expressions.");
+                    FunctionWrapper.Errors_Throw(key.firstToken, "This type of expression cannot be used as a dictionary key. Dictionary keys must be constant integer or string expressions.");
                 }
 
                 if (isMixed)
                 {
-                    Errors.ThrowError(key.firstToken, "Dictionary cannot contain mixed types for keys.");
+                    FunctionWrapper.Errors_Throw(key.firstToken, "Dictionary cannot contain mixed types for keys.");
                 }
 
                 if (isCollide)
                 {
-                    Errors.ThrowError(key.firstToken, "There are multiple keys with this same value.");
+                    FunctionWrapper.Errors_Throw(key.firstToken, "There are multiple keys with this same value.");
                 }
 
                 dictDef.keys[i] = key;
@@ -755,12 +755,12 @@ namespace CommonScript.Compiler
                         member = classDef.classMembers[df.strVal];
                         if (!member.isStatic)
                         {
-                            Errors.ThrowError(df.opToken, classDef.fqName + "." + df.strVal + " is not static.");
+                            FunctionWrapper.Errors_Throw(df.opToken, classDef.fqName + "." + df.strVal + " is not static.");
                         }
                     }
                     else
                     {
-                        Errors.ThrowError(df.opToken, "The class " + classDef.fqName + " does not have a member named '." + df.strVal + "'.");
+                        FunctionWrapper.Errors_Throw(df.opToken, "The class " + classDef.fqName + " does not have a member named '." + df.strVal + "'.");
                     }
                     break;
 
@@ -797,14 +797,14 @@ namespace CommonScript.Compiler
                         {
                             return expr;
                         }
-                        Errors.ThrowError(expr.firstToken, "Extension is not registered: " + expr.strVal);
+                        FunctionWrapper.Errors_Throw(expr.firstToken, "Extension is not registered: " + expr.strVal);
                         break;
                 }
             }
 
             if (argc != -1 && expr.args.Length != argc)
             {
-                Errors.ThrowError(expr.firstToken, "Incorrect number of arguments to extension");
+                FunctionWrapper.Errors_Throw(expr.firstToken, "Incorrect number of arguments to extension");
             }
 
             return expr;
@@ -840,7 +840,7 @@ namespace CommonScript.Compiler
                     break;
 
                 default:
-                    Errors.ThrowError(funcInvoke.opToken, "Cannot invoke this type of expression like a function.");
+                    FunctionWrapper.Errors_Throw(funcInvoke.opToken, "Cannot invoke this type of expression like a function.");
                     break;
             }
 
@@ -856,7 +856,7 @@ namespace CommonScript.Compiler
 
         private Expression SecondPass_ImportReference(Expression importRef)
         {
-            Errors.ThrowError(importRef.firstToken, "An import reference cannot be passed as a reference. You must reference the imported entity directly.");
+            FunctionWrapper.Errors_Throw(importRef.firstToken, "An import reference cannot be passed as a reference. You must reference the imported entity directly.");
             return null;
         }
 
@@ -879,7 +879,7 @@ namespace CommonScript.Compiler
                     break;
 
                 default:
-                    Errors.ThrowError(inlineIncr.opToken, "Cannot use the '" + inlineIncr.opToken.Value + "' operator on this type of expression.");
+                    FunctionWrapper.Errors_Throw(inlineIncr.opToken, "Cannot use the '" + inlineIncr.opToken.Value + "' operator on this type of expression.");
                     break;
             }
             return inlineIncr;
@@ -906,7 +906,7 @@ namespace CommonScript.Compiler
 
         private Expression SecondPass_NamespaceReference(Expression nsRef)
         {
-            Errors.ThrowError(nsRef.firstToken, "You cannot use a namespace reference like this.");
+            FunctionWrapper.Errors_Throw(nsRef.firstToken, "You cannot use a namespace reference like this.");
             return null;
         }
 
@@ -954,7 +954,7 @@ namespace CommonScript.Compiler
                     {
                         if (expr.type != ExpressionType.INTEGER_CONST && expr.type != ExpressionType.ENUM_CONST)
                         {
-                            Errors.ThrowError(expr.firstToken, "Only integers may be used in a slice expression.");
+                            FunctionWrapper.Errors_Throw(expr.firstToken, "Only integers may be used in a slice expression.");
                         }
                     }
                 }
@@ -978,7 +978,7 @@ namespace CommonScript.Compiler
             {
                 if (ternary.root.type != ExpressionType.BOOL_CONST)
                 {
-                    Errors.ThrowError(ternary.root.firstToken, "Only booleans can be used as ternary conditions.");
+                    FunctionWrapper.Errors_Throw(ternary.root.firstToken, "Only booleans can be used as ternary conditions.");
                 }
 
                 return ternary.root.boolVal ? ternary.left : ternary.right;
@@ -1029,7 +1029,7 @@ namespace CommonScript.Compiler
             if (((FunctionLikeEntity)this.resolver.activeEntity).variableScope.ContainsKey(varExpr.strVal)) return varExpr;
 
             // TODO: come up with a list of suggestions.
-            Errors.ThrowError(varExpr.firstToken, "There is no variable by the name of '" + varExpr.strVal + "'.");
+            FunctionWrapper.Errors_Throw(varExpr.firstToken, "There is no variable by the name of '" + varExpr.strVal + "'.");
             return null;
         }
 
@@ -1052,14 +1052,14 @@ namespace CommonScript.Compiler
                             return val;
                         }
                     }
-                    Errors.ThrowError(expr.firstToken, "The enum '" + enumParent.fqName + "' does not have a member named '" + enumMem + "'.");
+                    FunctionWrapper.Errors_Throw(expr.firstToken, "The enum '" + enumParent.fqName + "' does not have a member named '" + enumMem + "'.");
                     break;
 
                 case ExpressionType.BOOL_CONST:
                 case ExpressionType.FLOAT_CONST:
                 case ExpressionType.STRING_CONST:
                 case ExpressionType.BOOLEAN_NOT:
-                    Errors.ThrowError(expr.firstToken, "An integer is expected here.");
+                    FunctionWrapper.Errors_Throw(expr.firstToken, "An integer is expected here.");
                     break;
             }
             return expr;

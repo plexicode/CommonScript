@@ -266,7 +266,7 @@ namespace CommonScript.Compiler
                 {
                     if (defaultEncountered)
                     {
-                        Errors.ThrowError(this.tokens.peek(), "The default case for a switch statement must appear at the end.");
+                        FunctionWrapper.Errors_Throw(this.tokens.peek(), "The default case for a switch statement must appear at the end.");
                     }
 
                     if (this.tokens.isNext("case"))

@@ -185,7 +185,7 @@ namespace CommonScript.Compiler
                 Expression key = keys[i];
                 if (key.type != ExpressionType.STRING_CONST && key.type != ExpressionType.INTEGER_CONST)
                 {
-                    Errors.ThrowError(key.firstToken, "Only string and integer constants can be used as dictionary keys");
+                    FunctionWrapper.Errors_Throw(key.firstToken, "Only string and integer constants can be used as dictionary keys");
                 }
             }
             return expr;
@@ -241,7 +241,7 @@ namespace CommonScript.Compiler
                     break;
 
                 default:
-                    Errors.ThrowError(incrementOp, "The '" + incrementOp.Value + "' operator is not allowed on this type of expression.");
+                    FunctionWrapper.Errors_Throw(incrementOp, "The '" + incrementOp.Value + "' operator is not allowed on this type of expression.");
                     break;
             }
 
@@ -285,7 +285,7 @@ namespace CommonScript.Compiler
                 }
                 else if (errorMessage != null)
                 {
-                    Errors.ThrowError(walker.firstToken, errorMessage);
+                    FunctionWrapper.Errors_Throw(walker.firstToken, errorMessage);
                 }
                 else
                 {

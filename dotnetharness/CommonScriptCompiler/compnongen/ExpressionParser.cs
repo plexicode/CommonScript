@@ -284,14 +284,14 @@ namespace CommonScript.Compiler
 
                         if (sliceNums.Count < 0 || sliceNums.Count > 3)
                         {
-                            Errors.ThrowError(throwTokenOnInvalidSlice, "Invalid index or slice expression");
+                            FunctionWrapper.Errors_Throw(throwTokenOnInvalidSlice, "Invalid index or slice expression");
                         }
 
                         if (sliceNums.Count == 1)
                         {
                             if (sliceNums[0] == null)
                             {
-                                Errors.ThrowError(throwTokenOnInvalidSlice, "Expected index expression.");
+                                FunctionWrapper.Errors_Throw(throwTokenOnInvalidSlice, "Expected index expression.");
                             }
 
                             root = Expression.createBracketIndex(root, openBracket, sliceNums[0]);
@@ -493,7 +493,7 @@ namespace CommonScript.Compiler
                     return Expression.createVariable(varName, varName.Value);
             }
 
-            Errors.ThrowError(nextToken, "Expected an expression but found '" + next + "' instead.");
+            FunctionWrapper.Errors_Throw(nextToken, "Expected an expression but found '" + next + "' instead.");
             return null;
         }
 
@@ -553,7 +553,7 @@ namespace CommonScript.Compiler
                     i++;
 
                     // More of an assert. The tokenizer should outright prevent this from happening ever.
-                    if (i == length) Errors.ThrowError(throwToken, "Invalid backslash in string constant.");
+                    if (i == length) FunctionWrapper.Errors_Throw(throwToken, "Invalid backslash in string constant.");
 
                     c = rawValue.Substring(i, 1);
                     if (c == "n") c = "\n";
@@ -562,7 +562,7 @@ namespace CommonScript.Compiler
                     else if (c == "t") c = "\t";
                     else
                     {
-                        Errors.ThrowError(throwToken, "Unrecognized string escape sequence: '\\" + c + "'");
+                        FunctionWrapper.Errors_Throw(throwToken, "Unrecognized string escape sequence: '\\" + c + "'");
                     }
                 }
                 output.Add(c);
@@ -576,7 +576,7 @@ namespace CommonScript.Compiler
             double output;
             if (!double.TryParse(rawValue, out output))
             {
-                Errors.ThrowError(throwToken, "Invalid float constant");
+                FunctionWrapper.Errors_Throw(throwToken, "Invalid float constant");
                 return 0;
             }
             return output;
@@ -608,8 +608,8 @@ namespace CommonScript.Compiler
                 }
                 else
                 {
-                    if (isHex) Errors.ThrowError(throwToken, "Invalid hexadecimal constant.");
-                    Errors.ThrowError(throwToken, "Invalid integer constant");
+                    if (isHex) FunctionWrapper.Errors_Throw(throwToken, "Invalid hexadecimal constant.");
+                    FunctionWrapper.Errors_Throw(throwToken, "Invalid integer constant");
                 }
 
                 output = output * baseMultiplier + digitVal;

@@ -63,7 +63,7 @@ namespace CommonScript.Compiler
         {
             if (!this.hasMore())
             {
-                Errors.ThrowEof(this.file, "Unexpected end of file");
+                FunctionWrapper.Errors_ThrowEof(this.file, "Unexpected end of file");
             }
         }
 
@@ -119,7 +119,7 @@ namespace CommonScript.Compiler
             if (next == null) this.ensureMore(); // throw
             if (next.Value != value || next.Type != (int) TokenType.KEYWORD)
             {
-                Errors.ThrowError(next, "Expected '" + value + "' keyword but found '" + next.Value + "' instead.");
+                FunctionWrapper.Errors_Throw(next, "Expected '" + value + "' keyword but found '" + next.Value + "' instead.");
             }
             return next;
         }
@@ -138,7 +138,7 @@ namespace CommonScript.Compiler
         {
             Token t = this.pop();
             if (t == null) this.ensureMore(); // throw 
-            if (t.Type != (int) TokenType.NAME) Errors.ThrowError(t, "Expected " + purposeForErrorMessage + " but found '" + t.Value + "' instead.");
+            if (t.Type != (int) TokenType.NAME) FunctionWrapper.Errors_Throw(t, "Expected " + purposeForErrorMessage + " but found '" + t.Value + "' instead.");
             return t;
         }
 
@@ -146,7 +146,7 @@ namespace CommonScript.Compiler
         {
             Token output = this.pop();
             if (output == null) this.ensureMore(); // throw 
-            if (output.Value != value) Errors.ThrowError(output, "Expected '" + value + "' but found '" + output.Value + "' instead.");
+            if (output.Value != value) FunctionWrapper.Errors_Throw(output, "Expected '" + value + "' but found '" + output.Value + "' instead.");
             
             // this is an internal assert and not a user error. Feel free to remove later.
             if (output.Type == (int) TokenType.KEYWORD) throw new Exception("Use popKeyword instead.");

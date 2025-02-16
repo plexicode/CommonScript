@@ -1,0 +1,23 @@
+void Errors_Throw(Token token, string msg) { _Errors_ThrowImpl(1, token, msg, ""); }
+void Errors_ThrowEof(string fileName, string msg) { _Errors_ThrowImpl(2, null, fileName, msg); }
+void Errors_ThrowGeneralError(string msg) { _Errors_ThrowImpl(3, null, msg, ""); }
+void Errors_ThrowNotImplemented(Token token, string optionalMsg) {
+    if (optionalMsg == null) optionalMsg = "";
+    Errors_Throw(token, ("***NOT IMPLEMENTED*** " + optionalMsg).Trim());
+}
+
+object _Errors_ThrowImpl(int type, Token t, string s1, string s2) {
+    Array<object> args = new Array<object>(3);
+    args[0] = type;
+    if (type == 1) {
+        args[1] = t;
+        args[2] = s1;
+    } else if (type == 2) {
+        args[1] = s1;
+        args[2] = s2;
+    } else if (type == 3) {
+        args[1] = s1;
+    }
+
+    return Core.ExtensibleCallbackInvoke("throwParserException", args);
+}

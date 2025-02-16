@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
@@ -33,13 +34,13 @@ namespace CommonScript.Compiler
                 }
                 else
                 {
-                    if (imp.flatName.Contains('.')) Errors.ThrowError(imp.importToken, "Dot-delimited import paths must use an alias.");
+                    if (imp.flatName.Contains('.')) FunctionWrapper.Errors_Throw(imp.importToken, "Dot-delimited import paths must use an alias.");
                     varName = imp.flatName;
                 }
                 
                 if (varName != "*" && this.importsByVar.ContainsKey(varName))
                 {
-                    Errors.ThrowError(
+                    FunctionWrapper.Errors_Throw(
                         imp.importTargetVariableName,
                         "There are multiple imports loaded as the variable '" + varName + "'");
                 }

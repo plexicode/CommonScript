@@ -234,12 +234,12 @@ namespace CommonScript.Compiler
                 }
                 if (bcEntity == null)
                 {
-                    Errors.ThrowError(bc.firstToken, "Could not resolve base class");
+                    FunctionWrapper.Errors_Throw(bc.firstToken, "Could not resolve base class");
                     throw new NotImplementedException();
                 }
                 if (bcEntity.type != EntityType.CLASS)
                 {
-                    Errors.ThrowError(bc.firstToken, bcEntity.fqName + " is not a valid class.");
+                    FunctionWrapper.Errors_Throw(bc.firstToken, bcEntity.fqName + " is not a valid class.");
                 }
 
                 bc.baseClassEntity = (ClassEntity)bcEntity;
@@ -272,7 +272,7 @@ namespace CommonScript.Compiler
 
                     if (order.Count > deterministicOrder.Length)
                     {
-                        Errors.ThrowError(bc.firstToken, "This class has a cycle in its base class chain.");
+                        FunctionWrapper.Errors_Throw(bc.firstToken, "This class has a cycle in its base class chain.");
                     }
                 }
 
@@ -307,7 +307,7 @@ namespace CommonScript.Compiler
 
                         if (passNum == 2 && val.type != ExpressionType.INTEGER_CONST)
                         {
-                            Errors.ThrowError(enumDef.memberNameTokens[memberIndex], "This enum value has a non-integer value.");
+                            FunctionWrapper.Errors_Throw(enumDef.memberNameTokens[memberIndex], "This enum value has a non-integer value.");
                         }
 
                         enumDef.memberValues[memberIndex] = val;
@@ -325,7 +325,7 @@ namespace CommonScript.Compiler
                             val = this.expressionResolver.ResolveExpressionSecondPass(val);
                             if (!IsExpressionConstant(val))
                             {
-                                Errors.ThrowError(val.firstToken, "A constant expression is required here.");
+                                FunctionWrapper.Errors_Throw(val.firstToken, "A constant expression is required here.");
                             }
                         }
 
@@ -470,7 +470,7 @@ namespace CommonScript.Compiler
 
                     if (status == 1)
                     {
-                        Errors.ThrowError(item.firstToken, "This definition contains a resolution cycle.");
+                        FunctionWrapper.Errors_Throw(item.firstToken, "This definition contains a resolution cycle.");
                     }
 
                     if (status == 2)
@@ -540,7 +540,7 @@ namespace CommonScript.Compiler
                     AbstractEntity referenced = this.TryDoExactLookupForConstantEntity(file, fqNamespace, expr.strVal);
                     if (referenced == null)
                     {
-                        Errors.ThrowError(expr.firstToken, "No definition for '" + expr.strVal + "'");
+                        FunctionWrapper.Errors_Throw(expr.firstToken, "No definition for '" + expr.strVal + "'");
                     }
                     else
                     {
@@ -569,7 +569,7 @@ namespace CommonScript.Compiler
                                 throw new NotImplementedException();
 
                             default:
-                                Errors.ThrowError(expr.firstToken, "Cannot refer to this entity from a constant expression.");
+                                FunctionWrapper.Errors_Throw(expr.firstToken, "Cannot refer to this entity from a constant expression.");
                                 break;
                         }
                     }
@@ -579,7 +579,7 @@ namespace CommonScript.Compiler
                     string[] fullRefSegments = Expression.DotField_getVariableRootedDottedChain(expr, "Cannot use this type of entity from a constant expression.");
                     string fullRefDotted = string.Join('.', fullRefSegments);
                     AbstractEntity reffedEntity = this.TryDoExactLookupForConstantEntity(file, fqNamespace, fullRefDotted);
-                    if (reffedEntity == null) Errors.ThrowError(expr.firstToken, "Invalid expression for constant.");
+                    if (reffedEntity == null) FunctionWrapper.Errors_Throw(expr.firstToken, "Invalid expression for constant.");
                     if (reffedEntity.fileContext.compiledModule != file.compiledModule)
                     {
                         if (reffedEntity.type == EntityType.CONST) return ((ConstEntity)reffedEntity).constValue;
@@ -606,12 +606,12 @@ namespace CommonScript.Compiler
                     }
                     else
                     {
-                        Errors.ThrowError(expr.firstToken, "Cannot reference this entity from here.");
+                        FunctionWrapper.Errors_Throw(expr.firstToken, "Cannot reference this entity from here.");
                     }
                     return expr;
 
                 default:
-                    Errors.ThrowError(expr.firstToken, "Invalid expression for constant.");
+                    FunctionWrapper.Errors_Throw(expr.firstToken, "Invalid expression for constant.");
                     break;
             }
 

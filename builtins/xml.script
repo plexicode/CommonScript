@@ -14,7 +14,7 @@
     constructor() : base() { }
 }
 
-@public class XmlParseException : Exception{
+@public class XmlParseException : Exception {
     field line;
     field col;
     field err;
@@ -26,7 +26,7 @@
     }
 }
 
-@public function parseXml(s){
+@public function parseXml(s) {
     o = [0, 0, 0, 0];
     $xml_parse(s + '', o);
     if(o[0] == 0)
@@ -39,8 +39,7 @@
 // b: data buffer from xml_parse
 function _build(
     i,
-    b,
-
+    b
 ) {
     // The data buffer contains a flat list of data for the entire XML document.
     // Looping through this buffer using a mutable index pointer within a depth first traversal of the

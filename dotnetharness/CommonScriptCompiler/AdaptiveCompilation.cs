@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
@@ -10,6 +11,18 @@ namespace CommonScript.Compiler
         private bool isDone = false;
         private string nextModuleIdCache = null;
 
+        static AdaptiveCompilation()
+        {
+            FunctionWrapper.PST_RegisterExtensibleCallback("throwParserException", (args) =>
+            {
+                int type = (int) args[0];
+                if (type == 1) throw new ParserException((Token) args[1], (string) args[2]);
+                if (type == 2) throw new ParserException((string)args[1], (string)args[2]);
+                if (type == 3) throw new ParserException((string)args[1]);
+                throw new InvalidOperationException();
+            });
+        }
+        
         internal AdaptiveCompilation(string langId, string ver, string rootModuleId, ICollection<string> extensionNames)
         {
             this.genCompiler = new CompilerContext(rootModuleId, langId, ver, extensionNames.ToArray());

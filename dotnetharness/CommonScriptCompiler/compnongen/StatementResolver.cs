@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
@@ -97,11 +98,11 @@ namespace CommonScript.Compiler
         {
             if (this.resolver.breakContext == null)
             {
-                Errors.ThrowError(br.firstToken, "The 'break' keyword can only be used inside loops and switch statements.");
+                FunctionWrapper.Errors_Throw(br.firstToken, "The 'break' keyword can only be used inside loops and switch statements.");
             }
             else if (this.resolver.breakContext.type == StatementType.TRY)
             {
-                Errors.ThrowError(br.firstToken, "The 'break' keyword cannot be used inside a try/catch/finally block");
+                FunctionWrapper.Errors_Throw(br.firstToken, "The 'break' keyword cannot be used inside a try/catch/finally block");
             }
 
             return br;
@@ -111,15 +112,15 @@ namespace CommonScript.Compiler
         {
             if (this.resolver.breakContext == null)
             {
-                Errors.ThrowError(cont.firstToken, "The 'continue' keyword can only be used inside loops.");
+                FunctionWrapper.Errors_Throw(cont.firstToken, "The 'continue' keyword can only be used inside loops.");
             }
             else if (this.resolver.breakContext.type == StatementType.SWITCH_STATEMENT)
             {
-                Errors.ThrowError(cont.firstToken, "The 'continue' keyword cannot be used in switch statements, even if nested in a loop.");
+                FunctionWrapper.Errors_Throw(cont.firstToken, "The 'continue' keyword cannot be used in switch statements, even if nested in a loop.");
             }
             else if (this.resolver.breakContext.type == StatementType.TRY)
             {
-                Errors.ThrowError(cont.firstToken, "The 'continue' keyword cannot be used inside a try/catch/finally block");
+                FunctionWrapper.Errors_Throw(cont.firstToken, "The 'continue' keyword cannot be used inside a try/catch/finally block");
             }
 
             return cont;
@@ -251,7 +252,7 @@ namespace CommonScript.Compiler
                     break;
 
                 default:
-                    Errors.ThrowError(assignment.assignOp, "Invalid assignment. Cannot assign to this type of expression.");
+                    FunctionWrapper.Errors_Throw(assignment.assignOp, "Invalid assignment. Cannot assign to this type of expression.");
                     break;
             }
             return assignment;
@@ -289,7 +290,7 @@ namespace CommonScript.Compiler
                     break;
 
                 default:
-                    Errors.ThrowError(exprAsStmnt.firstToken, "This type of expression cannot exist by itself. Did you mean to assign it to a variable?");
+                    FunctionWrapper.Errors_Throw(exprAsStmnt.firstToken, "This type of expression cannot exist by itself. Did you mean to assign it to a variable?");
                     break;
             }
 
@@ -347,7 +348,7 @@ namespace CommonScript.Compiler
                         chunk.Cases[i] = expr;
                         if (!Resolver.IsExpressionConstant(expr))
                         {
-                            Errors.ThrowError(expr.firstToken, "Only constant expressions are allowed in switch statement cases.");
+                            FunctionWrapper.Errors_Throw(expr.firstToken, "Only constant expressions are allowed in switch statement cases.");
                         }
                         int currentType = -1;
                         bool hadCollision = false;
@@ -365,11 +366,11 @@ namespace CommonScript.Compiler
                         }
                         else
                         {
-                            Errors.ThrowError(expr.firstToken, "Only integer and string constants are allowed to be used as switch statement cases.");
+                            FunctionWrapper.Errors_Throw(expr.firstToken, "Only integer and string constants are allowed to be used as switch statement cases.");
                         }
                         if (exprType == -1) exprType = currentType;
-                        if (exprType != currentType) Errors.ThrowError(expr.firstToken, "Switch statement cases must use the same type for all cases.");
-                        if (hadCollision) Errors.ThrowError(expr.firstToken, "Switch statement contains multiple cases with the same value.");
+                        if (exprType != currentType) FunctionWrapper.Errors_Throw(expr.firstToken, "Switch statement cases must use the same type for all cases.");
+                        if (hadCollision) FunctionWrapper.Errors_Throw(expr.firstToken, "Switch statement contains multiple cases with the same value.");
                     }
                 }
 
@@ -387,7 +388,7 @@ namespace CommonScript.Compiler
                         break;
 
                     default:
-                        Errors.ThrowError(chunk.CaseTokens[chunk.CaseTokens.Count - 1], "This switch statement case has a fall-through.");
+                        FunctionWrapper.Errors_Throw(chunk.CaseTokens[chunk.CaseTokens.Count - 1], "This switch statement case has a fall-through.");
                         break;
                 }
             }
@@ -400,7 +401,7 @@ namespace CommonScript.Compiler
             throwStmnt.expression = this.expressionResolver.ResolveExpressionSecondPass(throwStmnt.expression);
             if (Resolver.IsExpressionConstant(throwStmnt.expression))
             {
-                Errors.ThrowError(throwStmnt.expression.firstToken, "Only instances of Exception are throwable.");
+                FunctionWrapper.Errors_Throw(throwStmnt.expression.firstToken, "Only instances of Exception are throwable.");
             }
             return throwStmnt;
         }

@@ -49,7 +49,7 @@ namespace CommonScript.Compiler
                                 functions.Add(func);
                                 if (checkForMain && tle.simpleName == "main")
                                 {
-                                    if (mainFunc != null) Errors.ThrowError(tle.firstToken, "There are multiple functions named main in the root module.");
+                                    if (mainFunc != null) FunctionWrapper.Errors_Throw(tle.firstToken, "There are multiple functions named main in the root module.");
                                     mainFunc = func;
                                 }
                             }
@@ -127,12 +127,12 @@ namespace CommonScript.Compiler
 
             if (mainFunc == null)
             {
-                Errors.ThrowGeneralError("There is no main() function defined.");
+                FunctionWrapper.Errors_ThrowGeneralError("There is no main() function defined.");
             }
 
             if (mainFunc.argTokens.Length >= 2)
             {
-                Errors.ThrowError(
+                FunctionWrapper.Errors_Throw(
                     mainFunc.nameToken,
                     "The main function can only take in at most one argument. " +
                     "Note that multiple CLI arguments are passed in to main(args) as a single list of strings.");

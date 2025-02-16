@@ -1,8 +1,9 @@
+@import("Token.pst");
+
 @import("util/StringSet.pst");
+@import("util/errors.pst");
 
 @import("builtins/index.pst");
-
-@import("Token.pst");
 
 object fail(string msg) {
     Array<object> failArgs = new Array<object>(1);

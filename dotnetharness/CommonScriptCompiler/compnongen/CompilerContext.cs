@@ -221,7 +221,7 @@ namespace CommonScript.Compiler
                 Token danglingToken = file.tokens.peek();
                 if (danglingToken != null)
                 {
-                    Errors.ThrowError(danglingToken, "Unexpected token: '" + danglingToken.Value + "'. You might have too many close parentheses in this file.");
+                    FunctionWrapper.Errors_Throw(danglingToken, "Unexpected token: '" + danglingToken.Value + "'. You might have too many close parentheses in this file.");
                 }
             }
 
@@ -252,11 +252,11 @@ namespace CommonScript.Compiler
                 string annotationName = token.Value.Substring(1);
                 if (output.ContainsKey(annotationName))
                 {
-                    Errors.ThrowError(token, "Multiplie redundant annotations.");
+                    FunctionWrapper.Errors_Throw(token, "Multiplie redundant annotations.");
                 }
                 if (!FunctionWrapper.StringSet_has(VALID_ANNOTATIONS, annotationName))
                 {
-                    Errors.ThrowError(token, "Unrecognized annotation: '@" + annotationName + "'");
+                    FunctionWrapper.Errors_Throw(token, "Unrecognized annotation: '@" + annotationName + "'");
                 }
                 output[annotationName] = token;
             }
@@ -326,7 +326,7 @@ namespace CommonScript.Compiler
                         throw new NotImplementedException(nextToken);
 
                     case "import":
-                        Errors.ThrowError(tokens.peek(), "All imports must appear at the top of the file.");
+                        FunctionWrapper.Errors_Throw(tokens.peek(), "All imports must appear at the top of the file.");
                         break;
 
                     case "}":
@@ -336,7 +336,7 @@ namespace CommonScript.Compiler
                     default:
                         // Unexpected EOF or stray tokens.
                         tokens.ensureMore();
-                        Errors.ThrowError(tokens.peek(), "Unexpected token: '" + tokens.peekValueNonNull() + "'");
+                        FunctionWrapper.Errors_Throw(tokens.peek(), "Unexpected token: '" + tokens.peekValueNonNull() + "'");
                         break;
                 }
 
@@ -348,7 +348,7 @@ namespace CommonScript.Compiler
 
                 if (entity == null && annotationTokens.Count > 0)
                 {
-                    Errors.ThrowError(firstToken, "This annotation is not attached to any entity.");
+                    FunctionWrapper.Errors_Throw(firstToken, "This annotation is not attached to any entity.");
                 }
 
                 if (!tokens.hasMore())
@@ -383,17 +383,17 @@ namespace CommonScript.Compiler
             bool isCtor = child.type == EntityType.CONSTRUCTOR;
             if (isCtor && !isAttachingToClass)
             {
-                Errors.ThrowError(child.firstToken, "Cannot place a constructor here. Constructors can only be added to classes.");
+                FunctionWrapper.Errors_Throw(child.firstToken, "Cannot place a constructor here. Constructors can only be added to classes.");
             }
 
             if (isStatic && !isClass && !isAttachingToClass)
             {
-                Errors.ThrowError(child.firstToken, "@static is not applicable to this type of entity.");
+                FunctionWrapper.Errors_Throw(child.firstToken, "@static is not applicable to this type of entity.");
             }
 
             if (activeEntityBucket.ContainsKey(child.simpleName))
             {
-                Errors.ThrowError(child.firstToken, "There are multiple entities named " + child.fqName + ".");
+                FunctionWrapper.Errors_Throw(child.firstToken, "There are multiple entities named " + child.fqName + ".");
             }
 
             activeEntityBucket[child.simpleName] = child;

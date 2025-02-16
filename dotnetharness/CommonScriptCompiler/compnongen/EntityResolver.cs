@@ -86,7 +86,7 @@ namespace CommonScript.Compiler
                 Token arg = funcDef.argTokens[i];
                 if (funcDef.variableScope.ContainsKey(arg.Value))
                 {
-                    Errors.ThrowError(arg, "There are multiple arguments named '" + arg.Value + "'.");
+                    FunctionWrapper.Errors_Throw(arg, "There are multiple arguments named '" + arg.Value + "'.");
                 }
                 funcDef.variableScope[arg.Value] = true;
 

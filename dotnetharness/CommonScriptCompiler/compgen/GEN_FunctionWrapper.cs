@@ -16,6 +16,51 @@ namespace CommonScript.Compiler.Internal
             PST_ExtCallbacks[name] = func;
         }
 
+        public static object _Errors_ThrowImpl(int type, Token t, string s1, string s2)
+        {
+            object[] args = new object[3];
+            args[0] = type;
+            if (type == 1)
+            {
+                args[1] = t;
+                args[2] = s1;
+            }
+            else if (type == 2)
+            {
+                args[1] = s1;
+                args[2] = s2;
+            }
+            else if (type == 3)
+            {
+                args[1] = s1;
+            }
+            return PST_ExtCallbacks.ContainsKey("throwParserException") ? PST_ExtCallbacks["throwParserException"].Invoke(args) : null;
+        }
+
+        public static void Errors_Throw(Token token, string msg)
+        {
+            _Errors_ThrowImpl(1, token, msg, "");
+        }
+
+        public static void Errors_ThrowEof(string fileName, string msg)
+        {
+            _Errors_ThrowImpl(2, null, fileName, msg);
+        }
+
+        public static void Errors_ThrowGeneralError(string msg)
+        {
+            _Errors_ThrowImpl(3, null, msg, "");
+        }
+
+        public static void Errors_ThrowNotImplemented(Token token, string optionalMsg)
+        {
+            if (optionalMsg == null)
+            {
+                optionalMsg = "";
+            }
+            Errors_Throw(token, ("***NOT IMPLEMENTED*** " + optionalMsg).Trim());
+        }
+
         public static object fail(string msg)
         {
             object[] failArgs = new object[1];
@@ -55,7 +100,7 @@ namespace CommonScript.Compiler.Internal
 
         public static string GEN_BUILTINS_xml()
         {
-            return "@3XmlNode{}\n@3XmlElement:XmlNode{\nfield name;\nfield attributes;\nfield children = [];\nconstructor() : base() { }\n}\n@3XmlText:XmlNode {\nfield value;\nconstructor() : base() { }\n}\n@3XmlParse@6{\nfield line;\nfield col;\nfield err;\nconstructor(e, l, c) : base('XML Parse Error: ' + e) {\nthis.err = e;\nthis.line = l;\nthis.col = c;\n}\n}\n@5parseXml(s){\no = [0, 0, 0, 0];\n$xml_parse(s + '', o);\nif(o[0] == 0)\nthrow new XmlParseException(o[1], o[2], o[3]);\n@4_build([0], o[1]);\n}\n@1_build(\ni,\nb,\n) {\nif (b[i[0]] == 1) {\ni[0]++;\no = new XmlElement();\no.name = b[i[0]++];\nc = b[i[0]++];\na = { };\nwhile (c --> 0) {\nk = b[i[0]++];\nv = b[i[0]++];\na[k] = v;\n}\no.attributes = a;\nc = b[i[0]++];\nwhile (c --> 0)\no.children.add(_build(i, b));\n} else {\no = new XmlText();\no.value = b[i[0]++];\n}\n@4o;\n}";
+            return "@3XmlNode{}\n@3XmlElement:XmlNode{\nfield name;\nfield attributes;\nfield children = [];\nconstructor() : base() { }\n}\n@3XmlText:XmlNode {\nfield value;\nconstructor() : base() { }\n}\n@3XmlParse@6 {\nfield line;\nfield col;\nfield err;\nconstructor(e, l, c) : base('XML Parse Error: ' + e) {\nthis.err = e;\nthis.line = l;\nthis.col = c;\n}\n}\n@5parseXml(s) {\no = [0, 0, 0, 0];\n$xml_parse(s + '', o);\nif(o[0] == 0)\nthrow new XmlParseException(o[1], o[2], o[3]);\n@4_build([0], o[1]);\n}\n@1_build(\ni,\nb\n) {\nif (b[i[0]] == 1) {\ni[0]++;\no = new XmlElement();\no.name = b[i[0]++];\nc = b[i[0]++];\na = { };\nwhile (c --> 0) {\nk = b[i[0]++];\nv = b[i[0]++];\na[k] = v;\n}\no.attributes = a;\nc = b[i[0]++];\nwhile (c --> 0)\no.children.add(_build(i, b));\n} else {\no = new XmlText();\no.value = b[i[0]++];\n}\n@4o;\n}";
         }
 
         public static string GetBuiltin(string moduleName)
