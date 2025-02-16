@@ -101,5 +101,45 @@ namespace CommonScript.Compiler.Internal
             }
             return null;
         }
+
+        public static StringSet StringSet_add(StringSet s, string item)
+        {
+            s.items[item] = true;
+            return s;
+        }
+
+        public static StringSet StringSet_fromArray(string[] items)
+        {
+            StringSet s = StringSet_new();
+            int i = 0;
+            while (i < items.Length)
+            {
+                s.items[items[i]] = true;
+                i += 1;
+            }
+            return s;
+        }
+
+        public static StringSet StringSet_fromList(System.Collections.Generic.List<string> items)
+        {
+            StringSet s = StringSet_new();
+            int i = 0;
+            while (i < items.Count)
+            {
+                s.items[items[i]] = true;
+                i += 1;
+            }
+            return s;
+        }
+
+        public static bool StringSet_has(StringSet s, string item)
+        {
+            return s.items.ContainsKey(item);
+        }
+
+        public static StringSet StringSet_new()
+        {
+            return new StringSet(new Dictionary<string, bool>());
+        }
     }
 }

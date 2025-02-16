@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
@@ -21,11 +22,11 @@ namespace CommonScript.Compiler
         private StatementResolver statementResolver;
         private EntityResolver entityResolver;
 
-        private HashSet<string> extensionNames = new HashSet<string>();
+        private StringSet extensionNames;
 
-        public Resolver(Dictionary<string, AbstractEntity> rootEntities, ICollection<string> extensionNames)
+        public Resolver(Dictionary<string, AbstractEntity> rootEntities, List<string> extensionNames)
         {
-            this.extensionNames = new HashSet<string>(extensionNames);
+            this.extensionNames = FunctionWrapper.StringSet_fromList(extensionNames);
 
             this.expressionResolver = new ExpressionResolver(this);
             this.statementResolver = new StatementResolver(this);
@@ -68,7 +69,7 @@ namespace CommonScript.Compiler
 
         public bool isValidRegisteredExtension(string extensionName)
         {
-            return this.extensionNames.Contains(extensionName);
+            return FunctionWrapper.StringSet_has(this.extensionNames, extensionName);
         }
 
         internal static AbstractEntity[] FlattenEntities(Dictionary<string, AbstractEntity> rootEntities)

@@ -1,0 +1,32 @@
+struct StringSet {
+    Dictionary<string, bool> items;
+}
+
+StringSet StringSet_new() {
+    return new StringSet(new Dictionary<string, bool>());
+}
+
+StringSet StringSet_fromArray(Array<string> items) {
+    StringSet s = StringSet_new();
+    for (int i = 0; i < items.Size(); i += 1) {
+        s.items[items[i]] = true;
+    }
+    return s;
+}
+
+StringSet StringSet_fromList(List<string> items) {
+    StringSet s = StringSet_new();
+    for (int i = 0; i < items.Size(); i += 1) {
+        s.items[items[i]] = true;
+    }
+    return s;
+}
+
+StringSet StringSet_add(StringSet s, string item) {
+    s.items[item] = true;
+    return s;
+}
+
+bool StringSet_has(StringSet s, string item) {
+    return s.items.Contains(item);
+}

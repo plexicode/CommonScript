@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
@@ -23,7 +24,7 @@ namespace CommonScript.Compiler
         public string flavorId;
         public List<string> extensionNames;
 
-        public CompilerContext(string rootId, string flavorId, string extensionVersionId, IList<string> extensionNames)
+        public CompilerContext(string rootId, string flavorId, string extensionVersionId, string[] extensionNames)
         {
             this.rootId = rootId;
             this.flavorId = flavorId;
@@ -240,7 +241,7 @@ namespace CommonScript.Compiler
             return m;
         }
 
-        private static HashSet<string> VALID_ANNOTATIONS = new HashSet<string>("public static".Split(' '));
+        private static StringSet VALID_ANNOTATIONS = FunctionWrapper.StringSet_fromArray("public static".Split(' '));
 
         private static Dictionary<string, Token> ParseOutAnnotations(TokenStream tokens)
         {
@@ -253,7 +254,7 @@ namespace CommonScript.Compiler
                 {
                     Errors.ThrowError(token, "Multiplie redundant annotations.");
                 }
-                if (!VALID_ANNOTATIONS.Contains(annotationName))
+                if (!FunctionWrapper.StringSet_has(VALID_ANNOTATIONS, annotationName))
                 {
                     Errors.ThrowError(token, "Unrecognized annotation: '@" + annotationName + "'");
                 }

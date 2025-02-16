@@ -1,3 +1,5 @@
+@import("util/StringSet.pst");
+
 @import("builtins/index.pst");
 
 object fail(string msg) {
