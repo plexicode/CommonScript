@@ -394,7 +394,7 @@ namespace CommonScript.Compiler
             string next = nextToken.Value;
             switch (nextToken.Type)
             {
-                case TokenType.PUNCTUATION:
+                case (int)TokenType.PUNCTUATION:
 
                     if (next == "(")
                     {
@@ -403,11 +403,11 @@ namespace CommonScript.Compiler
 
                         // (a, ...
                         if (this.tokens.isSequenceNext3("(", null, ",") &&
-                            this.tokens.PeekAhead(1).Type == TokenType.NAME) return this.ParseLambda();
+                            this.tokens.PeekAhead(1).Type == (int)TokenType.NAME) return this.ParseLambda();
 
                         // (a = ...
                         if (this.tokens.isSequenceNext3("(", null, "=") &&
-                            this.tokens.PeekAhead(1).Type == TokenType.NAME) return this.ParseLambda();
+                            this.tokens.PeekAhead(1).Type == (int)TokenType.NAME) return this.ParseLambda();
 
                         // (a) => 
                         if (this.tokens.isSequenceNext4("(", null, ")", "=>")) return this.ParseLambda();
@@ -428,7 +428,7 @@ namespace CommonScript.Compiler
                     }
                     break;
 
-                case TokenType.KEYWORD:
+                case (int) TokenType.KEYWORD:
                     if (next == "true" || next == "false")
                     {
                         Token boolTok = this.tokens.pop();
@@ -469,23 +469,23 @@ namespace CommonScript.Compiler
 
                     break;
 
-                case TokenType.INTEGER:
+                case (int) TokenType.INTEGER:
                     int intVal = ExpressionParser.TryParseInteger(nextToken, next, false);
                     return Expression.createIntegerConstant(this.tokens.pop(), intVal);
 
-                case TokenType.FLOAT:
+                case (int) TokenType.FLOAT:
                     double floatVal = ExpressionParser.TryParseFloat(nextToken, next);
                     return Expression.createFloatConstant(this.tokens.pop(), floatVal);
 
-                case TokenType.HEX_INTEGER:
+                case (int) TokenType.HEX_INTEGER:
                     int intValHex = ExpressionParser.TryParseInteger(nextToken, next, true);
                     return Expression.createIntegerConstant(this.tokens.pop(), intValHex);
 
-                case TokenType.STRING:
+                case (int) TokenType.STRING:
                     string strVal = ExpressionParser.TryParseString(nextToken, next);
                     return Expression.createStringConstant(this.tokens.pop(), strVal);
 
-                case TokenType.NAME:
+                case (int) TokenType.NAME:
                     if (this.tokens.isSequenceNext2(null, "=>")) return this.ParseLambda();
 
                     Token varName = this.tokens.popName("variable name");

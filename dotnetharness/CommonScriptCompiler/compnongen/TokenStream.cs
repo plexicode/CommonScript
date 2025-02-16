@@ -116,7 +116,7 @@ namespace CommonScript.Compiler
         {
             Token next = this.pop();
             if (next == null) this.ensureMore(); // throw
-            if (next.Value != value || next.Type != TokenType.KEYWORD)
+            if (next.Value != value || next.Type != (int) TokenType.KEYWORD)
             {
                 Errors.ThrowError(next, "Expected '" + value + "' keyword but found '" + next.Value + "' instead.");
             }
@@ -137,7 +137,7 @@ namespace CommonScript.Compiler
         {
             Token t = this.pop();
             if (t == null) this.ensureMore(); // throw 
-            if (t.Type != TokenType.NAME) Errors.ThrowError(t, "Expected " + purposeForErrorMessage + " but found '" + t.Value + "' instead.");
+            if (t.Type != (int) TokenType.NAME) Errors.ThrowError(t, "Expected " + purposeForErrorMessage + " but found '" + t.Value + "' instead.");
             return t;
         }
 
@@ -148,14 +148,14 @@ namespace CommonScript.Compiler
             if (output.Value != value) Errors.ThrowError(output, "Expected '" + value + "' but found '" + output.Value + "' instead.");
             
             // this is an internal assert and not a user error. Feel free to remove later.
-            if (output.Type == TokenType.KEYWORD) throw new Exception("Use popKeyword instead.");
+            if (output.Type == (int) TokenType.KEYWORD) throw new Exception("Use popKeyword instead.");
             
             return output;
         }
 
-        public TokenType peekType()
+        public int peekType()
         {
-            if (!this.hasMore()) return TokenType.EOF;
+            if (!this.hasMore()) return (int) TokenType.EOF;
             return this.peek().Type;
         }
     }

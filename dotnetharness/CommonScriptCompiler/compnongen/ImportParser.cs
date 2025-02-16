@@ -8,13 +8,13 @@ namespace CommonScript.Compiler
         {
             List<Token> builtinName = new List<Token>()
             {
-                Token.createFakeToken(tokens, TokenType.NAME, "{BUILTIN}", 0, 0)
+                Token.createFakeToken(tokens, (int) TokenType.NAME, "{BUILTIN}", 0, 0)
             };
 
             return new ImportStatement(
-                Token.createFakeToken(tokens, TokenType.KEYWORD, "import", 0, 0),
+                Token.createFakeToken(tokens, (int) TokenType.KEYWORD, "import", 0, 0),
                 builtinName,
-                Token.createFakeToken(tokens, TokenType.PUNCTUATION, "*", 0, 0));
+                Token.createFakeToken(tokens, (int) TokenType.PUNCTUATION, "*", 0, 0));
         }
 
         public static ImportStatement[] AdvanceThroughImports(TokenStream tokens, bool isCoreBuiltin)

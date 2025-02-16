@@ -356,7 +356,7 @@ namespace CommonScript.Compiler
         {
             return new Token(
                 value,
-                isPunc ? TokenType.PUNCTUATION : TokenType.NAME,
+                isPunc ? (int) TokenType.PUNCTUATION : (int) TokenType.NAME,
                 template.File,
                 template.Line,
                 template.Col);

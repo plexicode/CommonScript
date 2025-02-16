@@ -2,27 +2,27 @@
 {
     internal enum TokenType
     {
-        KEYWORD,
-        NAME,
-        PUNCTUATION,
-        STRING,
-        INTEGER,
-        HEX_INTEGER,
-        FLOAT,
-        ANNOTATION,
+        KEYWORD = 1,
+        NAME = 2,
+        PUNCTUATION = 3,
+        STRING = 4,
+        INTEGER = 5,
+        HEX_INTEGER = 6,
+        FLOAT = 7,
+        ANNOTATION = 8,
 
-        EOF,
+        EOF = 9,
     }
 
     internal class Token
     {
         public string Value { get; set; }
         public string File { get; set; }
-        public TokenType Type { get; set; }
+        public int Type { get; set; }
         public int Line { get; set; }
         public int Col { get; set; }
 
-        public Token(string value, TokenType type, string file, int line, int col)
+        public Token(string value, int type, string file, int line, int col)
         {
             this.File = file;
             this.Value = value;
@@ -31,7 +31,7 @@
             this.Col = col;
         }
 
-        public static Token createFakeToken(TokenStream tokens, TokenType type, string value, int line, int col)
+        public static Token createFakeToken(TokenStream tokens, int type, string value, int line, int col)
         {
             return new Token(value, type, tokens.GetFile(), line, col);
         }

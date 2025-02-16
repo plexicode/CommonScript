@@ -144,7 +144,7 @@ namespace CommonScript.Compiler
 
                             }
 
-                            tokens.Add(new Token(tokenVal, TokenType.PUNCTUATION, file, lines[i], cols[i]));
+                            tokens.Add(new Token(tokenVal, (int) TokenType.PUNCTUATION, file, lines[i], cols[i]));
                             i += tokenVal.Length - 1;
                         }
 
@@ -154,13 +154,13 @@ namespace CommonScript.Compiler
                         if (!Tokenizer.alphanumerics.ContainsKey(c))
                         {
                             tokenVal = trimmedCode.Substring(tokenStart, i - tokenStart);
-                            TokenType ttype = Tokenizer.keywords.ContainsKey(tokenVal)
-                                ? TokenType.KEYWORD
+                            int ttype = Tokenizer.keywords.ContainsKey(tokenVal)
+                                ? (int) TokenType.KEYWORD
                                 : Tokenizer.numeric.ContainsKey(tokenVal[0])
                                     ? tokenVal.ToLower().StartsWith("0x")
-                                        ? TokenType.HEX_INTEGER
-                                        : TokenType.INTEGER
-                                    : TokenType.NAME;
+                                        ? (int) TokenType.HEX_INTEGER
+                                        : (int) TokenType.INTEGER
+                                    : (int) TokenType.NAME;
                             tokens.Add(new Token(tokenVal, ttype, file, lines[tokenStart], cols[tokenStart]));
                             i--;
                             mode = TokenizerMode.READY;
@@ -193,7 +193,7 @@ namespace CommonScript.Compiler
                         else if (c == tokenSubtype)
                         {
                             tokenVal = trimmedCode.Substring(tokenStart, i - tokenStart + 1);
-                            tokens.Add(new Token(tokenVal, TokenType.STRING, file, lines[tokenStart], cols[tokenStart]));
+                            tokens.Add(new Token(tokenVal, (int) TokenType.STRING, file, lines[tokenStart], cols[tokenStart]));
                             mode = TokenizerMode.READY;
                         }
                         break;
@@ -211,24 +211,24 @@ namespace CommonScript.Compiler
                     Token right = i + 1 < tokens.Count ? tokens[i + 1] : null;
 
                     if (left != null &&
-                        left.Type == TokenType.INTEGER &&
+                        left.Type == (int) TokenType.INTEGER &&
                         left.Line == current.Line &&
                         left.Col + left.Value.Length == current.Col)
                     {
                         left.Value += ".";
-                        left.Type = TokenType.FLOAT;
+                        left.Type = (int) TokenType.FLOAT;
                         tokens[i - 1] = null;
                         tokens[i] = left;
                         current = left;
                     }
 
                     if (right != null &&
-                        right.Type == TokenType.INTEGER &&
+                        right.Type == (int) TokenType.INTEGER &&
                         right.Line == current.Line &&
                         current.Col + current.Value.Length == right.Col)
                     {
                         current.Value += right.Value;
-                        current.Type = TokenType.FLOAT;
+                        current.Type = (int) TokenType.FLOAT;
                         tokens[i + 1] = null;
                     }
                 }
@@ -240,10 +240,10 @@ namespace CommonScript.Compiler
                     if (next != null &&
                         next.Line == current.Line &&
                         next.Col == current.Col + 1 &&
-                        next.Type == TokenType.KEYWORD)
+                        next.Type == (int) TokenType.KEYWORD)
                     {
                         current.Value += next.Value;
-                        current.Type = TokenType.ANNOTATION;
+                        current.Type = (int) TokenType.ANNOTATION;
                         tokens[i + 1] = null;
                     }
                 }

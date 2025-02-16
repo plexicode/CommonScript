@@ -156,7 +156,7 @@ namespace CommonScript.Compiler
 
             if (colon != null &&
                 openParen.Value == "(" &&
-                varName.Type == TokenType.NAME &&
+                varName.Type == (int) TokenType.NAME &&
                 colon.Value == ":")
             {
                 return this.ParseForEachLoop();

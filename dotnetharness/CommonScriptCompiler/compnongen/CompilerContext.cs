@@ -246,7 +246,7 @@ namespace CommonScript.Compiler
         private static Dictionary<string, Token> ParseOutAnnotations(TokenStream tokens)
         {
             Dictionary<string, Token> output = new Dictionary<string, Token>();
-            while (tokens.peekType() == TokenType.ANNOTATION)
+            while (tokens.peekType() == (int) TokenType.ANNOTATION)
             {
                 Token token = tokens.pop();
                 string annotationName = token.Value.Substring(1);
