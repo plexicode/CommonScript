@@ -1,4 +1,6 @@
-﻿namespace CommonScript.Compiler
+﻿using CommonScript.Compiler.Internal;
+
+namespace CommonScript.Compiler
 {
     internal class FieldEntity : AbstractEntity
     {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
@@ -196,7 +197,7 @@ namespace CommonScript.Compiler
 
                 if (tok != null)
                 {
-                    string fp = tok.getFingerprint();
+                    string fp = FunctionWrapper.Token_getFingerprint(tok);
                     if (!tokenCountByFingerprint.ContainsKey(fp)) tokenCountByFingerprint[fp] = 0;
                     tokenCountByFingerprint[fp] = tokenCountByFingerprint[fp] + 1;
                 }

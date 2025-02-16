@@ -354,7 +354,7 @@ namespace CommonScript.Compiler
 
         private static Token BuildFakeToken(Token template, string value, bool isPunc)
         {
-            return new Token(
+            return FunctionWrapper.Token_new(
                 value,
                 isPunc ? (int) TokenType.PUNCTUATION : (int) TokenType.NAME,
                 template.File,

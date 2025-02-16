@@ -141,5 +141,19 @@ namespace CommonScript.Compiler.Internal
         {
             return new StringSet(new Dictionary<string, bool>());
         }
+
+        public static string Token_getFingerprint(Token t)
+        {
+            if (t.Fingerprint == null)
+            {
+                t.Fingerprint = string.Join("", new string[] { t.File, ",", t.Line.ToString(), ",", t.Col.ToString() });
+            }
+            return t.Fingerprint;
+        }
+
+        public static Token Token_new(string value, int type, string file, int line, int col)
+        {
+            return new Token(value, file, type, line, col, null);
+        }
     }
 }

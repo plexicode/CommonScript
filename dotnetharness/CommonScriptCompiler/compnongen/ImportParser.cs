@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
@@ -8,13 +9,13 @@ namespace CommonScript.Compiler
         {
             List<Token> builtinName = new List<Token>()
             {
-                Token.createFakeToken(tokens, (int) TokenType.NAME, "{BUILTIN}", 0, 0)
+                TokenUtil.createFakeToken(tokens, (int) TokenType.NAME, "{BUILTIN}", 0, 0)
             };
 
             return new ImportStatement(
-                Token.createFakeToken(tokens, (int) TokenType.KEYWORD, "import", 0, 0),
+                TokenUtil.createFakeToken(tokens, (int) TokenType.KEYWORD, "import", 0, 0),
                 builtinName,
-                Token.createFakeToken(tokens, (int) TokenType.PUNCTUATION, "*", 0, 0));
+                TokenUtil.createFakeToken(tokens, (int) TokenType.PUNCTUATION, "*", 0, 0));
         }
 
         public static ImportStatement[] AdvanceThroughImports(TokenStream tokens, bool isCoreBuiltin)

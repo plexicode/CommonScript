@@ -1,0 +1,20 @@
+struct Token {
+    string Value;
+    string File;
+    int Type;
+    int Line;
+    int Col;
+    string Fingerprint;
+}
+
+Token Token_new(string value, int type, string file, int line, int col) {
+    return new Token(value, file, type, line, col, null);
+}
+
+string Token_getFingerprint(Token t) {
+    if (t.Fingerprint == null)
+    {
+        t.Fingerprint = Core.StringConcatAll(t.File, ",", Core.IntToString(t.Line), ",", Core.IntToString(t.Col));
+    }
+    return t.Fingerprint;
+}

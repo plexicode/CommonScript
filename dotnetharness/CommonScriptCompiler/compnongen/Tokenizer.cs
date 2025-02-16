@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
@@ -144,7 +145,7 @@ namespace CommonScript.Compiler
 
                             }
 
-                            tokens.Add(new Token(tokenVal, (int) TokenType.PUNCTUATION, file, lines[i], cols[i]));
+                            tokens.Add(FunctionWrapper.Token_new(tokenVal, (int) TokenType.PUNCTUATION, file, lines[i], cols[i]));
                             i += tokenVal.Length - 1;
                         }
 
@@ -161,7 +162,7 @@ namespace CommonScript.Compiler
                                         ? (int) TokenType.HEX_INTEGER
                                         : (int) TokenType.INTEGER
                                     : (int) TokenType.NAME;
-                            tokens.Add(new Token(tokenVal, ttype, file, lines[tokenStart], cols[tokenStart]));
+                            tokens.Add(FunctionWrapper.Token_new(tokenVal, ttype, file, lines[tokenStart], cols[tokenStart]));
                             i--;
                             mode = TokenizerMode.READY;
                         }
@@ -193,7 +194,7 @@ namespace CommonScript.Compiler
                         else if (c == tokenSubtype)
                         {
                             tokenVal = trimmedCode.Substring(tokenStart, i - tokenStart + 1);
-                            tokens.Add(new Token(tokenVal, (int) TokenType.STRING, file, lines[tokenStart], cols[tokenStart]));
+                            tokens.Add(FunctionWrapper.Token_new(tokenVal, (int) TokenType.STRING, file, lines[tokenStart], cols[tokenStart]));
                             mode = TokenizerMode.READY;
                         }
                         break;

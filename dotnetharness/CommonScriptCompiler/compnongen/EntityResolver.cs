@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {

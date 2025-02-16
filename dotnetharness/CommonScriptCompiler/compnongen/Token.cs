@@ -1,4 +1,6 @@
-﻿namespace CommonScript.Compiler
+﻿using CommonScript.Compiler.Internal;
+
+namespace CommonScript.Compiler
 {
     internal enum TokenType
     {
@@ -14,36 +16,17 @@
         EOF = 9,
     }
 
-    internal class Token
+    internal class TokenUtil
     {
-        public string Value { get; set; }
-        public string File { get; set; }
-        public int Type { get; set; }
-        public int Line { get; set; }
-        public int Col { get; set; }
-
-        public Token(string value, int type, string file, int line, int col)
-        {
-            this.File = file;
-            this.Value = value;
-            this.Type = type;
-            this.Line = line;
-            this.Col = col;
-        }
-
         public static Token createFakeToken(TokenStream tokens, int type, string value, int line, int col)
         {
-            return new Token(value, type, tokens.GetFile(), line, col);
+            return FunctionWrapper.Token_new(value, type, tokens.GetFile(), line, col);
+            
         }
 
-        public string Fingerprint { get; set; }
-        public string getFingerprint()
+        public string getFingerprint(Token token)
         {
-            if (this.Fingerprint == null)
-            {
-                this.Fingerprint = this.File + ("," + this.Line + "," + this.Col);
-            }
-            return this.Fingerprint;
+            return FunctionWrapper.Token_getFingerprint(token);
         }
     }
 }
