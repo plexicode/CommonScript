@@ -1,0 +1,32 @@
+@import("builtins/gen_builtins.pst");
+
+string GetBuiltinRawStoredString(string m) {
+
+    if (m == "builtins") return GEN_BUILTINS_builtins();
+    if (m == "base64") return GEN_BUILTINS_base64();
+    if (m == "json") return GEN_BUILTINS_json();
+    if (m == "math") return GEN_BUILTINS_math();
+    if (m == "random") return GEN_BUILTINS_random();
+    if (m == "textencoding") return GEN_BUILTINS_textencoding();
+    if (m == "xml") return GEN_BUILTINS_xml();
+
+    return null;
+}
+
+string GetBuiltin(string moduleName) {
+    string code = GetBuiltinRawStoredString(moduleName);
+    if (code == null) {
+        fail(moduleName); // module not found
+        return null;
+    }
+
+    // swap out common strings to further reduce the footprint size.
+    return code
+        .Replace("@1", "function ")
+        .Replace("@2", " { constructor(m=null):base(m){} }")
+        .Replace("@3", "@public class ")
+        .Replace("@4", "return ")
+        .Replace("@5", "@public function ")
+        .Replace("@6", "Exception : Exception")
+    ;
+}

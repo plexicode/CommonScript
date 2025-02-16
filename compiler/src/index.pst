@@ -1,0 +1,7 @@
+@import("builtins/index.pst");
+
+object fail(string msg) {
+    Array<object> failArgs = new Array<object>(1);
+    failArgs[0] = msg;
+    return Core.ExtensibleCallbackInvoke("hardCrash", failArgs); // output ignored, obviously.
+}

@@ -1,0 +1,15 @@
+// TODO: remove some of the minifier artifacts from this code and create a true minifier.
+
+@public function randomFloat() { return $random_float(); }
+@public function randomBool() { return $random_float() < .5; }
+
+@public function randomInt(a, b = null) {
+    if (b == null) { 
+        b = a; 
+        a = 0; 
+    }
+    d = b - a;
+    if (d <= 0) throw new InvalidArgumentException("Range must be a positive number.");
+    return a + $math_floor($random_float() * d);
+}
+

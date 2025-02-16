@@ -1,0 +1,23 @@
+// TODO: remove some of the minifier artifacts from this code and create a true minifier.
+
+@public class TextEncodingException : Exception {
+    constructor(m) : base(m) { }
+}
+
+function validEnc(e) {
+    e = (e ?? '') + '';
+    t = e.lower().replace('-', '');
+    if ($txt_is_valid_enc(t)) return t;
+    throw new TextEncodingException("'" + e + "' is not a valid encoding.");
+}
+
+@public function bytesToText(arr, e='utf8') {
+    n = validEnc(e);
+    s = $txt_bytes_to_string(arr, n);
+    if (s == null) throw new TextEncodingException("Invalid byte values for encoding: '" + n + "'");
+    return s;
+}
+
+@public function textToBytes(s, e = 'utf8') {
+    return $txt_string_to_bytes((s ?? '') + '', validEnc(e));
+}

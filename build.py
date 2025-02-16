@@ -70,6 +70,40 @@ def main(args):
 
   return 'Done'
 
+def copy_builtins():
+  items = {}
+  for file in os.listdir('builtins'):
+    if file.endswith('.script'):
+      code = file_read_text(os.path.join('builtins', file))
+      # TODO: a real minifier goes here!
+      min_lines = []
+      for line in code.split('\n'):
+        line = line.strip()
+        if line[:2] != '//' and line != '':
+          min_lines.append(line)
+
+      code = '\n'.join(min_lines)
+      code = code.replace('Exception : Exception', '@6')
+      code = code.replace('@public function ', '@5')
+      code = code.replace('return ', '@4')
+      code = code.replace('@public class ', '@3')
+      code = code.replace(' { constructor(m=null):base(m){} }', '@2')
+      code = code.replace('function ', '@1')
+      items[file.split('.')[0]] = code
+  keys = list(items.keys())
+  keys.sort()
+  gen_builtins = ['// This file is generated.', '// Edits should go in builtins/']
+  for key in keys:
+    code = items[key]
+    escaped_code = code.replace('\\', '\\\\').replace('"', '\\"').replace('\r\n', '\n').replace('\n', '\\n')
+    gen_builtins.append('string GEN_BUILTINS_' + key + '() { return "' + escaped_code + '"; }')
+  file_write_text('compiler/src/builtins/gen_builtins.pst', '\n'.join(gen_builtins) + '\n')
+  return 'Done'
+
 if __name__ == '__main__':
-  msg = main(sys.argv[1:])
+  args = sys.argv[1:]
+  if len(args) == 1 and args[0] == 'copybuiltins':
+    msg = copy_builtins()
+  else:
+    msg = main(args)
   print(msg)

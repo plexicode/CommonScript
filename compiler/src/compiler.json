@@ -1,0 +1,18 @@
+{
+  "source": "./index.pst",
+  "targets": [
+    {
+      "name": "csharp",
+      "language": "c#",
+      "imports": [
+        "System.Collections.Generic"
+      ],
+      "output": {
+        "namespace": "CommonScript.Compiler.Internal",
+        "structs-path": "../../dotnetharness/CommonScriptCompiler/compgen",
+        "functions-path": "../../dotnetharness/CommonScriptCompiler/compgen/GEN_FunctionWrapper.cs",
+        "functions-wrapper-class": "FunctionWrapper"
+      }
+    }
+  ]
+}

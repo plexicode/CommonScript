@@ -1,0 +1,103 @@
+// TODO: remove some of the minifier artifacts from this code and create a true minifier.
+
+@public class XmlNode{}
+
+@public class XmlElement:XmlNode{
+    field name;
+    field attributes;
+    field children = [];
+    constructor() : base() { }
+}
+
+@public class XmlText:XmlNode {
+    field value;
+    constructor() : base() { }
+}
+
+@public class XmlParseException : Exception{
+    field line;
+    field col;
+    field err;
+
+    constructor(e, l, c) : base('XML Parse Error: ' + e) {
+        this.err = e;
+        this.line = l;
+        this.col = c;
+    }
+}
+
+@public function parseXml(s){
+    o = [0, 0, 0, 0];
+    $xml_parse(s + '', o);
+    if(o[0] == 0)
+        throw new XmlParseException(o[1], o[2], o[3]);
+    // $xml_parse sets a flat array of data as o[1]. See comment in _build
+    return _build([0], o[1]);
+}
+
+// i: integer pointer for the index. This pointer is in the form of an array containing the integer.
+// b: data buffer from xml_parse
+function _build(
+    i,
+    b,
+
+) {
+    // The data buffer contains a flat list of data for the entire XML document.
+    // Looping through this buffer using a mutable index pointer within a depth first traversal of the
+    // XML document tree will construct the proper tree.
+    //
+    // Each element is indicated by a 1 followed by the contents of that element including nested elements.
+    //
+    // XML Element: [..., 1, name, {attribute count} {attribute key, attribute value}*, {child count}, ...{children}, ...]
+    //
+    // XML Text nodes are indicated by literal strings.
+    //
+    // For example, the XML document <a attr="42">Hello <b>World</b></a> would be represented by the array...
+    //
+    // [1, 'a', 1, 'attr', '42', 2, 'Hello ', 1, 'b', 0, 1, 'World']
+    //
+    // Each element in this array repesents the following:
+    // [
+    //     1 --> indication of the beginning of the <a> element
+    //     'a' --> the name of the <a> element
+    //     1 --> the number of attributes within the opening tag
+    //     'attr' --> the first attribute name
+    //     '42' --> the first attribute value (always as a string)
+    //     2 --> the number of children directly within the <a> tag
+    //     'Hello ' --> the full representation of the "Hello " text node.
+    //     1 --> indication of the beginning of a new element (<b>)
+    //     'b' --> the name of the <b> element
+    //     0 --> number of attributes within the open tag of <b>
+    //     1 --> number of children directly within the <b> tag
+    //     'World' --> The full representation of the "World" text node.
+    // ]
+
+    if (b[i[0]] == 1) {
+        i[0]++;
+        o = new XmlElement();
+        o.name = b[i[0]++];
+
+        // attribute count
+        c = b[i[0]++];
+
+        a = { };
+        while (c --> 0) {
+            k = b[i[0]++];
+            v = b[i[0]++];
+            a[k] = v;
+        }
+        o.attributes = a;
+
+        // children count
+        c = b[i[0]++];
+
+        while (c --> 0)
+            o.children.add(_build(i, b));
+
+    } else {
+        o = new XmlText();
+        o.value = b[i[0]++];
+    }
+
+    return o;
+}
