@@ -2,5 +2,5 @@
 @import("parsenodes/ClassEntity.pst");
 @import("parsenodes/EntityType.pst");
 @import("parsenodes/ImportStatement.pst");
+@import("parsenodes/ModuleWrapperEntity.pst");
 @import("parsenodes/NamespaceEntity.pst");
-

@@ -700,7 +700,7 @@ namespace CommonScript.Compiler
 
             if (((FileContext)this.activeEntity.OBJ_TEMP_CAST_fileContext).importsByVar.ContainsKey(name))
             {
-                return new ModuleWrapperEntity(throwToken, ((FileContext)this.activeEntity.OBJ_TEMP_CAST_fileContext).importsByVar[name]).baseData;
+                return FunctionWrapper.ModuleWrapperEntity_new(throwToken, ((FileContext)this.activeEntity.OBJ_TEMP_CAST_fileContext).importsByVar[name]).baseData;
             }
 
             AbstractEntity walker = this.activeEntity;

@@ -1,0 +1,14 @@
+struct ModuleWrapperEntity {
+    Dictionary<string, AbstractEntity> publicMembers;
+    AbstractEntity baseData;
+}
+
+ModuleWrapperEntity ModuleWrapperEntity_new(Token token, ImportStatement imp) {
+
+    // TODO: filter this down to JUST the @public-anotated members
+    Dictionary<string, AbstractEntity> modEnts = imp.compiledModuleRef.nestedEntities;
+
+    ModuleWrapperEntity mw = new ModuleWrapperEntity(modEnts, null);
+    mw.baseData = AbstractEntity_new(token, EntityType.MODULE_REF, mw);
+    return mw;
+}

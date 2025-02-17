@@ -372,6 +372,14 @@ namespace CommonScript.Compiler.Internal
             return join4(join2(a, b), join2(c, d), join2(e, f), g);
         }
 
+        public static ModuleWrapperEntity ModuleWrapperEntity_new(Token token, ImportStatement imp)
+        {
+            System.Collections.Generic.Dictionary<string, AbstractEntity> modEnts = imp.compiledModuleRef.nestedEntities;
+            ModuleWrapperEntity mw = new ModuleWrapperEntity(modEnts, null);
+            mw.baseData = AbstractEntity_new(token, 9, mw);
+            return mw;
+        }
+
         public static NamespaceEntity NamespaceEntity_new(Token nsToken, Token nameToken, string fqName)
         {
             NamespaceEntity ns = new NamespaceEntity(new Dictionary<string, AbstractEntity>(), null);
