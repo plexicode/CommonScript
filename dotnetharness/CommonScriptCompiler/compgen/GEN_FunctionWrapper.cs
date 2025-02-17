@@ -129,6 +129,16 @@ namespace CommonScript.Compiler.Internal
             return join2(buf, create0(18, throwToken, null));
         }
 
+        public static ClassEntity ClassEntity_new(Token classToken, Token nameToken, string fqName)
+        {
+            ClassEntity cd = new ClassEntity(null, null, null, null, 0, null, new Dictionary<string, AbstractEntity>(), null);
+            cd.baseData = AbstractEntity_new(classToken, 1, cd);
+            cd.baseData.nameToken = nameToken;
+            cd.baseData.simpleName = nameToken.Value;
+            cd.baseData.fqName = fqName;
+            return cd;
+        }
+
         public static ByteCodeBuffer convertToBuffer(ByteCodeRow[] flatRows)
         {
             ByteCodeBuffer buf = null;

@@ -1,0 +1,28 @@
+struct ClassEntity {
+    Array<Token> baseClassTokens;
+    ClassEntity baseClassEntity;
+    Dictionary<string, int> directMemberToOffset;
+    Dictionary<string, int> flattenedMemberOffsetLookup;
+    int classDepth; // for sorting parents first
+    Array<string> newDirectMemberOffsets;
+    Dictionary<string, AbstractEntity> classMembers;
+    AbstractEntity baseData;
+}
+
+ClassEntity ClassEntity_new(Token classToken, Token nameToken, string fqName) {
+    ClassEntity cd = new ClassEntity(
+        null,
+        null,
+        null,
+        null,
+        0,
+        null,
+        new Dictionary<string, AbstractEntity>(),
+        null
+    );
+    cd.baseData = AbstractEntity_new(classToken, EntityType.CLASS, cd);
+    cd.baseData.nameToken = nameToken;
+    cd.baseData.simpleName = nameToken.Value;
+    cd.baseData.fqName = fqName;
+    return cd;
+}

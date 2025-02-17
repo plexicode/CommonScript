@@ -425,7 +425,7 @@ namespace CommonScript.Compiler
                 ? classNameToken.Value
                 : (namespacePrefix + "." + classNameToken.Value);
 
-            ClassEntity classDef = new ClassEntity(classToken, classNameToken, classFqName);
+            ClassEntity classDef = FunctionWrapper.ClassEntity_new(classToken, classNameToken, classFqName);
             classDef.baseClassTokens = baseClassTokens;
             tokens.popExpected("{");
             ParseOutEntities(ctx, file, classDef.classMembers, classDef.baseData, classFqName);
