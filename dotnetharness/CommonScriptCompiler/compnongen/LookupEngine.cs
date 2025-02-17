@@ -42,13 +42,13 @@ namespace CommonScript.Compiler
                 AbstractEntity tle = mod.nestedEntities[name];
                 switch (tle.type)
                 {
-                    case EntityType.FUNCTION:
+                    case (int)EntityType.FUNCTION:
                         return Expression.createFunctionReference(refToken, name, tle);
-                    case EntityType.CONST:
+                    case (int)EntityType.CONST:
                         return ((ConstEntity)tle.specificData).constValue;
-                    case EntityType.CLASS:
+                    case (int)EntityType.CLASS:
                         return Expression.createClassReference(refToken, tle);
-                    case EntityType.NAMESPACE:
+                    case (int)EntityType.NAMESPACE:
                         return Expression.createNamespaceReference(refToken, tle);
                     default:
                         throw new NotImplementedException();

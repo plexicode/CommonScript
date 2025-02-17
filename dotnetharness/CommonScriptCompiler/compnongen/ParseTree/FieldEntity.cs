@@ -10,7 +10,7 @@ namespace CommonScript.Compiler
 
         public FieldEntity(Token fieldToken, Token nameToken, Token equalToken, Expression defaultValueOrNull)
         {
-            this.baseData = new AbstractEntity(fieldToken, EntityType.FIELD, this);
+            this.baseData = new AbstractEntity(fieldToken, (int)EntityType.FIELD, this);
             this.defaultValue = defaultValueOrNull;
             this.baseData.nameToken = nameToken;
             this.baseData.simpleName = nameToken.Value;

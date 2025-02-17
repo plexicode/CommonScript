@@ -49,13 +49,13 @@ namespace CommonScript.Compiler
             {
                 this.flattenedEntities[tle.fqName] = tle;
                 this.flattenedEntitiesAndEnumValues[tle.fqName] = tle;
-                if (tle.type != EntityType.ENUM)
+                if (tle.type != (int)EntityType.ENUM)
                 {
                     this.flattenedEntitiesNoEnumParents[tle.fqName] = tle;
                 }
             }
 
-            foreach (EnumEntity enumDef in this.entityList.Where(e => e.type == EntityType.ENUM).Select(e => (EnumEntity)e.specificData))
+            foreach (EnumEntity enumDef in this.entityList.Where(e => e.type == (int)EntityType.ENUM).Select(e => (EnumEntity)e.specificData))
             {
                 for (int i = 0; i < enumDef.memberNameTokens.Length; i++)
                 {
@@ -104,31 +104,31 @@ namespace CommonScript.Compiler
             {
                 AbstractEntity tle = entities[i];
 
-                if (tle.type == EntityType.CONST)
+                if (tle.type == (int)EntityType.CONST)
                 {
                     constants.Add((ConstEntity)tle.specificData);
                 }
-                else if (tle.type == EntityType.ENUM)
+                else if (tle.type == (int)EntityType.ENUM)
                 {
                     enums.Add((EnumEntity)tle.specificData);
                 }
-                else if (tle.type == EntityType.FUNCTION)
+                else if (tle.type == (int)EntityType.FUNCTION)
                 {
                     functions.Add((FunctionLikeEntity)tle.specificData);
                 }
-                else if (tle.type == EntityType.CLASS)
+                else if (tle.type == (int)EntityType.CLASS)
                 {
                     classes.Add((ClassEntity)tle.specificData);
                 }
-                else if (tle.type == EntityType.CONSTRUCTOR)
+                else if (tle.type == (int)EntityType.CONSTRUCTOR)
                 {
                     constructors.Add((FunctionLikeEntity)tle.specificData);
                 }
-                else if (tle.type == EntityType.FIELD)
+                else if (tle.type == (int)EntityType.FIELD)
                 {
                     fields.Add((FieldEntity)tle.specificData);
                 }
-                else if (tle.type == EntityType.NAMESPACE)
+                else if (tle.type == (int)EntityType.NAMESPACE)
                 {
                     // Nothing to resolve.
                 }
@@ -237,7 +237,7 @@ namespace CommonScript.Compiler
                     FunctionWrapper.Errors_Throw(bc.baseData.firstToken, "Could not resolve base class");
                     throw new NotImplementedException();
                 }
-                if (bcEntity.type != EntityType.CLASS)
+                if (bcEntity.type != (int)EntityType.CLASS)
                 {
                     FunctionWrapper.Errors_Throw(bc.baseData.firstToken, bcEntity.fqName + " is not a valid class.");
                 }
@@ -291,7 +291,7 @@ namespace CommonScript.Compiler
                 {
                     AbstractEntity entity = this.flattenedEntitiesAndEnumValues[resOrder[i]];
                     this.activeEntity = entity;
-                    if (entity.type == EntityType.ENUM)
+                    if (entity.type == (int)EntityType.ENUM)
                     {
                         EnumEntity enumDef = (EnumEntity)entity.specificData;
                         int memberIndex = this.GetEnumMemberIndex(resOrder[i], enumDef);
@@ -546,11 +546,11 @@ namespace CommonScript.Compiler
                     {
                         if (((FileContext)referenced.OBJ_TEMP_CAST_fileContext).compiledModule != file.compiledModule)
                         {
-                            if (referenced.type == EntityType.CONST)
+                            if (referenced.type == (int)EntityType.CONST)
                             {
                                 throw new NotImplementedException();
                             }
-                            else if (referenced.type == EntityType.ENUM)
+                            else if (referenced.type == (int)EntityType.ENUM)
                             {
                                 throw new NotImplementedException();
                             }
@@ -562,10 +562,10 @@ namespace CommonScript.Compiler
 
                         switch (referenced.type)
                         {
-                            case EntityType.CONST:
+                            case (int)EntityType.CONST:
                                 refs.Add(referenced.fqName);
                                 break;
-                            case EntityType.ENUM:
+                            case (int)EntityType.ENUM:
                                 throw new NotImplementedException();
 
                             default:
@@ -585,9 +585,9 @@ namespace CommonScript.Compiler
                     }
                     if (((FileContext)reffedEntity.OBJ_TEMP_CAST_fileContext).compiledModule != file.compiledModule)
                     {
-                        if (reffedEntity.type == EntityType.CONST) return ((ConstEntity)reffedEntity.specificData).constValue;
+                        if (reffedEntity.type == (int)EntityType.CONST) return ((ConstEntity)reffedEntity.specificData).constValue;
 
-                        if (reffedEntity.type == EntityType.ENUM)
+                        if (reffedEntity.type == (int)EntityType.ENUM)
                         {
                             throw new NotImplementedException();
                         }
@@ -597,11 +597,11 @@ namespace CommonScript.Compiler
                         }
                     }
 
-                    if (reffedEntity.type == EntityType.CONST)
+                    if (reffedEntity.type == (int)EntityType.CONST)
                     {
                         refs.Add(reffedEntity.fqName);
                     }
-                    else if (reffedEntity.type == EntityType.ENUM)
+                    else if (reffedEntity.type == (int)EntityType.ENUM)
                     {
                         string enumMemberName = fullRefSegments[fullRefSegments.Length - 1];
                         string enumName = fullRefDotted.Substring(0, fullRefDotted.Length - enumMemberName.Length - 1);

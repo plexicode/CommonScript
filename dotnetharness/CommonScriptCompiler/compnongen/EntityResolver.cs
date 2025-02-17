@@ -57,7 +57,7 @@ namespace CommonScript.Compiler
                 AbstractEntity member = classDef.classMembers[memberName];
 
                 if (!member.isStatic &&
-                   (member.type == EntityType.FIELD || member.type == EntityType.FUNCTION))
+                   (member.type == (int)EntityType.FIELD || member.type == (int)EntityType.FUNCTION))
                 {
                     int offset = 0;
                     if (!classDef.flattenedMemberOffsetLookup.ContainsKey(memberName))
@@ -98,7 +98,7 @@ namespace CommonScript.Compiler
             List<Statement> postBaseFieldInit = new List<Statement>();
             List<Statement> baseCtorInvocation = new List<Statement>();
 
-            bool isCtor = funcDef.baseData.type == EntityType.CONSTRUCTOR;
+            bool isCtor = funcDef.baseData.type == (int)EntityType.CONSTRUCTOR;
             FunctionLikeEntity ctorEnt = null;
 
             if (isCtor)
@@ -114,7 +114,7 @@ namespace CommonScript.Compiler
                 FieldEntity[] fields = siblings.Keys
                     .OrderBy(k => k)
                     .Select(k => siblings[k])
-                    .Where(e => e.type == EntityType.FIELD && e.isStatic == ctorEnt.baseData.isStatic)
+                    .Where(e => e.type == (int)EntityType.FIELD && e.isStatic == ctorEnt.baseData.isStatic)
                     .Select(e => (FieldEntity)e.specificData)
                     .Where(e => e.defaultValue != null)
                     .ToArray();
@@ -135,7 +135,7 @@ namespace CommonScript.Compiler
             }
 
             if (isCtor && 
-                funcDef.baseData.nestParent.type == EntityType.CLASS && 
+                funcDef.baseData.nestParent.type == (int)EntityType.CLASS && 
                 ((ClassEntity) funcDef.baseData.nestParent.specificData).baseClassEntity != null)
             {
                 // TODO: verify arg count

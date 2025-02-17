@@ -379,9 +379,9 @@ namespace CommonScript.Compiler
             child.nestParent = parent;
 
             bool isStatic = annotationTokens.ContainsKey("static");
-            bool isAttachingToClass = parent != null && parent.type == EntityType.CLASS;
-            bool isClass = child.type == EntityType.CLASS;
-            bool isCtor = child.type == EntityType.CONSTRUCTOR;
+            bool isAttachingToClass = parent != null && parent.type == (int)EntityType.CLASS;
+            bool isClass = child.type == (int)EntityType.CLASS;
+            bool isCtor = child.type == (int)EntityType.CONSTRUCTOR;
             if (isCtor && !isAttachingToClass)
             {
                 FunctionWrapper.Errors_Throw(child.firstToken, "Cannot place a constructor here. Constructors can only be added to classes.");

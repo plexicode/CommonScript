@@ -35,7 +35,7 @@ namespace CommonScript.Compiler
             foreach (string fqName in this.flattenedEntities.Keys)
             {
                 AbstractEntity entity = this.flattenedEntities[fqName];
-                if (entity.type == EntityType.ENUM)
+                if (entity.type == (int)EntityType.ENUM)
                 {
                     // for no-enum-parents, add all the children but not the entity itself. This is
                     // used for situations where a specific enum member is desired instead of the definition.

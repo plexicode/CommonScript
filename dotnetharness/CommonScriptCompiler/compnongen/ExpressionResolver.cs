@@ -346,19 +346,19 @@ namespace CommonScript.Compiler
         {
             switch (entity.type)
             {
-                case EntityType.FUNCTION:
+                case (int)EntityType.FUNCTION:
                     return Expression.createFunctionReference(token, entity.simpleName, entity);
 
-                case EntityType.CLASS:
+                case (int)EntityType.CLASS:
                     return Expression.createClassReference(token, entity);
 
-                case EntityType.CONST:
+                case (int)EntityType.CONST:
                     return Expression.cloneExpressionWithNewToken(token, ((ConstEntity)entity.specificData).constValue);
 
-                case EntityType.ENUM:
+                case (int)EntityType.ENUM:
                     return Expression.createEnumReference(token, entity);
 
-                case EntityType.NAMESPACE:
+                case (int)EntityType.NAMESPACE:
                     return Expression.createNamespaceReference(token, entity);
             }
 

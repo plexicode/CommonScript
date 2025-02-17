@@ -47,7 +47,7 @@ namespace CommonScript.Compiler
             IList<Statement> code
         )
         {
-            this.baseData = new AbstractEntity(firstToken, type, this);
+            this.baseData = new AbstractEntity(firstToken, (int)type, this);
             this.argTokens = [.. argNames];
             this.argDefaultValues = [.. argDefaultValues];
             this.code = [.. code];

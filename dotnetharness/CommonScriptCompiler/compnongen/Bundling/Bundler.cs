@@ -36,9 +36,9 @@ namespace CommonScript.Compiler
                 {
                     switch (tle.type)
                     {
-                        case EntityType.CONST: break;
+                        case (int)EntityType.CONST: break;
 
-                        case EntityType.FUNCTION:
+                        case (int)EntityType.FUNCTION:
                             FunctionLikeEntity func = (FunctionLikeEntity)tle.specificData;
                             if (((FileContext)tle.OBJ_TEMP_CAST_fileContext).isCoreBuiltin)
                             {
@@ -55,28 +55,28 @@ namespace CommonScript.Compiler
                             }
                             break;
 
-                        case EntityType.LAMBDA_ENTITY:
+                        case (int)EntityType.LAMBDA_ENTITY:
                             lambdas.Add((FunctionLikeEntity)tle.specificData);
                             break;
 
-                        case EntityType.FIELD:
+                        case (int)EntityType.FIELD:
                             fields.Add((FieldEntity)tle.specificData);
                             break;
 
 
-                        case EntityType.ENUM:
+                        case (int)EntityType.ENUM:
                             enums.Add((EnumEntity)tle.specificData);
                             break;
 
-                        case EntityType.CLASS:
+                        case (int)EntityType.CLASS:
                             classes.Add((ClassEntity)tle.specificData);
                             break;
 
-                        case EntityType.CONSTRUCTOR:
+                        case (int)EntityType.CONSTRUCTOR:
                             functions.Add((FunctionLikeEntity)tle.specificData);
                             break;
 
-                        case EntityType.NAMESPACE:
+                        case (int)EntityType.NAMESPACE:
                             // skip
                             break;
 
@@ -243,28 +243,28 @@ namespace CommonScript.Compiler
         {
             switch (entity.type)
             {
-                case EntityType.CONST:
+                case (int)EntityType.CONST:
                     // these are already flattened into expressions and have no more use.
                     break;
 
-                case EntityType.CLASS:
+                case (int)EntityType.CLASS:
                     bundleClass((ClassEntity)entity.specificData, bundle);
                     break;
 
-                case EntityType.ENUM:
+                case (int)EntityType.ENUM:
                     bundleEnum((EnumEntity)entity.specificData, bundle);
                     break;
 
-                case EntityType.FIELD:
+                case (int)EntityType.FIELD:
                     throw new NotImplementedException();
 
-                case EntityType.FUNCTION:
-                case EntityType.CONSTRUCTOR:
-                case EntityType.LAMBDA_ENTITY:
+                case (int)EntityType.FUNCTION:
+                case (int)EntityType.CONSTRUCTOR:
+                case (int)EntityType.LAMBDA_ENTITY:
                     bundleFunction((FunctionLikeEntity)entity.specificData, bundle);
                     break;
 
-                case EntityType.PROPERTY:
+                case (int)EntityType.PROPERTY:
                     throw new NotImplementedException();
 
                 default:
@@ -298,14 +298,14 @@ namespace CommonScript.Compiler
                 AbstractEntity member = classEntity.classMembers[memberName];
                 switch (member.type)
                 {
-                    case EntityType.FUNCTION:
+                    case (int)EntityType.FUNCTION:
                         bci.methodsToId[memberName] = member.serializationIndex;
                         if (member.isStatic) bci.staticMethods.Add(memberName);
                         break;
-                    case EntityType.FIELD:
+                    case (int)EntityType.FIELD:
                         if (member.isStatic) bci.staticFields.Add(memberName);
                         break;
-                    case EntityType.CONSTRUCTOR:
+                    case (int)EntityType.CONSTRUCTOR:
                         break; // already handled.
                     default:
                         throw new NotImplementedException();
@@ -323,7 +323,7 @@ namespace CommonScript.Compiler
 
         private static void bundleFunction(FunctionLikeEntity entity, CompilationBundle bundle)
         {
-            bool isLambda = entity.baseData.type == EntityType.LAMBDA_ENTITY;
+            bool isLambda = entity.baseData.type == (int)EntityType.LAMBDA_ENTITY;
             ByteCodeBuffer buffer = null;
             int argc = entity.argTokens.Length;
             int argcMin = 0;

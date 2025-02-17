@@ -20,7 +20,7 @@ namespace CommonScript.Compiler
     internal class AbstractEntity
     {
         public Token firstToken;
-        public EntityType type;
+        public int type;
 
         public string simpleName;
         public Token nameToken;
@@ -34,7 +34,7 @@ namespace CommonScript.Compiler
 
         public object specificData;
         
-        public AbstractEntity(Token firstToken, EntityType type, object specificData)
+        public AbstractEntity(Token firstToken, int type, object specificData)
         {
             this.firstToken = firstToken;
             this.type = type;
@@ -46,9 +46,9 @@ namespace CommonScript.Compiler
 
         public Dictionary<string, AbstractEntity> getMemberLookup()
         {
-            if (this.type == EntityType.CLASS) return ((ClassEntity)this.specificData).classMembers;
-            if (this.type == EntityType.NAMESPACE) return ((NamespaceEntity)this.specificData).nestedMembers;
-            if (this.type == EntityType.MODULE_REF) return ((ModuleWrapperEntity)this.specificData).publicMembers;
+            if (this.type == (int)EntityType.CLASS) return ((ClassEntity)this.specificData).classMembers;
+            if (this.type == (int)EntityType.NAMESPACE) return ((NamespaceEntity)this.specificData).nestedMembers;
+            if (this.type == (int)EntityType.MODULE_REF) return ((ModuleWrapperEntity)this.specificData).publicMembers;
             return EMPTY;
         }
     }

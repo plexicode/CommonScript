@@ -16,7 +16,7 @@ namespace CommonScript.Compiler
 
         public ClassEntity(Token classToken, Token nameToken, string fqName)
         {
-            this.baseData = new AbstractEntity(classToken, EntityType.CLASS, this);
+            this.baseData = new AbstractEntity(classToken, (int)EntityType.CLASS, this);
             this.baseData.nameToken = nameToken;
             this.baseData.simpleName = nameToken.Value;
             this.baseData.fqName = fqName;
