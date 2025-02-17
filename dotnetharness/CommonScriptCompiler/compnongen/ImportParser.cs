@@ -12,7 +12,7 @@ namespace CommonScript.Compiler
                 TokenUtil.createFakeToken(tokens, (int) TokenType.NAME, "{BUILTIN}", 0, 0)
             };
 
-            return new ImportStatement(
+            return FunctionWrapper.ImportStatement_new(
                 TokenUtil.createFakeToken(tokens, (int) TokenType.KEYWORD, "import", 0, 0),
                 builtinName,
                 TokenUtil.createFakeToken(tokens, (int) TokenType.PUNCTUATION, "*", 0, 0));
@@ -49,7 +49,7 @@ namespace CommonScript.Compiler
 
                 tokens.popExpected(";");
 
-                output.Add(new ImportStatement(importToken, tokenChain, importTargetName));
+                output.Add(FunctionWrapper.ImportStatement_new(importToken, tokenChain, importTargetName));
             }
 
             return output.ToArray();

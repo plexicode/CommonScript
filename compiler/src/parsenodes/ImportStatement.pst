@@ -1,0 +1,27 @@
+struct ImportStatement {
+
+    Token importToken;
+    Array<Token> nameChain;
+    string flatName;
+    Token importTargetVariableName;
+    bool isPollutionImport;
+    CompiledModule compiledModuleRef;
+}
+
+ImportStatement ImportStatement_new(Token importToken, List<Token> tokenChain, Token targetVarName) {
+
+    List<string> flatName = new List<string>();
+    for (int i = 0; i < tokenChain.Size(); i += 1)
+    {
+        flatName.Add(tokenChain[i].Value);
+    }
+
+    return new ImportStatement(
+        importToken,
+        Core.ListToArray(tokenChain),
+        flatName.Join("."),
+        targetVarName,
+        targetVarName != null && targetVarName.Value == "*",
+        null // compiledModuleRef
+    );
+}

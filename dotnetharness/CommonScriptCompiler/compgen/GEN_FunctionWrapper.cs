@@ -322,6 +322,18 @@ namespace CommonScript.Compiler.Internal
             return null;
         }
 
+        public static ImportStatement ImportStatement_new(Token importToken, System.Collections.Generic.List<Token> tokenChain, Token targetVarName)
+        {
+            System.Collections.Generic.List<string> flatName = new List<string>();
+            int i = 0;
+            while (i < tokenChain.Count)
+            {
+                flatName.Add(tokenChain[i].Value);
+                i += 1;
+            }
+            return new ImportStatement(importToken, tokenChain.ToArray(), string.Join(".", flatName), targetVarName, targetVarName != null && targetVarName.Value == "*", null);
+        }
+
         public static ByteCodeBuffer join2(ByteCodeBuffer a, ByteCodeBuffer b)
         {
             if (a == null)
