@@ -2,17 +2,18 @@
 
 namespace CommonScript.Compiler
 {
-    internal class FieldEntity : AbstractEntity
+    internal class FieldEntity
     {
         public Expression defaultValue;
         public Token opToken;
+        public AbstractEntity baseData;
 
         public FieldEntity(Token fieldToken, Token nameToken, Token equalToken, Expression defaultValueOrNull)
-            : base(fieldToken, EntityType.FIELD)
         {
+            this.baseData = new AbstractEntity(fieldToken, EntityType.FIELD, this);
             this.defaultValue = defaultValueOrNull;
-            this.nameToken = nameToken;
-            this.simpleName = nameToken.Value;
+            this.baseData.nameToken = nameToken;
+            this.baseData.simpleName = nameToken.Value;
             this.opToken = equalToken;
         }
     }

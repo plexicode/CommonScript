@@ -3,16 +3,17 @@ using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
-    internal class EnumEntity : AbstractEntity
+    internal class EnumEntity
     {
         public Token[] memberNameTokens;
         public Expression[] memberValues;
+        public AbstractEntity baseData;
 
         public EnumEntity(Token enumToken, Token nameToken, Token[] memberNames, Expression[] memberValues)
-            : base(enumToken, EntityType.ENUM)
         {
-            this.nameToken = nameToken;
-            this.simpleName = nameToken.Value;
+            this.baseData = new AbstractEntity(enumToken, EntityType.ENUM, this);
+            this.baseData.nameToken = nameToken;
+            this.baseData.simpleName = nameToken.Value;
             this.memberNameTokens = memberNames;
             this.memberValues = memberValues;
 

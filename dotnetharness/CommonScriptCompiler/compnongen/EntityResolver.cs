@@ -78,7 +78,7 @@ namespace CommonScript.Compiler
         {
             funcDef.variableScope = new Dictionary<string, bool>();
 
-            this.resolver.activeEntity = funcDef;
+            this.resolver.activeEntity = funcDef.baseData;
             this.resolver.breakContext = null;
 
             for (int i = 0; i < funcDef.argTokens.Length; i++)
@@ -98,14 +98,14 @@ namespace CommonScript.Compiler
             List<Statement> postBaseFieldInit = new List<Statement>();
             List<Statement> baseCtorInvocation = new List<Statement>();
 
-            bool isCtor = funcDef.type == EntityType.CONSTRUCTOR;
+            bool isCtor = funcDef.baseData.type == EntityType.CONSTRUCTOR;
             FunctionLikeEntity ctorEnt = null;
 
             if (isCtor)
             {
                 ctorEnt = funcDef;
 
-                Dictionary<string, AbstractEntity> siblings = funcDef.nestParent.getMemberLookup();
+                Dictionary<string, AbstractEntity> siblings = funcDef.baseData.nestParent.getMemberLookup();
                 // TODO: this is wrong. The fields should be processed in the order that they appear in the code itself.
                 // This will affect runtime order of complex expressions which could have observable consequences.
                 // TODO: simple constant initial values should be conveyed in the metadata and direct-copied from a template.
@@ -114,8 +114,8 @@ namespace CommonScript.Compiler
                 FieldEntity[] fields = siblings.Keys
                     .OrderBy(k => k)
                     .Select(k => siblings[k])
-                    .Where(e => e.type == EntityType.FIELD && e.isStatic == ctorEnt.isStatic)
-                    .Cast<FieldEntity>()
+                    .Where(e => e.type == EntityType.FIELD && e.isStatic == ctorEnt.baseData.isStatic)
+                    .Select(e => (FieldEntity)e.specificData)
                     .Where(e => e.defaultValue != null)
                     .ToArray();
                 for (int i = 0; i < fields.Length; i++)
@@ -135,12 +135,12 @@ namespace CommonScript.Compiler
             }
 
             if (isCtor && 
-                funcDef.nestParent.type == EntityType.CLASS && 
-                ((ClassEntity) funcDef.nestParent).baseClassEntity != null)
+                funcDef.baseData.nestParent.type == EntityType.CLASS && 
+                ((ClassEntity) funcDef.baseData.nestParent.specificData).baseClassEntity != null)
             {
                 // TODO: verify arg count
-                Token baseCtor = funcDef.firstToken; // TODO: this is wrong, get the actual 'base' token
-                Token baseCtorParen = funcDef.firstToken; // TODO: this is even more wrong 
+                Token baseCtor = funcDef.baseData.firstToken; // TODO: this is wrong, get the actual 'base' token
+                Token baseCtorParen = funcDef.baseData.firstToken; // TODO: this is even more wrong 
                 Expression baseCtorRef = Expression.createBaseCtorReference(baseCtor);
                 Expression baseCtorInvoke = Expression.createFunctionInvocation(baseCtorRef, baseCtorParen, ctorEnt.baseCtorArgValues);
                 Statement baseCtorStmnt = Statement.createExpressionAsStatement(baseCtorInvoke);
@@ -148,13 +148,13 @@ namespace CommonScript.Compiler
                 baseCtorInvocation.Add(baseCtorStmnt);
             }
 
-            this.statementResolver.ResolveStatementArrayFirstPass(funcDef.code);
+            this.statementResolver.ResolveStatementArrayFirstPass(funcDef.baseData.code);
 
             List<Statement> flattened = [
                 .. preBaseFieldInit,
                 .. baseCtorInvocation,
                 .. postBaseFieldInit,
-                .. funcDef.code,
+                .. funcDef.baseData.code,
             ];
 
             Statement lastStatement = flattened.Count == 0 ? null : flattened[flattened.Count - 1];
@@ -164,7 +164,7 @@ namespace CommonScript.Compiler
             {
                 flattened.Add(Statement.createReturn(null, Expression.createNullConstant(null)));
             }
-            funcDef.code = [.. flattened];
+            funcDef.baseData.code = [.. flattened];
 
             this.resolver.activeEntity = null;
             this.resolver.breakContext = null;
@@ -173,17 +173,17 @@ namespace CommonScript.Compiler
         private static Statement ConvertFieldDefaultValueIntoSetter(FieldEntity fld)
         {
             if (fld.opToken == null) throw new InvalidOperationException(); // only applicable to default-value-based fields.
-            Expression root = fld.isStatic
-                ? Expression.createClassReference(null, fld.nestParent)
+            Expression root = fld.baseData.isStatic
+                ? Expression.createClassReference(null, fld.baseData.nestParent)
                 : Expression.createThisReference(null);
-            Expression target = Expression.createDotField(root, null, fld.simpleName);
+            Expression target = Expression.createDotField(root, null, fld.baseData.simpleName);
             Token equal = fld.opToken;
             return Statement.createAssignment(target, equal, fld.defaultValue);
         }
 
         public void ResolveFunctionSecondPass(FunctionLikeEntity funcDef)
         {
-            this.resolver.activeEntity = funcDef;
+            this.resolver.activeEntity = funcDef.baseData;
             this.resolver.breakContext = null;
 
             for (int i = 0; i < funcDef.argDefaultValues.Length; i++)
@@ -195,13 +195,13 @@ namespace CommonScript.Compiler
                 }
             }
 
-            this.statementResolver.ResolveStatementArraySecondPass(funcDef.code);
+            this.statementResolver.ResolveStatementArraySecondPass(funcDef.baseData.code);
 
-            if (funcDef.code.Length == 0 || funcDef.code[funcDef.code.Length - 1].type != StatementType.RETURN)
+            if (funcDef.baseData.code.Length == 0 || funcDef.baseData.code[funcDef.baseData.code.Length - 1].type != StatementType.RETURN)
             {
-                List<Statement> newCode = new List<Statement>(funcDef.code);
+                List<Statement> newCode = new List<Statement>(funcDef.baseData.code);
                 newCode.Add(Statement.createReturn(null, Expression.createNullConstant(null)));
-                funcDef.code = newCode.ToArray();
+                funcDef.baseData.code = newCode.ToArray();
             }
             this.resolver.activeEntity = null;
             this.resolver.breakContext = null;

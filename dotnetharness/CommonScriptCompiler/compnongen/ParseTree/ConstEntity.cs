@@ -2,15 +2,16 @@
 
 namespace CommonScript.Compiler
 {
-    internal class ConstEntity : AbstractEntity
+    internal class ConstEntity
     {
         public Expression constValue;
-
+        public AbstractEntity baseData;
+        
         public ConstEntity(Token constToken, Token nameToken, Expression constValue)
-            : base(constToken, EntityType.CONST)
         {
-            this.nameToken = nameToken;
-            this.simpleName = nameToken.Value;
+            this.baseData = new AbstractEntity(constToken, EntityType.CONST, this);
+            this.baseData.nameToken = nameToken;
+            this.baseData.simpleName = nameToken.Value;
             this.constValue = constValue;
         }
     }

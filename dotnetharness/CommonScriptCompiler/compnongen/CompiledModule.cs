@@ -39,7 +39,7 @@ namespace CommonScript.Compiler
                 {
                     // for no-enum-parents, add all the children but not the entity itself. This is
                     // used for situations where a specific enum member is desired instead of the definition.
-                    foreach (Token enumMem in ((EnumEntity)entity).memberNameTokens)
+                    foreach (Token enumMem in ((EnumEntity)entity.specificData).memberNameTokens)
                     {
                         this.entitiesNoEnumParents[fqName + "." + enumMem.Value] = entity;
                     }

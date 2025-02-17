@@ -54,7 +54,8 @@ namespace CommonScript.Compiler
         public string strVal = null;
         public int intVal = 0;
         public double floatVal = 0.0;
-        public object objPtr = null;
+        public AbstractEntity entityPtr = null;
+        public ImportStatement importPtr = null;
         public Expression[] args = null;
         public Expression[] keys = null;
         public Expression[] values = null;
@@ -162,7 +163,7 @@ namespace CommonScript.Compiler
         public static Expression createConstructorInvocation(Token firstToken, AbstractEntity classDef, Token invokeToken, Expression[] args)
         {
             Expression ctorInvoke = new Expression(firstToken, ExpressionType.CONSTRUCTOR_INVOCATION);
-            ctorInvoke.objPtr = classDef;
+            ctorInvoke.entityPtr = classDef;
             ctorInvoke.args = args;
             ctorInvoke.opToken = invokeToken;
             return ctorInvoke;
@@ -317,7 +318,7 @@ namespace CommonScript.Compiler
         public static Expression createClassReference(Token firstToken, AbstractEntity classDef)
         {
             Expression classRef = new Expression(firstToken, ExpressionType.CLASS_REFERENCE);
-            classRef.objPtr = classDef;
+            classRef.entityPtr = classDef;
             classRef.boolVal = false; // verified safe usage
             return classRef;
         }
@@ -325,7 +326,7 @@ namespace CommonScript.Compiler
         public static Expression createEnumConstant(Token firstToken, AbstractEntity enumDef, string name, int value)
         {
             Expression enumConst = new Expression(firstToken, ExpressionType.ENUM_CONST);
-            enumConst.objPtr = enumDef;
+            enumConst.entityPtr = enumDef;
             enumConst.strVal = name;
             enumConst.intVal = value;
             return enumConst;
@@ -334,7 +335,7 @@ namespace CommonScript.Compiler
         public static Expression createEnumReference(Token firstToken, AbstractEntity enumDef)
         {
             Expression enumRef = new Expression(firstToken, ExpressionType.ENUM_REFERENCE);
-            enumRef.objPtr = enumDef;
+            enumRef.entityPtr = enumDef;
             return enumRef;
         }
 
@@ -342,21 +343,21 @@ namespace CommonScript.Compiler
         {
             Expression funcRef = new Expression(firstToken, ExpressionType.FUNCTION_REFERENCE);
             funcRef.strVal = name;
-            funcRef.objPtr = funcDef;
+            funcRef.entityPtr = funcDef;
             return funcRef;
         }
 
         public static Expression createImportReference(Token firstToken, ImportStatement importStatement)
         {
             Expression impRef = new Expression(firstToken, ExpressionType.IMPORT_REFERENCE);
-            impRef.objPtr = importStatement;
+            impRef.importPtr = importStatement;
             return impRef;
         }
 
         public static Expression createNamespaceReference(Token firstToken, AbstractEntity nsDef)
         {
             Expression nsRef = new Expression(firstToken, ExpressionType.NAMESPACE_REFERENCE);
-            nsRef.objPtr = nsDef;
+            nsRef.entityPtr = nsDef;
             return nsRef;
         }
 

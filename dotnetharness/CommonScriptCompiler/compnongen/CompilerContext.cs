@@ -283,7 +283,8 @@ namespace CommonScript.Compiler
             expressionParser.statementParser = statementParser;
             expressionParser.entityParser = entityParser;
 
-            ClassEntity wrappingClass = nestParent as ClassEntity;
+            // note that casting can fail as a namespace
+            ClassEntity wrappingClass = nestParent == null ? null : (nestParent.specificData as ClassEntity);
 
             while (keepChecking)
             {
@@ -311,7 +312,7 @@ namespace CommonScript.Compiler
                         break;
 
                     case "class":
-                        entity = ParseClass(compiler, file, namespacePrefix);
+                        entity = ParseClass(compiler, file, namespacePrefix).baseData;
                         break;
 
                     case "constructor":
@@ -427,7 +428,7 @@ namespace CommonScript.Compiler
             ClassEntity classDef = new ClassEntity(classToken, classNameToken, classFqName);
             classDef.baseClassTokens = baseClassTokens;
             tokens.popExpected("{");
-            ParseOutEntities(ctx, file, classDef.classMembers, classDef, classFqName);
+            ParseOutEntities(ctx, file, classDef.classMembers, classDef.baseData, classFqName);
             tokens.popExpected("}");
 
             // inject a fake do-nothing constructor if one was not declared.
@@ -438,8 +439,8 @@ namespace CommonScript.Compiler
                 {
                     baseArgs = [];
                 }
-                AbstractEntity ctor = FunctionLikeEntity.BuildConstructor(classToken, [], [], baseArgs, [], false);
-                AttachEntityToParseTree(ctor, classDef, classDef.fileContext, classDef.fqName, classDef.classMembers, new Dictionary<string, Token>());
+                AbstractEntity ctor = FunctionLikeEntity.BuildConstructor(classToken, [], [], baseArgs, [], false).baseData;
+                AttachEntityToParseTree(ctor, classDef.baseData, classDef.baseData.fileContext, classDef.baseData.fqName, classDef.classMembers, new Dictionary<string, Token>());
             }
 
             return classDef;
@@ -464,9 +465,9 @@ namespace CommonScript.Compiler
             NamespaceEntity nsEntity = new NamespaceEntity(nsToken, nsFirst, namespacePrefix);
             tokens.popExpected("{");
             namespacePrefix = string.Join(".", namespaceChain);
-            ParseOutEntities(ctx, file, nsEntity.nestedMembers, nsEntity, namespacePrefix);
+            ParseOutEntities(ctx, file, nsEntity.nestedMembers, nsEntity.baseData, namespacePrefix);
             tokens.popExpected("}");
-            return nsEntity;
+            return nsEntity.baseData;
         }
     }
 }

@@ -535,7 +535,7 @@ namespace CommonScript.Compiler
                 CatchChunk cc = tryStmnt.catchChunks[i];
                 foreach (ClassEntity cdef in cc.ClassDefinitions)
                 {
-                    catchRouterArgs.Add(cdef.serializationIndex);
+                    catchRouterArgs.Add(cdef.baseData.serializationIndex);
                 }
 
                 jumpOffset += catchBufs[i].length;

@@ -33,20 +33,23 @@ namespace CommonScript.Compiler
         public FileContext fileContext;
         public int serializationIndex = -1;
 
-        protected AbstractEntity(Token firstToken, EntityType type)
+        public object specificData;
+        
+        public AbstractEntity(Token firstToken, EntityType type, object specificData)
         {
             this.firstToken = firstToken;
             this.type = type;
             this.isStatic = false;
+            this.specificData = specificData;
         }
 
         private static Dictionary<string, AbstractEntity> EMPTY = new Dictionary<string, AbstractEntity>();
 
         public Dictionary<string, AbstractEntity> getMemberLookup()
         {
-            if (this.type == EntityType.CLASS) return ((ClassEntity)this).classMembers;
-            if (this.type == EntityType.NAMESPACE) return ((NamespaceEntity)this).nestedMembers;
-            if (this.type == EntityType.MODULE_REF) return ((ModuleWrapperEntity)this).publicMembers;
+            if (this.type == EntityType.CLASS) return ((ClassEntity)this.specificData).classMembers;
+            if (this.type == EntityType.NAMESPACE) return ((NamespaceEntity)this.specificData).nestedMembers;
+            if (this.type == EntityType.MODULE_REF) return ((ModuleWrapperEntity)this.specificData).publicMembers;
             return EMPTY;
         }
     }

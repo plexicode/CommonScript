@@ -55,14 +55,14 @@ namespace CommonScript.Compiler
                 }
             }
 
-            foreach (EnumEntity enumDef in this.entityList.OfType<EnumEntity>())
+            foreach (EnumEntity enumDef in this.entityList.Where(e => e.type == EntityType.ENUM).Select(e => (EnumEntity)e.specificData))
             {
                 for (int i = 0; i < enumDef.memberNameTokens.Length; i++)
                 {
-                    string fqName = enumDef.fqName + "." + enumDef.memberNameTokens[i].Value;
-                    this.enumsByMemberFqName[fqName] = enumDef;
-                    this.flattenedEntitiesAndEnumValues[fqName] = enumDef;
-                    this.flattenedEntitiesNoEnumParents[fqName] = enumDef;
+                    string fqName = enumDef.baseData.fqName + "." + enumDef.memberNameTokens[i].Value;
+                    this.enumsByMemberFqName[fqName] = enumDef.baseData;
+                    this.flattenedEntitiesAndEnumValues[fqName] = enumDef.baseData;
+                    this.flattenedEntitiesNoEnumParents[fqName] = enumDef.baseData;
                 }
             }
         }
@@ -106,27 +106,27 @@ namespace CommonScript.Compiler
 
                 if (tle.type == EntityType.CONST)
                 {
-                    constants.Add((ConstEntity)tle);
+                    constants.Add((ConstEntity)tle.specificData);
                 }
                 else if (tle.type == EntityType.ENUM)
                 {
-                    enums.Add((EnumEntity)tle);
+                    enums.Add((EnumEntity)tle.specificData);
                 }
                 else if (tle.type == EntityType.FUNCTION)
                 {
-                    functions.Add((FunctionLikeEntity)tle);
+                    functions.Add((FunctionLikeEntity)tle.specificData);
                 }
                 else if (tle.type == EntityType.CLASS)
                 {
-                    classes.Add((ClassEntity)tle);
+                    classes.Add((ClassEntity)tle.specificData);
                 }
                 else if (tle.type == EntityType.CONSTRUCTOR)
                 {
-                    constructors.Add((FunctionLikeEntity)tle);
+                    constructors.Add((FunctionLikeEntity)tle.specificData);
                 }
                 else if (tle.type == EntityType.FIELD)
                 {
-                    fields.Add((FieldEntity)tle);
+                    fields.Add((FieldEntity)tle.specificData);
                 }
                 else if (tle.type == EntityType.NAMESPACE)
                 {
@@ -196,7 +196,7 @@ namespace CommonScript.Compiler
             Dictionary<string, AbstractEntity> flattenedEntities)
         {
             // TODO: add external module resolving as a separate feature.
-            ClassEntity[] deterministicOrder = classes.OrderBy(c => c.fqName).ToArray();
+            ClassEntity[] deterministicOrder = classes.OrderBy(c => c.baseData.fqName).ToArray();
             List<ClassEntity> finalOrder = new List<ClassEntity>();
             List<ClassEntity> baseClassRequired = new List<ClassEntity>();
             foreach (ClassEntity e in deterministicOrder)
@@ -212,8 +212,8 @@ namespace CommonScript.Compiler
             }
             foreach (ClassEntity bc in baseClassRequired)
             {
-                string ns = string.Join('.', bc.fqName.Split('.').SkipLast(1));
-                this.activeEntity = bc;
+                string ns = string.Join('.', bc.baseData.fqName.Split('.').SkipLast(1));
+                this.activeEntity = bc.baseData;
                 Token baseClassToken = bc.baseClassTokens[0];
                 AbstractEntity bcEntity = this.DoLookup2(baseClassToken, baseClassToken.Value);
                 if (bcEntity != null)
@@ -234,22 +234,22 @@ namespace CommonScript.Compiler
                 }
                 if (bcEntity == null)
                 {
-                    FunctionWrapper.Errors_Throw(bc.firstToken, "Could not resolve base class");
+                    FunctionWrapper.Errors_Throw(bc.baseData.firstToken, "Could not resolve base class");
                     throw new NotImplementedException();
                 }
                 if (bcEntity.type != EntityType.CLASS)
                 {
-                    FunctionWrapper.Errors_Throw(bc.firstToken, bcEntity.fqName + " is not a valid class.");
+                    FunctionWrapper.Errors_Throw(bc.baseData.firstToken, bcEntity.fqName + " is not a valid class.");
                 }
 
-                bc.baseClassEntity = (ClassEntity)bcEntity;
+                bc.baseClassEntity = (ClassEntity)bcEntity.specificData;
                 this.activeEntity = null;
             }
 
             Dictionary<string, bool> includedInOrder = new Dictionary<string, bool>();
-            foreach (AbstractEntity bc in baseClassRequired)
+            foreach (ClassEntity bc in baseClassRequired)
             {
-                includedInOrder[bc.fqName] = false;
+                includedInOrder[bc.baseData.fqName] = false;
             }
             foreach (ClassEntity bc in baseClassRequired)
             {
@@ -258,21 +258,21 @@ namespace CommonScript.Compiler
                 while (walker != null)
                 {
                     // If it's external or already included, stop.
-                    if (!includedInOrder.ContainsKey(walker.fqName) ||
-                        includedInOrder[walker.fqName])
+                    if (!includedInOrder.ContainsKey(walker.baseData.fqName) ||
+                        includedInOrder[walker.baseData.fqName])
                     {
                         walker = null;
                     }
                     else
                     {
                         order.Add(walker);
-                        includedInOrder[walker.fqName] = true;
+                        includedInOrder[walker.baseData.fqName] = true;
                         walker = walker.baseClassEntity;
                     }
 
                     if (order.Count > deterministicOrder.Length)
                     {
-                        FunctionWrapper.Errors_Throw(bc.firstToken, "This class has a cycle in its base class chain.");
+                        FunctionWrapper.Errors_Throw(bc.baseData.firstToken, "This class has a cycle in its base class chain.");
                     }
                 }
 
@@ -293,7 +293,7 @@ namespace CommonScript.Compiler
                     this.activeEntity = entity;
                     if (entity.type == EntityType.ENUM)
                     {
-                        EnumEntity enumDef = (EnumEntity)entity;
+                        EnumEntity enumDef = (EnumEntity)entity.specificData;
                         int memberIndex = this.GetEnumMemberIndex(resOrder[i], enumDef);
                         Expression val = enumDef.memberValues[memberIndex];
                         if (passNum == 1)
@@ -314,7 +314,7 @@ namespace CommonScript.Compiler
                     }
                     else
                     {
-                        ConstEntity constEnt = (ConstEntity)entity;
+                        ConstEntity constEnt = (ConstEntity)entity.specificData;
                         Expression val = constEnt.constValue;
                         if (passNum == 1)
                         {
@@ -388,7 +388,7 @@ namespace CommonScript.Compiler
                         else
                         {
                             enumEnt.memberValues[j] = Expression.createBinaryOp(
-                                BuildFakeDotChain(enumEnt.simpleName, enumEnt.memberNameTokens[j - 1].Value),
+                                BuildFakeDotChain(enumEnt.baseData.simpleName, enumEnt.memberNameTokens[j - 1].Value),
                                 BuildFakeToken(token, "+", true),
                                 Expression.createIntegerConstant(null, 1)
                             );
@@ -413,24 +413,24 @@ namespace CommonScript.Compiler
 
             foreach (ConstEntity c in constants)
             {
-                string ns = c.nestParent == null ? "" : c.nestParent.fqName;
+                string ns = c.baseData.nestParent == null ? "" : c.baseData.nestParent.fqName;
 
                 List<string> refsOut = new List<string>();
-                c.constValue = this.GetListOfUnresolvedConstReferences(c.fileContext, ns, c.constValue, refsOut);
-                referencesMadeByFqItem[c.fqName] = refsOut;
+                c.constValue = this.GetListOfUnresolvedConstReferences(c.baseData.fileContext, ns, c.constValue, refsOut);
+                referencesMadeByFqItem[c.baseData.fqName] = refsOut;
             }
 
             foreach (EnumEntity e in enums)
             {
-                string ns = e.nestParent == null ? "" : e.nestParent.fqName;
+                string ns = e.baseData.nestParent == null ? "" : e.baseData.nestParent.fqName;
                 int memCount = e.memberNameTokens.Length;
 
                 for (int i = 0; i < memCount; i++)
                 {
-                    string memFqName = e.fqName + "." + e.memberNameTokens[i].Value;
+                    string memFqName = e.baseData.fqName + "." + e.memberNameTokens[i].Value;
                     Expression val = e.memberValues[i];
                     List<string> refsOut = new List<string>();
-                    e.memberValues[i] = this.GetListOfUnresolvedConstReferences(e.fileContext, ns, val, refsOut);
+                    e.memberValues[i] = this.GetListOfUnresolvedConstReferences(e.baseData.fileContext, ns, val, refsOut);
                     referencesMadeByFqItem[memFqName] = refsOut;
                 }
             }
@@ -460,7 +460,7 @@ namespace CommonScript.Compiler
                     Token itemToken = item.firstToken;
                     if (item.fqName != itemFqName) // an enum member
                     {
-                        EnumEntity parentEnum = (EnumEntity)item;
+                        EnumEntity parentEnum = (EnumEntity)item.specificData;
                         int enumValIndex = this.GetEnumMemberIndex(itemFqName, parentEnum);
                         itemToken = parentEnum.memberNameTokens[enumValIndex];
                     }
@@ -579,10 +579,13 @@ namespace CommonScript.Compiler
                     string[] fullRefSegments = Expression.DotField_getVariableRootedDottedChain(expr, "Cannot use this type of entity from a constant expression.");
                     string fullRefDotted = string.Join('.', fullRefSegments);
                     AbstractEntity reffedEntity = this.TryDoExactLookupForConstantEntity(file, fqNamespace, fullRefDotted);
-                    if (reffedEntity == null) FunctionWrapper.Errors_Throw(expr.firstToken, "Invalid expression for constant.");
+                    if (reffedEntity == null)
+                    {
+                        FunctionWrapper.Errors_Throw(expr.firstToken, "Invalid expression for constant.");
+                    }
                     if (reffedEntity.fileContext.compiledModule != file.compiledModule)
                     {
-                        if (reffedEntity.type == EntityType.CONST) return ((ConstEntity)reffedEntity).constValue;
+                        if (reffedEntity.type == EntityType.CONST) return ((ConstEntity)reffedEntity.specificData).constValue;
 
                         if (reffedEntity.type == EntityType.ENUM)
                         {
@@ -703,7 +706,7 @@ namespace CommonScript.Compiler
 
             if (this.activeEntity.fileContext.importsByVar.ContainsKey(name))
             {
-                return new ModuleWrapperEntity(throwToken, this.activeEntity.fileContext.importsByVar[name]);
+                return new ModuleWrapperEntity(throwToken, this.activeEntity.fileContext.importsByVar[name]).baseData;
             }
 
             AbstractEntity walker = this.activeEntity;

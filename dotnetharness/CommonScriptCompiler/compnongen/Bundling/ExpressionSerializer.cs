@@ -46,7 +46,7 @@ namespace CommonScript.Compiler
 
         private static ByteCodeBuffer serializeBaseCtorReference(Expression baseCtor)
         {
-            AbstractEntity baseClass = (AbstractEntity)baseCtor.objPtr;
+            AbstractEntity baseClass = baseCtor.entityPtr;
             return FunctionWrapper.create1(OpCodes.OP_PUSH_BASE_CTOR, baseCtor.firstToken, null, baseClass.serializationIndex);
         }
 
@@ -137,12 +137,12 @@ namespace CommonScript.Compiler
 
         private static ByteCodeBuffer serializeClassReference(Expression classRef)
         {
-            return FunctionWrapper.create1(OpCodes.OP_PUSH_CLASS_REF, classRef.firstToken, null, ((AbstractEntity)classRef.objPtr).serializationIndex);
+            return FunctionWrapper.create1(OpCodes.OP_PUSH_CLASS_REF, classRef.firstToken, null, classRef.entityPtr.serializationIndex);
         }
 
         private static ByteCodeBuffer serializeConstructorInvocation(Expression ctorInvoke)
         {
-            AbstractEntity classDef = (AbstractEntity)ctorInvoke.objPtr;
+            AbstractEntity classDef = ctorInvoke.entityPtr;
             ByteCodeBuffer buf = null;
             for (int i = 0; i < ctorInvoke.args.Length; i++)
             {
@@ -194,7 +194,7 @@ namespace CommonScript.Compiler
 
         private static ByteCodeBuffer serializeFunctionReference(Expression funcRef)
         {
-            AbstractEntity funcDef = (AbstractEntity)funcRef.objPtr;
+            AbstractEntity funcDef = (AbstractEntity)funcRef.entityPtr;
             int index = funcDef.serializationIndex;
             if (index == -1) throw new InvalidOperationException();
             return FunctionWrapper.create1(OpCodes.OP_PUSH_FUNC_PTR, funcRef.firstToken, null, index);
@@ -316,8 +316,8 @@ namespace CommonScript.Compiler
 
         private static ByteCodeBuffer serializeLambda(Expression lambda)
         {
-            FunctionLikeEntity lambdaEntity = (FunctionLikeEntity)lambda.objPtr;
-            return FunctionWrapper.create1(OpCodes.OP_PUSH_LAMBDA, lambda.firstToken, null, lambdaEntity.serializationIndex);
+            FunctionLikeEntity lambdaEntity = (FunctionLikeEntity)lambda.entityPtr.specificData;
+            return FunctionWrapper.create1(OpCodes.OP_PUSH_LAMBDA, lambda.firstToken, null, lambdaEntity.baseData.serializationIndex);
         }
 
         private static ByteCodeBuffer serializeListDefinition(Expression listDef)

@@ -88,7 +88,7 @@ namespace CommonScript.Compiler
             if (assign.assignTarget.type == ExpressionType.VARIABLE)
             {
                 // register that this variable was assigned to in this variable scope
-                ((FunctionLikeEntity)this.resolver.activeEntity).variableScope[assign.assignTarget.strVal] = true;
+                ((FunctionLikeEntity)this.resolver.activeEntity.specificData).variableScope[assign.assignTarget.strVal] = true;
             }
 
             return assign;
@@ -140,7 +140,7 @@ namespace CommonScript.Compiler
         {
             forEachLoop.autoId = this.entityResolver.GetNextAutoVarId();
             forEachLoop.expression = this.expressionResolver.ResolveExpressionFirstPass(forEachLoop.expression);
-            ((FunctionLikeEntity)this.resolver.activeEntity).variableScope[forEachLoop.varToken.Value] = true;
+            ((FunctionLikeEntity)this.resolver.activeEntity.specificData).variableScope[forEachLoop.varToken.Value] = true;
             this.ResolveStatementArrayFirstPass(forEachLoop.code);
             return forEachLoop;
         }
@@ -200,7 +200,7 @@ namespace CommonScript.Compiler
             {
                 if (cc.exceptionVarName != null)
                 {
-                    ((FunctionLikeEntity)this.resolver.activeEntity).variableScope[cc.exceptionVarName.Value] = true;
+                    ((FunctionLikeEntity)this.resolver.activeEntity.specificData).variableScope[cc.exceptionVarName.Value] = true;
                 }
 
                 if (cc.ExceptionNames.Length > 0)

@@ -42,7 +42,7 @@ namespace CommonScript.Compiler
                 defaultValue = this.expressionParser.ParseExpression();
             }
             this.tokens.popExpected(";");
-            AbstractEntity entity = new FieldEntity(fieldKeyword, nameToken, equalToken, defaultValue);
+            AbstractEntity entity = new FieldEntity(fieldKeyword, nameToken, equalToken, defaultValue).baseData;
             entity.annotations = annotations;
             return entity;
         }
@@ -61,7 +61,7 @@ namespace CommonScript.Compiler
             Statement[] code = this.statementParser.ParseCodeBlock(true);
 
             AbstractEntity entity = FunctionLikeEntity.BuildMethodOrStandalone(
-                functionKeyword, nameToken, args, argValues, code, isStatic, optionalParentClass);
+                functionKeyword, nameToken, args, argValues, code, isStatic, optionalParentClass).baseData;
             entity.annotations = annotations;
             return entity;
         }
@@ -95,7 +95,7 @@ namespace CommonScript.Compiler
                 argValues,
                 baseArgs,
                 code,
-                annotations.ContainsKey("static"));
+                annotations.ContainsKey("static")).baseData;
 
             ctor.annotations = annotations;
             return ctor;
@@ -109,7 +109,7 @@ namespace CommonScript.Compiler
             Expression constValue = this.expressionParser.ParseExpression();
             this.tokens.popExpected(";");
 
-            return new ConstEntity(constKeyword, nameToken, constValue);
+            return new ConstEntity(constKeyword, nameToken, constValue).baseData;
         }
 
         public AbstractEntity ParseEnum()
@@ -134,7 +134,7 @@ namespace CommonScript.Compiler
 
             tokens.popExpected("}");
 
-            return new EnumEntity(enumKeyword, nameToken, names.ToArray(), values.ToArray());
+            return new EnumEntity(enumKeyword, nameToken, names.ToArray(), values.ToArray()).baseData;
         }
     }
 }

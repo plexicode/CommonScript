@@ -64,7 +64,7 @@ namespace CommonScript.Compiler
 
             return new BundleEnumInfo()
             {
-                enumId = e.serializationIndex,
+                enumId = e.baseData.serializationIndex,
                 names = names.ToArray(),
                 values = values.ToArray(),
             };

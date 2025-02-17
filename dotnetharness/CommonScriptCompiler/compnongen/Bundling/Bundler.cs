@@ -29,7 +29,7 @@ namespace CommonScript.Compiler
 
                 AbstractEntity[] orderedEntities = [
                     .. deterministicKeyOrder.Select(k => m.flattenedEntities[k]),
-                    .. m.lambdaEntities,
+                    .. m.lambdaEntities.Select(v => v.baseData),
                 ];
 
                 foreach (AbstractEntity tle in orderedEntities)
@@ -39,7 +39,7 @@ namespace CommonScript.Compiler
                         case EntityType.CONST: break;
 
                         case EntityType.FUNCTION:
-                            FunctionLikeEntity func = (FunctionLikeEntity)tle;
+                            FunctionLikeEntity func = (FunctionLikeEntity)tle.specificData;
                             if (tle.fileContext.isCoreBuiltin)
                             {
                                 builtInFunctions.Add(func);
@@ -56,24 +56,24 @@ namespace CommonScript.Compiler
                             break;
 
                         case EntityType.LAMBDA_ENTITY:
-                            lambdas.Add((FunctionLikeEntity)tle);
+                            lambdas.Add((FunctionLikeEntity)tle.specificData);
                             break;
 
                         case EntityType.FIELD:
-                            fields.Add((FieldEntity)tle);
+                            fields.Add((FieldEntity)tle.specificData);
                             break;
 
 
                         case EntityType.ENUM:
-                            enums.Add((EnumEntity)tle);
+                            enums.Add((EnumEntity)tle.specificData);
                             break;
 
                         case EntityType.CLASS:
-                            classes.Add((ClassEntity)tle);
+                            classes.Add((ClassEntity)tle.specificData);
                             break;
 
                         case EntityType.CONSTRUCTOR:
-                            functions.Add((FunctionLikeEntity)tle);
+                            functions.Add((FunctionLikeEntity)tle.specificData);
                             break;
 
                         case EntityType.NAMESPACE:
@@ -92,15 +92,15 @@ namespace CommonScript.Compiler
 
             for (int i = 0; i < functions.Count; i++)
             {
-                AbstractEntity fn = functions[i];
+                AbstractEntity fn = functions[i].baseData;
                 fn.serializationIndex = i + 1;
                 finalOrder.Add(fn);
             }
 
             for (int i = 0; i < enums.Count; i++)
             {
-                enums[i].serializationIndex = i + 1;
-                finalOrder.Add(enums[i]);
+                enums[i].baseData.serializationIndex = i + 1;
+                finalOrder.Add(enums[i].baseData);
             }
 
             ClassEntity[] sortedClasses = SortClasses(classes);
@@ -108,14 +108,14 @@ namespace CommonScript.Compiler
             for (int i = 0; i < sortedClasses.Length; i++)
             {
                 ClassEntity cls = sortedClasses[i];
-                cls.serializationIndex = i + 1;
-                finalOrder.Add(cls);
+                cls.baseData.serializationIndex = i + 1;
+                finalOrder.Add(cls.baseData);
             }
 
             for (int i = 0; i < lambdas.Count; i++)
             {
-                lambdas[i].serializationIndex = i + 1;
-                finalOrder.Add(lambdas[i]);
+                lambdas[i].baseData.serializationIndex = i + 1;
+                finalOrder.Add(lambdas[i].baseData);
             }
 
             foreach (AbstractEntity entity in finalOrder)
@@ -133,12 +133,12 @@ namespace CommonScript.Compiler
             if (mainFunc.argTokens.Length >= 2)
             {
                 FunctionWrapper.Errors_Throw(
-                    mainFunc.nameToken,
+                    mainFunc.baseData.nameToken,
                     "The main function can only take in at most one argument. " +
                     "Note that multiple CLI arguments are passed in to main(args) as a single list of strings.");
             }
 
-            bundle.mainFunctionId = mainFunc.serializationIndex;
+            bundle.mainFunctionId = mainFunc.baseData.serializationIndex;
             bundle.builtInCount = builtInFunctions.Count;
 
             return bundle;
@@ -146,7 +146,7 @@ namespace CommonScript.Compiler
 
         private static ClassEntity[] SortClasses(List<ClassEntity> unorderedClasses)
         {
-            ClassEntity[] deterministicOrder = unorderedClasses.OrderBy(c => c.fqName).ToArray();
+            ClassEntity[] deterministicOrder = unorderedClasses.OrderBy(c => c.baseData.fqName).ToArray();
             for (int i = 0; i < deterministicOrder.Length; i++)
             {
                 ClassEntity cls = deterministicOrder[i];
@@ -248,11 +248,11 @@ namespace CommonScript.Compiler
                     break;
 
                 case EntityType.CLASS:
-                    bundleClass((ClassEntity)entity, bundle);
+                    bundleClass((ClassEntity)entity.specificData, bundle);
                     break;
 
                 case EntityType.ENUM:
-                    bundleEnum((EnumEntity)entity, bundle);
+                    bundleEnum((EnumEntity)entity.specificData, bundle);
                     break;
 
                 case EntityType.FIELD:
@@ -261,7 +261,7 @@ namespace CommonScript.Compiler
                 case EntityType.FUNCTION:
                 case EntityType.CONSTRUCTOR:
                 case EntityType.LAMBDA_ENTITY:
-                    bundleFunction((FunctionLikeEntity)entity, bundle);
+                    bundleFunction((FunctionLikeEntity)entity.specificData, bundle);
                     break;
 
                 case EntityType.PROPERTY:
@@ -277,14 +277,14 @@ namespace CommonScript.Compiler
             int baseClassId = 0;
             if (classEntity.baseClassEntity != null)
             {
-                baseClassId = classEntity.baseClassEntity.serializationIndex;
+                baseClassId = classEntity.baseClassEntity.baseData.serializationIndex;
             }
             Dictionary<string, AbstractEntity> mems = classEntity.classMembers;
             BundleClassInfo bci = new BundleClassInfo()
             {
-                id = classEntity.serializationIndex,
+                id = classEntity.baseData.serializationIndex,
                 parentId = baseClassId,
-                name = classEntity.simpleName,
+                name = classEntity.baseData.simpleName,
                 ctorId = mems["@ctor"].serializationIndex,
                 staticCtorId = mems.ContainsKey("@cctor") ? mems["@cctor"].serializationIndex : 0,
                 methodsToId = new Dictionary<string, int>(),
@@ -323,7 +323,7 @@ namespace CommonScript.Compiler
 
         private static void bundleFunction(FunctionLikeEntity entity, CompilationBundle bundle)
         {
-            bool isLambda = entity.type == EntityType.LAMBDA_ENTITY;
+            bool isLambda = entity.baseData.type == EntityType.LAMBDA_ENTITY;
             ByteCodeBuffer buffer = null;
             int argc = entity.argTokens.Length;
             int argcMin = 0;
@@ -350,7 +350,7 @@ namespace CommonScript.Compiler
                     FunctionWrapper.create0(OpCodes.OP_ASSIGN_VAR, argToken, argToken.Value));
             }
 
-            foreach (Statement stmnt in entity.code)
+            foreach (Statement stmnt in entity.baseData.code)
             {
                 buffer = FunctionWrapper.join2(buffer, StatementSerializer.serializeStatement(stmnt));
             }
@@ -374,7 +374,7 @@ namespace CommonScript.Compiler
                 code = flatByteCode.ToArray(),
                 argcMin = argcMin,
                 argcMax = argc,
-                name = isLambda ? null : entity.simpleName,
+                name = isLambda ? null : entity.baseData.simpleName,
             };
             if (isLambda)
             {

@@ -185,7 +185,7 @@ namespace CommonScript.Compiler
             switch (dotField.root.type)
             {
                 case ExpressionType.IMPORT_REFERENCE:
-                    ImportStatement importRef = (ImportStatement)dotField.root.objPtr;
+                    ImportStatement importRef = dotField.root.importPtr;
                     CompiledModule moduleRef = importRef.compiledModuleRef;
                     Expression output = LookupEngine.tryCreateModuleMemberReference(moduleRef, dotField.firstToken, fieldName);
                     if (output == null)
@@ -195,22 +195,22 @@ namespace CommonScript.Compiler
                     return output;
 
                 case ExpressionType.ENUM_REFERENCE:
-                    EnumEntity enumRef = (EnumEntity)dotField.root.objPtr;
+                    EnumEntity enumRef = (EnumEntity)dotField.root.entityPtr.specificData;
                     // TODO: ew, gross, figure out a way to cache and stash a dictionary somewhere on the entity.
-                    // Otherwise this could potentitially turn problematic in the off chance there's an enum with a
+                    // Otherwise this could potentially turn problematic in the off chance there's an enum with a
                     // few hundred members in it (e.g. generated code).
                     for (int i = 0; i < enumRef.memberNameTokens.Length; i++)
                     {
                         if (enumRef.memberNameTokens[i].Value == fieldName)
                         {
-                            return Expression.createEnumConstant(dotField.firstToken, enumRef, fieldName, enumRef.memberValues[i].intVal);
+                            return Expression.createEnumConstant(dotField.firstToken, enumRef.baseData, fieldName, enumRef.memberValues[i].intVal);
                         }
                     }
-                    FunctionWrapper.Errors_Throw(dotField.opToken, "The enum " + enumRef.fqName + " does not have a member named '" + fieldName + "'");
+                    FunctionWrapper.Errors_Throw(dotField.opToken, "The enum " + enumRef.baseData.fqName + " does not have a member named '" + fieldName + "'");
                     break;
 
                 case ExpressionType.NAMESPACE_REFERENCE:
-                    NamespaceEntity nsEntity = (NamespaceEntity)dotField.root.objPtr;
+                    NamespaceEntity nsEntity = (NamespaceEntity)dotField.root.entityPtr.specificData;
                     if (!nsEntity.nestedMembers.ContainsKey(fieldName))
                     {
                         FunctionWrapper.Errors_Throw(dotField.opToken, "There is no member of this namespace named '" + fieldName + "'.");
@@ -270,7 +270,7 @@ namespace CommonScript.Compiler
                 lamb.values,
                 lamb.nestedCode);
             this.resolver.ReportNewLambda(lambdaEnt);
-            lamb.objPtr = lambdaEnt;
+            lamb.entityPtr = lambdaEnt.baseData;
             return lamb;
         }
 
@@ -353,7 +353,7 @@ namespace CommonScript.Compiler
                     return Expression.createClassReference(token, entity);
 
                 case EntityType.CONST:
-                    return Expression.cloneExpressionWithNewToken(token, ((ConstEntity)entity).constValue);
+                    return Expression.cloneExpressionWithNewToken(token, ((ConstEntity)entity.specificData).constValue);
 
                 case EntityType.ENUM:
                     return Expression.createEnumReference(token, entity);
@@ -417,7 +417,7 @@ namespace CommonScript.Compiler
 
         private Expression SecondPass_BaseCtorReference(Expression baseCtor)
         {
-            baseCtor.objPtr = ((ClassEntity)this.resolver.activeEntity.nestParent).baseClassEntity;
+            baseCtor.entityPtr = ((ClassEntity)this.resolver.activeEntity.nestParent.specificData).baseClassEntity.baseData;
             return baseCtor;
         }
 
@@ -629,7 +629,7 @@ namespace CommonScript.Compiler
                 ctorRef.root.boolVal = true;
                 ctorRef.root = this.ResolveExpressionSecondPass(ctorRef.root);
                 if (ctorRef.root.type != ExpressionType.CLASS_REFERENCE) FunctionWrapper.Errors_Throw(ctorRef.root.firstToken, "This is not a valid class definition.");
-                ctorRef.objPtr = ctorRef.root.objPtr;
+                ctorRef.entityPtr = ctorRef.root.entityPtr;
                 ctorRef.root = null;
                 return ctorRef;
             }
@@ -748,19 +748,19 @@ namespace CommonScript.Compiler
                     break;
 
                 case ExpressionType.CLASS_REFERENCE:
-                    ClassEntity classDef = (ClassEntity)df.root.objPtr;
+                    ClassEntity classDef = (ClassEntity)df.root.entityPtr.specificData;
                     AbstractEntity member = null;
                     if (classDef.classMembers.ContainsKey(df.strVal))
                     {
                         member = classDef.classMembers[df.strVal];
                         if (!member.isStatic)
                         {
-                            FunctionWrapper.Errors_Throw(df.opToken, classDef.fqName + "." + df.strVal + " is not static.");
+                            FunctionWrapper.Errors_Throw(df.opToken, classDef.baseData.fqName + "." + df.strVal + " is not static.");
                         }
                     }
                     else
                     {
-                        FunctionWrapper.Errors_Throw(df.opToken, "The class " + classDef.fqName + " does not have a member named '." + df.strVal + "'.");
+                        FunctionWrapper.Errors_Throw(df.opToken, "The class " + classDef.baseData.fqName + " does not have a member named '." + df.strVal + "'.");
                     }
                     break;
 
@@ -824,7 +824,7 @@ namespace CommonScript.Compiler
 
                 this.ResolveExpressionArraySecondPass(funcInvoke.args);
 
-                return Expression.createConstructorInvocation(funcInvoke.firstToken, (AbstractEntity)ctorRef.objPtr, funcInvoke.opToken, funcInvoke.args);
+                return Expression.createConstructorInvocation(funcInvoke.firstToken, (AbstractEntity)ctorRef.entityPtr, funcInvoke.opToken, funcInvoke.args);
             }
 
             funcInvoke.root = this.ResolveExpressionSecondPass(funcInvoke.root);
@@ -1026,7 +1026,7 @@ namespace CommonScript.Compiler
         private Expression SecondPass_Variable(Expression varExpr)
         {
             if (varExpr.strVal == "print") throw new InvalidOperationException();
-            if (((FunctionLikeEntity)this.resolver.activeEntity).variableScope.ContainsKey(varExpr.strVal)) return varExpr;
+            if (((FunctionLikeEntity)this.resolver.activeEntity.specificData).variableScope.ContainsKey(varExpr.strVal)) return varExpr;
 
             // TODO: come up with a list of suggestions.
             FunctionWrapper.Errors_Throw(varExpr.firstToken, "There is no variable by the name of '" + varExpr.strVal + "'.");
@@ -1038,7 +1038,7 @@ namespace CommonScript.Compiler
             switch (expr.type)
             {
                 case ExpressionType.ENUM_CONST:
-                    EnumEntity enumParent = (EnumEntity)expr.objPtr;
+                    EnumEntity enumParent = (EnumEntity)expr.entityPtr.specificData;
                     string enumMem = expr.strVal;
                     for (int i = 0; i < enumParent.memberValues.Length; i++)
                     {
@@ -1052,7 +1052,7 @@ namespace CommonScript.Compiler
                             return val;
                         }
                     }
-                    FunctionWrapper.Errors_Throw(expr.firstToken, "The enum '" + enumParent.fqName + "' does not have a member named '" + enumMem + "'.");
+                    FunctionWrapper.Errors_Throw(expr.firstToken, "The enum '" + enumParent.baseData.fqName + "' does not have a member named '" + enumMem + "'.");
                     break;
 
                 case ExpressionType.BOOL_CONST:

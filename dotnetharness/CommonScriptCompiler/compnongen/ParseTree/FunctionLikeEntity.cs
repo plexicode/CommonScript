@@ -13,11 +13,12 @@ namespace CommonScript.Compiler
         LAMBDA,
     }
 
-    internal class FunctionLikeEntity : AbstractEntity
+    internal class FunctionLikeEntity
     {
         public Token[] argTokens;
         public Expression[] argDefaultValues;
         public Expression[] baseCtorArgValues;
+        public AbstractEntity baseData;
 
         public Dictionary<string, bool> variableScope;
         public FunctionType FunctionSubtype { get; set; }
@@ -33,6 +34,7 @@ namespace CommonScript.Compiler
                 case FunctionType.CONSTRUCTOR: return EntityType.CONSTRUCTOR;
                 case FunctionType.FUNCTION: return EntityType.FUNCTION;
             }
+
             throw new System.NotImplementedException();
         }
 
@@ -43,11 +45,11 @@ namespace CommonScript.Compiler
             IList<Expression> argDefaultValues,
             IList<Statement> code
         )
-            : base(firstToken, type)
         {
+            this.baseData = new AbstractEntity(firstToken, type, this);
             this.argTokens = [.. argNames];
             this.argDefaultValues = [.. argDefaultValues];
-            this.code = [.. code];
+            this.baseData.code = [.. code];
         }
 
         public static FunctionLikeEntity BuildMethodOrStandalone(
@@ -60,7 +62,7 @@ namespace CommonScript.Compiler
             ClassEntity classParent)
         {
             bool isMethod = classParent != null;
-            return new FunctionLikeEntity(
+            FunctionLikeEntity fle = new FunctionLikeEntity(
                 funcToken,
                 EntityType.FUNCTION,
                 args,
@@ -72,9 +74,10 @@ namespace CommonScript.Compiler
                         ? FunctionType.STATIC_METHOD
                         : FunctionType.METHOD
                     : FunctionType.FUNCTION,
-                nameToken = nameToken,
-                simpleName = nameToken.Value,
             };
+            fle.baseData.nameToken = nameToken;
+            fle.baseData.simpleName = nameToken.Value;
+            return fle;
         }
 
         public static FunctionLikeEntity BuildLambda(
@@ -84,11 +87,12 @@ namespace CommonScript.Compiler
             IList<Expression> argDefaultValues,
             IList<Statement> code)
         {
-            return new FunctionLikeEntity(firstToken, EntityType.LAMBDA_ENTITY, argNames, argDefaultValues, code)
+            FunctionLikeEntity fle = new FunctionLikeEntity(firstToken, EntityType.LAMBDA_ENTITY, argNames, argDefaultValues, code)
             {
                 FunctionSubtype = FunctionType.LAMBDA,
-                fileContext = ctx,
             };
+            fle.baseData.fileContext = ctx;
+            return fle;
         }
 
         public static FunctionLikeEntity BuildConstructor(
@@ -99,13 +103,14 @@ namespace CommonScript.Compiler
             IList<Statement> code,
             bool isStatic)
         {
-            return new FunctionLikeEntity(ctorToken, EntityType.CONSTRUCTOR, args, argDefaultValues, code)
+            FunctionLikeEntity fle = new FunctionLikeEntity(ctorToken, EntityType.CONSTRUCTOR, args, argDefaultValues, code)
             {
                 FunctionSubtype = isStatic ? FunctionType.STATIC_CONSTRUCTOR : FunctionType.CONSTRUCTOR,
-                simpleName = isStatic ? "@cctor" : "@ctor",
                 baseCtorArgValues = baseArgs == null ? null : [.. baseArgs],
-                isStatic = isStatic,
             };
+            fle.baseData.simpleName = isStatic ? "@cctor" : "@ctor";
+            fle.baseData.isStatic = isStatic;
+            return fle;
         }
     }
 }

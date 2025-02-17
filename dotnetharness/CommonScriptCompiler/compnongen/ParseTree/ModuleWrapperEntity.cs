@@ -3,13 +3,14 @@ using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
-    internal class ModuleWrapperEntity : AbstractEntity
+    internal class ModuleWrapperEntity
     {
         public Dictionary<string, AbstractEntity> publicMembers;
+        public AbstractEntity baseData;
 
         public ModuleWrapperEntity(Token token, ImportStatement imp)
-            : base(token, EntityType.MODULE_REF)
         {
+            this.baseData = new AbstractEntity(token, EntityType.MODULE_REF, this);
             // TODO: filter this down to JUST the @public-anotated members
             this.publicMembers = imp.compiledModuleRef.nestedEntities;
         }
