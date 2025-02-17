@@ -315,7 +315,7 @@ namespace CommonScript.Compiler
             Statement[] finallyCode = null;
             while (this.tokens.isNext("catch"))
             {
-                Token catchToken = this.tokens.popKeyword("catch");
+                this.tokens.popKeyword("catch");
                 List<Token[]> classNamesRaw = new List<Token[]>();
                 Token exceptionVarToken = null;
                 this.tokens.popExpected("(");
@@ -354,7 +354,6 @@ namespace CommonScript.Compiler
                 Statement[] catchCode = this.ParseCodeBlock(true);
                 catches.Add(new CatchChunk()
                 {
-                    CatchToken = catchToken,
                     Code = catchCode,
                     ExceptionNames = classNamesRaw.ToArray(),
                     exceptionVarName = exceptionVarToken,

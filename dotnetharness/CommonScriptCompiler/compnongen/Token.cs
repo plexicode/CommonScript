@@ -23,10 +23,5 @@ namespace CommonScript.Compiler
             return FunctionWrapper.Token_new(value, type, tokens.GetFile(), line, col);
             
         }
-
-        public string getFingerprint(Token token)
-        {
-            return FunctionWrapper.Token_getFingerprint(token);
-        }
     }
 }

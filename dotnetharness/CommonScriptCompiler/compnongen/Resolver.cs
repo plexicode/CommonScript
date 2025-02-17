@@ -690,15 +690,6 @@ namespace CommonScript.Compiler
             return null;
         }
 
-        private AbstractEntity DoDirectLookup(string fqAttempt)
-        {
-            if (this.flattenedEntities.ContainsKey(fqAttempt))
-            {
-                return this.flattenedEntities[fqAttempt];
-            }
-            return null;
-        }
-
         internal AbstractEntity DoLookup2(Token throwToken, string name)
         {
             // root level entities and namespaces always have precedence.
@@ -735,37 +726,6 @@ namespace CommonScript.Compiler
             }
 
             return null;
-        }
-
-        // Note that you may get an enum when passing in the fully qualified member name.
-        internal AbstractEntity DoLookup(string ns, string dottedName)
-        {
-            string name = dottedName.Split('.')[0];
-
-            if (ns == "") return this.DoDirectLookup(name);
-
-            AbstractEntity e = this.DoDirectLookup(ns + "." + name);
-            if (e != null) return e;
-
-            string[] parts = ns.Split('.');
-            for (int i = 1; i < parts.Length; i++)
-            {
-                parts[i] = parts[i - 1] + "." + parts[i];
-            }
-
-            for (int i = parts.Length - 1; i >= 0; i--)
-            {
-                e = this.DoDirectLookup(parts[i] + "." + name);
-                if (e != null) return e;
-            }
-
-            return null;
-        }
-
-        internal string GetCurrentNamespace()
-        {
-            if (this.activeEntity.nestParent == null) return "";
-            return this.activeEntity.nestParent.fqName;
         }
     }
 }

@@ -24,21 +24,6 @@ namespace CommonScript.Compiler
         public Dictionary<string, bool> variableScope;
         public FunctionType FunctionSubtype { get; set; }
 
-        private static EntityType Func2Entity(FunctionType ft)
-        {
-            switch (ft)
-            {
-                case FunctionType.STATIC_CONSTRUCTOR: return EntityType.CONSTRUCTOR;
-                case FunctionType.STATIC_METHOD: return EntityType.FUNCTION;
-                case FunctionType.METHOD: return EntityType.FUNCTION;
-                case FunctionType.LAMBDA: return EntityType.LAMBDA_ENTITY;
-                case FunctionType.CONSTRUCTOR: return EntityType.CONSTRUCTOR;
-                case FunctionType.FUNCTION: return EntityType.FUNCTION;
-            }
-
-            throw new System.NotImplementedException();
-        }
-
         private FunctionLikeEntity(
             Token firstToken,
             EntityType type,
