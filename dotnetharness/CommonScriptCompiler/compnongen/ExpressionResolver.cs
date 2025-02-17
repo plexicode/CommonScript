@@ -264,7 +264,7 @@ namespace CommonScript.Compiler
         private Expression FirstPass_Lambda(Expression lamb)
         {
             FunctionLikeEntity lambdaEnt = FunctionLikeEntity.BuildLambda(
-                this.resolver.activeEntity.fileContext,
+                (FileContext)this.resolver.activeEntity.OBJ_TEMP_CAST_fileContext,
                 lamb.firstToken,
                 lamb.argNames,
                 lamb.values,

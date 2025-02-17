@@ -40,7 +40,7 @@ namespace CommonScript.Compiler
 
                         case EntityType.FUNCTION:
                             FunctionLikeEntity func = (FunctionLikeEntity)tle.specificData;
-                            if (tle.fileContext.isCoreBuiltin)
+                            if (((FileContext)tle.OBJ_TEMP_CAST_fileContext).isCoreBuiltin)
                             {
                                 builtInFunctions.Add(func);
                             }
@@ -350,7 +350,7 @@ namespace CommonScript.Compiler
                     FunctionWrapper.create0(OpCodes.OP_ASSIGN_VAR, argToken, argToken.Value));
             }
 
-            foreach (Statement stmnt in entity.baseData.code)
+            foreach (Statement stmnt in entity.code)
             {
                 buffer = FunctionWrapper.join2(buffer, StatementSerializer.serializeStatement(stmnt));
             }

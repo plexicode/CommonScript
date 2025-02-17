@@ -8,7 +8,7 @@ namespace CommonScript.Compiler
         // Determines if a variable is actually a pointer into any of the imported modules. 
         public static Expression DoFirstPassVariableLookupThroughImports(Resolver ctx, Token refToken, string name)
         {
-            FileContext fileCtx = ctx.activeEntity.fileContext;
+            FileContext fileCtx = (FileContext)ctx.activeEntity.OBJ_TEMP_CAST_fileContext;
 
             // If there's an import into a name, this is considered a locally defined name,
             // and therefore will take precedence over pollution imports.

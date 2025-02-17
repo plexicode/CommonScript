@@ -19,7 +19,8 @@ namespace CommonScript.Compiler
         public Expression[] argDefaultValues;
         public Expression[] baseCtorArgValues;
         public AbstractEntity baseData;
-
+        public Statement[] code;
+        
         public Dictionary<string, bool> variableScope;
         public FunctionType FunctionSubtype { get; set; }
 
@@ -49,7 +50,7 @@ namespace CommonScript.Compiler
             this.baseData = new AbstractEntity(firstToken, type, this);
             this.argTokens = [.. argNames];
             this.argDefaultValues = [.. argDefaultValues];
-            this.baseData.code = [.. code];
+            this.code = [.. code];
         }
 
         public static FunctionLikeEntity BuildMethodOrStandalone(
@@ -91,7 +92,7 @@ namespace CommonScript.Compiler
             {
                 FunctionSubtype = FunctionType.LAMBDA,
             };
-            fle.baseData.fileContext = ctx;
+            fle.baseData.OBJ_TEMP_CAST_fileContext = ctx;
             return fle;
         }
 

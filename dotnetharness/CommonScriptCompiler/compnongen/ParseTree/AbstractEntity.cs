@@ -29,8 +29,7 @@ namespace CommonScript.Compiler
         public bool isStatic;
         public AbstractEntity nestParent;
 
-        public Statement[] code;
-        public FileContext fileContext;
+        public object OBJ_TEMP_CAST_fileContext;
         public int serializationIndex = -1;
 
         public object specificData;

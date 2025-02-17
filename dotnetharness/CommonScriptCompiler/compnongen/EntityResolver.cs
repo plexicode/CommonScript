@@ -148,13 +148,13 @@ namespace CommonScript.Compiler
                 baseCtorInvocation.Add(baseCtorStmnt);
             }
 
-            this.statementResolver.ResolveStatementArrayFirstPass(funcDef.baseData.code);
+            this.statementResolver.ResolveStatementArrayFirstPass(funcDef.code);
 
             List<Statement> flattened = [
                 .. preBaseFieldInit,
                 .. baseCtorInvocation,
                 .. postBaseFieldInit,
-                .. funcDef.baseData.code,
+                .. funcDef.code,
             ];
 
             Statement lastStatement = flattened.Count == 0 ? null : flattened[flattened.Count - 1];
@@ -164,7 +164,7 @@ namespace CommonScript.Compiler
             {
                 flattened.Add(Statement.createReturn(null, Expression.createNullConstant(null)));
             }
-            funcDef.baseData.code = [.. flattened];
+            funcDef.code = [.. flattened];
 
             this.resolver.activeEntity = null;
             this.resolver.breakContext = null;
@@ -195,13 +195,13 @@ namespace CommonScript.Compiler
                 }
             }
 
-            this.statementResolver.ResolveStatementArraySecondPass(funcDef.baseData.code);
+            this.statementResolver.ResolveStatementArraySecondPass(funcDef.code);
 
-            if (funcDef.baseData.code.Length == 0 || funcDef.baseData.code[funcDef.baseData.code.Length - 1].type != StatementType.RETURN)
+            if (funcDef.code.Length == 0 || funcDef.code[funcDef.code.Length - 1].type != StatementType.RETURN)
             {
-                List<Statement> newCode = new List<Statement>(funcDef.baseData.code);
+                List<Statement> newCode = new List<Statement>(funcDef.code);
                 newCode.Add(Statement.createReturn(null, Expression.createNullConstant(null)));
-                funcDef.baseData.code = newCode.ToArray();
+                funcDef.code = newCode.ToArray();
             }
             this.resolver.activeEntity = null;
             this.resolver.breakContext = null;
