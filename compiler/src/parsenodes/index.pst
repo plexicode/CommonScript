@@ -1,3 +1,4 @@
 @import("parsenodes/AbstractEntity.pst");
 @import("parsenodes/ClassEntity.pst");
 @import("parsenodes/EntityType.pst");
+@import("parsenodes/NamespaceEntity.pst");

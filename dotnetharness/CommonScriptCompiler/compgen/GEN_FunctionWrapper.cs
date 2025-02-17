@@ -355,6 +355,16 @@ namespace CommonScript.Compiler.Internal
             return join4(join2(a, b), join2(c, d), join2(e, f), g);
         }
 
+        public static NamespaceEntity NamespaceEntity_new(Token nsToken, Token nameToken, string fqName)
+        {
+            NamespaceEntity ns = new NamespaceEntity(new Dictionary<string, AbstractEntity>(), null);
+            ns.baseData = AbstractEntity_new(nsToken, 7, ns);
+            ns.baseData.nameToken = nameToken;
+            ns.baseData.simpleName = nameToken.Value;
+            ns.baseData.fqName = fqName;
+            return ns;
+        }
+
         public static StaticContext StaticContext_new()
         {
             return new StaticContext(TokenizerStaticContext_new());

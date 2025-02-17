@@ -464,7 +464,7 @@ namespace CommonScript.Compiler
             {
                 throw new NotImplementedException();
             }
-            NamespaceEntity nsEntity = new NamespaceEntity(nsToken, nsFirst, namespacePrefix);
+            NamespaceEntity nsEntity = FunctionWrapper.NamespaceEntity_new(nsToken, nsFirst, namespacePrefix);
             tokens.popExpected("{");
             namespacePrefix = string.Join(".", namespaceChain);
             ParseOutEntities(ctx, file, nsEntity.nestedMembers, nsEntity.baseData, namespacePrefix);

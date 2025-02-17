@@ -1,0 +1,16 @@
+struct NamespaceEntity {
+    Dictionary<string, AbstractEntity> nestedMembers;
+    AbstractEntity baseData;
+}
+
+NamespaceEntity NamespaceEntity_new(Token nsToken, Token nameToken, string fqName) {
+    NamespaceEntity ns = new NamespaceEntity(
+        new Dictionary<string, AbstractEntity>(),
+        null
+    );
+    ns.baseData = AbstractEntity_new(nsToken, EntityType.NAMESPACE, ns);
+    ns.baseData.nameToken = nameToken;
+    ns.baseData.simpleName = nameToken.Value;
+    ns.baseData.fqName = fqName;
+    return ns;
+}
