@@ -33,3 +33,110 @@ ByteCodeBuffer ByteCodeBuffer_fromRow(ByteCodeRow row) {
         row
     );
 }
+
+ByteCodeBuffer join2(ByteCodeBuffer a, ByteCodeBuffer b) {
+    if (a == null) return b;
+    if (b == null) return a;
+
+    return ByteCodeBuffer_from2(a, b);
+}
+
+ByteCodeBuffer join3(
+    ByteCodeBuffer a,
+    ByteCodeBuffer b,
+    ByteCodeBuffer c) {
+    return join2(a, join2(b, c));
+}
+
+ByteCodeBuffer join4(
+    ByteCodeBuffer a,
+    ByteCodeBuffer b,
+    ByteCodeBuffer c,
+    ByteCodeBuffer d) {
+    return join2(join2(a, b), join2(c, d));
+}
+
+ByteCodeBuffer join5(
+    ByteCodeBuffer a,
+    ByteCodeBuffer b,
+    ByteCodeBuffer c,
+    ByteCodeBuffer d,
+    ByteCodeBuffer e) {
+    return join2(join2(a, b), join3(c, d, e));
+}
+
+ByteCodeBuffer join6(
+    ByteCodeBuffer a,
+    ByteCodeBuffer b,
+    ByteCodeBuffer c,
+    ByteCodeBuffer d,
+    ByteCodeBuffer e,
+    ByteCodeBuffer f) {
+    return join3(join2(a, b), join2(c, d), join2(e, f));
+}
+
+ByteCodeBuffer join7(
+    ByteCodeBuffer a,
+    ByteCodeBuffer b,
+    ByteCodeBuffer c,
+    ByteCodeBuffer d,
+    ByteCodeBuffer e,
+    ByteCodeBuffer f,
+    ByteCodeBuffer g) {
+    return join4(join2(a, b), join2(c, d), join2(e, f), g);
+}
+
+ByteCodeBuffer create0(int opCode, Token token, string stringArg) {
+    return ByteCodeBuffer_fromRow(ByteCodeRow_new(opCode, token, stringArg, new Array<int>(0)));
+}
+
+ByteCodeBuffer create1(int opCode, Token token, string stringArg, int arg1) {
+    Array<int> args = new Array<int>(1);
+    args[0] = arg1;
+    return ByteCodeBuffer_fromRow(ByteCodeRow_new(opCode, token, stringArg, args));
+}
+
+ByteCodeBuffer create2(int opCode, Token token, string stringArg, int arg1, int arg2) {
+    Array<int> args = new Array<int>(2);
+    args[0] = arg1;
+    args[1] = arg2;
+    return ByteCodeBuffer_fromRow(ByteCodeRow_new(opCode, token, stringArg, args));
+}
+
+ByteCodeBuffer create3(int opCode, Token token, string stringArg, int arg1, int arg2, int arg3) {
+    Array<int> args = new Array<int>(3);
+    args[0] = arg1;
+    args[1] = arg2;
+    args[2] = arg3;
+    return ByteCodeBuffer_fromRow(ByteCodeRow_new(opCode, token, stringArg, args));
+}
+
+ByteCodeBuffer convertToBuffer(Array<ByteCodeRow> flatRows) {
+    ByteCodeBuffer buf = null;
+    int length = flatRows.Size();
+    for (int i = 0; i < length; i += 1) {
+        buf = join2(buf, ByteCodeBuffer_fromRow(flatRows[i]));
+    }
+    return buf;
+}
+
+Array<ByteCodeRow> flatten(ByteCodeBuffer buffer) {
+    if (buffer == null) return new Array<ByteCodeRow>(0);
+
+    List<ByteCodeBuffer> q = new List<ByteCodeBuffer>();
+    q.Add(buffer);
+
+    List<ByteCodeRow> output = new List<ByteCodeRow>();
+
+    while (q.Size() > 0) {
+        ByteCodeBuffer current = q[q.Size() - 1];
+        q.RemoveAt(q.Size() - 1);
+        if (current.isLeaf) {
+            output.Add(current.row);
+        } else {
+            q.Add(current.right);
+            q.Add(current.left);
+        }
+    }
+    return Core.ListToArray(output);
+}

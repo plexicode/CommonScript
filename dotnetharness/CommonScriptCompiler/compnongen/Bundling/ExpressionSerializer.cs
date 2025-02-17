@@ -47,7 +47,7 @@ namespace CommonScript.Compiler
         private static ByteCodeBuffer serializeBaseCtorReference(Expression baseCtor)
         {
             AbstractEntity baseClass = (AbstractEntity)baseCtor.objPtr;
-            return ByteCode.create1(OpCodes.OP_PUSH_BASE_CTOR, baseCtor.firstToken, null, baseClass.serializationIndex);
+            return FunctionWrapper.create1(OpCodes.OP_PUSH_BASE_CTOR, baseCtor.firstToken, null, baseClass.serializationIndex);
         }
 
         private static ByteCodeBuffer serializeBinaryOp(Expression binOp)
@@ -62,9 +62,9 @@ namespace CommonScript.Compiler
 
             if (op == "??")
             {
-                return ByteCode.join3(
+                return FunctionWrapper.join3(
                     leftBuf,
-                    ByteCode.create1(OpCodes.OP_POP_IF_NULL_OR_JUMP, opToken, null, rightBuf.length),
+                    FunctionWrapper.create1(OpCodes.OP_POP_IF_NULL_OR_JUMP, opToken, null, rightBuf.length),
                     rightBuf);
             }
 
@@ -72,26 +72,26 @@ namespace CommonScript.Compiler
             {
                 leftBuf = ByteCode.ensureBooleanExpression(left.firstToken, leftBuf);
                 rightBuf = ByteCode.ensureBooleanExpression(right.firstToken, rightBuf);
-                return ByteCode.join3(
+                return FunctionWrapper.join3(
                     leftBuf,
-                    ByteCode.create1(
+                    FunctionWrapper.create1(
                         op == "&&" ? OpCodes.OP_POP_IF_TRUE_OR_JUMP : OpCodes.OP_POP_IF_FALSE_OR_JUMP,
                         null, null, rightBuf.length),
                     rightBuf);
             }
 
-            return ByteCode.join3(
+            return FunctionWrapper.join3(
                 leftBuf,
                 rightBuf,
-                ByteCode.create0(OpCodes.OP_BIN_OP, opToken, op)
+                FunctionWrapper.create0(OpCodes.OP_BIN_OP, opToken, op)
             );
         }
 
         private static ByteCodeBuffer serializeDotField(Expression df)
         {
-            return ByteCode.join2(
+            return FunctionWrapper.join2(
                 serializeExpression(df.root),
-                ByteCode.create0(OpCodes.OP_DOT_FIELD, df.opToken, df.strVal));
+                FunctionWrapper.create0(OpCodes.OP_DOT_FIELD, df.opToken, df.strVal));
         }
 
         private static ByteCodeBuffer serializeExtensionInvocation(Expression extInvoke)
@@ -105,39 +105,39 @@ namespace CommonScript.Compiler
             int argc = extInvoke.args.Length;
             for (int i = 0; i < argc; i++)
             {
-                buf = ByteCode.join2(buf, serializeExpression(extInvoke.args[i]));
+                buf = FunctionWrapper.join2(buf, serializeExpression(extInvoke.args[i]));
             }
 
-            return ByteCode.join2(
+            return FunctionWrapper.join2(
                 buf,
-                ByteCode.create1(OpCodes.OP_EXT_INVOKE, extInvoke.firstToken, extInvoke.strVal, argc));
+                FunctionWrapper.create1(OpCodes.OP_EXT_INVOKE, extInvoke.firstToken, extInvoke.strVal, argc));
         }
 
         private static ByteCodeBuffer serializeBitwiseNot(Expression bwn)
         {
-            return ByteCode.join2(
+            return FunctionWrapper.join2(
                 ByteCode.ensureIntegerExpression(bwn.root.firstToken, serializeExpression(bwn.root)),
-                ByteCode.create0(OpCodes.OP_BITWISE_NOT, bwn.firstToken, null)
+                FunctionWrapper.create0(OpCodes.OP_BITWISE_NOT, bwn.firstToken, null)
                 );
         }
 
         private static ByteCodeBuffer serializeBoolConst(Expression bc)
         {
-            return ByteCode.create1(OpCodes.OP_PUSH_BOOL, bc.firstToken, null, bc.boolVal ? 1 : 0); ;
+            return FunctionWrapper.create1(OpCodes.OP_PUSH_BOOL, bc.firstToken, null, bc.boolVal ? 1 : 0); ;
         }
 
         private static ByteCodeBuffer serializeBooleanNot(Expression bn)
         {
             // OP_BOOLEAN_NOT includes assertions for a boolean value, so ensureBooleanExpression is not needed here.
             // ! unary op is unlikely to be used in expressions that are verifiable as boolean at compile time, so it's faster to just bundle them together. 
-            return ByteCode.join2(
+            return FunctionWrapper.join2(
                 serializeExpression(bn.root),
-                ByteCode.create0(OpCodes.OP_BOOLEAN_NOT, bn.firstToken, null));
+                FunctionWrapper.create0(OpCodes.OP_BOOLEAN_NOT, bn.firstToken, null));
         }
 
         private static ByteCodeBuffer serializeClassReference(Expression classRef)
         {
-            return ByteCode.create1(OpCodes.OP_PUSH_CLASS_REF, classRef.firstToken, null, ((AbstractEntity)classRef.objPtr).serializationIndex);
+            return FunctionWrapper.create1(OpCodes.OP_PUSH_CLASS_REF, classRef.firstToken, null, ((AbstractEntity)classRef.objPtr).serializationIndex);
         }
 
         private static ByteCodeBuffer serializeConstructorInvocation(Expression ctorInvoke)
@@ -146,12 +146,12 @@ namespace CommonScript.Compiler
             ByteCodeBuffer buf = null;
             for (int i = 0; i < ctorInvoke.args.Length; i++)
             {
-                buf = ByteCode.join2(buf, serializeExpression(ctorInvoke.args[i]));
+                buf = FunctionWrapper.join2(buf, serializeExpression(ctorInvoke.args[i]));
             }
-            return ByteCode.join3(
-                ByteCode.create1(OpCodes.OP_CTOR_REF, ctorInvoke.firstToken, null, classDef.serializationIndex),
+            return FunctionWrapper.join3(
+                FunctionWrapper.create1(OpCodes.OP_CTOR_REF, ctorInvoke.firstToken, null, classDef.serializationIndex),
                 buf,
-                ByteCode.create1(OpCodes.OP_FUNCTION_INVOKE, ctorInvoke.opToken, null, ctorInvoke.args.Length));
+                FunctionWrapper.create1(OpCodes.OP_FUNCTION_INVOKE, ctorInvoke.opToken, null, ctorInvoke.args.Length));
         }
 
         private static ByteCodeBuffer serializeDictionaryDefinition(Expression dictDef)
@@ -159,14 +159,14 @@ namespace CommonScript.Compiler
             ByteCodeBuffer buf = null;
             for (int i = 0; i < dictDef.keys.Length; i++)
             {
-                buf = ByteCode.join3(
+                buf = FunctionWrapper.join3(
                     buf,
                     serializeExpression(dictDef.keys[i]),
                     serializeExpression(dictDef.values[i]));
             }
-            return ByteCode.join2(
+            return FunctionWrapper.join2(
                 buf,
-                ByteCode.create1(OpCodes.OP_BUILD_DICT, dictDef.firstToken, null, dictDef.keys.Length));
+                FunctionWrapper.create1(OpCodes.OP_BUILD_DICT, dictDef.firstToken, null, dictDef.keys.Length));
         }
 
         private static ByteCodeBuffer serializeFloatConstant(Expression floatConst)
@@ -174,9 +174,9 @@ namespace CommonScript.Compiler
             double val = floatConst.floatVal;
             if (val * 4 % 1 == 0)
             {
-                return ByteCode.create1(OpCodes.OP_PUSH_FLOAT, null, null, (int)(val * 4));
+                return FunctionWrapper.create1(OpCodes.OP_PUSH_FLOAT, null, null, (int)(val * 4));
             }
-            return ByteCode.create0(OpCodes.OP_PUSH_FLOAT, null, val + "");
+            return FunctionWrapper.create0(OpCodes.OP_PUSH_FLOAT, null, val + "");
         }
 
         private static ByteCodeBuffer serializeFunctionInvocation(Expression funcInvoke)
@@ -185,11 +185,11 @@ namespace CommonScript.Compiler
             int argc = funcInvoke.args.Length;
             for (int i = 0; i < argc; i++)
             {
-                buf = ByteCode.join2(buf, serializeExpression(funcInvoke.args[i]));
+                buf = FunctionWrapper.join2(buf, serializeExpression(funcInvoke.args[i]));
             }
-            return ByteCode.join2(
+            return FunctionWrapper.join2(
                 buf,
-                ByteCode.create1(OpCodes.OP_FUNCTION_INVOKE, funcInvoke.opToken, null, argc));
+                FunctionWrapper.create1(OpCodes.OP_FUNCTION_INVOKE, funcInvoke.opToken, null, argc));
         }
 
         private static ByteCodeBuffer serializeFunctionReference(Expression funcRef)
@@ -197,15 +197,15 @@ namespace CommonScript.Compiler
             AbstractEntity funcDef = (AbstractEntity)funcRef.objPtr;
             int index = funcDef.serializationIndex;
             if (index == -1) throw new InvalidOperationException();
-            return ByteCode.create1(OpCodes.OP_PUSH_FUNC_PTR, funcRef.firstToken, null, index);
+            return FunctionWrapper.create1(OpCodes.OP_PUSH_FUNC_PTR, funcRef.firstToken, null, index);
         }
 
         private static ByteCodeBuffer serializeIndex(Expression index)
         {
-            return ByteCode.join3(
+            return FunctionWrapper.join3(
                 serializeExpression(index.root),
                 serializeExpression(index.right),
-                ByteCode.create0(OpCodes.OP_INDEX, index.opToken, null)
+                FunctionWrapper.create0(OpCodes.OP_INDEX, index.opToken, null)
             );
         }
 
@@ -228,20 +228,20 @@ namespace CommonScript.Compiler
 
             if (ii.boolVal) // is prefix? duplicate after incrementation
             {
-                return ByteCode.join4(
+                return FunctionWrapper.join4(
                     serializeExpression(ii.root),
-                    ByteCode.create1(OpCodes.OP_INT_INCR, ii.opToken, null, ii.opToken.Value == "++" ? 1 : -1),
-                    ByteCode.create0(OpCodes.OP_STACK_DUPLICATE, null, null),
-                    ByteCode.create0(OpCodes.OP_ASSIGN_VAR, null, ii.root.strVal)
+                    FunctionWrapper.create1(OpCodes.OP_INT_INCR, ii.opToken, null, ii.opToken.Value == "++" ? 1 : -1),
+                    FunctionWrapper.create0(OpCodes.OP_STACK_DUPLICATE, null, null),
+                    FunctionWrapper.create0(OpCodes.OP_ASSIGN_VAR, null, ii.root.strVal)
                 );
             }
             else // suffix. duplicate before incrementation
             {
-                return ByteCode.join4(
+                return FunctionWrapper.join4(
                     serializeExpression(ii.root),
-                    ByteCode.create0(OpCodes.OP_STACK_DUPLICATE, null, null),
-                    ByteCode.create1(OpCodes.OP_INT_INCR, ii.opToken, null, ii.opToken.Value == "++" ? 1 : -1),
-                    ByteCode.create0(OpCodes.OP_ASSIGN_VAR, null, ii.root.strVal)
+                    FunctionWrapper.create0(OpCodes.OP_STACK_DUPLICATE, null, null),
+                    FunctionWrapper.create1(OpCodes.OP_INT_INCR, ii.opToken, null, ii.opToken.Value == "++" ? 1 : -1),
+                    FunctionWrapper.create0(OpCodes.OP_ASSIGN_VAR, null, ii.root.strVal)
                 );
             }
         }
@@ -251,31 +251,31 @@ namespace CommonScript.Compiler
             ByteCodeBuffer root = serializeExpression(ii.root.root);
             bool isPrefix = ii.boolVal;
 
-            return ByteCode.join5(
+            return FunctionWrapper.join5(
 
                 // []
                 root,
                 // [root]
-                ByteCode.create0(OpCodes.OP_STACK_DUPLICATE, null, null),
+                FunctionWrapper.create0(OpCodes.OP_STACK_DUPLICATE, null, null),
                 // [root, root]
-                ByteCode.create0(OpCodes.OP_DOT_FIELD, ii.root.opToken, ii.root.strVal),
+                FunctionWrapper.create0(OpCodes.OP_DOT_FIELD, ii.root.opToken, ii.root.strVal),
                 // [root, originalValue]
                 isPrefix
-                    ? ByteCode.join2(
-                        ByteCode.create1(OpCodes.OP_INT_INCR, ii.opToken, null, ii.opToken.Value == "++" ? 1 : -1),
+                    ? FunctionWrapper.join2(
+                        FunctionWrapper.create1(OpCodes.OP_INT_INCR, ii.opToken, null, ii.opToken.Value == "++" ? 1 : -1),
                         // [root, return/finalValue]
-                        ByteCode.create0(OpCodes.OP_STACK_DO_SI_DUP_1, null, null))
+                        FunctionWrapper.create0(OpCodes.OP_STACK_DO_SI_DUP_1, null, null))
                     // [returnValue, finalValue, root]
-                    : ByteCode.join3(
-                        ByteCode.create0(OpCodes.OP_STACK_DUPLICATE, null, null),
+                    : FunctionWrapper.join3(
+                        FunctionWrapper.create0(OpCodes.OP_STACK_DUPLICATE, null, null),
                         // [root, returnValue, originalValue]
-                        ByteCode.create1(OpCodes.OP_INT_INCR, ii.opToken, null, ii.opToken.Value == "++" ? 1 : -1),
+                        FunctionWrapper.create1(OpCodes.OP_INT_INCR, ii.opToken, null, ii.opToken.Value == "++" ? 1 : -1),
                         // [root, returnValue, finalValue]
-                        ByteCode.create0(OpCodes.OP_STACK_DO_SI_DUP_2, null, null)),
+                        FunctionWrapper.create0(OpCodes.OP_STACK_DO_SI_DUP_2, null, null)),
                 // [returnValue, finalValue, root]
 
                 // [returnValue, finalValue, root]
-                ByteCode.create0(OpCodes.OP_ASSIGN_FIELD, ii.opToken, ii.root.strVal)
+                FunctionWrapper.create0(OpCodes.OP_ASSIGN_FIELD, ii.opToken, ii.root.strVal)
             // [returnValue]
             );
 
@@ -290,34 +290,34 @@ namespace CommonScript.Compiler
         {
             ByteCodeBuffer root = serializeExpression(ii.root.root);
             ByteCodeBuffer index = serializeExpression(ii.root.right);
-            return ByteCode.join7(
+            return FunctionWrapper.join7(
                 root, // root 
                 index, // root, index
-                ByteCode.create0(OpCodes.OP_STACK_DUPLICATE_2, null, null), // root, index, root, index 
-                ByteCode.create0(OpCodes.OP_INDEX, ii.root.opToken, null), // root, index, value
+                FunctionWrapper.create0(OpCodes.OP_STACK_DUPLICATE_2, null, null), // root, index, root, index 
+                FunctionWrapper.create0(OpCodes.OP_INDEX, ii.root.opToken, null), // root, index, value
                 ii.boolVal
-                    ? ByteCode.join2(
-                        ByteCode.create1(OpCodes.OP_INT_INCR, ii.opToken, null, ii.opToken.Value == "++" ? 1 : -1), // root, index, value+1
-                        ByteCode.create0(OpCodes.OP_STACK_DUPLICATE, null, null) // root, index, returnValue, value+1
+                    ? FunctionWrapper.join2(
+                        FunctionWrapper.create1(OpCodes.OP_INT_INCR, ii.opToken, null, ii.opToken.Value == "++" ? 1 : -1), // root, index, value+1
+                        FunctionWrapper.create0(OpCodes.OP_STACK_DUPLICATE, null, null) // root, index, returnValue, value+1
                     )
-                    : ByteCode.join2(
-                        ByteCode.create0(OpCodes.OP_STACK_DUPLICATE, null, null), // root, index, returnValue, value
-                        ByteCode.create1(OpCodes.OP_INT_INCR, ii.opToken, null, ii.opToken.Value == "++" ? 1 : -1) // root, index, returnValue, value+1
+                    : FunctionWrapper.join2(
+                        FunctionWrapper.create0(OpCodes.OP_STACK_DUPLICATE, null, null), // root, index, returnValue, value
+                        FunctionWrapper.create1(OpCodes.OP_INT_INCR, ii.opToken, null, ii.opToken.Value == "++" ? 1 : -1) // root, index, returnValue, value+1
                     ),
-                ByteCode.create0(OpCodes.OP_STACK_DO_SI_DO_4A, null, null), // returnValue, value+1, root, index
-                ByteCode.create0(OpCodes.OP_ASSIGN_INDEX, ii.root.opToken, null)
+                FunctionWrapper.create0(OpCodes.OP_STACK_DO_SI_DO_4A, null, null), // returnValue, value+1, root, index
+                FunctionWrapper.create0(OpCodes.OP_ASSIGN_INDEX, ii.root.opToken, null)
             );
         }
 
         private static ByteCodeBuffer serializeIntegerConstant(Expression intConst)
         {
-            return ByteCode.create1(OpCodes.OP_PUSH_INT, intConst.firstToken, null, intConst.intVal);
+            return FunctionWrapper.create1(OpCodes.OP_PUSH_INT, intConst.firstToken, null, intConst.intVal);
         }
 
         private static ByteCodeBuffer serializeLambda(Expression lambda)
         {
             FunctionLikeEntity lambdaEntity = (FunctionLikeEntity)lambda.objPtr;
-            return ByteCode.create1(OpCodes.OP_PUSH_LAMBDA, lambda.firstToken, null, lambdaEntity.serializationIndex);
+            return FunctionWrapper.create1(OpCodes.OP_PUSH_LAMBDA, lambda.firstToken, null, lambdaEntity.serializationIndex);
         }
 
         private static ByteCodeBuffer serializeListDefinition(Expression listDef)
@@ -325,24 +325,24 @@ namespace CommonScript.Compiler
             ByteCodeBuffer buf = null;
             for (int i = 0; i < listDef.values.Length; i++)
             {
-                buf = ByteCode.join2(buf, serializeExpression(listDef.values[i]));
+                buf = FunctionWrapper.join2(buf, serializeExpression(listDef.values[i]));
             }
-            return ByteCode.join2(
+            return FunctionWrapper.join2(
                 buf,
-                ByteCode.create1(OpCodes.OP_BUILD_LIST, listDef.firstToken, null, listDef.values.Length));
+                FunctionWrapper.create1(OpCodes.OP_BUILD_LIST, listDef.firstToken, null, listDef.values.Length));
         }
 
         private static ByteCodeBuffer serializeNegativeSign(Expression negSign)
         {
-            return ByteCode.join2(
+            return FunctionWrapper.join2(
                 serializeExpression(negSign.root),
-                ByteCode.create0(OpCodes.OP_NEGATIVE_SIGN, negSign.opToken, null)
+                FunctionWrapper.create0(OpCodes.OP_NEGATIVE_SIGN, negSign.opToken, null)
             );
         }
 
         private static ByteCodeBuffer serializeNullConstant(Expression nullConst)
         {
-            return ByteCode.create0(OpCodes.OP_PUSH_NULL, nullConst.firstToken, null);
+            return FunctionWrapper.create0(OpCodes.OP_PUSH_NULL, nullConst.firstToken, null);
         }
 
         private static ByteCodeBuffer serializeSlice(Expression slice)
@@ -355,17 +355,17 @@ namespace CommonScript.Compiler
                 (end != null ? 2 : 0) |
                 (step != null ? 4 : 0);
 
-            return ByteCode.join5(
+            return FunctionWrapper.join5(
                 serializeExpression(slice.root),
                 start != null ? ByteCode.ensureIntegerExpression(start.firstToken, serializeExpression(start)) : null,
                 end != null ? ByteCode.ensureIntegerExpression(end.firstToken, serializeExpression(end)) : null,
                 step != null ? ByteCode.ensureIntegerExpression(step.firstToken, serializeExpression(step)) : null,
-                ByteCode.create1(OpCodes.OP_SLICE, slice.opToken, null, sliceMask));
+                FunctionWrapper.create1(OpCodes.OP_SLICE, slice.opToken, null, sliceMask));
         }
 
         private static ByteCodeBuffer serializeStringConstant(Expression strConst)
         {
-            return ByteCode.create0(OpCodes.OP_PUSH_STRING, strConst.firstToken, strConst.strVal);
+            return FunctionWrapper.create0(OpCodes.OP_PUSH_STRING, strConst.firstToken, strConst.strVal);
         }
 
         private static ByteCodeBuffer serializeTernary(Expression ternaryExpression)
@@ -375,31 +375,31 @@ namespace CommonScript.Compiler
             ByteCodeBuffer rightBuf = serializeExpression(ternaryExpression.right);
             condBuf = ByteCode.ensureBooleanExpression(ternaryExpression.opToken, condBuf);
 
-            return ByteCode.join5(
+            return FunctionWrapper.join5(
                 condBuf,
-                ByteCode.create1(OpCodes.OP_POP_AND_JUMP_IF_FALSE, null, null, leftBuf.length + 1),
+                FunctionWrapper.create1(OpCodes.OP_POP_AND_JUMP_IF_FALSE, null, null, leftBuf.length + 1),
                 leftBuf,
-                ByteCode.create1(OpCodes.OP_JUMP, null, null, rightBuf.length),
+                FunctionWrapper.create1(OpCodes.OP_JUMP, null, null, rightBuf.length),
                 rightBuf);
         }
 
         private static ByteCodeBuffer serializeThis(Expression thisKeyword)
         {
-            return ByteCode.create0(OpCodes.OP_PUSH_THIS, thisKeyword.firstToken, null);
+            return FunctionWrapper.create0(OpCodes.OP_PUSH_THIS, thisKeyword.firstToken, null);
         }
 
         private static ByteCodeBuffer serializeTypeOf(Expression typeOfExpr)
         {
             ByteCodeBuffer root = serializeExpression(typeOfExpr.root);
-            return ByteCode.join2(
+            return FunctionWrapper.join2(
                 root,
-                ByteCode.create0(OpCodes.OP_TYPEOF, typeOfExpr.firstToken, null));
+                FunctionWrapper.create0(OpCodes.OP_TYPEOF, typeOfExpr.firstToken, null));
         }
 
         private static ByteCodeBuffer serializeVariable(Expression v)
         {
             if (v.strVal == "print") throw new InvalidOperationException();
-            return ByteCode.create0(OpCodes.OP_PUSH_VAR, v.firstToken, v.strVal);
+            return FunctionWrapper.create0(OpCodes.OP_PUSH_VAR, v.firstToken, v.strVal);
         }
     }
 }

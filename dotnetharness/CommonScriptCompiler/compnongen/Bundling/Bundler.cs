@@ -336,25 +336,25 @@ namespace CommonScript.Compiler
                 if (argValue == null)
                 {
                     argcMin++;
-                    argBuffer = ByteCode.create1(OpCodes.OP_PUSH_ARG, argToken, null, i);
+                    argBuffer = FunctionWrapper.create1(OpCodes.OP_PUSH_ARG, argToken, null, i);
                 }
                 else
                 {
                     ByteCodeBuffer defaultValBuffer = ExpressionSerializer.serializeExpression(argValue);
-                    argBuffer = ByteCode.create2(OpCodes.OP_PUSH_ARG_IF_PRESENT, argToken, null, i, defaultValBuffer.length);
-                    argBuffer = ByteCode.join2(argBuffer, defaultValBuffer);
+                    argBuffer = FunctionWrapper.create2(OpCodes.OP_PUSH_ARG_IF_PRESENT, argToken, null, i, defaultValBuffer.length);
+                    argBuffer = FunctionWrapper.join2(argBuffer, defaultValBuffer);
                 }
-                buffer = ByteCode.join3(
+                buffer = FunctionWrapper.join3(
                     buffer,
                     argBuffer,
-                    ByteCode.create0(OpCodes.OP_ASSIGN_VAR, argToken, argToken.Value));
+                    FunctionWrapper.create0(OpCodes.OP_ASSIGN_VAR, argToken, argToken.Value));
             }
 
             foreach (Statement stmnt in entity.code)
             {
-                buffer = ByteCode.join2(buffer, StatementSerializer.serializeStatement(stmnt));
+                buffer = FunctionWrapper.join2(buffer, StatementSerializer.serializeStatement(stmnt));
             }
-            List<ByteCodeRow> flatByteCode = new List<ByteCodeRow>(ByteCode.flatten(buffer));
+            List<ByteCodeRow> flatByteCode = new List<ByteCodeRow>(FunctionWrapper.flatten(buffer));
 
             for (int i = 0; i < flatByteCode.Count; i++)
             {

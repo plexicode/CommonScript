@@ -11,7 +11,7 @@ namespace CommonScript.Compiler
             int argc = action.args.Length;
             for (int i = 0; i < argc; i++)
             {
-                argBuffer = ByteCode.join2(argBuffer, ExpressionSerializer.serializeExpression(action.args[i]));
+                argBuffer = FunctionWrapper.join2(argBuffer, ExpressionSerializer.serializeExpression(action.args[i]));
             }
 
             ByteCodeBuffer actionBuf;
@@ -20,20 +20,20 @@ namespace CommonScript.Compiler
             {
                 case "math_floor":
                     // Uses a specific op code for speed, rather than a special action nested op code.
-                    actionBuf = ByteCode.create0(OpCodes.OP_MATH_FLOOR, action.firstToken, null);
+                    actionBuf = FunctionWrapper.create0(OpCodes.OP_MATH_FLOOR, action.firstToken, null);
                     break;
 
                 case "unix_time":
                     // return the arg as a hard-coded op, discard the arg buffer.
-                    return ByteCode.create2(OpCodes.OP_SPECIAL_ACTION, null, null, SpecialActionCodes.UNIX_TIME, action.args[0].intVal);
+                    return FunctionWrapper.create2(OpCodes.OP_SPECIAL_ACTION, null, null, SpecialActionCodes.UNIX_TIME, action.args[0].intVal);
 
                 default:
-                    actionBuf = ByteCode.create1(OpCodes.OP_SPECIAL_ACTION, null, null, SpecialActionUtil.GetSpecialActionOpCode(action.strVal));
+                    actionBuf = FunctionWrapper.create1(OpCodes.OP_SPECIAL_ACTION, null, null, SpecialActionUtil.GetSpecialActionOpCode(action.strVal));
                     break;
 
             }
 
-            return ByteCode.join2(argBuffer, actionBuf);
+            return FunctionWrapper.join2(argBuffer, actionBuf);
         }
     }
 }

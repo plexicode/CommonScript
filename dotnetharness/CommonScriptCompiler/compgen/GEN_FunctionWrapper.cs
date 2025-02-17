@@ -74,6 +74,48 @@ namespace CommonScript.Compiler.Internal
             return new ByteCodeRow(opCode, stringArg, token, args, 0, 0, null);
         }
 
+        public static ByteCodeBuffer convertToBuffer(ByteCodeRow[] flatRows)
+        {
+            ByteCodeBuffer buf = null;
+            int length = flatRows.Length;
+            int i = 0;
+            while (i < length)
+            {
+                buf = join2(buf, ByteCodeBuffer_fromRow(flatRows[i]));
+                i += 1;
+            }
+            return buf;
+        }
+
+        public static ByteCodeBuffer create0(int opCode, Token token, string stringArg)
+        {
+            return ByteCodeBuffer_fromRow(ByteCodeRow_new(opCode, token, stringArg, new int[0]));
+        }
+
+        public static ByteCodeBuffer create1(int opCode, Token token, string stringArg, int arg1)
+        {
+            int[] args = new int[1];
+            args[0] = arg1;
+            return ByteCodeBuffer_fromRow(ByteCodeRow_new(opCode, token, stringArg, args));
+        }
+
+        public static ByteCodeBuffer create2(int opCode, Token token, string stringArg, int arg1, int arg2)
+        {
+            int[] args = new int[2];
+            args[0] = arg1;
+            args[1] = arg2;
+            return ByteCodeBuffer_fromRow(ByteCodeRow_new(opCode, token, stringArg, args));
+        }
+
+        public static ByteCodeBuffer create3(int opCode, Token token, string stringArg, int arg1, int arg2, int arg3)
+        {
+            int[] args = new int[3];
+            args[0] = arg1;
+            args[1] = arg2;
+            args[2] = arg3;
+            return ByteCodeBuffer_fromRow(ByteCodeRow_new(opCode, token, stringArg, args));
+        }
+
         public static void Errors_Throw(Token token, string msg)
         {
             _Errors_ThrowImpl(1, token, msg, "");
@@ -103,6 +145,32 @@ namespace CommonScript.Compiler.Internal
             object[] failArgs = new object[1];
             failArgs[0] = msg;
             return PST_ExtCallbacks.ContainsKey("hardCrash") ? PST_ExtCallbacks["hardCrash"].Invoke(failArgs) : null;
+        }
+
+        public static ByteCodeRow[] flatten(ByteCodeBuffer buffer)
+        {
+            if (buffer == null)
+            {
+                return new ByteCodeRow[0];
+            }
+            System.Collections.Generic.List<ByteCodeBuffer> q = new List<ByteCodeBuffer>();
+            q.Add(buffer);
+            System.Collections.Generic.List<ByteCodeRow> output = new List<ByteCodeRow>();
+            while (q.Count > 0)
+            {
+                ByteCodeBuffer current = q[q.Count - 1];
+                q.RemoveAt(q.Count - 1);
+                if (current.isLeaf)
+                {
+                    output.Add(current.row);
+                }
+                else
+                {
+                    q.Add(current.right);
+                    q.Add(current.left);
+                }
+            }
+            return output.ToArray();
         }
 
         public static string GEN_BUILTINS_base64()
@@ -182,6 +250,44 @@ namespace CommonScript.Compiler.Internal
                 return GEN_BUILTINS_xml();
             }
             return null;
+        }
+
+        public static ByteCodeBuffer join2(ByteCodeBuffer a, ByteCodeBuffer b)
+        {
+            if (a == null)
+            {
+                return b;
+            }
+            if (b == null)
+            {
+                return a;
+            }
+            return ByteCodeBuffer_from2(a, b);
+        }
+
+        public static ByteCodeBuffer join3(ByteCodeBuffer a, ByteCodeBuffer b, ByteCodeBuffer c)
+        {
+            return join2(a, join2(b, c));
+        }
+
+        public static ByteCodeBuffer join4(ByteCodeBuffer a, ByteCodeBuffer b, ByteCodeBuffer c, ByteCodeBuffer d)
+        {
+            return join2(join2(a, b), join2(c, d));
+        }
+
+        public static ByteCodeBuffer join5(ByteCodeBuffer a, ByteCodeBuffer b, ByteCodeBuffer c, ByteCodeBuffer d, ByteCodeBuffer e)
+        {
+            return join2(join2(a, b), join3(c, d, e));
+        }
+
+        public static ByteCodeBuffer join6(ByteCodeBuffer a, ByteCodeBuffer b, ByteCodeBuffer c, ByteCodeBuffer d, ByteCodeBuffer e, ByteCodeBuffer f)
+        {
+            return join3(join2(a, b), join2(c, d), join2(e, f));
+        }
+
+        public static ByteCodeBuffer join7(ByteCodeBuffer a, ByteCodeBuffer b, ByteCodeBuffer c, ByteCodeBuffer d, ByteCodeBuffer e, ByteCodeBuffer f, ByteCodeBuffer g)
+        {
+            return join4(join2(a, b), join2(c, d), join2(e, f), g);
         }
 
         public static StaticContext StaticContext_new()
