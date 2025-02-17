@@ -28,7 +28,7 @@
 @import("rawdataparser/tokenSection.pst");
 
 @import("b64_util.pst");
-@import("constants_ops.pst");
+@import("../../shared/src/constants_ops.pst");
 @import("constants.pst");
 @import("exception_util.pst");
 @import("json_util.pst");
