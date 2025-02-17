@@ -467,7 +467,7 @@ namespace CommonScript.Compiler
             ByteCodeBuffer output = null;
             for (int i = 0; i < rows.Length; i++)
             {
-                output = ByteCode.join2(output, new ByteCodeBuffer(rows[i]));
+                output = ByteCode.join2(output, FunctionWrapper.ByteCodeBuffer_fromRow(rows[i]));
             }
 
             return output;
@@ -544,7 +544,7 @@ namespace CommonScript.Compiler
             // which will probably be the OP_JUMP for the finally.
             catchRouterArgs.Insert(0, jumpOffset); // jump to finally
 
-            ByteCodeBuffer catchRouterBuf = new ByteCodeBuffer(FunctionWrapper.ByteCodeRow_new(OpCodes.OP_TRY_CATCH_ROUTER, null, null, catchRouterArgs.ToArray()));
+            ByteCodeBuffer catchRouterBuf = FunctionWrapper.ByteCodeBuffer_fromRow(FunctionWrapper.ByteCodeRow_new(OpCodes.OP_TRY_CATCH_ROUTER, null, null, catchRouterArgs.ToArray()));
 
             ByteCodeBuffer routeAndCatches = catchRouterBuf;
             foreach (ByteCodeBuffer catchBuf in catchBufs)

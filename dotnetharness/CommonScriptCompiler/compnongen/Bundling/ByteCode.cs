@@ -11,7 +11,7 @@ namespace CommonScript.Compiler
             if (a == null) return b;
             if (b == null) return a;
 
-            return new ByteCodeBuffer(a, b);
+            return FunctionWrapper.ByteCodeBuffer_from2(a, b);
         }
 
         public static ByteCodeBuffer join3(
@@ -66,25 +66,25 @@ namespace CommonScript.Compiler
 
         public static ByteCodeBuffer create0(int opCode, Token token, string stringArg)
         {
-            return new ByteCodeBuffer(FunctionWrapper.ByteCodeRow_new(opCode, token, stringArg, new int[0]));
+            return FunctionWrapper.ByteCodeBuffer_fromRow(FunctionWrapper.ByteCodeRow_new(opCode, token, stringArg, new int[0]));
         }
 
         public static ByteCodeBuffer create1(int opCode, Token token, string stringArg, int arg1)
         {
             int[] args = new int[] { arg1 };
-            return new ByteCodeBuffer(FunctionWrapper.ByteCodeRow_new(opCode, token, stringArg, args));
+            return FunctionWrapper.ByteCodeBuffer_fromRow(FunctionWrapper.ByteCodeRow_new(opCode, token, stringArg, args));
         }
 
         public static ByteCodeBuffer create2(int opCode, Token token, string stringArg, int arg1, int arg2)
         {
             int[] args = new int[] { arg1, arg2 };
-            return new ByteCodeBuffer(FunctionWrapper.ByteCodeRow_new(opCode, token, stringArg, args));
+            return FunctionWrapper.ByteCodeBuffer_fromRow(FunctionWrapper.ByteCodeRow_new(opCode, token, stringArg, args));
         }
 
         public static ByteCodeBuffer create3(int opCode, Token token, string stringArg, int arg1, int arg2, int arg3)
         {
             int[] args = new int[] { arg1, arg2, arg3 };
-            return new ByteCodeBuffer(FunctionWrapper.ByteCodeRow_new(opCode, token, stringArg, args));
+            return FunctionWrapper.ByteCodeBuffer_fromRow(FunctionWrapper.ByteCodeRow_new(opCode, token, stringArg, args));
         }
 
         public static ByteCodeBuffer ensureIntegerExpression(Token throwToken, ByteCodeBuffer buf)
@@ -156,41 +156,9 @@ namespace CommonScript.Compiler
             ByteCodeBuffer buf = null;
             foreach (ByteCodeRow row in flatRows)
             {
-                buf = join2(buf, new ByteCodeBuffer(row));
+                buf = join2(buf, FunctionWrapper.ByteCodeBuffer_fromRow(row));
             }
             return buf;
-        }
-    }
-
-    internal class ByteCodeBuffer
-    {
-        public int length;
-        public bool isLeaf;
-        public ByteCodeBuffer left = null;
-        public ByteCodeBuffer right = null;
-        public ByteCodeRow row = null;
-        public ByteCodeRow last;
-        public ByteCodeRow first;
-
-        // TODO: add an optimization here that tracks whether or not the buffer contains a break/continue
-
-        public ByteCodeBuffer(ByteCodeBuffer left, ByteCodeBuffer right)
-        {
-            length = left.length + right.length;
-            isLeaf = false;
-            this.left = left;
-            this.right = right;
-            first = left.first;
-            last = right.last;
-        }
-
-        public ByteCodeBuffer(ByteCodeRow row)
-        {
-            length = 1;
-            isLeaf = true;
-            this.row = row;
-            last = row;
-            first = row;
         }
     }
 }

@@ -1,0 +1,35 @@
+struct ByteCodeBuffer {
+    int length;
+    bool isLeaf;
+    ByteCodeBuffer left;
+    ByteCodeBuffer right;
+    ByteCodeRow row;
+    ByteCodeRow first;
+    ByteCodeRow last;
+
+    // TODO: add an optimization here that tracks whether or not the buffer contains a break/continue
+}
+
+ByteCodeBuffer ByteCodeBuffer_from2(ByteCodeBuffer left, ByteCodeBuffer right) {
+    return new ByteCodeBuffer(
+        left.length + right.length,
+        false,
+        left,
+        right,
+        null,
+        left.first,
+        right.last
+    );
+}
+
+ByteCodeBuffer ByteCodeBuffer_fromRow(ByteCodeRow row) {
+    return new ByteCodeBuffer(
+        1,
+        true,
+        null,
+        null,
+        row,
+        row,
+        row
+    );
+}
