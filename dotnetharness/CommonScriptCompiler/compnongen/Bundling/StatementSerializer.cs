@@ -544,7 +544,7 @@ namespace CommonScript.Compiler
             // which will probably be the OP_JUMP for the finally.
             catchRouterArgs.Insert(0, jumpOffset); // jump to finally
 
-            ByteCodeBuffer catchRouterBuf = new ByteCodeBuffer(new ByteCodeRow(OpCodes.OP_TRY_CATCH_ROUTER, null, null, catchRouterArgs.ToArray()));
+            ByteCodeBuffer catchRouterBuf = new ByteCodeBuffer(FunctionWrapper.ByteCodeRow_new(OpCodes.OP_TRY_CATCH_ROUTER, null, null, catchRouterArgs.ToArray()));
 
             ByteCodeBuffer routeAndCatches = catchRouterBuf;
             foreach (ByteCodeBuffer catchBuf in catchBufs)

@@ -59,6 +59,11 @@ namespace CommonScript.Compiler.Internal
             return PST_ExtCallbacks.ContainsKey("throwParserException") ? PST_ExtCallbacks["throwParserException"].Invoke(args) : null;
         }
 
+        public static ByteCodeRow ByteCodeRow_new(int opCode, Token token, string stringArg, int[] args)
+        {
+            return new ByteCodeRow(opCode, stringArg, token, args, 0, 0, null);
+        }
+
         public static void Errors_Throw(Token token, string msg)
         {
             _Errors_ThrowImpl(1, token, msg, "");

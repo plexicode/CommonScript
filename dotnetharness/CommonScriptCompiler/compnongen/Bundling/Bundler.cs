@@ -364,7 +364,7 @@ namespace CommonScript.Compiler
                 {
                     int[] tryInfoArgs = row.tryCatchInfo;
                     tryInfoArgs[0] = i - flatByteCode.Count;
-                    ByteCodeRow tryInfoRow = new ByteCodeRow(OpCodes.OP_TRY_INFO, null, null, tryInfoArgs);
+                    ByteCodeRow tryInfoRow = FunctionWrapper.ByteCodeRow_new(OpCodes.OP_TRY_INFO, null, null, tryInfoArgs);
                     flatByteCode.Add(tryInfoRow);
                 }
             }

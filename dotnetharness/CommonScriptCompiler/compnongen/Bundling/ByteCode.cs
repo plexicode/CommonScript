@@ -66,25 +66,25 @@ namespace CommonScript.Compiler
 
         public static ByteCodeBuffer create0(int opCode, Token token, string stringArg)
         {
-            return new ByteCodeBuffer(new ByteCodeRow(opCode, token, stringArg, new int[0]));
+            return new ByteCodeBuffer(FunctionWrapper.ByteCodeRow_new(opCode, token, stringArg, new int[0]));
         }
 
         public static ByteCodeBuffer create1(int opCode, Token token, string stringArg, int arg1)
         {
             int[] args = new int[] { arg1 };
-            return new ByteCodeBuffer(new ByteCodeRow(opCode, token, stringArg, args));
+            return new ByteCodeBuffer(FunctionWrapper.ByteCodeRow_new(opCode, token, stringArg, args));
         }
 
         public static ByteCodeBuffer create2(int opCode, Token token, string stringArg, int arg1, int arg2)
         {
             int[] args = new int[] { arg1, arg2 };
-            return new ByteCodeBuffer(new ByteCodeRow(opCode, token, stringArg, args));
+            return new ByteCodeBuffer(FunctionWrapper.ByteCodeRow_new(opCode, token, stringArg, args));
         }
 
         public static ByteCodeBuffer create3(int opCode, Token token, string stringArg, int arg1, int arg2, int arg3)
         {
             int[] args = new int[] { arg1, arg2, arg3 };
-            return new ByteCodeBuffer(new ByteCodeRow(opCode, token, stringArg, args));
+            return new ByteCodeBuffer(FunctionWrapper.ByteCodeRow_new(opCode, token, stringArg, args));
         }
 
         public static ByteCodeBuffer ensureIntegerExpression(Token throwToken, ByteCodeBuffer buf)
@@ -191,28 +191,6 @@ namespace CommonScript.Compiler
             this.row = row;
             last = row;
             first = row;
-        }
-    }
-
-    internal class ByteCodeRow
-    {
-        public int opCode;
-        public string stringArg;
-        public Token token;
-        public int[] args;
-        public int stringId;
-        public int tokenId;
-        public int[] tryCatchInfo;
-
-        public ByteCodeRow(int opCode, Token token, string stringArg, int[] args)
-        {
-            this.opCode = opCode;
-            this.token = token;
-            this.stringArg = stringArg;
-            this.args = args;
-            stringId = 0;
-            tokenId = 0;
-            tryCatchInfo = null;
         }
     }
 }

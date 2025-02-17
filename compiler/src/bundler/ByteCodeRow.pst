@@ -1,0 +1,13 @@
+struct ByteCodeRow {
+    int opCode;
+    string stringArg;
+    Token token;
+    Array<int> args;
+    int stringId;
+    int tokenId;
+    Array<int> tryCatchInfo;
+}
+
+ByteCodeRow ByteCodeRow_new(int opCode, Token token, string stringArg, Array<int> args) {
+    return new ByteCodeRow(opCode, stringArg, token, args, 0, 0, null);
+}
