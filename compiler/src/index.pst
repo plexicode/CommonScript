@@ -1,9 +1,13 @@
-@import("Token.pst");
-
-@import("util/StringSet.pst");
-@import("util/errors.pst");
 
 @import("builtins/index.pst");
+@import("util/StringSet.pst");
+@import("util/errors.pst");
+@import("util/unicode.pst");
+
+@import("StaticContext.pst");
+@import("Token.pst");
+@import("Tokenizer.pst");
+@import("TokenType.pst");
 
 object fail(string msg) {
     Array<object> failArgs = new Array<object>(1);

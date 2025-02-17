@@ -1,0 +1,69 @@
+struct StaticContext {
+    TokenizerStaticContext tokenizerCtx;
+}
+
+StaticContext StaticContext_new() {
+    return new StaticContext(
+        TokenizerStaticContext_new()
+    );
+}
+
+struct TokenizerStaticContext {
+    Dictionary<int, bool> alphanumerics;
+    Dictionary<int, bool> numerics;
+    Dictionary<int, bool> whitespace;
+    StringSet keywords;
+    Dictionary<int, List<Array<int>>> multicharTokensByFirstChar;
+}
+TokenizerStaticContext TokenizerStaticContext_new() {
+    TokenizerStaticContext ctx = new TokenizerStaticContext(
+        new Dictionary<int, bool>(),
+        new Dictionary<int, bool>(),
+        new Dictionary<int, bool>(),
+        null,
+        new Dictionary<int, List<Array<int>>>());
+
+    int i = 0;
+    for (i = 0; i < 10; i += 1) {
+        ctx.numerics[Core.Ord('0') + i] = true;
+        ctx.alphanumerics[Core.Ord('0') + i] = true;
+    }
+    for (i = 0; i < 26; i += 1) {
+        ctx.alphanumerics[Core.Ord('A') + i] = true;
+        ctx.alphanumerics[Core.Ord('a') + i] = true;
+    }
+    ctx.alphanumerics[Core.Ord('_')] = true;
+
+    string ws = " \r\n\t";
+    for (i = 0; i < ws.Size(); i += 1) {
+        ctx.whitespace[Core.Ord(ws[i])] = true;
+    }
+
+    ctx.keywords = StringSet_fromArray("function class field property constructor const enum
+base this
+null false true new
+is typeof
+if else for while do break continue switch case default yield return
+throw try catch finally
+import namespace
+public static readonly abstract".Trim().Replace("\n", " ").Split(" "));
+
+    // This list must be sorted by length descending as longer candidates must be checked
+    // before shorter ones. For example, it would be a bug for >>> to register as a hit before >>>= does.
+    Array<string> mcharTokens = ">>>= >>> <<= >>= **= ++ -- && || ** == != <= >= => -> << >> ?? += -= *= %= /= |= &= ^=".Split(" ");
+    for (i = 0; i < mcharTokens.Size(); i += 1) {
+        string mcharTok = mcharTokens[i];
+        Array<int> uchars = new Array<int>(mcharTok.Size());
+        for (int j = 0; j < uchars.Size(); j += 1) {
+            uchars[j] = Core.Ord(mcharTok[j]);
+        }
+        int firstChar = uchars[0];
+        if (!ctx.multicharTokensByFirstChar.Contains(firstChar)) {
+            ctx.multicharTokensByFirstChar[firstChar] = new List<Array<int>>();
+        }
+        ctx.multicharTokensByFirstChar[firstChar].Add(uchars);
+    }
+
+    return ctx;
+}
+

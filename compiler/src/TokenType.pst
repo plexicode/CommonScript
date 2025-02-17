@@ -1,0 +1,13 @@
+enum TokenType
+{
+    KEYWORD = 1,
+    NAME = 2,
+    PUNCTUATION = 3,
+    STRING = 4,
+    INTEGER = 5,
+    HEX_INTEGER = 6,
+    FLOAT = 7,
+    ANNOTATION = 8,
+
+    EOF = 9,
+}

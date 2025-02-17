@@ -11,6 +11,28 @@ namespace CommonScript.Compiler.Internal
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         private static Dictionary<string, System.Func<object[], object>> PST_ExtCallbacks = new Dictionary<string, System.Func<object[], object>>();
 
+        private static int[] PST_stringToUtf8Bytes(string str)
+        {
+            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(str);
+            int len = bytes.Length;
+            int[] output = new int[len];
+            for (int i = 0; i < len; i++)
+            {
+                output[i] = ((int)bytes[i]) & 255;
+            }
+            return output;
+        }
+
+        private static readonly string[] PST_SplitSep = new string[1];
+
+        private static string[] PST_StringSplit(string value, string sep)
+        {
+            if (sep.Length == 1) return value.Split(sep[0]);
+            if (sep.Length == 0) return value.ToCharArray().Select<char, string>(c => "" + c).ToArray();
+            PST_SplitSep[0] = sep;
+            return value.Split(PST_SplitSep, System.StringSplitOptions.None);
+        }
+
         public static void PST_RegisterExtensibleCallback(string name, System.Func<object[], object> func)
         {
             PST_ExtCallbacks[name] = func;
@@ -147,6 +169,11 @@ namespace CommonScript.Compiler.Internal
             return null;
         }
 
+        public static StaticContext StaticContext_new()
+        {
+            return new StaticContext(TokenizerStaticContext_new());
+        }
+
         public static StringSet StringSet_add(StringSet s, string item)
         {
             s.items[item] = true;
@@ -187,6 +214,57 @@ namespace CommonScript.Compiler.Internal
             return new StringSet(new Dictionary<string, bool>());
         }
 
+        public static int[] StringToUnicodeArray(string strVal)
+        {
+            int[] bytes = PST_stringToUtf8Bytes(strVal);
+            int[] output = new int[bytes.Length];
+            int length = bytes.Length;
+            int c = 0;
+            int i = 0;
+            int j = 0;
+            int val = 0;
+            while (i < length)
+            {
+                c = bytes[i];
+                if (c < 128)
+                {
+                    output[j] = c;
+                    i += 1;
+                }
+                else if ((c & 224) == 192)
+                {
+                    output[j] = (c & 31) << 6 | (bytes[i + 1] & 63);
+                    i += 2;
+                }
+                else if ((c & 240) == 224)
+                {
+                    output[j] = (c & 15) << 12 | (bytes[i + 1] & 63) << 6 | (bytes[i + 2] & 63);
+                    i += 3;
+                }
+                else if ((c & 240) == 224)
+                {
+                    output[j] = (c & 7) << 18 | (bytes[i + 1] & 63) << 12 | (bytes[i + 2] & 63) << 6 | (bytes[i + 3] & 63);
+                    i += 4;
+                }
+                else
+                {
+                    return null;
+                }
+                j += 1;
+            }
+            if (j < length)
+            {
+                int[] trimmedOutput = new int[j];
+                while (j > 0)
+                {
+                    j -= 1;
+                    trimmedOutput[j] = output[j];
+                }
+                output = trimmedOutput;
+            }
+            return output;
+        }
+
         public static string Token_getFingerprint(Token t)
         {
             if (t.Fingerprint == null)
@@ -199,6 +277,305 @@ namespace CommonScript.Compiler.Internal
         public static Token Token_new(string value, int type, string file, int line, int col)
         {
             return new Token(value, file, type, line, col, null);
+        }
+
+        public static Token[] Tokenize(string file, string content, StaticContext ctx)
+        {
+            string contentPadded = (content.Replace("\r\n", "\n").Replace("\r", "\n")) + "\n\n\n\n\n";
+            int[] chars = StringToUnicodeArray(contentPadded);
+            int length = chars.Length;
+            TokenizerStaticContext tokenizerCtx = ctx.tokenizerCtx;
+            int[] lines = new int[length];
+            int[] cols = new int[length];
+            int i = 0;
+            int j = 0;
+            int k = 0;
+            int line = 1;
+            int col = 1;
+            int c = 0;
+            i = 0;
+            while (i < length)
+            {
+                c = chars[i];
+                lines[i] = line;
+                cols[i] = col;
+                if (c == 10)
+                {
+                    line += 1;
+                    col = 1;
+                }
+                else
+                {
+                    col += 1;
+                }
+                i += 1;
+            }
+            int mode = 1;
+            int tokenStart = 0;
+            int tokenSubtype = 0;
+            string tokenVal = "";
+            System.Collections.Generic.List<Token> tokens = new List<Token>();
+            i = 0;
+            while (i < length)
+            {
+                c = chars[i];
+                switch (mode)
+                {
+                    case 1:
+                        if (tokenizerCtx.whitespace.ContainsKey(c))
+                        {
+                        }
+                        else if (tokenizerCtx.alphanumerics.ContainsKey(c))
+                        {
+                            mode = 3;
+                            tokenStart = i;
+                        }
+                        else if (c == 34 || c == 39)
+                        {
+                            mode = 2;
+                            tokenStart = i;
+                            tokenSubtype = c;
+                        }
+                        else if (c == 47 && (chars[i + 1] == 47 || chars[i + 1] == 42))
+                        {
+                            mode = 4;
+                            tokenSubtype = chars[i + 1];
+                            i += 1;
+                        }
+                        else
+                        {
+                            tokenVal = null;
+                            if (c == 62 && chars[i + 1] == c && chars[i + 2] == c && chars[i + 3] == 61)
+                            {
+                                tokenVal = ">>>=";
+                            }
+                            else if (tokenizerCtx.multicharTokensByFirstChar.ContainsKey(c))
+                            {
+                                System.Collections.Generic.List<int[]> mcharCandidates = tokenizerCtx.multicharTokensByFirstChar[c];
+                                j = 0;
+                                while (j < mcharCandidates.Count && tokenVal == null)
+                                {
+                                    int[] mcharCandidate = mcharCandidates[j];
+                                    bool isMatch = true;
+                                    int mSize = mcharCandidate.Length;
+                                    k = 1;
+                                    while (k < mSize)
+                                    {
+                                        if (mcharCandidate[k] != chars[i + k])
+                                        {
+                                            isMatch = false;
+                                            k += mSize;
+                                        }
+                                        k += 1;
+                                    }
+                                    if (isMatch)
+                                    {
+                                        tokenVal = UnicodeArrayToString(mcharCandidate);
+                                    }
+                                    j += 1;
+                                }
+                            }
+                            if (tokenVal == null)
+                            {
+                                tokenVal = (char)c + "";
+                            }
+                            tokens.Add(Token_new(tokenVal, 3, file, lines[i], cols[i]));
+                            i += tokenVal.Length - 1;
+                        }
+                        break;
+                    case 3:
+                        if (!tokenizerCtx.alphanumerics.ContainsKey(c))
+                        {
+                            int tokenLen = i - tokenStart;
+                            tokenVal = UnicodeArrayToString_slice(chars, tokenStart, tokenLen);
+                            int firstChar = chars[tokenStart];
+                            int tokenType = 2;
+                            if (tokenizerCtx.numerics.ContainsKey(firstChar))
+                            {
+                                if (firstChar == 48 && tokenLen > 2 && (chars[tokenStart + 1] == 120 || chars[tokenStart + 1] == 88))
+                                {
+                                    tokenType = 6;
+                                }
+                                else
+                                {
+                                    tokenType = 5;
+                                }
+                            }
+                            else if (StringSet_has(tokenizerCtx.keywords, tokenVal))
+                            {
+                                tokenType = 1;
+                            }
+                            tokens.Add(Token_new(tokenVal, tokenType, file, lines[tokenStart], cols[tokenStart]));
+                            i -= 1;
+                            mode = 1;
+                        }
+                        break;
+                    case 4:
+                        if (c == 10 && tokenSubtype == 47)
+                        {
+                            mode = 1;
+                        }
+                        else if (c == 42 && tokenSubtype == c && chars[i + 1] == 47)
+                        {
+                            mode = 1;
+                            i += 1;
+                        }
+                        break;
+                    case 2:
+                        if (c == tokenSubtype)
+                        {
+                            tokenVal = UnicodeArrayToString_slice(chars, tokenStart, i - tokenStart + 1);
+                            mode = 1;
+                            tokens.Add(Token_new(tokenVal, 4, file, lines[tokenStart], cols[tokenStart]));
+                        }
+                        else if (c == 92)
+                        {
+                            i += 1;
+                        }
+                        break;
+                    default:
+                        return null;
+                }
+                i += 1;
+            }
+            if (mode != 1)
+            {
+                if (mode == 2)
+                {
+                    Errors_ThrowEof(file, "Unclosed string.");
+                }
+                Errors_ThrowEof(file, "Unclosed comment.");
+            }
+            i = 0;
+            while (i < tokens.Count)
+            {
+                Token current = tokens[i];
+                if (current != null)
+                {
+                    Token left = null;
+                    Token right = null;
+                    if (i > 0)
+                    {
+                        left = tokens[i - 1];
+                    }
+                    if (i + 1 < tokens.Count)
+                    {
+                        right = tokens[i + 1];
+                    }
+                    if (left != null && (left.Line != current.Line || left.Col + left.Value.Length != current.Col))
+                    {
+                        left = null;
+                    }
+                    if (right != null && (right.Line != current.Line || current.Col + current.Value.Length != right.Col))
+                    {
+                        right = null;
+                    }
+                    if (current.Value == "@" && right != null && (right.Type == 2 || right.Type == 1))
+                    {
+                        current.Value += right.Value;
+                        current.Type = 8;
+                        tokens[i + 1] = null;
+                    }
+                    else if (current.Value == ".")
+                    {
+                        if (left != null && left.Type == 5)
+                        {
+                            left.Value += ".";
+                            left.Type = 7;
+                            tokens[i] = left;
+                            tokens[i - 1] = null;
+                            current = left;
+                            left = null;
+                        }
+                        if (right != null && right.Type == 5)
+                        {
+                            current.Value += right.Value;
+                            tokens[i + 1] = null;
+                            current.Type = 7;
+                        }
+                    }
+                }
+                i += 1;
+            }
+            System.Collections.Generic.List<Token> output = new List<Token>();
+            i = 0;
+            while (i < tokens.Count)
+            {
+                if (tokens[i] != null)
+                {
+                    output.Add(tokens[i]);
+                }
+                i += 1;
+            }
+            return output.ToArray();
+        }
+
+        public static TokenizerStaticContext TokenizerStaticContext_new()
+        {
+            TokenizerStaticContext ctx = new TokenizerStaticContext(new Dictionary<int, bool>(), new Dictionary<int, bool>(), new Dictionary<int, bool>(), null, new Dictionary<int, System.Collections.Generic.List<int[]>>());
+            int i = 0;
+            i = 0;
+            while (i < 10)
+            {
+                ctx.numerics[48 + i] = true;
+                ctx.alphanumerics[48 + i] = true;
+                i += 1;
+            }
+            i = 0;
+            while (i < 26)
+            {
+                ctx.alphanumerics[65 + i] = true;
+                ctx.alphanumerics[97 + i] = true;
+                i += 1;
+            }
+            ctx.alphanumerics[95] = true;
+            string ws = " \r\n\t";
+            i = 0;
+            while (i < ws.Length)
+            {
+                ctx.whitespace[(int)ws[i]] = true;
+                i += 1;
+            }
+            ctx.keywords = StringSet_fromArray(PST_StringSplit("function class field property constructor const enum\nbase this\nnull false true new\nis typeof\nif else for while do break continue switch case default yield return\nthrow try catch finally\nimport namespace\npublic static readonly abstract".Trim().Replace("\n", " "), " "));
+            string[] mcharTokens = PST_StringSplit(">>>= >>> <<= >>= **= ++ -- && || ** == != <= >= => -> << >> ?? += -= *= %= /= |= &= ^=", " ");
+            i = 0;
+            while (i < mcharTokens.Length)
+            {
+                string mcharTok = mcharTokens[i];
+                int[] uchars = new int[mcharTok.Length];
+                int j = 0;
+                while (j < uchars.Length)
+                {
+                    uchars[j] = (int)mcharTok[j];
+                    j += 1;
+                }
+                int firstChar = uchars[0];
+                if (!ctx.multicharTokensByFirstChar.ContainsKey(firstChar))
+                {
+                    ctx.multicharTokensByFirstChar[firstChar] = new List<int[]>();
+                }
+                ctx.multicharTokensByFirstChar[firstChar].Add(uchars);
+                i += 1;
+            }
+            return ctx;
+        }
+
+        public static string UnicodeArrayToString(int[] chars)
+        {
+            return UnicodeArrayToString_slice(chars, 0, chars.Length);
+        }
+
+        public static string UnicodeArrayToString_slice(int[] chars, int start, int length)
+        {
+            System.Collections.Generic.List<string> sb = new List<string>();
+            int end = start + length;
+            int i = start;
+            while (i < end)
+            {
+                sb.Add(((char)chars[i]).ToString());
+                i += 1;
+            }
+            return string.Join("", sb);
         }
     }
 }

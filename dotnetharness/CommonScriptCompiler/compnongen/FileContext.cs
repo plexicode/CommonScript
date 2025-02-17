@@ -14,11 +14,13 @@ namespace CommonScript.Compiler
         public bool isCoreBuiltin = false;
         public CompiledModule compiledModule = null;
 
+        private static readonly StaticContext staticCtx = FunctionWrapper.StaticContext_new();
+        
         public FileContext(string path, string content)
         {
             this.content = content.Replace("\r\n", "\n").TrimEnd();
             this.path = path;
-            this.tokens = Tokenizer.Tokenize(path, this.content);
+            this.tokens = new TokenStream(path, FunctionWrapper.Tokenize(this.path, this.content, staticCtx));
         }
 
         public void InitializeImportLookup()
