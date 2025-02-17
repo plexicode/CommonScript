@@ -1,0 +1,32 @@
+
+ByteCodeBuffer ByteCodeUtil_ensureIntegerExpression(Token throwToken, ByteCodeBuffer buf) {
+    if (buf == null) { fail("invalid operation"); return null; }
+
+    ByteCodeRow last = buf.last;
+    if (last.opCode == OP_PUSH_INT) return buf;
+    if (last.opCode == OP_BITWISE_NOT) return buf;
+    return join2(buf, create0(OP_ENSURE_INT, throwToken, null));
+}
+
+ByteCodeBuffer ByteCodeUtil_ensureBooleanExpression(Token throwToken, ByteCodeBuffer buf) {
+    if (buf == null) { fail("invalid operation"); return null; }
+
+    ByteCodeRow last = buf.last;
+    if (last.opCode == OP_BIN_OP) {
+        string op = last.stringArg;
+        // TODO: convert this to integer IDs 
+        if (op == "||" || op == "&&" || 
+            op == "==" || op == "!=" ||
+            op == "<" || op == ">" ||
+            op == "<=" || op == ">=") {
+
+            return buf;
+        }
+    }
+
+    if (last.opCode == OP_ENSURE_BOOL) return buf;
+    if (last.opCode == OP_PUSH_BOOL) return buf;
+    if (last.opCode == OP_BOOLEAN_NOT) return buf;
+
+    return join2(buf, create0(OP_ENSURE_BOOL, throwToken, null));
+}

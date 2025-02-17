@@ -70,8 +70,8 @@ namespace CommonScript.Compiler
 
             if (op == "&&" || op == "||")
             {
-                leftBuf = ByteCode.ensureBooleanExpression(left.firstToken, leftBuf);
-                rightBuf = ByteCode.ensureBooleanExpression(right.firstToken, rightBuf);
+                leftBuf = FunctionWrapper.ByteCodeUtil_ensureBooleanExpression(left.firstToken, leftBuf);
+                rightBuf = FunctionWrapper.ByteCodeUtil_ensureBooleanExpression(right.firstToken, rightBuf);
                 return FunctionWrapper.join3(
                     leftBuf,
                     FunctionWrapper.create1(
@@ -116,7 +116,7 @@ namespace CommonScript.Compiler
         private static ByteCodeBuffer serializeBitwiseNot(Expression bwn)
         {
             return FunctionWrapper.join2(
-                ByteCode.ensureIntegerExpression(bwn.root.firstToken, serializeExpression(bwn.root)),
+                FunctionWrapper.ByteCodeUtil_ensureIntegerExpression(bwn.root.firstToken, serializeExpression(bwn.root)),
                 FunctionWrapper.create0(OpCodes.OP_BITWISE_NOT, bwn.firstToken, null)
                 );
         }
@@ -357,9 +357,9 @@ namespace CommonScript.Compiler
 
             return FunctionWrapper.join5(
                 serializeExpression(slice.root),
-                start != null ? ByteCode.ensureIntegerExpression(start.firstToken, serializeExpression(start)) : null,
-                end != null ? ByteCode.ensureIntegerExpression(end.firstToken, serializeExpression(end)) : null,
-                step != null ? ByteCode.ensureIntegerExpression(step.firstToken, serializeExpression(step)) : null,
+                start != null ? FunctionWrapper.ByteCodeUtil_ensureIntegerExpression(start.firstToken, serializeExpression(start)) : null,
+                end != null ? FunctionWrapper.ByteCodeUtil_ensureIntegerExpression(end.firstToken, serializeExpression(end)) : null,
+                step != null ? FunctionWrapper.ByteCodeUtil_ensureIntegerExpression(step.firstToken, serializeExpression(step)) : null,
                 FunctionWrapper.create1(OpCodes.OP_SLICE, slice.opToken, null, sliceMask));
         }
 
@@ -373,7 +373,7 @@ namespace CommonScript.Compiler
             ByteCodeBuffer condBuf = serializeExpression(ternaryExpression.root);
             ByteCodeBuffer leftBuf = serializeExpression(ternaryExpression.left);
             ByteCodeBuffer rightBuf = serializeExpression(ternaryExpression.right);
-            condBuf = ByteCode.ensureBooleanExpression(ternaryExpression.opToken, condBuf);
+            condBuf = FunctionWrapper.ByteCodeUtil_ensureBooleanExpression(ternaryExpression.opToken, condBuf);
 
             return FunctionWrapper.join5(
                 condBuf,

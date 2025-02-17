@@ -137,7 +137,7 @@ namespace CommonScript.Compiler
         private static ByteCodeBuffer serializeDoWhileLoop(Statement doWhileLoop)
         {
             ByteCodeBuffer body = serializeCodeBlock(doWhileLoop.code);
-            ByteCodeBuffer condition = ByteCode.ensureBooleanExpression(doWhileLoop.condition.firstToken, ExpressionSerializer.serializeExpression(doWhileLoop.condition));
+            ByteCodeBuffer condition = FunctionWrapper.ByteCodeUtil_ensureBooleanExpression(doWhileLoop.condition.firstToken, ExpressionSerializer.serializeExpression(doWhileLoop.condition));
             return FunctionWrapper.join4(
                 finalizeBreakContinue(body, condition.length + 2, true, 0),
                 condition,
@@ -165,7 +165,7 @@ namespace CommonScript.Compiler
             ByteCodeBuffer bufBody = serializeCodeBlock(code);
             ByteCodeBuffer bufCondition = ExpressionSerializer.serializeExpression(condition);
 
-            bufCondition = ByteCode.ensureBooleanExpression(condition.firstToken, bufCondition);
+            bufCondition = FunctionWrapper.ByteCodeUtil_ensureBooleanExpression(condition.firstToken, bufCondition);
 
             int stepSize = 0;
             int bodySize = 0;
@@ -244,7 +244,7 @@ namespace CommonScript.Compiler
             ByteCodeBuffer buf = ExpressionSerializer.serializeExpression(condition);
             ByteCodeBuffer bufTrue = serializeCodeBlock(ifCode);
             ByteCodeBuffer bufFalse = serializeCodeBlock(elseCode);
-            buf = ByteCode.ensureBooleanExpression(condition.firstToken, buf);
+            buf = FunctionWrapper.ByteCodeUtil_ensureBooleanExpression(condition.firstToken, buf);
 
             int trueSize = 0;
             int falseSize = 0;
@@ -566,7 +566,7 @@ namespace CommonScript.Compiler
         private static ByteCodeBuffer serializeWhileLoop(Statement whileLoop)
         {
             ByteCodeBuffer condBuf = ExpressionSerializer.serializeExpression(whileLoop.condition);
-            condBuf = ByteCode.ensureBooleanExpression(whileLoop.condition.firstToken, condBuf);
+            condBuf = FunctionWrapper.ByteCodeUtil_ensureBooleanExpression(whileLoop.condition.firstToken, condBuf);
             ByteCodeBuffer loopBody = serializeCodeBlock(whileLoop.code);
             return FunctionWrapper.join4(
                 condBuf,

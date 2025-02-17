@@ -74,6 +74,56 @@ namespace CommonScript.Compiler.Internal
             return new ByteCodeRow(opCode, stringArg, token, args, 0, 0, null);
         }
 
+        public static ByteCodeBuffer ByteCodeUtil_ensureBooleanExpression(Token throwToken, ByteCodeBuffer buf)
+        {
+            if (buf == null)
+            {
+                fail("invalid operation");
+                return null;
+            }
+            ByteCodeRow last = buf.last;
+            if (last.opCode == 4)
+            {
+                string op = last.stringArg;
+                if (op == "||" || op == "&&" || op == "==" || op == "!=" || op == "<" || op == ">" || op == "<=" || op == ">=")
+                {
+                    return buf;
+                }
+            }
+            if (last.opCode == 16)
+            {
+                return buf;
+            }
+            if (last.opCode == 36)
+            {
+                return buf;
+            }
+            if (last.opCode == 11)
+            {
+                return buf;
+            }
+            return join2(buf, create0(16, throwToken, null));
+        }
+
+        public static ByteCodeBuffer ByteCodeUtil_ensureIntegerExpression(Token throwToken, ByteCodeBuffer buf)
+        {
+            if (buf == null)
+            {
+                fail("invalid operation");
+                return null;
+            }
+            ByteCodeRow last = buf.last;
+            if (last.opCode == 40)
+            {
+                return buf;
+            }
+            if (last.opCode == 10)
+            {
+                return buf;
+            }
+            return join2(buf, create0(18, throwToken, null));
+        }
+
         public static ByteCodeBuffer convertToBuffer(ByteCodeRow[] flatRows)
         {
             ByteCodeBuffer buf = null;
