@@ -1,50 +1,39 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
-    internal class CompiledModule
+    internal static class CompiledModuleUtil
     {
-        public string id;
-        public Dictionary<string, string> codeFiles;
-        public Dictionary<string, AbstractEntity> nestedEntities;
-        public Dictionary<string, AbstractEntity> flattenedEntities;
-        public Dictionary<string, AbstractEntity> entitiesNoEnumParents;
-        public List<FunctionLikeEntity> lambdaEntities;
-
-        public CompiledModule(string id)
+        public static void AddLambdas(CompiledModule m, IList<FunctionLikeEntity> lambdas)
         {
-            this.id = id;
-            this.codeFiles = new Dictionary<string, string>();
+            m.lambdaEntities = [.. lambdas.Select(fn => fn.baseData)];
         }
 
-        public void AddLambdas(IList<FunctionLikeEntity> lambdas)
-        {
-            this.lambdaEntities = [.. lambdas];
-        }
-
-        public void InitializeCompieldModuleLookups(
+        public static void InitializeCompieldModuleLookups(
+            CompiledModule m,
             Dictionary<string, AbstractEntity> rootEntities,
             Dictionary<string, AbstractEntity> flatEntities)
         {
-            this.nestedEntities = rootEntities;
-            this.flattenedEntities = flatEntities;
-            this.entitiesNoEnumParents = new Dictionary<string, AbstractEntity>();
-            foreach (string fqName in this.flattenedEntities.Keys)
+            m.nestedEntities = rootEntities;
+            m.flattenedEntities = flatEntities;
+            m.entitiesNoEnumParents = new Dictionary<string, AbstractEntity>();
+            foreach (string fqName in m.flattenedEntities.Keys)
             {
-                AbstractEntity entity = this.flattenedEntities[fqName];
+                AbstractEntity entity = m.flattenedEntities[fqName];
                 if (entity.type == (int)EntityType.ENUM)
                 {
                     // for no-enum-parents, add all the children but not the entity itself. This is
                     // used for situations where a specific enum member is desired instead of the definition.
                     foreach (Token enumMem in ((EnumEntity)entity.specificData).memberNameTokens)
                     {
-                        this.entitiesNoEnumParents[fqName + "." + enumMem.Value] = entity;
+                        m.entitiesNoEnumParents[fqName + "." + enumMem.Value] = entity;
                     }
                 }
                 else
                 {
-                    this.entitiesNoEnumParents[fqName] = entity;
+                    m.entitiesNoEnumParents[fqName] = entity;
                 }
             }
         }

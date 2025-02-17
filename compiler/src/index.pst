@@ -7,6 +7,7 @@
 @import("util/errors.pst");
 @import("util/unicode.pst");
 
+@import("CompiledModule.pst");
 @import("StaticContext.pst");
 @import("Token.pst");
 @import("Tokenizer.pst");

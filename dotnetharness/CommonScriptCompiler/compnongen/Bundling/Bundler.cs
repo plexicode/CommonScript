@@ -29,7 +29,7 @@ namespace CommonScript.Compiler
 
                 AbstractEntity[] orderedEntities = [
                     .. deterministicKeyOrder.Select(k => m.flattenedEntities[k]),
-                    .. m.lambdaEntities.Select(v => v.baseData),
+                    .. m.lambdaEntities,
                 ];
 
                 foreach (AbstractEntity tle in orderedEntities)

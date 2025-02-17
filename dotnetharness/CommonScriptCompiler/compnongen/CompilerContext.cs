@@ -229,10 +229,10 @@ namespace CommonScript.Compiler
 
             resolverCtx.Resolve();
 
-            CompiledModule m = new CompiledModule(moduleId);
+            CompiledModule m = FunctionWrapper.CompiledModule_new(moduleId);
             m.codeFiles = sourceCode;
-            m.AddLambdas(resolverCtx.lambdas);
-            m.InitializeCompieldModuleLookups(resolverCtx.nestedEntities, resolverCtx.flattenedEntities);
+            CompiledModuleUtil.AddLambdas(m, resolverCtx.lambdas);
+            CompiledModuleUtil.InitializeCompieldModuleLookups(m, resolverCtx.nestedEntities, resolverCtx.flattenedEntities);
             foreach (FileContext file in files)
             {
                 file.compiledModule = m;

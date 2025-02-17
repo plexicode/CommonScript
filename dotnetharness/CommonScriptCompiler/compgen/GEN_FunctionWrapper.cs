@@ -139,6 +139,11 @@ namespace CommonScript.Compiler.Internal
             return cd;
         }
 
+        public static CompiledModule CompiledModule_new(string id)
+        {
+            return new CompiledModule(id, new Dictionary<string, string>(), null, null, null, null);
+        }
+
         public static ByteCodeBuffer convertToBuffer(ByteCodeRow[] flatRows)
         {
             ByteCodeBuffer buf = null;

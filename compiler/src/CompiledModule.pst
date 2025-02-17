@@ -1,0 +1,19 @@
+struct CompiledModule {
+    string id;
+    Dictionary<string, string> codeFiles;
+    Dictionary<string, AbstractEntity> nestedEntities;
+    Dictionary<string, AbstractEntity> flattenedEntities;
+    Dictionary<string, AbstractEntity> entitiesNoEnumParents;
+    List<AbstractEntity> lambdaEntities;
+}
+
+CompiledModule CompiledModule_new(string id) {
+    return new CompiledModule(
+        id, 
+        new Dictionary<string, string>(),
+        null, 
+        null, 
+        null, 
+        null
+    );
+}
