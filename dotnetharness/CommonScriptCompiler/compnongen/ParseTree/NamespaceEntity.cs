@@ -12,7 +12,7 @@ namespace CommonScript.Compiler
             Token nameToken,
             string fqName)
         {
-            this.baseData = new AbstractEntity(nsToken, (int)EntityType.NAMESPACE, this);
+            this.baseData = FunctionWrapper.AbstractEntity_new(nsToken, (int)EntityType.NAMESPACE, this);
             this.baseData.nameToken = nameToken;
             this.baseData.simpleName = nameToken.Value;
             this.baseData.fqName = fqName;

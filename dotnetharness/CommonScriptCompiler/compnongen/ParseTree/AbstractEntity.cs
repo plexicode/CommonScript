@@ -17,38 +17,15 @@ namespace CommonScript.Compiler
         LAMBDA_ENTITY = 10, // despite being an expression, are exported like top level functions
     }
 
-    internal class AbstractEntity
+    internal class AbstractEntityUtil
     {
-        public Token firstToken;
-        public int type;
-
-        public string simpleName;
-        public Token nameToken;
-        public string fqName;
-        public Dictionary<string, Token> annotations;
-        public bool isStatic;
-        public AbstractEntity nestParent;
-
-        public object OBJ_TEMP_CAST_fileContext;
-        public int serializationIndex = -1;
-
-        public object specificData;
-        
-        public AbstractEntity(Token firstToken, int type, object specificData)
-        {
-            this.firstToken = firstToken;
-            this.type = type;
-            this.isStatic = false;
-            this.specificData = specificData;
-        }
-
         private static Dictionary<string, AbstractEntity> EMPTY = new Dictionary<string, AbstractEntity>();
 
-        public Dictionary<string, AbstractEntity> getMemberLookup()
+        public static Dictionary<string, AbstractEntity> getMemberLookup(AbstractEntity entity)
         {
-            if (this.type == (int)EntityType.CLASS) return ((ClassEntity)this.specificData).classMembers;
-            if (this.type == (int)EntityType.NAMESPACE) return ((NamespaceEntity)this.specificData).nestedMembers;
-            if (this.type == (int)EntityType.MODULE_REF) return ((ModuleWrapperEntity)this.specificData).publicMembers;
+            if (entity.type == (int)EntityType.CLASS) return ((ClassEntity)entity.specificData).classMembers;
+            if (entity.type == (int)EntityType.NAMESPACE) return ((NamespaceEntity)entity.specificData).nestedMembers;
+            if (entity.type == (int)EntityType.MODULE_REF) return ((ModuleWrapperEntity)entity.specificData).publicMembers;
             return EMPTY;
         }
     }

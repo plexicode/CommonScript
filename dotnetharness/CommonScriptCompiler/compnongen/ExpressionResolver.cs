@@ -328,7 +328,8 @@ namespace CommonScript.Compiler
             return typeofExpr;
         }
 
-        private static AbstractEntity FindLocallyReferencedEntity(Dictionary<string, AbstractEntity> lookup, string name)
+        private static AbstractEntity FindLocallyReferencedEntity(Dictionary<string, AbstractEntity> lookup,
+            string name)
         {
             if (lookup.ContainsKey(name))
             {
@@ -337,8 +338,9 @@ namespace CommonScript.Compiler
 
             if (lookup.ContainsKey(".."))
             {
-                return FindLocallyReferencedEntity(lookup[".."].getMemberLookup(), name);
+                return FindLocallyReferencedEntity(AbstractEntityUtil.getMemberLookup(lookup[".."]), name);
             }
+
             return null;
         }
 

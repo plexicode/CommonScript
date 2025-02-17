@@ -11,7 +11,7 @@ namespace CommonScript.Compiler
 
         public EnumEntity(Token enumToken, Token nameToken, Token[] memberNames, Expression[] memberValues)
         {
-            this.baseData = new AbstractEntity(enumToken, (int)EntityType.ENUM, this);
+            this.baseData = FunctionWrapper.AbstractEntity_new(enumToken, (int)EntityType.ENUM, this);
             this.baseData.nameToken = nameToken;
             this.baseData.simpleName = nameToken.Value;
             this.memberNameTokens = memberNames;

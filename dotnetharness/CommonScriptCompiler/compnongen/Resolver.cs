@@ -81,7 +81,7 @@ namespace CommonScript.Compiler
                 AbstractEntity entity = queue[i];
                 output.Add(entity);
 
-                foreach (AbstractEntity mem in entity.getMemberLookup().Values)
+                foreach (AbstractEntity mem in AbstractEntityUtil.getMemberLookup(entity).Values)
                 {
                     queue.Add(mem);
                 }
@@ -221,14 +221,17 @@ namespace CommonScript.Compiler
                     for (int i = 2; i < bc.baseClassTokens.Length; i += 2)
                     {
                         string next = bc.baseClassTokens[i].Value;
-                        if (bcEntity != null &&
-                            bcEntity.getMemberLookup().ContainsKey(next))
+                        if (bcEntity != null)
                         {
-                            bcEntity = bcEntity.getMemberLookup()[next];
-                        }
-                        else
-                        {
-                            bcEntity = null;
+                            Dictionary<string, AbstractEntity> lookup = AbstractEntityUtil.getMemberLookup(bcEntity);
+                            if (lookup.ContainsKey(next))
+                            {
+                                bcEntity = lookup[next];
+                            }
+                            else
+                            {
+                                bcEntity = null;
+                            }
                         }
                     }
                 }
@@ -712,9 +715,10 @@ namespace CommonScript.Compiler
             AbstractEntity walker = this.activeEntity;
             while (walker != null)
             {
-                if (walker.getMemberLookup().ContainsKey(name))
+                Dictionary<string, AbstractEntity> lookup = AbstractEntityUtil.getMemberLookup(walker); 
+                if (lookup.ContainsKey(name))
                 {
-                    return walker.getMemberLookup()[name];
+                    return lookup[name];
                 }
                 walker = walker.nestParent;
             }

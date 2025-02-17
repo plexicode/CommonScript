@@ -1,0 +1,29 @@
+struct AbstractEntity {
+    Token firstToken;
+    int type;
+    object specificData;
+    string simpleName;
+    Token nameToken;
+    string fqName;
+    Dictionary<string, Token> annotations;
+    bool isStatic;
+    AbstractEntity nestParent;
+    object OBJ_TEMP_CAST_fileContext;
+    int serializationIndex;
+}
+
+AbstractEntity AbstractEntity_new(Token firstToken, int type, object specificData) {
+    return new AbstractEntity(
+        firstToken, 
+        type, 
+        specificData,
+        null, // simpleName
+        null, // nameToken 
+        null, // fqName 
+        null, // annotations 
+        false, // isStatic 
+        null, // nestParent 
+        null, // fileContext 
+        -1 // serializationIndex 
+    );
+}
