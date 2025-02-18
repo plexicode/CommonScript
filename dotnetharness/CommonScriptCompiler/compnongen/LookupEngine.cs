@@ -14,7 +14,7 @@ namespace CommonScript.Compiler
             // and therefore will take precedence over pollution imports.
             if (fileCtx.importsByVar.ContainsKey(name))
             {
-                return Expression.createImportReference(refToken, fileCtx.importsByVar[name]);
+                return ExpressionUtil.createImportReference(refToken, fileCtx.importsByVar[name]);
             }
 
             ImportStatement[] imports = fileCtx.imports;
@@ -43,13 +43,13 @@ namespace CommonScript.Compiler
                 switch (tle.type)
                 {
                     case (int)EntityType.FUNCTION:
-                        return Expression.createFunctionReference(refToken, name, tle);
+                        return ExpressionUtil.createFunctionReference(refToken, name, tle);
                     case (int)EntityType.CONST:
                         return ((ConstEntity)tle.specificData).constValue;
                     case (int)EntityType.CLASS:
-                        return Expression.createClassReference(refToken, tle);
+                        return ExpressionUtil.createClassReference(refToken, tle);
                     case (int)EntityType.NAMESPACE:
-                        return Expression.createNamespaceReference(refToken, tle);
+                        return ExpressionUtil.createNamespaceReference(refToken, tle);
                     default:
                         throw new NotImplementedException();
                 }

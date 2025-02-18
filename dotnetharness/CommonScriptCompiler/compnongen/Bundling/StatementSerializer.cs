@@ -13,29 +13,29 @@ namespace CommonScript.Compiler
         {
             switch (stmnt.type)
             {
-                case StatementType.ASSIGNMENT:
+                case (int) StatementType.ASSIGNMENT:
                     string op = stmnt.assignOp.Value;
                     op = op == "=" ? op : op.Substring(0, op.Length - 1);
                     switch (stmnt.assignTarget.type)
                     {
-                        case ExpressionType.VARIABLE: return serializeAssignVariable(stmnt, op);
-                        case ExpressionType.INDEX: return serializeAssignIndex(stmnt, op);
-                        case ExpressionType.DOT_FIELD: return serializeAssignField(stmnt, op);
+                        case (int) ExpressionType.VARIABLE: return serializeAssignVariable(stmnt, op);
+                        case (int) ExpressionType.INDEX: return serializeAssignIndex(stmnt, op);
+                        case (int) ExpressionType.DOT_FIELD: return serializeAssignField(stmnt, op);
                     }
                     throw new InvalidOperationException(); // should have been removed by now.
 
-                case StatementType.BREAK: return serializeBreak(stmnt);
-                case StatementType.CONTINUE: return serializeContinue(stmnt);
-                case StatementType.DO_WHILE_LOOP: return serializeDoWhileLoop(stmnt);
-                case StatementType.EXPRESSION_AS_STATEMENT: return serializeExpressionStatement(stmnt);
-                case StatementType.FOR_LOOP: return serializeForLoop(stmnt);
-                case StatementType.FOR_EACH_LOOP: return serializeForEachLoop(stmnt);
-                case StatementType.IF_STATEMENT: return serializeIfStatement(stmnt);
-                case StatementType.RETURN: return serializeReturn(stmnt);
-                case StatementType.SWITCH_STATEMENT: return serializeSwitchStatement(stmnt);
-                case StatementType.THROW: return serializeThrowStatement(stmnt);
-                case StatementType.TRY: return serializeTryStatement(stmnt);
-                case StatementType.WHILE_LOOP: return serializeWhileLoop(stmnt);
+                case (int) StatementType.BREAK: return serializeBreak(stmnt);
+                case (int) StatementType.CONTINUE: return serializeContinue(stmnt);
+                case (int) StatementType.DO_WHILE_LOOP: return serializeDoWhileLoop(stmnt);
+                case (int) StatementType.EXPRESSION_AS_STATEMENT: return serializeExpressionStatement(stmnt);
+                case (int) StatementType.FOR_LOOP: return serializeForLoop(stmnt);
+                case (int) StatementType.FOR_EACH_LOOP: return serializeForEachLoop(stmnt);
+                case (int) StatementType.IF_STATEMENT: return serializeIfStatement(stmnt);
+                case (int) StatementType.RETURN: return serializeReturn(stmnt);
+                case (int) StatementType.SWITCH_STATEMENT: return serializeSwitchStatement(stmnt);
+                case (int) StatementType.THROW: return serializeThrowStatement(stmnt);
+                case (int) StatementType.TRY: return serializeTryStatement(stmnt);
+                case (int) StatementType.WHILE_LOOP: return serializeWhileLoop(stmnt);
 
                 default: throw new NotImplementedException();
             }
@@ -311,11 +311,11 @@ namespace CommonScript.Compiler
             Expression firstCaseExpr = switchStmnt.switchChunks[0].Cases[0];
             if (firstCaseExpr != null)
             {
-                if (firstCaseExpr.type == ExpressionType.INTEGER_CONST)
+                if (firstCaseExpr.type == (int) ExpressionType.INTEGER_CONST)
                 {
                     conditionTypeEnsuranceOpCode = OpCodes.OP_ENSURE_INT;
                 }
-                else if (firstCaseExpr.type == ExpressionType.STRING_CONST)
+                else if (firstCaseExpr.type == (int) ExpressionType.STRING_CONST)
                 {
                     conditionTypeEnsuranceOpCode = OpCodes.OP_ENSURE_STRING;
                 }

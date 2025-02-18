@@ -42,36 +42,11 @@ namespace CommonScript.Compiler
         MAX_VALUE = 34,
     }
 
-    internal class Expression
+    internal class ExpressionUtil
     {
-        public Token firstToken;
-        public ExpressionType type;
-        public Expression root = null;
-        public Expression left = null;
-        public Expression right = null;
-        public Token opToken = null;
-        public bool boolVal = false;
-        public string strVal = null;
-        public int intVal = 0;
-        public double floatVal = 0.0;
-        public AbstractEntity entityPtr = null;
-        public ImportStatement importPtr = null;
-        public Expression[] args = null;
-        public Expression[] keys = null;
-        public Expression[] values = null;
-        public Token[] argNames = null;
-        public Statement[] nestedCode = null;
-        // Remember to add any new fields to BOTH the constructor and to the clone method.
-
-        private Expression(Token firstToken, ExpressionType type)
-        {
-            this.firstToken = firstToken;
-            this.type = type;
-        }
-
         public static Expression cloneExpressionWithNewToken(Token token, Expression other)
         {
-            Expression cloned = new Expression(token, other.type);
+            Expression cloned = FunctionWrapper.Expression_new(token, other.type);
             cloned.root = other.root;
             cloned.left = other.left;
             cloned.right = other.right;
@@ -90,40 +65,40 @@ namespace CommonScript.Compiler
 
         public static Expression createNullConstant(Token nullToken)
         {
-            return new Expression(nullToken, ExpressionType.NULL_CONST);
+            return FunctionWrapper.Expression_new(nullToken, (int) ExpressionType.NULL_CONST);
         }
 
         public static Expression createBoolConstant(Token token, bool val)
         {
-            Expression expr = new Expression(token, ExpressionType.BOOL_CONST);
+            Expression expr = FunctionWrapper.Expression_new(token, (int) ExpressionType.BOOL_CONST);
             expr.boolVal = val;
             return expr;
         }
 
         public static Expression createIntegerConstant(Token token, int val)
         {
-            Expression expr = new Expression(token, ExpressionType.INTEGER_CONST);
+            Expression expr = FunctionWrapper.Expression_new(token, (int) ExpressionType.INTEGER_CONST);
             expr.intVal = val;
             return expr;
         }
 
         public static Expression createFloatConstant(Token token, double val)
         {
-            Expression expr = new Expression(token, ExpressionType.FLOAT_CONST);
+            Expression expr = FunctionWrapper.Expression_new(token, (int) ExpressionType.FLOAT_CONST);
             expr.floatVal = val;
             return expr;
         }
 
         public static Expression createStringConstant(Token token, string val)
         {
-            Expression expr = new Expression(token, ExpressionType.STRING_CONST);
+            Expression expr = FunctionWrapper.Expression_new(token, (int) ExpressionType.STRING_CONST);
             expr.strVal = val;
             return expr;
         }
 
         public static Expression createLambda(Token firstToken, Token[] argNameTokens, Expression[] argDefaultValues, Token arrowToken, Statement[] code)
         {
-            Expression expr = new Expression(firstToken, ExpressionType.LAMBDA);
+            Expression expr = FunctionWrapper.Expression_new(firstToken, (int) ExpressionType.LAMBDA);
             expr.argNames = argNameTokens;
             expr.values = argDefaultValues;
             expr.opToken = arrowToken;
@@ -133,36 +108,36 @@ namespace CommonScript.Compiler
 
         public static Expression createVariable(Token token, string varName)
         {
-            Expression expr = new Expression(token, ExpressionType.VARIABLE);
+            Expression expr = FunctionWrapper.Expression_new(token, (int) ExpressionType.VARIABLE);
             expr.strVal = varName;
             return expr;
         }
 
         public static Expression createThisReference(Token token)
         {
-            return new Expression(token, ExpressionType.THIS);
+            return FunctionWrapper.Expression_new(token, (int) ExpressionType.THIS);
         }
 
         public static Expression createBaseReference(Token token)
         {
-            return new Expression(token, ExpressionType.BASE);
+            return FunctionWrapper.Expression_new(token, (int) ExpressionType.BASE);
         }
 
         public static Expression createBaseCtorReference(Token token)
         {
-            return new Expression(token, ExpressionType.BASE_CTOR_REFERENCE);
+            return FunctionWrapper.Expression_new(token, (int) ExpressionType.BASE_CTOR_REFERENCE);
         }
 
         public static Expression createConstructorReference(Token newToken, Expression nameChain)
         {
-            Expression ctor = new Expression(newToken, ExpressionType.CONSTRUCTOR_REFERENCE);
+            Expression ctor = FunctionWrapper.Expression_new(newToken, (int) ExpressionType.CONSTRUCTOR_REFERENCE);
             ctor.root = nameChain;
             return ctor;
         }
 
         public static Expression createConstructorInvocation(Token firstToken, AbstractEntity classDef, Token invokeToken, Expression[] args)
         {
-            Expression ctorInvoke = new Expression(firstToken, ExpressionType.CONSTRUCTOR_INVOCATION);
+            Expression ctorInvoke = FunctionWrapper.Expression_new(firstToken, (int) ExpressionType.CONSTRUCTOR_INVOCATION);
             ctorInvoke.entityPtr = classDef;
             ctorInvoke.args = args;
             ctorInvoke.opToken = invokeToken;
@@ -171,20 +146,20 @@ namespace CommonScript.Compiler
 
         public static Expression createListDefinition(Token openList, Expression[] items)
         {
-            Expression expr = new Expression(openList, ExpressionType.LIST_DEFINITION);
+            Expression expr = FunctionWrapper.Expression_new(openList, (int) ExpressionType.LIST_DEFINITION);
             expr.values = items;
             return expr;
         }
 
         public static Expression createDictionaryDefinition(Token openDict, Expression[] keys, Expression[] values)
         {
-            Expression expr = new Expression(openDict, ExpressionType.DICTIONARY_DEFINITION);
+            Expression expr = FunctionWrapper.Expression_new(openDict, (int) ExpressionType.DICTIONARY_DEFINITION);
             expr.keys = keys;
             expr.values = values;
             for (int i = 0; i < keys.Length; i++)
             {
                 Expression key = keys[i];
-                if (key.type != ExpressionType.STRING_CONST && key.type != ExpressionType.INTEGER_CONST)
+                if (key.type != (int) ExpressionType.STRING_CONST && key.type != (int) ExpressionType.INTEGER_CONST)
                 {
                     FunctionWrapper.Errors_Throw(key.firstToken, "Only string and integer constants can be used as dictionary keys");
                 }
@@ -194,14 +169,14 @@ namespace CommonScript.Compiler
 
         public static Expression createExtensionReference(Token prefixToken, string name)
         {
-            Expression extRef = new Expression(prefixToken, ExpressionType.EXTENSION_REFERENCE);
+            Expression extRef = FunctionWrapper.Expression_new(prefixToken, (int) ExpressionType.EXTENSION_REFERENCE);
             extRef.strVal = name;
             return extRef;
         }
 
         public static Expression createExtensionInvocation(Token firstToken, string name, Expression[] args)
         {
-            Expression extInvoke = new Expression(firstToken, ExpressionType.EXTENSION_INVOCATION);
+            Expression extInvoke = FunctionWrapper.Expression_new(firstToken, (int) ExpressionType.EXTENSION_INVOCATION);
             extInvoke.strVal = name;
             extInvoke.args = args;
             return extInvoke;
@@ -209,7 +184,7 @@ namespace CommonScript.Compiler
 
         public static Expression createTernary(Expression condition, Token op, Expression trueValue, Expression falseValue)
         {
-            Expression ternary = new Expression(condition.firstToken, ExpressionType.TERNARY);
+            Expression ternary = FunctionWrapper.Expression_new(condition.firstToken, (int) ExpressionType.TERNARY);
             ternary.root = condition;
             ternary.opToken = op;
             ternary.left = trueValue;
@@ -219,7 +194,7 @@ namespace CommonScript.Compiler
 
         public static Expression createBinaryOp(Expression left, Token op, Expression right)
         {
-            Expression pair = new Expression(left.firstToken, ExpressionType.BINARY_OP);
+            Expression pair = FunctionWrapper.Expression_new(left.firstToken, (int) ExpressionType.BINARY_OP);
             pair.opToken = op;
             pair.left = left;
             pair.right = right;
@@ -228,16 +203,16 @@ namespace CommonScript.Compiler
 
         public static Expression createInlineIncrement(Token firstToken, Expression root, Token incrementOp, bool isPrefix)
         {
-            Expression expr = new Expression(firstToken, ExpressionType.INLINE_INCREMENT);
+            Expression expr = FunctionWrapper.Expression_new(firstToken, (int) ExpressionType.INLINE_INCREMENT);
             expr.opToken = incrementOp;
             expr.root = root;
             expr.boolVal = isPrefix;
 
             switch (root.type)
             {
-                case ExpressionType.DOT_FIELD:
-                case ExpressionType.INDEX:
-                case ExpressionType.VARIABLE:
+                case (int) ExpressionType.DOT_FIELD:
+                case (int) ExpressionType.INDEX:
+                case (int) ExpressionType.VARIABLE:
                     // These are fine.
                     break;
 
@@ -254,7 +229,7 @@ namespace CommonScript.Compiler
             ExpressionType t = ExpressionType.NEGATIVE_SIGN;
             if (opToken.Value == "!") t = ExpressionType.BOOLEAN_NOT;
             if (opToken.Value == "~") t = ExpressionType.BITWISE_NOT;
-            Expression expr = new Expression(opToken, t);
+            Expression expr = FunctionWrapper.Expression_new(opToken, (int) t);
             expr.opToken = opToken;
             expr.root = root;
             return expr;
@@ -262,7 +237,7 @@ namespace CommonScript.Compiler
 
         public static Expression createDotField(Expression root, Token dotToken, string name)
         {
-            Expression df = new Expression(root.firstToken, ExpressionType.DOT_FIELD);
+            Expression df = FunctionWrapper.Expression_new(root.firstToken, (int) ExpressionType.DOT_FIELD);
             df.root = root;
             df.opToken = dotToken;
             df.strVal = name;
@@ -276,11 +251,11 @@ namespace CommonScript.Compiler
             while (walker != null)
             {
                 chain.Add(walker.strVal);
-                if (walker.type == ExpressionType.DOT_FIELD)
+                if (walker.type == (int) ExpressionType.DOT_FIELD)
                 {
                     walker = walker.root;
                 }
-                else if (walker.type == ExpressionType.VARIABLE)
+                else if (walker.type == (int) ExpressionType.VARIABLE)
                 {
                     walker = null;
                 }
@@ -299,7 +274,7 @@ namespace CommonScript.Compiler
 
         public static Expression createFunctionInvocation(Expression root, Token parenToken, Expression[] args)
         {
-            Expression funcInvoke = new Expression(root.firstToken, ExpressionType.FUNCTION_INVOKE);
+            Expression funcInvoke = FunctionWrapper.Expression_new(root.firstToken, (int) ExpressionType.FUNCTION_INVOKE);
             funcInvoke.root = root;
             funcInvoke.opToken = parenToken;
             funcInvoke.args = args;
@@ -308,7 +283,7 @@ namespace CommonScript.Compiler
 
         public static Expression createBracketIndex(Expression root, Token bracketToken, Expression index)
         {
-            Expression bracketIndex = new Expression(root.firstToken, ExpressionType.INDEX);
+            Expression bracketIndex = FunctionWrapper.Expression_new(root.firstToken, (int) ExpressionType.INDEX);
             bracketIndex.root = root;
             bracketIndex.opToken = bracketToken;
             bracketIndex.right = index;
@@ -317,7 +292,7 @@ namespace CommonScript.Compiler
 
         public static Expression createClassReference(Token firstToken, AbstractEntity classDef)
         {
-            Expression classRef = new Expression(firstToken, ExpressionType.CLASS_REFERENCE);
+            Expression classRef = FunctionWrapper.Expression_new(firstToken, (int) ExpressionType.CLASS_REFERENCE);
             classRef.entityPtr = classDef;
             classRef.boolVal = false; // verified safe usage
             return classRef;
@@ -325,7 +300,7 @@ namespace CommonScript.Compiler
 
         public static Expression createEnumConstant(Token firstToken, AbstractEntity enumDef, string name, int value)
         {
-            Expression enumConst = new Expression(firstToken, ExpressionType.ENUM_CONST);
+            Expression enumConst = FunctionWrapper.Expression_new(firstToken, (int) ExpressionType.ENUM_CONST);
             enumConst.entityPtr = enumDef;
             enumConst.strVal = name;
             enumConst.intVal = value;
@@ -334,14 +309,14 @@ namespace CommonScript.Compiler
 
         public static Expression createEnumReference(Token firstToken, AbstractEntity enumDef)
         {
-            Expression enumRef = new Expression(firstToken, ExpressionType.ENUM_REFERENCE);
+            Expression enumRef = FunctionWrapper.Expression_new(firstToken, (int) ExpressionType.ENUM_REFERENCE);
             enumRef.entityPtr = enumDef;
             return enumRef;
         }
 
         public static Expression createFunctionReference(Token firstToken, string name, AbstractEntity funcDef)
         {
-            Expression funcRef = new Expression(firstToken, ExpressionType.FUNCTION_REFERENCE);
+            Expression funcRef = FunctionWrapper.Expression_new(firstToken, (int) ExpressionType.FUNCTION_REFERENCE);
             funcRef.strVal = name;
             funcRef.entityPtr = funcDef;
             return funcRef;
@@ -349,14 +324,14 @@ namespace CommonScript.Compiler
 
         public static Expression createImportReference(Token firstToken, ImportStatement importStatement)
         {
-            Expression impRef = new Expression(firstToken, ExpressionType.IMPORT_REFERENCE);
+            Expression impRef = FunctionWrapper.Expression_new(firstToken, (int) ExpressionType.IMPORT_REFERENCE);
             impRef.importPtr = importStatement;
             return impRef;
         }
 
         public static Expression createNamespaceReference(Token firstToken, AbstractEntity nsDef)
         {
-            Expression nsRef = new Expression(firstToken, ExpressionType.NAMESPACE_REFERENCE);
+            Expression nsRef = FunctionWrapper.Expression_new(firstToken, (int) ExpressionType.NAMESPACE_REFERENCE);
             nsRef.entityPtr = nsDef;
             return nsRef;
         }
@@ -368,7 +343,7 @@ namespace CommonScript.Compiler
             Expression end,
             Expression step)
         {
-            Expression sliceExpr = new Expression(rootExpression.firstToken, ExpressionType.SLICE);
+            Expression sliceExpr = FunctionWrapper.Expression_new(rootExpression.firstToken, (int) ExpressionType.SLICE);
             sliceExpr.root = rootExpression;
             sliceExpr.opToken = bracketToken;
             sliceExpr.args = new Expression[] { start, end, step };
@@ -377,7 +352,7 @@ namespace CommonScript.Compiler
         
         public static Expression createTypeof(Token typeofToken, Expression root)
         {
-            Expression typeofExpr = new Expression(typeofToken, ExpressionType.TYPEOF);
+            Expression typeofExpr = FunctionWrapper.Expression_new(typeofToken, (int) ExpressionType.TYPEOF);
             typeofExpr.root = root;
             return typeofExpr;
         }

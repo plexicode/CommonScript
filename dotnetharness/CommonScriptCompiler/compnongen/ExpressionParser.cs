@@ -33,7 +33,7 @@ namespace CommonScript.Compiler
                 Expression trueValue = this.ParseTernary();
                 FunctionWrapper.Tokens_popExpected(this.tokens, ":");
                 Expression falseValue = this.ParseTernary();
-                root = Expression.createTernary(root, qmark, trueValue, falseValue);
+                root = ExpressionUtil.createTernary(root, qmark, trueValue, falseValue);
             }
             return root;
         }
@@ -45,7 +45,7 @@ namespace CommonScript.Compiler
             {
                 Token op = FunctionWrapper.Tokens_pop(this.tokens);
                 Expression next = this.ParseNullCoalesce();
-                root = Expression.createBinaryOp(root, op, next);
+                root = ExpressionUtil.createBinaryOp(root, op, next);
             }
             return root;
         }
@@ -92,7 +92,7 @@ namespace CommonScript.Compiler
             {
                 Token op = FunctionWrapper.Tokens_pop(this.tokens);
                 Expression right = this.ParseInequality();
-                return Expression.createBinaryOp(root, op, right);
+                return ExpressionUtil.createBinaryOp(root, op, right);
             }
             return root;
         }
@@ -104,7 +104,7 @@ namespace CommonScript.Compiler
             {
                 Token op = FunctionWrapper.Tokens_pop(this.tokens);
                 Expression right = this.ParseBitshift();
-                root = Expression.createBinaryOp(root, op, right);
+                root = ExpressionUtil.createBinaryOp(root, op, right);
             }
             return root;
         }
@@ -208,7 +208,7 @@ namespace CommonScript.Compiler
         {
             Token typeofToken = FunctionWrapper.Tokens_popKeyword(this.tokens, "typeof");
             Expression root = this.ParseUnaryPrefix();
-            return Expression.createTypeof(typeofToken, root);
+            return ExpressionUtil.createTypeof(typeofToken, root);
         }
 
         private Expression ParseNegatePrefix()
@@ -219,7 +219,7 @@ namespace CommonScript.Compiler
             }
             Token op = FunctionWrapper.Tokens_pop(this.tokens);
             Expression root = this.ParseUnaryPrefix();
-            return Expression.createNegatePrefix(op, root);
+            return ExpressionUtil.createNegatePrefix(op, root);
         }
 
         private Expression ParseUnarySuffix()
@@ -235,7 +235,7 @@ namespace CommonScript.Compiler
                     case ".":
                         Token dotToken = FunctionWrapper.Tokens_pop(this.tokens);
                         Token nameToken = FunctionWrapper.Tokens_popName(this.tokens, "field name");
-                        root = Expression.createDotField(root, dotToken, nameToken.Value);
+                        root = ExpressionUtil.createDotField(root, dotToken, nameToken.Value);
                         checkForSuffixes = true;
                         break;
 
@@ -247,7 +247,7 @@ namespace CommonScript.Compiler
                             if (args.Count > 0) FunctionWrapper.Tokens_popExpected(this.tokens, ",");
                             args.Add(this.ParseExpression());
                         }
-                        root = Expression.createFunctionInvocation(root, openParen, args.ToArray());
+                        root = ExpressionUtil.createFunctionInvocation(root, openParen, args.ToArray());
                         checkForSuffixes = true;
                         break;
 
@@ -294,11 +294,11 @@ namespace CommonScript.Compiler
                                 FunctionWrapper.Errors_Throw(throwTokenOnInvalidSlice, "Expected index expression.");
                             }
 
-                            root = Expression.createBracketIndex(root, openBracket, sliceNums[0]);
+                            root = ExpressionUtil.createBracketIndex(root, openBracket, sliceNums[0]);
                         }
                         else
                         {
-                            root = Expression.createSliceExpression(root, openBracket, sliceNums[0], sliceNums[1], sliceNums.Count == 3 ? sliceNums[2] : null);
+                            root = ExpressionUtil.createSliceExpression(root, openBracket, sliceNums[0], sliceNums[1], sliceNums.Count == 3 ? sliceNums[2] : null);
                         }
 
                         checkForSuffixes = true;
@@ -307,7 +307,7 @@ namespace CommonScript.Compiler
                     case "++":
                     case "--":
                         Token ppToken = FunctionWrapper.Tokens_pop(this.tokens);
-                        root = Expression.createInlineIncrement(root.firstToken, root, ppToken, false);
+                        root = ExpressionUtil.createInlineIncrement(root.firstToken, root, ppToken, false);
                         break;
 
                     default:
@@ -327,7 +327,7 @@ namespace CommonScript.Compiler
             }
             Token op = FunctionWrapper.Tokens_pop(this.tokens);
             Expression root = this.ParseUnarySuffix();
-            return Expression.createInlineIncrement(op, root, op, true);
+            return ExpressionUtil.createInlineIncrement(op, root, op, true);
         }
 
         private static Expression FlattenBinaryOpChain(List<Expression> expressions, List<Token> ops)
@@ -338,19 +338,19 @@ namespace CommonScript.Compiler
             int length = expressions.Count;
             if (isShortCircuit)
             {
-                acc = Expression.createBinaryOp(expressions[length - 2], ops[length - 2], expressions[length - 1]);
+                acc = ExpressionUtil.createBinaryOp(expressions[length - 2], ops[length - 2], expressions[length - 1]);
                 for (int i = length - 3; i >= 0; i--)
                 {
-                    acc = Expression.createBinaryOp(expressions[i], ops[i], acc);
+                    acc = ExpressionUtil.createBinaryOp(expressions[i], ops[i], acc);
                 }
             }
             else
             {
-                acc = Expression.createBinaryOp(expressions[0], ops[0], expressions[1]);
+                acc = ExpressionUtil.createBinaryOp(expressions[0], ops[0], expressions[1]);
 
                 for (int i = 2; i < length; i++)
                 {
-                    acc = Expression.createBinaryOp(acc, ops[i - 1], expressions[i]);
+                    acc = ExpressionUtil.createBinaryOp(acc, ops[i - 1], expressions[i]);
                 }
             }
 
@@ -368,7 +368,7 @@ namespace CommonScript.Compiler
                 nextAllowed = FunctionWrapper.Tokens_popIfPresent(this.tokens, ",");
             }
             FunctionWrapper.Tokens_popExpected(this.tokens, "]");
-            return Expression.createListDefinition(openListToken, items.ToArray());
+            return ExpressionUtil.createListDefinition(openListToken, items.ToArray());
         }
 
         private Expression ParseDictionaryDefinition()
@@ -385,7 +385,7 @@ namespace CommonScript.Compiler
                 nextAllowed = FunctionWrapper.Tokens_popIfPresent(this.tokens, ",");
             }
             FunctionWrapper.Tokens_popExpected(this.tokens, "}");
-            return Expression.createDictionaryDefinition(openDictionaryToken, keys.ToArray(), values.ToArray());
+            return ExpressionUtil.createDictionaryDefinition(openDictionaryToken, keys.ToArray(), values.ToArray());
         }
 
         private Expression ParseAtomicExpression()
@@ -425,7 +425,7 @@ namespace CommonScript.Compiler
                     {
                         Token builtinPrefix = FunctionWrapper.Tokens_pop(this.tokens);
                         Token builtinName = FunctionWrapper.Tokens_popName(this.tokens, "built-in function name");
-                        return Expression.createExtensionReference(builtinPrefix, builtinName.Value);
+                        return ExpressionUtil.createExtensionReference(builtinPrefix, builtinName.Value);
                     }
                     break;
 
@@ -433,12 +433,12 @@ namespace CommonScript.Compiler
                     if (next == "true" || next == "false")
                     {
                         Token boolTok = FunctionWrapper.Tokens_pop(this.tokens);
-                        return Expression.createBoolConstant(boolTok, next == "true");
+                        return ExpressionUtil.createBoolConstant(boolTok, next == "true");
                     }
 
                     if (next == "null")
                     {
-                        return Expression.createNullConstant(FunctionWrapper.Tokens_pop(this.tokens));
+                        return ExpressionUtil.createNullConstant(FunctionWrapper.Tokens_pop(this.tokens));
                     }
 
                     if (next == "new")
@@ -450,47 +450,47 @@ namespace CommonScript.Compiler
                             nameChain.Add(FunctionWrapper.Tokens_pop(this.tokens));
                             nameChain.Add(FunctionWrapper.Tokens_popName(this.tokens, "class name"));
                         }
-                        Expression ctorChain = Expression.createVariable(nameChain[0], nameChain[0].Value);
+                        Expression ctorChain = ExpressionUtil.createVariable(nameChain[0], nameChain[0].Value);
                         for (int i = 1; i < nameChain.Count; i += 2)
                         {
-                            ctorChain = Expression.createDotField(ctorChain, nameChain[i], nameChain[i + 1].Value);
+                            ctorChain = ExpressionUtil.createDotField(ctorChain, nameChain[i], nameChain[i + 1].Value);
                         }
-                        return Expression.createConstructorReference(newTok, ctorChain);
+                        return ExpressionUtil.createConstructorReference(newTok, ctorChain);
                     }
 
                     if (next == "this")
                     {
-                        return Expression.createThisReference(FunctionWrapper.Tokens_pop(this.tokens));
+                        return ExpressionUtil.createThisReference(FunctionWrapper.Tokens_pop(this.tokens));
                     }
 
                     if (next == "base")
                     {
-                        return Expression.createBaseReference(FunctionWrapper.Tokens_pop(this.tokens));
+                        return ExpressionUtil.createBaseReference(FunctionWrapper.Tokens_pop(this.tokens));
                     }
 
                     break;
 
                 case (int) TokenType.INTEGER:
                     int intVal = ExpressionParser.TryParseInteger(nextToken, next, false);
-                    return Expression.createIntegerConstant(FunctionWrapper.Tokens_pop(this.tokens), intVal);
+                    return ExpressionUtil.createIntegerConstant(FunctionWrapper.Tokens_pop(this.tokens), intVal);
 
                 case (int) TokenType.FLOAT:
                     double floatVal = ExpressionParser.TryParseFloat(nextToken, next);
-                    return Expression.createFloatConstant(FunctionWrapper.Tokens_pop(this.tokens), floatVal);
+                    return ExpressionUtil.createFloatConstant(FunctionWrapper.Tokens_pop(this.tokens), floatVal);
 
                 case (int) TokenType.HEX_INTEGER:
                     int intValHex = ExpressionParser.TryParseInteger(nextToken, next, true);
-                    return Expression.createIntegerConstant(FunctionWrapper.Tokens_pop(this.tokens), intValHex);
+                    return ExpressionUtil.createIntegerConstant(FunctionWrapper.Tokens_pop(this.tokens), intValHex);
 
                 case (int) TokenType.STRING:
                     string strVal = ExpressionParser.TryParseString(nextToken, next);
-                    return Expression.createStringConstant(FunctionWrapper.Tokens_pop(this.tokens), strVal);
+                    return ExpressionUtil.createStringConstant(FunctionWrapper.Tokens_pop(this.tokens), strVal);
 
                 case (int) TokenType.NAME:
                     if (FunctionWrapper.Tokens_isSequenceNext2(this.tokens, null, "=>")) return this.ParseLambda();
 
                     Token varName = FunctionWrapper.Tokens_popName(this.tokens, "variable name");
-                    return Expression.createVariable(varName, varName.Value);
+                    return ExpressionUtil.createVariable(varName, varName.Value);
             }
 
             FunctionWrapper.Errors_Throw(nextToken, "Expected an expression but found '" + next + "' instead.");
@@ -533,10 +533,10 @@ namespace CommonScript.Compiler
             {
                 Expression codeExpr = this.ParseExpression();
                 code = new Statement[] {
-                    Statement.createReturn(arrow, codeExpr)
+                    StatementUtil.createReturn(arrow, codeExpr)
                 };
             }
-            return Expression.createLambda(firstToken, argTokens.ToArray(), argDefaultValues.ToArray(), arrow, code);
+            return ExpressionUtil.createLambda(firstToken, argTokens.ToArray(), argDefaultValues.ToArray(), arrow, code);
         }
 
         private static string TryParseString(Token throwToken, string rawValue)

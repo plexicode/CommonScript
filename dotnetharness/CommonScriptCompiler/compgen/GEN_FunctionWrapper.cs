@@ -129,6 +129,11 @@ namespace CommonScript.Compiler.Internal
             return join2(buf, create0(18, throwToken, null));
         }
 
+        public static CatchChunk CatchChunk_new(Statement[] catchCode, System.Collections.Generic.List<Token[]> exceptionClassNamesRaw, Token exceptionVarToken)
+        {
+            return new CatchChunk(exceptionClassNamesRaw.ToArray(), null, exceptionVarToken, catchCode, false);
+        }
+
         public static ClassEntity ClassEntity_new(Token classToken, Token nameToken, string fqName)
         {
             ClassEntity cd = new ClassEntity(null, null, null, null, 0, null, new Dictionary<string, AbstractEntity>(), null);
@@ -230,6 +235,11 @@ namespace CommonScript.Compiler.Internal
                 optionalMsg = "";
             }
             Errors_Throw(token, ("***NOT IMPLEMENTED*** " + optionalMsg).Trim());
+        }
+
+        public static Expression Expression_new(Token firstToken, int type)
+        {
+            return new Expression(firstToken, type, null, null, null, null, false, null, 0, 0.0, null, null, null, null, null, null, null);
         }
 
         public static object fail(string msg)
@@ -412,6 +422,11 @@ namespace CommonScript.Compiler.Internal
             return ns;
         }
 
+        public static Statement Statement_new(Token firstToken, int type)
+        {
+            return new Statement(firstToken, type, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0);
+        }
+
         public static StaticContext StaticContext_new()
         {
             return new StaticContext(TokenizerStaticContext_new(), new Dictionary<string, AbstractEntity>());
@@ -506,6 +521,11 @@ namespace CommonScript.Compiler.Internal
                 output = trimmedOutput;
             }
             return output;
+        }
+
+        public static SwitchChunk SwitchChunk_new()
+        {
+            return new SwitchChunk(new List<Token>(), new List<Expression>(), new List<Statement>());
         }
 
         public static string Token_getFingerprint(Token t)

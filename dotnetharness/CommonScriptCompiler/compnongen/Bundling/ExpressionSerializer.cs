@@ -10,35 +10,35 @@ namespace CommonScript.Compiler
             switch (expr.type)
             {
                 // These should have been resolved out with proper errors thrown before this point.
-                case ExpressionType.EXTENSION_REFERENCE:
+                case (int) ExpressionType.EXTENSION_REFERENCE:
                     throw new InvalidOperationException();
 
-                case ExpressionType.BASE_CTOR_REFERENCE: return serializeBaseCtorReference(expr);
-                case ExpressionType.BINARY_OP: return serializeBinaryOp(expr);
-                case ExpressionType.BITWISE_NOT: return serializeBitwiseNot(expr);
-                case ExpressionType.BOOL_CONST: return serializeBoolConst(expr);
-                case ExpressionType.BOOLEAN_NOT: return serializeBooleanNot(expr);
-                case ExpressionType.CLASS_REFERENCE: return serializeClassReference(expr);
-                case ExpressionType.CONSTRUCTOR_INVOCATION: return serializeConstructorInvocation(expr);
-                case ExpressionType.DICTIONARY_DEFINITION: return serializeDictionaryDefinition(expr);
-                case ExpressionType.DOT_FIELD: return serializeDotField(expr);
-                case ExpressionType.EXTENSION_INVOCATION: return serializeExtensionInvocation(expr);
-                case ExpressionType.FLOAT_CONST: return serializeFloatConstant(expr);
-                case ExpressionType.FUNCTION_INVOKE: return serializeFunctionInvocation(expr);
-                case ExpressionType.FUNCTION_REFERENCE: return serializeFunctionReference(expr);
-                case ExpressionType.INDEX: return serializeIndex(expr);
-                case ExpressionType.INLINE_INCREMENT: return serializeInlineIncrement(expr);
-                case ExpressionType.INTEGER_CONST: return serializeIntegerConstant(expr);
-                case ExpressionType.LAMBDA: return serializeLambda(expr);
-                case ExpressionType.LIST_DEFINITION: return serializeListDefinition(expr);
-                case ExpressionType.NEGATIVE_SIGN: return serializeNegativeSign(expr);
-                case ExpressionType.NULL_CONST: return serializeNullConstant(expr);
-                case ExpressionType.SLICE: return serializeSlice(expr);
-                case ExpressionType.STRING_CONST: return serializeStringConstant(expr);
-                case ExpressionType.TERNARY: return serializeTernary(expr);
-                case ExpressionType.THIS: return serializeThis(expr);
-                case ExpressionType.TYPEOF: return serializeTypeOf(expr);
-                case ExpressionType.VARIABLE: return serializeVariable(expr);
+                case (int) ExpressionType.BASE_CTOR_REFERENCE: return serializeBaseCtorReference(expr);
+                case (int) ExpressionType.BINARY_OP: return serializeBinaryOp(expr);
+                case (int) ExpressionType.BITWISE_NOT: return serializeBitwiseNot(expr);
+                case (int) ExpressionType.BOOL_CONST: return serializeBoolConst(expr);
+                case (int) ExpressionType.BOOLEAN_NOT: return serializeBooleanNot(expr);
+                case (int) ExpressionType.CLASS_REFERENCE: return serializeClassReference(expr);
+                case (int) ExpressionType.CONSTRUCTOR_INVOCATION: return serializeConstructorInvocation(expr);
+                case (int) ExpressionType.DICTIONARY_DEFINITION: return serializeDictionaryDefinition(expr);
+                case (int) ExpressionType.DOT_FIELD: return serializeDotField(expr);
+                case (int) ExpressionType.EXTENSION_INVOCATION: return serializeExtensionInvocation(expr);
+                case (int) ExpressionType.FLOAT_CONST: return serializeFloatConstant(expr);
+                case (int) ExpressionType.FUNCTION_INVOKE: return serializeFunctionInvocation(expr);
+                case (int) ExpressionType.FUNCTION_REFERENCE: return serializeFunctionReference(expr);
+                case (int) ExpressionType.INDEX: return serializeIndex(expr);
+                case (int) ExpressionType.INLINE_INCREMENT: return serializeInlineIncrement(expr);
+                case (int) ExpressionType.INTEGER_CONST: return serializeIntegerConstant(expr);
+                case (int) ExpressionType.LAMBDA: return serializeLambda(expr);
+                case (int) ExpressionType.LIST_DEFINITION: return serializeListDefinition(expr);
+                case (int) ExpressionType.NEGATIVE_SIGN: return serializeNegativeSign(expr);
+                case (int) ExpressionType.NULL_CONST: return serializeNullConstant(expr);
+                case (int) ExpressionType.SLICE: return serializeSlice(expr);
+                case (int) ExpressionType.STRING_CONST: return serializeStringConstant(expr);
+                case (int) ExpressionType.TERNARY: return serializeTernary(expr);
+                case (int) ExpressionType.THIS: return serializeThis(expr);
+                case (int) ExpressionType.TYPEOF: return serializeTypeOf(expr);
+                case (int) ExpressionType.VARIABLE: return serializeVariable(expr);
                 default:
                     throw new NotImplementedException();
             }
@@ -213,9 +213,9 @@ namespace CommonScript.Compiler
         {
             switch (ii.root.type)
             {
-                case ExpressionType.VARIABLE: return serializeInlineIncrementVar(ii);
-                case ExpressionType.INDEX: return serializeInlineIncrementIndex(ii);
-                case ExpressionType.DOT_FIELD: return serializeInlineIncrementDotField(ii);
+                case (int) ExpressionType.VARIABLE: return serializeInlineIncrementVar(ii);
+                case (int) ExpressionType.INDEX: return serializeInlineIncrementIndex(ii);
+                case (int) ExpressionType.DOT_FIELD: return serializeInlineIncrementDotField(ii);
                 default:
                     break;
             }

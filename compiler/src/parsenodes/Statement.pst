@@ -1,0 +1,60 @@
+
+enum StatementType {
+    ASSIGNMENT = 1,
+    BREAK = 2,
+    CONTINUE = 3,
+    DO_WHILE_LOOP = 4,
+    EXPRESSION_AS_STATEMENT = 5,
+    FOR_LOOP = 6,
+    FOR_EACH_LOOP = 7,
+    IF_STATEMENT = 8,
+    RETURN = 9,
+    SWITCH_STATEMENT = 10,
+    THROW = 11,
+    TRY = 12,
+    WHILE_LOOP = 13
+}
+
+
+struct Statement {
+    Token firstToken;
+    int type;
+
+    Expression expression;
+    Expression condition;
+
+    Expression assignTarget;
+    Expression assignValue;
+    Token assignOp;
+
+    Token varToken;
+    Token finallyToken;
+
+    Array<Statement> forInit;
+    Array<Statement> forStep;
+
+    Array<Statement> code;
+    Array<Statement> elseCode;
+    Array<Statement> finallyCode;
+
+    Array<SwitchChunk> switchChunks;
+    Array<CatchChunk> catchChunks;
+
+    int autoId;
+}
+
+Statement Statement_new(Token firstToken, int type) {
+    return new Statement(
+        firstToken, 
+        type,
+
+        null, null, 
+        null, null, null,
+        null, null, 
+        null, null, 
+        null, null, null, 
+        null, null, 
+
+        0
+    ); 
+}

@@ -141,9 +141,9 @@ namespace CommonScript.Compiler
                 // TODO: verify arg count
                 Token baseCtor = funcDef.baseData.firstToken; // TODO: this is wrong, get the actual 'base' token
                 Token baseCtorParen = funcDef.baseData.firstToken; // TODO: this is even more wrong 
-                Expression baseCtorRef = Expression.createBaseCtorReference(baseCtor);
-                Expression baseCtorInvoke = Expression.createFunctionInvocation(baseCtorRef, baseCtorParen, ctorEnt.baseCtorArgValues);
-                Statement baseCtorStmnt = Statement.createExpressionAsStatement(baseCtorInvoke);
+                Expression baseCtorRef = ExpressionUtil.createBaseCtorReference(baseCtor);
+                Expression baseCtorInvoke = ExpressionUtil.createFunctionInvocation(baseCtorRef, baseCtorParen, ctorEnt.baseCtorArgValues);
+                Statement baseCtorStmnt = StatementUtil.createExpressionAsStatement(baseCtorInvoke);
                 baseCtorStmnt = this.statementResolver.ResolveStatementFirstPass(baseCtorStmnt);
                 baseCtorInvocation.Add(baseCtorStmnt);
             }
@@ -159,10 +159,10 @@ namespace CommonScript.Compiler
 
             Statement lastStatement = flattened.Count == 0 ? null : flattened[flattened.Count - 1];
             bool autoReturnNeeded = lastStatement == null ||
-                (lastStatement.type != StatementType.RETURN && lastStatement.type != StatementType.THROW);
+                (lastStatement.type != (int) StatementType.RETURN && lastStatement.type != (int) StatementType.THROW);
             if (autoReturnNeeded)
             {
-                flattened.Add(Statement.createReturn(null, Expression.createNullConstant(null)));
+                flattened.Add(StatementUtil.createReturn(null, ExpressionUtil.createNullConstant(null)));
             }
             funcDef.code = [.. flattened];
 
@@ -174,11 +174,11 @@ namespace CommonScript.Compiler
         {
             if (fld.opToken == null) throw new InvalidOperationException(); // only applicable to default-value-based fields.
             Expression root = fld.baseData.isStatic
-                ? Expression.createClassReference(null, fld.baseData.nestParent)
-                : Expression.createThisReference(null);
-            Expression target = Expression.createDotField(root, null, fld.baseData.simpleName);
+                ? ExpressionUtil.createClassReference(null, fld.baseData.nestParent)
+                : ExpressionUtil.createThisReference(null);
+            Expression target = ExpressionUtil.createDotField(root, null, fld.baseData.simpleName);
             Token equal = fld.opToken;
-            return Statement.createAssignment(target, equal, fld.defaultValue);
+            return StatementUtil.createAssignment(target, equal, fld.defaultValue);
         }
 
         public void ResolveFunctionSecondPass(FunctionLikeEntity funcDef)
@@ -197,10 +197,10 @@ namespace CommonScript.Compiler
 
             this.statementResolver.ResolveStatementArraySecondPass(funcDef.code);
 
-            if (funcDef.code.Length == 0 || funcDef.code[funcDef.code.Length - 1].type != StatementType.RETURN)
+            if (funcDef.code.Length == 0 || funcDef.code[funcDef.code.Length - 1].type != (int) StatementType.RETURN)
             {
                 List<Statement> newCode = new List<Statement>(funcDef.code);
-                newCode.Add(Statement.createReturn(null, Expression.createNullConstant(null)));
+                newCode.Add(StatementUtil.createReturn(null, ExpressionUtil.createNullConstant(null)));
                 funcDef.code = newCode.ToArray();
             }
             this.resolver.activeEntity = null;

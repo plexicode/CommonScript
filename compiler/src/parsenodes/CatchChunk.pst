@@ -1,0 +1,19 @@
+struct CatchChunk {
+
+    // Token CatchToken;
+    Array<Array<Token>> ExceptionNames;
+    Array<ClassEntity> ClassDefinitions;
+    Token exceptionVarName;
+    Array<Statement> Code;
+    bool IsCatchAll;
+}
+
+CatchChunk CatchChunk_new(Array<Statement> catchCode, List<Array<Token>> exceptionClassNamesRaw, Token exceptionVarToken) {
+    return new CatchChunk(
+        Core.ListToArray(exceptionClassNamesRaw), 
+        null, 
+        exceptionVarToken, 
+        catchCode, 
+        false
+    );
+}

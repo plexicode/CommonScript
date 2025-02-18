@@ -20,32 +20,32 @@ namespace CommonScript.Compiler
         {
             switch (expr.type)
             {
-                case ExpressionType.BASE_CTOR_REFERENCE: return this.FirstPass_BaseCtorReference(expr);
-                case ExpressionType.BINARY_OP: return this.FirstPass_BinaryOp(expr);
-                case ExpressionType.BITWISE_NOT: return this.FirstPass_BitwiseNot(expr);
-                case ExpressionType.BOOL_CONST: return this.FirstPass_BoolConst(expr);
-                case ExpressionType.BOOLEAN_NOT: return this.FirstPass_BoolNot(expr);
-                case ExpressionType.CONSTRUCTOR_INVOCATION: return this.FirstPass_ConstructorInvocation(expr);
-                case ExpressionType.CONSTRUCTOR_REFERENCE: return this.FirstPass_ConstructorReference(expr);
-                case ExpressionType.DICTIONARY_DEFINITION: return this.FirstPass_DictionaryDefinition(expr);
-                case ExpressionType.DOT_FIELD: return this.FirstPass_DotField(expr);
-                case ExpressionType.FLOAT_CONST: return this.FirstPass_FloatConstant(expr);
-                case ExpressionType.FUNCTION_INVOKE: return this.FirstPass_FunctionInvocation(expr);
-                case ExpressionType.INDEX: return this.FirstPass_Index(expr);
-                case ExpressionType.INLINE_INCREMENT: return this.FirstPass_InlineIncrement(expr);
-                case ExpressionType.INTEGER_CONST: return this.FirstPass_IntegerConstant(expr);
-                case ExpressionType.LAMBDA: return this.FirstPass_Lambda(expr);
-                case ExpressionType.LIST_DEFINITION: return this.FirstPass_ListDefinition(expr);
-                case ExpressionType.NEGATIVE_SIGN: return this.FirstPass_NegativeSign(expr);
-                case ExpressionType.NULL_CONST: return this.FirstPass_NullConst(expr);
-                case ExpressionType.SLICE: return this.FirstPass_Slice(expr);
-                case ExpressionType.STRING_CONST: return this.FirstPass_StringConstant(expr);
-                case ExpressionType.TERNARY: return this.FirstPass_Ternary(expr);
-                case ExpressionType.THIS: return this.FirstPass_This(expr);
-                case ExpressionType.TYPEOF: return this.FirstPass_TypeOf(expr);
-                case ExpressionType.VARIABLE: return this.FirstPass_Variable(expr);
+                case (int) ExpressionType.BASE_CTOR_REFERENCE: return this.FirstPass_BaseCtorReference(expr);
+                case (int) ExpressionType.BINARY_OP: return this.FirstPass_BinaryOp(expr);
+                case (int) ExpressionType.BITWISE_NOT: return this.FirstPass_BitwiseNot(expr);
+                case (int) ExpressionType.BOOL_CONST: return this.FirstPass_BoolConst(expr);
+                case (int) ExpressionType.BOOLEAN_NOT: return this.FirstPass_BoolNot(expr);
+                case (int) ExpressionType.CONSTRUCTOR_INVOCATION: return this.FirstPass_ConstructorInvocation(expr);
+                case (int) ExpressionType.CONSTRUCTOR_REFERENCE: return this.FirstPass_ConstructorReference(expr);
+                case (int) ExpressionType.DICTIONARY_DEFINITION: return this.FirstPass_DictionaryDefinition(expr);
+                case (int) ExpressionType.DOT_FIELD: return this.FirstPass_DotField(expr);
+                case (int) ExpressionType.FLOAT_CONST: return this.FirstPass_FloatConstant(expr);
+                case (int) ExpressionType.FUNCTION_INVOKE: return this.FirstPass_FunctionInvocation(expr);
+                case (int) ExpressionType.INDEX: return this.FirstPass_Index(expr);
+                case (int) ExpressionType.INLINE_INCREMENT: return this.FirstPass_InlineIncrement(expr);
+                case (int) ExpressionType.INTEGER_CONST: return this.FirstPass_IntegerConstant(expr);
+                case (int) ExpressionType.LAMBDA: return this.FirstPass_Lambda(expr);
+                case (int) ExpressionType.LIST_DEFINITION: return this.FirstPass_ListDefinition(expr);
+                case (int) ExpressionType.NEGATIVE_SIGN: return this.FirstPass_NegativeSign(expr);
+                case (int) ExpressionType.NULL_CONST: return this.FirstPass_NullConst(expr);
+                case (int) ExpressionType.SLICE: return this.FirstPass_Slice(expr);
+                case (int) ExpressionType.STRING_CONST: return this.FirstPass_StringConstant(expr);
+                case (int) ExpressionType.TERNARY: return this.FirstPass_Ternary(expr);
+                case (int) ExpressionType.THIS: return this.FirstPass_This(expr);
+                case (int) ExpressionType.TYPEOF: return this.FirstPass_TypeOf(expr);
+                case (int) ExpressionType.VARIABLE: return this.FirstPass_Variable(expr);
 
-                case ExpressionType.EXTENSION_REFERENCE:
+                case (int) ExpressionType.EXTENSION_REFERENCE:
                     FunctionWrapper.Errors_Throw(expr.firstToken, "Extension method references must be invoked immediately.");
                     break;
 
@@ -60,35 +60,35 @@ namespace CommonScript.Compiler
         {
             switch (expr.type)
             {
-                case ExpressionType.BASE_CTOR_REFERENCE: return this.SecondPass_BaseCtorReference(expr);
-                case ExpressionType.BINARY_OP: return this.SecondPass_BinaryOp(expr);
-                case ExpressionType.BITWISE_NOT: return this.SecondPass_BitwiseNot(expr);
-                case ExpressionType.BOOL_CONST: return this.SecondPass_BoolConst(expr);
-                case ExpressionType.BOOLEAN_NOT: return this.SecondPass_BoolNot(expr);
-                case ExpressionType.CLASS_REFERENCE: return this.SecondPass_ClassReference(expr);
-                case ExpressionType.CONSTRUCTOR_REFERENCE: return this.SecondPass_ConstructorReference(expr, false);
-                case ExpressionType.DICTIONARY_DEFINITION: return this.SecondPass_DictionaryDefinition(expr);
-                case ExpressionType.DOT_FIELD: return this.SecondPass_DotField(expr);
-                case ExpressionType.ENUM_CONST: return this.SecondPass_EnumConstant(expr);
-                case ExpressionType.EXTENSION_INVOCATION: return this.SecondPass_ExtensionInvocation(expr);
-                case ExpressionType.FLOAT_CONST: return this.SecondPass_FloatConstant(expr);
-                case ExpressionType.FUNCTION_INVOKE: return this.SecondPass_FunctionInvocation(expr);
-                case ExpressionType.FUNCTION_REFERENCE: return this.SecondPass_FunctionReference(expr);
-                case ExpressionType.IMPORT_REFERENCE: return this.SecondPass_ImportReference(expr);
-                case ExpressionType.INDEX: return this.SecondPass_Index(expr);
-                case ExpressionType.INLINE_INCREMENT: return this.SecondPass_InlineIncrement(expr);
-                case ExpressionType.INTEGER_CONST: return this.SecondPass_IntegerConstant(expr);
-                case ExpressionType.LAMBDA: return this.SecondPass_Lambda(expr);
-                case ExpressionType.LIST_DEFINITION: return this.SecondPass_ListDefinition(expr);
-                case ExpressionType.NAMESPACE_REFERENCE: return this.SecondPass_NamespaceReference(expr);
-                case ExpressionType.NEGATIVE_SIGN: return this.SecondPass_NegativeSign(expr);
-                case ExpressionType.NULL_CONST: return this.SecondPass_NullConstant(expr);
-                case ExpressionType.SLICE: return this.SecondPass_Slice(expr);
-                case ExpressionType.STRING_CONST: return this.SecondPass_StringConstant(expr);
-                case ExpressionType.TERNARY: return this.SecondPass_Ternary(expr);
-                case ExpressionType.THIS: return this.SecondPass_ThisConstant(expr);
-                case ExpressionType.TYPEOF: return this.SecondPass_TypeOf(expr);
-                case ExpressionType.VARIABLE: return this.SecondPass_Variable(expr);
+                case (int) ExpressionType.BASE_CTOR_REFERENCE: return this.SecondPass_BaseCtorReference(expr);
+                case (int) ExpressionType.BINARY_OP: return this.SecondPass_BinaryOp(expr);
+                case (int) ExpressionType.BITWISE_NOT: return this.SecondPass_BitwiseNot(expr);
+                case (int) ExpressionType.BOOL_CONST: return this.SecondPass_BoolConst(expr);
+                case (int) ExpressionType.BOOLEAN_NOT: return this.SecondPass_BoolNot(expr);
+                case (int) ExpressionType.CLASS_REFERENCE: return this.SecondPass_ClassReference(expr);
+                case (int) ExpressionType.CONSTRUCTOR_REFERENCE: return this.SecondPass_ConstructorReference(expr, false);
+                case (int) ExpressionType.DICTIONARY_DEFINITION: return this.SecondPass_DictionaryDefinition(expr);
+                case (int) ExpressionType.DOT_FIELD: return this.SecondPass_DotField(expr);
+                case (int) ExpressionType.ENUM_CONST: return this.SecondPass_EnumConstant(expr);
+                case (int) ExpressionType.EXTENSION_INVOCATION: return this.SecondPass_ExtensionInvocation(expr);
+                case (int) ExpressionType.FLOAT_CONST: return this.SecondPass_FloatConstant(expr);
+                case (int) ExpressionType.FUNCTION_INVOKE: return this.SecondPass_FunctionInvocation(expr);
+                case (int) ExpressionType.FUNCTION_REFERENCE: return this.SecondPass_FunctionReference(expr);
+                case (int) ExpressionType.IMPORT_REFERENCE: return this.SecondPass_ImportReference(expr);
+                case (int) ExpressionType.INDEX: return this.SecondPass_Index(expr);
+                case (int) ExpressionType.INLINE_INCREMENT: return this.SecondPass_InlineIncrement(expr);
+                case (int) ExpressionType.INTEGER_CONST: return this.SecondPass_IntegerConstant(expr);
+                case (int) ExpressionType.LAMBDA: return this.SecondPass_Lambda(expr);
+                case (int) ExpressionType.LIST_DEFINITION: return this.SecondPass_ListDefinition(expr);
+                case (int) ExpressionType.NAMESPACE_REFERENCE: return this.SecondPass_NamespaceReference(expr);
+                case (int) ExpressionType.NEGATIVE_SIGN: return this.SecondPass_NegativeSign(expr);
+                case (int) ExpressionType.NULL_CONST: return this.SecondPass_NullConstant(expr);
+                case (int) ExpressionType.SLICE: return this.SecondPass_Slice(expr);
+                case (int) ExpressionType.STRING_CONST: return this.SecondPass_StringConstant(expr);
+                case (int) ExpressionType.TERNARY: return this.SecondPass_Ternary(expr);
+                case (int) ExpressionType.THIS: return this.SecondPass_ThisConstant(expr);
+                case (int) ExpressionType.TYPEOF: return this.SecondPass_TypeOf(expr);
+                case (int) ExpressionType.VARIABLE: return this.SecondPass_Variable(expr);
                 default:
                     FunctionWrapper.Errors_ThrowNotImplemented(expr.firstToken, "second pass for this type");
                     break;
@@ -185,7 +185,7 @@ namespace CommonScript.Compiler
 
             switch (dotField.root.type)
             {
-                case ExpressionType.IMPORT_REFERENCE:
+                case (int) ExpressionType.IMPORT_REFERENCE:
                     ImportStatement importRef = dotField.root.importPtr;
                     CompiledModule moduleRef = importRef.compiledModuleRef;
                     Expression output = LookupEngine.tryCreateModuleMemberReference(moduleRef, dotField.firstToken, fieldName);
@@ -195,7 +195,7 @@ namespace CommonScript.Compiler
                     }
                     return output;
 
-                case ExpressionType.ENUM_REFERENCE:
+                case (int) ExpressionType.ENUM_REFERENCE:
                     EnumEntity enumRef = (EnumEntity)dotField.root.entityPtr.specificData;
                     // TODO: ew, gross, figure out a way to cache and stash a dictionary somewhere on the entity.
                     // Otherwise this could potentially turn problematic in the off chance there's an enum with a
@@ -204,13 +204,13 @@ namespace CommonScript.Compiler
                     {
                         if (enumRef.memberNameTokens[i].Value == fieldName)
                         {
-                            return Expression.createEnumConstant(dotField.firstToken, enumRef.baseData, fieldName, enumRef.memberValues[i].intVal);
+                            return ExpressionUtil.createEnumConstant(dotField.firstToken, enumRef.baseData, fieldName, enumRef.memberValues[i].intVal);
                         }
                     }
                     FunctionWrapper.Errors_Throw(dotField.opToken, "The enum " + enumRef.baseData.fqName + " does not have a member named '" + fieldName + "'");
                     break;
 
-                case ExpressionType.NAMESPACE_REFERENCE:
+                case (int) ExpressionType.NAMESPACE_REFERENCE:
                     NamespaceEntity nsEntity = (NamespaceEntity)dotField.root.entityPtr.specificData;
                     if (!nsEntity.nestedMembers.ContainsKey(fieldName))
                     {
@@ -230,10 +230,10 @@ namespace CommonScript.Compiler
 
         private Expression FirstPass_FunctionInvocation(Expression funcInvoke)
         {
-            if (funcInvoke.root.type == ExpressionType.EXTENSION_REFERENCE)
+            if (funcInvoke.root.type == (int) ExpressionType.EXTENSION_REFERENCE)
             {
                 this.ResolveExpressionArrayFirstPass(funcInvoke.args);
-                return Expression.createExtensionInvocation(funcInvoke.firstToken, funcInvoke.root.strVal, funcInvoke.args);
+                return ExpressionUtil.createExtensionInvocation(funcInvoke.firstToken, funcInvoke.root.strVal, funcInvoke.args);
             }
             else
             {
@@ -351,19 +351,19 @@ namespace CommonScript.Compiler
             switch (entity.type)
             {
                 case (int)EntityType.FUNCTION:
-                    return Expression.createFunctionReference(token, entity.simpleName, entity);
+                    return ExpressionUtil.createFunctionReference(token, entity.simpleName, entity);
 
                 case (int)EntityType.CLASS:
-                    return Expression.createClassReference(token, entity);
+                    return ExpressionUtil.createClassReference(token, entity);
 
                 case (int)EntityType.CONST:
-                    return Expression.cloneExpressionWithNewToken(token, ((ConstEntity)entity.specificData).constValue);
+                    return ExpressionUtil.cloneExpressionWithNewToken(token, ((ConstEntity)entity.specificData).constValue);
 
                 case (int)EntityType.ENUM:
-                    return Expression.createEnumReference(token, entity);
+                    return ExpressionUtil.createEnumReference(token, entity);
 
                 case (int)EntityType.NAMESPACE:
-                    return Expression.createNamespaceReference(token, entity);
+                    return ExpressionUtil.createNamespaceReference(token, entity);
             }
 
             FunctionWrapper.Errors_Throw(token, "Not implemented!");
@@ -388,33 +388,33 @@ namespace CommonScript.Compiler
 
         private static bool IsExpressionNumericConstant(Expression expr)
         {
-            ExpressionType t = expr.type;
+            int t = expr.type;
             return
-                t == ExpressionType.INTEGER_CONST ||
-                t == ExpressionType.FLOAT_CONST ||
-                t == ExpressionType.ENUM_CONST;
+                t == (int) ExpressionType.INTEGER_CONST ||
+                t == (int) ExpressionType.FLOAT_CONST ||
+                t == (int) ExpressionType.ENUM_CONST;
         }
 
         private static double GetNumericValueOfConstant(Expression exprConst)
         {
-            return exprConst.type == ExpressionType.FLOAT_CONST ? exprConst.floatVal : exprConst.intVal;
+            return exprConst.type == (int) ExpressionType.FLOAT_CONST ? exprConst.floatVal : exprConst.intVal;
         }
 
 
-        private static string SimpleExprToTypeName(ExpressionType t)
+        private static string SimpleExprToTypeName(int t)
         {
             switch (t)
             {
-                case ExpressionType.BOOL_CONST: return "boolean";
-                case ExpressionType.INTEGER_CONST: return "integer";
-                case ExpressionType.FLOAT_CONST: return "float";
-                case ExpressionType.NULL_CONST: return "null";
-                case ExpressionType.STRING_CONST: return "string";
-                case ExpressionType.ENUM_CONST: return "enum";
+                case (int) ExpressionType.BOOL_CONST: return "boolean";
+                case (int) ExpressionType.INTEGER_CONST: return "integer";
+                case (int) ExpressionType.FLOAT_CONST: return "float";
+                case (int) ExpressionType.NULL_CONST: return "null";
+                case (int) ExpressionType.STRING_CONST: return "string";
+                case (int) ExpressionType.ENUM_CONST: return "enum";
             }
             throw new NotImplementedException(); // this should not happen
         }
-        private static void ThrowOpNotDefinedError(Token throwToken, string op, ExpressionType left, ExpressionType right)
+        private static void ThrowOpNotDefinedError(Token throwToken, string op, int left, int right)
         {
             FunctionWrapper.Errors_Throw(throwToken, "The operation '" + SimpleExprToTypeName(left) + " " + op + " " + SimpleExprToTypeName(right) + "' is not defined.");
         }
@@ -432,7 +432,7 @@ namespace CommonScript.Compiler
             string op = opToken.Value;
 
             expr.left = this.ResolveExpressionSecondPass(expr.left);
-            if (expr.right.type == ExpressionType.CLASS_REFERENCE && op == "is")
+            if (expr.right.type == (int)ExpressionType.CLASS_REFERENCE && op == "is")
             {
                 expr.right.boolVal = true;
             }
@@ -444,7 +444,7 @@ namespace CommonScript.Compiler
             {
                 bool isLeftNumeric = IsExpressionNumericConstant(expr.left);
                 bool isRightNumeric = IsExpressionNumericConstant(expr.right);
-                bool isRightZero = expr.right.type == ExpressionType.FLOAT_CONST ? (expr.right.floatVal == 0) : (expr.right.intVal == 0);
+                bool isRightZero = expr.right.type == (int) ExpressionType.FLOAT_CONST ? (expr.right.floatVal == 0) : (expr.right.intVal == 0);
 
                 if (isRightNumeric)
                 {
@@ -463,10 +463,10 @@ namespace CommonScript.Compiler
                     double floatLeft = GetNumericValueOfConstant(expr.left);
                     double floatRight = GetNumericValueOfConstant(expr.right);
 
-                    if (op == "<") return Expression.createBoolConstant(firstToken, floatLeft < floatRight);
-                    if (op == ">") return Expression.createBoolConstant(firstToken, floatLeft > floatRight);
-                    if (op == "<=") return Expression.createBoolConstant(firstToken, floatLeft <= floatRight);
-                    if (op == ">=") return Expression.createBoolConstant(firstToken, floatLeft >= floatRight);
+                    if (op == "<") return ExpressionUtil.createBoolConstant(firstToken, floatLeft < floatRight);
+                    if (op == ">") return ExpressionUtil.createBoolConstant(firstToken, floatLeft > floatRight);
+                    if (op == "<=") return ExpressionUtil.createBoolConstant(firstToken, floatLeft <= floatRight);
+                    if (op == ">=") return ExpressionUtil.createBoolConstant(firstToken, floatLeft >= floatRight);
 
                     // TODO
                     // strict equality comparison on floats is okay in the case that these are converted
@@ -479,15 +479,15 @@ namespace CommonScript.Compiler
                     //     x = 2
                     //     value = ln(e ** x) == x;
                     // This value may different if the runtime language and compile time language are different.
-                    if (op == "==") return Expression.createBoolConstant(firstToken, floatLeft == floatRight);
-                    if (op == "!=") return Expression.createBoolConstant(firstToken, floatLeft != floatRight);
+                    if (op == "==") return ExpressionUtil.createBoolConstant(firstToken, floatLeft == floatRight);
+                    if (op == "!=") return ExpressionUtil.createBoolConstant(firstToken, floatLeft != floatRight);
                 }
 
-                if (op == "+" && (expr.left.type == ExpressionType.STRING_CONST || expr.right.type == ExpressionType.STRING_CONST))
+                if (op == "+" && (expr.left.type == (int) ExpressionType.STRING_CONST || expr.right.type == (int) ExpressionType.STRING_CONST))
                 {
                     string leftStr = GetStringFromConstantExpression(expr.left);
                     string rightStr = GetStringFromConstantExpression(expr.right);
-                    return Expression.createStringConstant(expr.firstToken, leftStr + rightStr);
+                    return ExpressionUtil.createStringConstant(expr.firstToken, leftStr + rightStr);
                 }
 
                 switch ((int)expr.left.type * (int)ExpressionType.MAX_VALUE + (int)expr.right.type)
@@ -500,7 +500,7 @@ namespace CommonScript.Compiler
                         int intRight = expr.right.intVal;
                         if (op == "**")
                         {
-                            return Expression.createFloatConstant(opToken, Math.Pow(intLeft, intRight));
+                            return ExpressionUtil.createFloatConstant(opToken, Math.Pow(intLeft, intRight));
                         }
                         int resultInt = 0;
                         switch (op)
@@ -533,7 +533,7 @@ namespace CommonScript.Compiler
                                 ThrowOpNotDefinedError(opToken, op, expr.left.type, expr.right.type);
                                 break;
                         }
-                        return Expression.createIntegerConstant(opToken, resultInt);
+                        return ExpressionUtil.createIntegerConstant(opToken, resultInt);
 
                     case (int)ExpressionType.FLOAT_CONST * (int)ExpressionType.MAX_VALUE + (int)ExpressionType.FLOAT_CONST:
                     case (int)ExpressionType.INTEGER_CONST * (int)ExpressionType.MAX_VALUE + (int)ExpressionType.FLOAT_CONST:
@@ -566,17 +566,17 @@ namespace CommonScript.Compiler
                                 ThrowOpNotDefinedError(opToken, op, expr.left.type, expr.right.type);
                                 break;
                         }
-                        return Expression.createFloatConstant(opToken, floatResult);
+                        return ExpressionUtil.createFloatConstant(opToken, floatResult);
 
                     case (int)ExpressionType.STRING_CONST * (int)ExpressionType.MAX_VALUE + (int)ExpressionType.INTEGER_CONST:
                     case (int)ExpressionType.INTEGER_CONST * (int)ExpressionType.MAX_VALUE + (int)ExpressionType.STRING_CONST:
                         if (op == "*")
                         {
-                            Expression strExpr = expr.left.type == ExpressionType.STRING_CONST ? expr.left : expr.right;
-                            Expression intExpr = expr.left.type == ExpressionType.INTEGER_CONST ? expr.left : expr.right;
+                            Expression strExpr = expr.left.type == (int) ExpressionType.STRING_CONST ? expr.left : expr.right;
+                            Expression intExpr = expr.left.type == (int) ExpressionType.INTEGER_CONST ? expr.left : expr.right;
                             int size = intExpr.intVal;
                             string val = strExpr.strVal;
-                            if (size == 0) return Expression.createStringConstant(expr.firstToken, "");
+                            if (size == 0) return ExpressionUtil.createStringConstant(expr.firstToken, "");
                             if (size == 1) return strExpr;
                             if (val.Length * size < 12)
                             {
@@ -585,7 +585,7 @@ namespace CommonScript.Compiler
                                 {
                                     sb.Add(val);
                                 }
-                                return Expression.createStringConstant(expr.firstToken, string.Join("", sb));
+                                return ExpressionUtil.createStringConstant(expr.firstToken, string.Join("", sb));
                             }
                             return expr;
                         }
@@ -605,13 +605,13 @@ namespace CommonScript.Compiler
 
         private static string GetStringFromConstantExpression(Expression expr)
         {
-            if (expr.type == ExpressionType.STRING_CONST) return expr.strVal;
-            if (expr.type == ExpressionType.INTEGER_CONST) return expr.intVal + "";
-            if (expr.type == ExpressionType.BOOL_CONST) return expr.boolVal ? "true" : "false";
-            if (expr.type == ExpressionType.NULL_CONST) return "null"; // TODO: hmm...
-            if (expr.type == ExpressionType.ENUM_CONST) return expr.strVal;
+            if (expr.type == (int) ExpressionType.STRING_CONST) return expr.strVal;
+            if (expr.type == (int) ExpressionType.INTEGER_CONST) return expr.intVal + "";
+            if (expr.type == (int) ExpressionType.BOOL_CONST) return expr.boolVal ? "true" : "false";
+            if (expr.type == (int) ExpressionType.NULL_CONST) return "null"; // TODO: hmm...
+            if (expr.type == (int) ExpressionType.ENUM_CONST) return expr.strVal;
 
-            if (expr.type == ExpressionType.FLOAT_CONST)
+            if (expr.type == (int) ExpressionType.FLOAT_CONST)
             {
                 string val = expr.floatVal + "";
                 if (val.ToLowerInvariant().Contains('e'))
@@ -632,7 +632,7 @@ namespace CommonScript.Compiler
             {
                 ctorRef.root.boolVal = true;
                 ctorRef.root = this.ResolveExpressionSecondPass(ctorRef.root);
-                if (ctorRef.root.type != ExpressionType.CLASS_REFERENCE) FunctionWrapper.Errors_Throw(ctorRef.root.firstToken, "This is not a valid class definition.");
+                if (ctorRef.root.type != (int) ExpressionType.CLASS_REFERENCE) FunctionWrapper.Errors_Throw(ctorRef.root.firstToken, "This is not a valid class definition.");
                 ctorRef.entityPtr = ctorRef.root.entityPtr;
                 ctorRef.root = null;
                 return ctorRef;
@@ -648,11 +648,11 @@ namespace CommonScript.Compiler
 
             if (Resolver.IsExpressionConstant(bwn.root))
             {
-                if (bwn.root.type != ExpressionType.INTEGER_CONST)
+                if (bwn.root.type != (int) ExpressionType.INTEGER_CONST)
                 {
                     FunctionWrapper.Errors_Throw(bwn.firstToken, "Bitwise-NOT operator can only be applied on integers.");
                 }
-                return Expression.createIntegerConstant(bwn.firstToken, ~bwn.root.intVal);
+                return ExpressionUtil.createIntegerConstant(bwn.firstToken, ~bwn.root.intVal);
             }
             return bwn;
         }
@@ -668,11 +668,11 @@ namespace CommonScript.Compiler
 
             if (Resolver.IsExpressionConstant(bn.root))
             {
-                if (bn.root.type != ExpressionType.BOOLEAN_NOT)
+                if (bn.root.type != (int) ExpressionType.BOOLEAN_NOT)
                 {
                     FunctionWrapper.Errors_Throw(bn.firstToken, "Boolean-NOT operator can only be applied to booleans.");
                 }
-                return Expression.createBoolConstant(bn.firstToken, !bn.root.boolVal);
+                return ExpressionUtil.createBoolConstant(bn.firstToken, !bn.root.boolVal);
             }
 
             return bn;
@@ -697,13 +697,13 @@ namespace CommonScript.Compiler
                 Expression key = this.ResolveExpressionSecondPass(dictDef.keys[i]);
                 bool isMixed = false;
                 bool isCollide = false;
-                if (key.type == ExpressionType.INTEGER_CONST)
+                if (key.type == (int) ExpressionType.INTEGER_CONST)
                 {
                     isMixed = strCollide.Count > 0;
                     isCollide = intCollide.ContainsKey(key.intVal);
                     intCollide[key.intVal] = true;
                 }
-                else if (key.type == ExpressionType.STRING_CONST)
+                else if (key.type == (int) ExpressionType.STRING_CONST)
                 {
                     isMixed = intCollide.Count > 0;
                     isCollide = strCollide.ContainsKey(key.strVal);
@@ -733,25 +733,25 @@ namespace CommonScript.Compiler
         private Expression SecondPass_DotField(Expression df)
         {
             // This is the only way to refer to a class reference.
-            if (df.root.type == ExpressionType.CLASS_REFERENCE) df.root.boolVal = true;
+            if (df.root.type == (int) ExpressionType.CLASS_REFERENCE) df.root.boolVal = true;
 
             df.root = this.ResolveExpressionSecondPass(df.root);
             switch (df.root.type)
             {
-                case ExpressionType.STRING_CONST:
+                case (int) ExpressionType.STRING_CONST:
                     if (df.strVal == "length")
                     {
-                        return Expression.createIntegerConstant(df.firstToken, df.root.strVal.Length);
+                        return ExpressionUtil.createIntegerConstant(df.firstToken, df.root.strVal.Length);
                     }
                     break;
 
-                case ExpressionType.THIS:
-                case ExpressionType.BASE:
+                case (int) ExpressionType.THIS:
+                case (int) ExpressionType.BASE:
                     // TODO: check to see if field exists.
                     // For now, just trust it at runtime as if it were a blind variable.
                     break;
 
-                case ExpressionType.CLASS_REFERENCE:
+                case (int) ExpressionType.CLASS_REFERENCE:
                     ClassEntity classDef = (ClassEntity)df.root.entityPtr.specificData;
                     AbstractEntity member = null;
                     if (classDef.classMembers.ContainsKey(df.strVal))
@@ -821,26 +821,26 @@ namespace CommonScript.Compiler
 
         private Expression SecondPass_FunctionInvocation(Expression funcInvoke)
         {
-            if (funcInvoke.root.type == ExpressionType.CONSTRUCTOR_REFERENCE)
+            if (funcInvoke.root.type == (int) ExpressionType.CONSTRUCTOR_REFERENCE)
             {
                 Expression ctorRef = this.SecondPass_ConstructorReference(funcInvoke.root, true);
-                if (ctorRef.type != ExpressionType.CONSTRUCTOR_REFERENCE) throw new InvalidOperationException(); // this shouldn't happen. 
+                if (ctorRef.type != (int) ExpressionType.CONSTRUCTOR_REFERENCE) throw new InvalidOperationException(); // this shouldn't happen. 
 
                 this.ResolveExpressionArraySecondPass(funcInvoke.args);
 
-                return Expression.createConstructorInvocation(funcInvoke.firstToken, (AbstractEntity)ctorRef.entityPtr, funcInvoke.opToken, funcInvoke.args);
+                return ExpressionUtil.createConstructorInvocation(funcInvoke.firstToken, (AbstractEntity)ctorRef.entityPtr, funcInvoke.opToken, funcInvoke.args);
             }
 
             funcInvoke.root = this.ResolveExpressionSecondPass(funcInvoke.root);
 
             switch (funcInvoke.root.type)
             {
-                case ExpressionType.VARIABLE:
-                case ExpressionType.BASE:
-                case ExpressionType.FUNCTION_REFERENCE:
-                case ExpressionType.DOT_FIELD:
-                case ExpressionType.BASE_CTOR_REFERENCE:
-                case ExpressionType.INDEX:
+                case (int) ExpressionType.VARIABLE:
+                case (int) ExpressionType.BASE:
+                case (int) ExpressionType.FUNCTION_REFERENCE:
+                case (int) ExpressionType.DOT_FIELD:
+                case (int) ExpressionType.BASE_CTOR_REFERENCE:
+                case (int) ExpressionType.INDEX:
                     break;
 
                 default:
@@ -876,9 +876,9 @@ namespace CommonScript.Compiler
             inlineIncr.root = this.ResolveExpressionSecondPass(inlineIncr.root);
             switch (inlineIncr.root.type)
             {
-                case ExpressionType.VARIABLE:
-                case ExpressionType.INDEX:
-                case ExpressionType.DOT_FIELD:
+                case (int) ExpressionType.VARIABLE:
+                case (int) ExpressionType.INDEX:
+                case (int) ExpressionType.DOT_FIELD:
                     // these are fine
                     break;
 
@@ -922,14 +922,14 @@ namespace CommonScript.Compiler
             {
                 switch (root.type)
                 {
-                    case ExpressionType.INTEGER_CONST:
+                    case (int) ExpressionType.INTEGER_CONST:
                         root.intVal *= -1;
                         break;
-                    case ExpressionType.FLOAT_CONST:
+                    case (int) ExpressionType.FLOAT_CONST:
                         root.floatVal *= -1;
                         break;
-                    case ExpressionType.ENUM_CONST:
-                        root = Expression.createIntegerConstant(root.firstToken, -root.intVal);
+                    case (int) ExpressionType.ENUM_CONST:
+                        root = ExpressionUtil.createIntegerConstant(root.firstToken, -root.intVal);
                         break;
                     default:
                         throw new NotImplementedException();
@@ -956,7 +956,7 @@ namespace CommonScript.Compiler
                     slice.args[i] = expr;
                     if (Resolver.IsExpressionConstant(expr))
                     {
-                        if (expr.type != ExpressionType.INTEGER_CONST && expr.type != ExpressionType.ENUM_CONST)
+                        if (expr.type != (int) ExpressionType.INTEGER_CONST && expr.type != (int) ExpressionType.ENUM_CONST)
                         {
                             FunctionWrapper.Errors_Throw(expr.firstToken, "Only integers may be used in a slice expression.");
                         }
@@ -980,7 +980,7 @@ namespace CommonScript.Compiler
 
             if (Resolver.IsExpressionConstant(ternary.root))
             {
-                if (ternary.root.type != ExpressionType.BOOL_CONST)
+                if (ternary.root.type != (int) ExpressionType.BOOL_CONST)
                 {
                     FunctionWrapper.Errors_Throw(ternary.root.firstToken, "Only booleans can be used as ternary conditions.");
                 }
@@ -1003,25 +1003,25 @@ namespace CommonScript.Compiler
             string stringConst = null;
             switch (typeofExpr.root.type)
             {
-                case ExpressionType.INTEGER_CONST: stringConst = "int"; break;
-                case ExpressionType.FLOAT_CONST: stringConst = "float"; break;
-                case ExpressionType.NULL_CONST: stringConst = "null"; break;
-                case ExpressionType.BOOL_CONST: stringConst = "bool"; break;
-                case ExpressionType.STRING_CONST: stringConst = "string"; break;
-                case ExpressionType.FUNCTION_REFERENCE: stringConst = "function"; break;
+                case (int) ExpressionType.INTEGER_CONST: stringConst = "int"; break;
+                case (int) ExpressionType.FLOAT_CONST: stringConst = "float"; break;
+                case (int) ExpressionType.NULL_CONST: stringConst = "null"; break;
+                case (int) ExpressionType.BOOL_CONST: stringConst = "bool"; break;
+                case (int) ExpressionType.STRING_CONST: stringConst = "string"; break;
+                case (int) ExpressionType.FUNCTION_REFERENCE: stringConst = "function"; break;
 
-                case ExpressionType.LIST_DEFINITION:
+                case (int) ExpressionType.LIST_DEFINITION:
                     if (typeofExpr.root.values.Length == 0) stringConst = "list";
                     break;
 
-                case ExpressionType.DICTIONARY_DEFINITION:
+                case (int) ExpressionType.DICTIONARY_DEFINITION:
                     if (typeofExpr.root.keys.Length == 0) stringConst = "dict";
                     break;
             }
 
             if (stringConst != null)
             {
-                return Expression.createStringConstant(typeofExpr.firstToken, stringConst);
+                return ExpressionUtil.createStringConstant(typeofExpr.firstToken, stringConst);
             }
 
             return typeofExpr;
@@ -1041,7 +1041,7 @@ namespace CommonScript.Compiler
         {
             switch (expr.type)
             {
-                case ExpressionType.ENUM_CONST:
+                case (int) ExpressionType.ENUM_CONST:
                     EnumEntity enumParent = (EnumEntity)expr.entityPtr.specificData;
                     string enumMem = expr.strVal;
                     for (int i = 0; i < enumParent.memberValues.Length; i++)
@@ -1049,7 +1049,7 @@ namespace CommonScript.Compiler
                         if (enumMem == enumParent.memberNameTokens[i].Value)
                         {
                             Expression val = enumParent.memberValues[i];
-                            if (val.type != ExpressionType.INTEGER_CONST)
+                            if (val.type != (int) ExpressionType.INTEGER_CONST)
                             {
                                 throw new InvalidOperationException();
                             }
@@ -1059,10 +1059,10 @@ namespace CommonScript.Compiler
                     FunctionWrapper.Errors_Throw(expr.firstToken, "The enum '" + enumParent.baseData.fqName + "' does not have a member named '" + enumMem + "'.");
                     break;
 
-                case ExpressionType.BOOL_CONST:
-                case ExpressionType.FLOAT_CONST:
-                case ExpressionType.STRING_CONST:
-                case ExpressionType.BOOLEAN_NOT:
+                case (int) ExpressionType.BOOL_CONST:
+                case (int) ExpressionType.FLOAT_CONST:
+                case (int) ExpressionType.STRING_CONST:
+                case (int) ExpressionType.BOOLEAN_NOT:
                     FunctionWrapper.Errors_Throw(expr.firstToken, "An integer is expected here.");
                     break;
             }

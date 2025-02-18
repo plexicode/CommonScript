@@ -35,20 +35,20 @@ namespace CommonScript.Compiler
         {
             switch (s.type)
             {
-                case StatementType.ASSIGNMENT: return FirstPass_Assignment(s);
-                case StatementType.BREAK: return FirstPass_Break(s);
-                case StatementType.CONTINUE: return FirstPass_Continue(s);
-                case StatementType.DO_WHILE_LOOP: return FirstPass_DoWhileLoop(s);
-                case StatementType.FOR_EACH_LOOP: return FirstPass_ForEachLoop(s);
-                case StatementType.FOR_LOOP: return FirstPass_ForLoop(s);
-                case StatementType.IF_STATEMENT: return FirstPass_IfStatement(s);
-                case StatementType.SWITCH_STATEMENT: return FirstPass_SwitchStatement(s);
-                case StatementType.TRY: return FirstPass_Try(s);
-                case StatementType.WHILE_LOOP: return FirstPass_WhileLoop(s);
+                case (int) StatementType.ASSIGNMENT: return FirstPass_Assignment(s);
+                case (int) StatementType.BREAK: return FirstPass_Break(s);
+                case (int) StatementType.CONTINUE: return FirstPass_Continue(s);
+                case (int) StatementType.DO_WHILE_LOOP: return FirstPass_DoWhileLoop(s);
+                case (int) StatementType.FOR_EACH_LOOP: return FirstPass_ForEachLoop(s);
+                case (int) StatementType.FOR_LOOP: return FirstPass_ForLoop(s);
+                case (int) StatementType.IF_STATEMENT: return FirstPass_IfStatement(s);
+                case (int) StatementType.SWITCH_STATEMENT: return FirstPass_SwitchStatement(s);
+                case (int) StatementType.TRY: return FirstPass_Try(s);
+                case (int) StatementType.WHILE_LOOP: return FirstPass_WhileLoop(s);
 
-                case StatementType.RETURN:
-                case StatementType.THROW:
-                case StatementType.EXPRESSION_AS_STATEMENT:
+                case (int) StatementType.RETURN:
+                case (int) StatementType.THROW:
+                case (int) StatementType.EXPRESSION_AS_STATEMENT:
                     s.expression = this.expressionResolver.ResolveExpressionFirstPass(s.expression);
                     break;
 
@@ -62,19 +62,19 @@ namespace CommonScript.Compiler
         {
             switch (s.type)
             {
-                case StatementType.ASSIGNMENT: return SecondPass_Assignment(s);
-                case StatementType.BREAK: return SecondPass_Break(s);
-                case StatementType.CONTINUE: return SecondPass_Continue(s);
-                case StatementType.DO_WHILE_LOOP: return SecondPass_DoWhileLoop(s);
-                case StatementType.EXPRESSION_AS_STATEMENT: return SecondPass_ExpressionAsStatement(s);
-                case StatementType.FOR_LOOP: return SecondPass_ForLoop(s);
-                case StatementType.FOR_EACH_LOOP: return SecondPass_ForEachLoop(s);
-                case StatementType.IF_STATEMENT: return SecondPass_IfStatement(s);
-                case StatementType.RETURN: return SecondPass_Return(s);
-                case StatementType.SWITCH_STATEMENT: return SecondPass_SwitchStatement(s);
-                case StatementType.THROW: return SecondPass_ThrowStatement(s);
-                case StatementType.TRY: return SecondPass_TryStatement(s);
-                case StatementType.WHILE_LOOP: return SecondPass_WhileLoop(s);
+                case (int) StatementType.ASSIGNMENT: return SecondPass_Assignment(s);
+                case (int) StatementType.BREAK: return SecondPass_Break(s);
+                case (int) StatementType.CONTINUE: return SecondPass_Continue(s);
+                case (int) StatementType.DO_WHILE_LOOP: return SecondPass_DoWhileLoop(s);
+                case (int) StatementType.EXPRESSION_AS_STATEMENT: return SecondPass_ExpressionAsStatement(s);
+                case (int) StatementType.FOR_LOOP: return SecondPass_ForLoop(s);
+                case (int) StatementType.FOR_EACH_LOOP: return SecondPass_ForEachLoop(s);
+                case (int) StatementType.IF_STATEMENT: return SecondPass_IfStatement(s);
+                case (int) StatementType.RETURN: return SecondPass_Return(s);
+                case (int) StatementType.SWITCH_STATEMENT: return SecondPass_SwitchStatement(s);
+                case (int) StatementType.THROW: return SecondPass_ThrowStatement(s);
+                case (int) StatementType.TRY: return SecondPass_TryStatement(s);
+                case (int) StatementType.WHILE_LOOP: return SecondPass_WhileLoop(s);
             }
 
             throw new NotImplementedException();
@@ -85,7 +85,7 @@ namespace CommonScript.Compiler
             assign.assignTarget = this.expressionResolver.ResolveExpressionFirstPass(assign.assignTarget);
             assign.assignValue = this.expressionResolver.ResolveExpressionFirstPass(assign.assignValue);
 
-            if (assign.assignTarget.type == ExpressionType.VARIABLE)
+            if (assign.assignTarget.type == (int) ExpressionType.VARIABLE)
             {
                 // register that this variable was assigned to in this variable scope
                 ((FunctionLikeEntity)this.resolver.activeEntity.specificData).variableScope[assign.assignTarget.strVal] = true;
@@ -100,7 +100,7 @@ namespace CommonScript.Compiler
             {
                 FunctionWrapper.Errors_Throw(br.firstToken, "The 'break' keyword can only be used inside loops and switch statements.");
             }
-            else if (this.resolver.breakContext.type == StatementType.TRY)
+            else if (this.resolver.breakContext.type == (int) StatementType.TRY)
             {
                 FunctionWrapper.Errors_Throw(br.firstToken, "The 'break' keyword cannot be used inside a try/catch/finally block");
             }
@@ -114,11 +114,11 @@ namespace CommonScript.Compiler
             {
                 FunctionWrapper.Errors_Throw(cont.firstToken, "The 'continue' keyword can only be used inside loops.");
             }
-            else if (this.resolver.breakContext.type == StatementType.SWITCH_STATEMENT)
+            else if (this.resolver.breakContext.type == (int) StatementType.SWITCH_STATEMENT)
             {
                 FunctionWrapper.Errors_Throw(cont.firstToken, "The 'continue' keyword cannot be used in switch statements, even if nested in a loop.");
             }
-            else if (this.resolver.breakContext.type == StatementType.TRY)
+            else if (this.resolver.breakContext.type == (int) StatementType.TRY)
             {
                 FunctionWrapper.Errors_Throw(cont.firstToken, "The 'continue' keyword cannot be used inside a try/catch/finally block");
             }
@@ -245,9 +245,9 @@ namespace CommonScript.Compiler
             Expression target = assignment.assignTarget;
             switch (target.type)
             {
-                case ExpressionType.INDEX:
-                case ExpressionType.DOT_FIELD:
-                case ExpressionType.VARIABLE:
+                case (int) ExpressionType.INDEX:
+                case (int) ExpressionType.DOT_FIELD:
+                case (int) ExpressionType.VARIABLE:
                     // These are fine.
                     break;
 
@@ -283,9 +283,9 @@ namespace CommonScript.Compiler
             exprAsStmnt.expression = this.expressionResolver.ResolveExpressionSecondPass(exprAsStmnt.expression);
             switch (exprAsStmnt.expression.type)
             {
-                case ExpressionType.FUNCTION_INVOKE:
-                case ExpressionType.EXTENSION_INVOCATION:
-                case ExpressionType.INLINE_INCREMENT:
+                case (int) ExpressionType.FUNCTION_INVOKE:
+                case (int) ExpressionType.EXTENSION_INVOCATION:
+                case (int) ExpressionType.INLINE_INCREMENT:
                     // these are fine 
                     break;
 
@@ -352,13 +352,13 @@ namespace CommonScript.Compiler
                         }
                         int currentType = -1;
                         bool hadCollision = false;
-                        if (expr.type == ExpressionType.INTEGER_CONST)
+                        if (expr.type == (int) ExpressionType.INTEGER_CONST)
                         {
                             currentType = 1;
                             hadCollision = intCollisions.ContainsKey(expr.intVal);
                             intCollisions[expr.intVal] = true;
                         }
-                        else if (expr.type == ExpressionType.STRING_CONST)
+                        else if (expr.type == (int) ExpressionType.STRING_CONST)
                         {
                             currentType = 2;
                             hadCollision = strCollisions.ContainsKey(expr.strVal);
@@ -381,9 +381,9 @@ namespace CommonScript.Compiler
 
                 switch (chunk.Code[chunk.Code.Count - 1].type)
                 {
-                    case StatementType.BREAK:
-                    case StatementType.RETURN:
-                    case StatementType.THROW:
+                    case (int) StatementType.BREAK:
+                    case (int) StatementType.RETURN:
+                    case (int) StatementType.THROW:
                         // these are fine.
                         break;
 

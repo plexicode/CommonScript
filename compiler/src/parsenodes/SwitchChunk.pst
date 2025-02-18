@@ -1,0 +1,11 @@
+struct SwitchChunk {
+
+    List<Token> CaseTokens;
+    List<Expression> Cases;
+    List<Statement> Code;
+
+}
+
+SwitchChunk SwitchChunk_new() {
+    return new SwitchChunk(new List<Token>(), new List<Expression>(), new List<Statement>());
+}

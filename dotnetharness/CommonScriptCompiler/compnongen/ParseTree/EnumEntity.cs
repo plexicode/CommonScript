@@ -36,7 +36,7 @@ namespace CommonScript.Compiler
 
                 if (isImplicit)
                 {
-                    this.memberValues[i] = Expression.createIntegerConstant(null, i + 1);
+                    this.memberValues[i] = ExpressionUtil.createIntegerConstant(null, i + 1);
                 }
             }
         }

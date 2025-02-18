@@ -63,11 +63,11 @@ namespace CommonScript.Compiler
             if (assignOp != null)
             {
                 Expression assignValue = this.expressionParser.ParseExpression();
-                s = Statement.createAssignment(expr, assignOp, assignValue);
+                s = StatementUtil.createAssignment(expr, assignOp, assignValue);
             }
             else
             {
-                s = Statement.createExpressionAsStatement(expr);
+                s = StatementUtil.createExpressionAsStatement(expr);
             }
 
             if (!isForLoop)
@@ -130,7 +130,7 @@ namespace CommonScript.Compiler
         {
             Token token = FunctionWrapper.Tokens_popKeyword(this.tokens, FunctionWrapper.Tokens_isNext(this.tokens, "continue") ? "continue" : "break");
             FunctionWrapper.Tokens_popExpected(this.tokens, ";");
-            return Statement.createBreakContinue(token);
+            return StatementUtil.createBreakContinue(token);
         }
 
         private Statement ParseDoWhileLoop()
@@ -143,7 +143,7 @@ namespace CommonScript.Compiler
             FunctionWrapper.Tokens_popExpected(this.tokens, ")");
             FunctionWrapper.Tokens_popExpected(this.tokens, ";");
 
-            return Statement.createDoWhile(doToken, code, whileToken, condition);
+            return StatementUtil.createDoWhile(doToken, code, whileToken, condition);
         }
 
         private Statement ParseAnyForLoop()
@@ -175,7 +175,7 @@ namespace CommonScript.Compiler
             Expression listExpr = this.expressionParser.ParseExpression();
             FunctionWrapper.Tokens_popExpected(this.tokens, ")");
             Statement[] code = this.ParseCodeBlock(false);
-            return Statement.createForEachLoop(forToken, varToken, listExpr, code);
+            return StatementUtil.createForEachLoop(forToken, varToken, listExpr, code);
         }
 
         private Statement ParseTraditionalForLoop()
@@ -213,7 +213,7 @@ namespace CommonScript.Compiler
 
             Statement[] code = this.ParseCodeBlock(false);
 
-            return Statement.createForLoop(forToken, init.ToArray(), condition, step.ToArray(), code);
+            return StatementUtil.createForLoop(forToken, init.ToArray(), condition, step.ToArray(), code);
         }
 
         private Statement ParseIfStatement()
@@ -229,7 +229,7 @@ namespace CommonScript.Compiler
                 elseCode = this.ParseCodeBlock(false);
             }
 
-            return Statement.createIfStatement(ifToken, condition, ifCode, elseCode);
+            return StatementUtil.createIfStatement(ifToken, condition, ifCode, elseCode);
         }
 
         private Statement ParseReturn()
@@ -242,10 +242,10 @@ namespace CommonScript.Compiler
             }
             else
             {
-                expr = Expression.createNullConstant(null);
+                expr = ExpressionUtil.createNullConstant(null);
             }
             FunctionWrapper.Tokens_popExpected(this.tokens, ";");
-            return Statement.createReturn(retToken, expr);
+            return StatementUtil.createReturn(retToken, expr);
         }
 
         private Statement ParseSwitch()
@@ -260,7 +260,7 @@ namespace CommonScript.Compiler
             while (!FunctionWrapper.Tokens_popIfPresent(this.tokens, "}"))
             {
                 FunctionWrapper.Tokens_ensureMore(this.tokens);
-                SwitchChunk activeChunk = new SwitchChunk();
+                SwitchChunk activeChunk = FunctionWrapper.SwitchChunk_new();
                 chunks.Add(activeChunk);
                 while (FunctionWrapper.Tokens_isNext(this.tokens, "case") || FunctionWrapper.Tokens_isNext(this.tokens, "default"))
                 {
@@ -295,7 +295,7 @@ namespace CommonScript.Compiler
                 }
             }
 
-            return Statement.createSwitchStatement(switchToken, condition, chunks.ToArray());
+            return StatementUtil.createSwitchStatement(switchToken, condition, chunks.ToArray());
         }
 
         private Statement ParseThrow()
@@ -303,7 +303,7 @@ namespace CommonScript.Compiler
             Token throwToken = FunctionWrapper.Tokens_popKeyword(this.tokens, "throw");
             Expression value = this.expressionParser.ParseExpression();
             FunctionWrapper.Tokens_popExpected(this.tokens, ";");
-            return Statement.createThrow(throwToken, value);
+            return StatementUtil.createThrow(throwToken, value);
         }
 
         private Statement ParseTry()
@@ -352,12 +352,10 @@ namespace CommonScript.Compiler
                     FunctionWrapper.Tokens_popExpected(this.tokens, ")");
                 }
                 Statement[] catchCode = this.ParseCodeBlock(true);
-                catches.Add(new CatchChunk()
-                {
-                    Code = catchCode,
-                    ExceptionNames = classNamesRaw.ToArray(),
-                    exceptionVarName = exceptionVarToken,
-                });
+                catches.Add(FunctionWrapper.CatchChunk_new(
+                    catchCode,
+                    classNamesRaw,
+                    exceptionVarToken));
             }
 
             if (FunctionWrapper.Tokens_isNext(this.tokens, "finally"))
@@ -370,7 +368,7 @@ namespace CommonScript.Compiler
                 finallyCode = new Statement[0];
             }
 
-            return Statement.createTry(tryToken, tryCode, catches.ToArray(), finallyToken, finallyCode);
+            return StatementUtil.createTry(tryToken, tryCode, catches.ToArray(), finallyToken, finallyCode);
         }
 
         private Statement ParseWhileLoop()
@@ -380,7 +378,7 @@ namespace CommonScript.Compiler
             Expression condition = this.expressionParser.ParseExpression();
             FunctionWrapper.Tokens_popExpected(this.tokens, ")");
             Statement[] code = this.ParseCodeBlock(false);
-            return Statement.createWhileLoop(whileToken, condition, code);
+            return StatementUtil.createWhileLoop(whileToken, condition, code);
         }
     }
 }

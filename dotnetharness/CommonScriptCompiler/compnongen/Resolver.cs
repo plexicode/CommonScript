@@ -312,7 +312,7 @@ namespace CommonScript.Compiler
                             val = this.expressionResolver.ResolveExpressionSecondPass(val);
                         }
 
-                        if (passNum == 2 && val.type != ExpressionType.INTEGER_CONST)
+                        if (passNum == 2 && val.type != (int) ExpressionType.INTEGER_CONST)
                         {
                             FunctionWrapper.Errors_Throw(enumDef.memberNameTokens[memberIndex], "This enum value has a non-integer value.");
                         }
@@ -347,12 +347,12 @@ namespace CommonScript.Compiler
         {
             switch (expr.type)
             {
-                case ExpressionType.BOOL_CONST:
-                case ExpressionType.NULL_CONST:
-                case ExpressionType.INTEGER_CONST:
-                case ExpressionType.FLOAT_CONST:
-                case ExpressionType.STRING_CONST:
-                case ExpressionType.ENUM_CONST:
+                case (int) ExpressionType.BOOL_CONST:
+                case (int) ExpressionType.NULL_CONST:
+                case (int) ExpressionType.INTEGER_CONST:
+                case (int) ExpressionType.FLOAT_CONST:
+                case (int) ExpressionType.STRING_CONST:
+                case (int) ExpressionType.ENUM_CONST:
                     return true;
             }
             return false;
@@ -371,8 +371,8 @@ namespace CommonScript.Compiler
 
         private static Expression BuildFakeDotChain(string root, string field)
         {
-            Expression varRoot = Expression.createVariable(null, root);
-            return Expression.createDotField(varRoot, null, field);
+            Expression varRoot = ExpressionUtil.createVariable(null, root);
+            return ExpressionUtil.createDotField(varRoot, null, field);
         }
 
         // For all undefined values of an enum, make it equal to the previous value + 1 by
@@ -390,14 +390,14 @@ namespace CommonScript.Compiler
                     {
                         if (j == 0)
                         {
-                            enumEnt.memberValues[j] = Expression.createIntegerConstant(token, 1);
+                            enumEnt.memberValues[j] = ExpressionUtil.createIntegerConstant(token, 1);
                         }
                         else
                         {
-                            enumEnt.memberValues[j] = Expression.createBinaryOp(
+                            enumEnt.memberValues[j] = ExpressionUtil.createBinaryOp(
                                 BuildFakeDotChain(enumEnt.baseData.simpleName, enumEnt.memberNameTokens[j - 1].Value),
                                 BuildFakeToken(token, "+", true),
-                                Expression.createIntegerConstant(null, 1)
+                                ExpressionUtil.createIntegerConstant(null, 1)
                             );
                         }
                     }
@@ -530,20 +530,20 @@ namespace CommonScript.Compiler
         {
             switch (expr.type)
             {
-                case ExpressionType.INTEGER_CONST:
-                case ExpressionType.BOOL_CONST:
-                case ExpressionType.FLOAT_CONST:
-                case ExpressionType.NULL_CONST:
-                case ExpressionType.STRING_CONST:
+                case (int) ExpressionType.INTEGER_CONST:
+                case (int) ExpressionType.BOOL_CONST:
+                case (int) ExpressionType.FLOAT_CONST:
+                case (int) ExpressionType.NULL_CONST:
+                case (int) ExpressionType.STRING_CONST:
                     // This is fine
                     return expr;
 
-                case ExpressionType.BINARY_OP:
+                case (int) ExpressionType.BINARY_OP:
                     expr.left = this.GetListOfUnresolvedConstReferencesImpl(file, fqNamespace, expr.left, refs);
                     expr.right = this.GetListOfUnresolvedConstReferencesImpl(file, fqNamespace, expr.right, refs);
                     return expr;
 
-                case ExpressionType.VARIABLE:
+                case (int) ExpressionType.VARIABLE:
                     AbstractEntity referenced = this.TryDoExactLookupForConstantEntity(file, fqNamespace, expr.strVal);
                     if (referenced == null)
                     {
@@ -582,8 +582,8 @@ namespace CommonScript.Compiler
                     }
                     return expr;
 
-                case ExpressionType.DOT_FIELD:
-                    string[] fullRefSegments = Expression.DotField_getVariableRootedDottedChain(expr, "Cannot use this type of entity from a constant expression.");
+                case (int) ExpressionType.DOT_FIELD:
+                    string[] fullRefSegments = ExpressionUtil.DotField_getVariableRootedDottedChain(expr, "Cannot use this type of entity from a constant expression.");
                     string fullRefDotted = string.Join('.', fullRefSegments);
                     AbstractEntity reffedEntity = this.TryDoExactLookupForConstantEntity(file, fqNamespace, fullRefDotted);
                     if (reffedEntity == null)
