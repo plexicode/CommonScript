@@ -1,0 +1,50 @@
+
+struct FileContext {
+    StaticContext staticCtx;
+    string path;
+    string content;
+    TokenStream tokens;
+    Array<ImportStatement> imports;
+    Dictionary<string, ImportStatement> importsByVar;
+    bool isBuiltInLib;
+    bool isCoreBuiltin;
+    CompiledModule compiledModule;
+}
+
+FileContext FileContext_new(StaticContext staticCtx, string path, string content) {
+    return new FileContext(
+        staticCtx,
+        path,
+        content,
+        TokenStream_new(path, Tokenize(path, content, staticCtx)),
+        null,
+        null,
+        false,
+        false,
+        null
+    );
+}
+
+void FileContext_initializeImportLookup(FileContext fileCtx) {
+    fileCtx.importsByVar = new Dictionary<string, ImportStatement>();
+    for (int i = 0; i < fileCtx.imports.Size(); i += 1) {
+        ImportStatement imp = fileCtx.imports[i];
+        string varName = null;
+        if (imp.importTargetVariableName != null) {
+            varName = imp.importTargetVariableName.Value;
+        } else {
+            if (imp.flatName.Contains(".")) {
+                Errors_Throw(imp.importToken, "Dot-delimited import paths must use an alias.");
+            }
+            varName = imp.flatName;
+        }
+
+        if (varName != "*" && fileCtx.importsByVar.Contains(varName)) {
+            Errors_Throw(
+                imp.importTargetVariableName,
+                "There are multiple imports loaded as the variable '" + varName + "'");
+        }
+
+        fileCtx.importsByVar[varName] = imp;
+    }
+}

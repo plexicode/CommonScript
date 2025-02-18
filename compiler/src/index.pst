@@ -8,6 +8,7 @@
 @import("util/unicode.pst");
 
 @import("CompiledModule.pst");
+@import("FileContext.pst");
 @import("StaticContext.pst");
 @import("Token.pst");
 @import("Tokenizer.pst");

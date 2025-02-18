@@ -554,6 +554,40 @@ namespace CommonScript.Compiler.Internal
             return PST_ExtCallbacks.ContainsKey("hardCrash") ? PST_ExtCallbacks["hardCrash"].Invoke(failArgs) : null;
         }
 
+        public static void FileContext_initializeImportLookup(FileContext fileCtx)
+        {
+            fileCtx.importsByVar = new Dictionary<string, ImportStatement>();
+            int i = 0;
+            while (i < fileCtx.imports.Length)
+            {
+                ImportStatement imp = fileCtx.imports[i];
+                string varName = null;
+                if (imp.importTargetVariableName != null)
+                {
+                    varName = imp.importTargetVariableName.Value;
+                }
+                else
+                {
+                    if (imp.flatName.Contains("."))
+                    {
+                        Errors_Throw(imp.importToken, "Dot-delimited import paths must use an alias.");
+                    }
+                    varName = imp.flatName;
+                }
+                if (varName != "*" && fileCtx.importsByVar.ContainsKey(varName))
+                {
+                    Errors_Throw(imp.importTargetVariableName, string.Join("", new string[] { "There are multiple imports loaded as the variable '", varName, "'" }));
+                }
+                fileCtx.importsByVar[varName] = imp;
+                i += 1;
+            }
+        }
+
+        public static FileContext FileContext_new(StaticContext staticCtx, string path, string content)
+        {
+            return new FileContext(staticCtx, path, content, TokenStream_new(path, Tokenize(path, content, staticCtx)), null, null, false, false, null);
+        }
+
         public static ByteCodeRow[] flatten(ByteCodeBuffer buffer)
         {
             if (buffer == null)

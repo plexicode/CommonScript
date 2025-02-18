@@ -58,12 +58,12 @@ namespace CommonScript.Compiler
             Dictionary<string, ImportStatement> imports = new Dictionary<string, ImportStatement>();
             foreach (string path in fileLookup.Keys.OrderBy(n => n))
             {
-                FileContext fileCtx = new FileContext(compiler.staticCtx, path, fileLookup[path]);
+                FileContext fileCtx = FunctionWrapper.FileContext_new(compiler.staticCtx, path, fileLookup[path]);
                 fileCtx.isCoreBuiltin = isCoreBuiltin;
                 fileCtx.isBuiltInLib = isBuiltInLib;
                 files.Add(fileCtx);
                 fileCtx.imports = ImportParser.AdvanceThroughImports(fileCtx.tokens, isCoreBuiltin);
-                fileCtx.InitializeImportLookup();
+                FunctionWrapper.FileContext_initializeImportLookup(fileCtx);
                 foreach (ImportStatement impStmnt in fileCtx.imports)
                 {
                     imports[impStmnt.flatName] = impStmnt;
