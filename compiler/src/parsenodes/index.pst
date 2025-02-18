@@ -1,6 +1,8 @@
 @import("parsenodes/AbstractEntity.pst");
 @import("parsenodes/CatchChunk.pst");
 @import("parsenodes/ClassEntity.pst");
+@import("parsenodes/ConstEntity.pst");
+@import("parsenodes/EnumEntity.pst");
 @import("parsenodes/EntityType.pst");
 @import("parsenodes/Expression.pst");
 @import("parsenodes/ImportStatement.pst");

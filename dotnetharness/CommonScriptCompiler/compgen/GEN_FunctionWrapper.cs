@@ -149,6 +149,15 @@ namespace CommonScript.Compiler.Internal
             return new CompiledModule(id, new Dictionary<string, string>(), null, null, null, null);
         }
 
+        public static ConstEntity ConstEntity_new(Token constToken, Token nameToken, Expression constValue)
+        {
+            ConstEntity c = new ConstEntity(constValue, null);
+            c.baseData = AbstractEntity_new(constToken, 2, c);
+            c.baseData.nameToken = nameToken;
+            c.baseData.simpleName = nameToken.Value;
+            return c;
+        }
+
         public static ByteCodeBuffer convertToBuffer(ByteCodeRow[] flatRows)
         {
             ByteCodeBuffer buf = null;
@@ -240,6 +249,40 @@ namespace CommonScript.Compiler.Internal
                 return ((ModuleWrapperEntity)entity.specificData).publicMembers;
             }
             return staticCtx.emptyLookup;
+        }
+
+        public static EnumEntity EnumEntity_new(Token enumToken, Token nameToken, Token[] memberNames, Expression[] memberValues)
+        {
+            EnumEntity e = new EnumEntity(memberNames, memberValues, null);
+            e.baseData = AbstractEntity_new(enumToken, 4, e);
+            e.baseData.nameToken = nameToken;
+            e.baseData.simpleName = nameToken.Value;
+            if (memberNames.Length == 0)
+            {
+                Errors_Throw(enumToken, "This enum definition is empty.");
+            }
+            System.Collections.Generic.Dictionary<string, bool> collisionCheck = new Dictionary<string, bool>();
+            bool isImplicit = memberValues[0] == null;
+            int i = 0;
+            while (i < memberNames.Length)
+            {
+                Token name = memberNames[i];
+                if (collisionCheck.ContainsKey(name.Value))
+                {
+                    Errors_Throw(name, "This enum value name collides with a previous definition.");
+                }
+                bool valueIsImplicit = memberValues[i] == null;
+                if (valueIsImplicit != isImplicit)
+                {
+                    Errors_Throw(enumToken, "This enum definition defines values for some but not all members. Mixed implicit/explicit definitions are not allowed.");
+                }
+                if (isImplicit)
+                {
+                    e.memberValues[i] = Expression_createIntegerConstant(null, i + 1);
+                }
+                i += 1;
+            }
+            return e;
         }
 
         public static void Errors_Throw(Token token, string msg)

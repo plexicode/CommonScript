@@ -109,7 +109,7 @@ namespace CommonScript.Compiler
             Expression constValue = this.expressionParser.ParseExpression();
             FunctionWrapper.Tokens_popExpected(this.tokens, ";");
 
-            return new ConstEntity(constKeyword, nameToken, constValue).baseData;
+            return FunctionWrapper.ConstEntity_new(constKeyword, nameToken, constValue).baseData;
         }
 
         public AbstractEntity ParseEnum()
@@ -134,7 +134,7 @@ namespace CommonScript.Compiler
 
             FunctionWrapper.Tokens_popExpected(this.tokens, "}");
 
-            return new EnumEntity(enumKeyword, nameToken, names.ToArray(), values.ToArray()).baseData;
+            return FunctionWrapper.EnumEntity_new(enumKeyword, nameToken, names.ToArray(), values.ToArray()).baseData;
         }
     }
 }

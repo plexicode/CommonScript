@@ -1,0 +1,38 @@
+
+struct EnumEntity {
+    Array<Token> memberNameTokens;
+    Array<Expression> memberValues;
+    AbstractEntity baseData;
+}
+
+EnumEntity EnumEntity_new(Token enumToken, Token nameToken, Array<Token> memberNames, Array<Expression> memberValues) {
+    EnumEntity e = new EnumEntity(memberNames, memberValues, null);
+
+    e.baseData = AbstractEntity_new(enumToken, EntityType.ENUM, e);
+    e.baseData.nameToken = nameToken;
+    e.baseData.simpleName = nameToken.Value;
+    
+    if (memberNames.Size() == 0) {
+        Errors_Throw(enumToken, "This enum definition is empty.");
+    }
+
+    Dictionary<string, bool> collisionCheck = new Dictionary<string, bool>();
+    bool isImplicit = memberValues[0] == null;
+    for (int i = 0; i < memberNames.Size(); i += 1) {
+        Token name = memberNames[i];
+        if (collisionCheck.Contains(name.Value)) {
+            Errors_Throw(name, "This enum value name collides with a previous definition.");
+        }
+
+        bool valueIsImplicit = memberValues[i] == null;
+        if (valueIsImplicit != isImplicit) {
+            Errors_Throw(enumToken, "This enum definition defines values for some but not all members. Mixed implicit/explicit definitions are not allowed.");
+        }
+
+        if (isImplicit) {
+            e.memberValues[i] = Expression_createIntegerConstant(null, i + 1);
+        }
+    }
+
+    return e;
+}

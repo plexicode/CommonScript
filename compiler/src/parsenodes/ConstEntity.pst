@@ -1,0 +1,14 @@
+
+struct ConstEntity {
+    Expression constValue;
+    AbstractEntity baseData;
+}
+
+ConstEntity ConstEntity_new(Token constToken, Token nameToken, Expression constValue) {
+    ConstEntity c = new ConstEntity(constValue, null);
+    c.baseData = AbstractEntity_new(constToken, EntityType.CONST, c);
+    c.baseData.nameToken = nameToken;
+    c.baseData.simpleName = nameToken.Value;
+
+    return c;
+}
