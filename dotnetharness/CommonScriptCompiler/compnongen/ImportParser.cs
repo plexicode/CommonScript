@@ -23,31 +23,31 @@ namespace CommonScript.Compiler
             List<ImportStatement> output = new List<ImportStatement>();
             if (!isCoreBuiltin) output.Add(createBuiltinImport(tokens));
 
-            while (tokens.hasMore() && tokens.isNext("import"))
+            while (TokenStreamUtil.Tokens_hasMore(tokens) && TokenStreamUtil.Tokens_isNext(tokens, "import"))
             {
-                Token importToken = tokens.popKeyword("import");
+                Token importToken = TokenStreamUtil.Tokens_popKeyword(tokens, "import");
                 List<Token> tokenChain = new List<Token>() {
-                    tokens.popName("module name"),
+                    TokenStreamUtil.Tokens_popName(tokens, "module name"),
                 };
 
-                while (tokens.popIfPresent("."))
+                while (TokenStreamUtil.Tokens_popIfPresent(tokens, "."))
                 {
-                    tokenChain.Add(tokens.popName("module name"));
+                    tokenChain.Add(TokenStreamUtil.Tokens_popName(tokens, "module name"));
                 }
                 Token importTargetName = null;
-                if (tokens.popIfPresent("->"))
+                if (TokenStreamUtil.Tokens_popIfPresent(tokens, "->"))
                 {
-                    if (tokens.isNext("*"))
+                    if (TokenStreamUtil.Tokens_isNext(tokens, "*"))
                     {
-                        importTargetName = tokens.pop();
+                        importTargetName = TokenStreamUtil.Tokens_pop(tokens);
                     }
                     else
                     {
-                        importTargetName = tokens.popName("import target variable");
+                        importTargetName = TokenStreamUtil.Tokens_popName(tokens, "import target variable");
                     }
                 }
 
-                tokens.popExpected(";");
+                TokenStreamUtil.Tokens_popExpected(tokens, ";");
 
                 output.Add(FunctionWrapper.ImportStatement_new(importToken, tokenChain, importTargetName));
             }

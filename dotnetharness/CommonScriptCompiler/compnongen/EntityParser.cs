@@ -16,13 +16,13 @@ namespace CommonScript.Compiler
 
         private void ParseArgDefinitionList(List<Token> tokensOut, List<Expression> defaultValuesOut)
         {
-            this.tokens.popExpected("(");
-            while (!this.tokens.popIfPresent(")"))
+            TokenStreamUtil.Tokens_popExpected(this.tokens, "(");
+            while (!TokenStreamUtil.Tokens_popIfPresent(this.tokens, ")"))
             {
-                if (tokensOut.Count > 0) this.tokens.popExpected(",");
-                tokensOut.Add(this.tokens.popName("argument name"));
+                if (tokensOut.Count > 0) TokenStreamUtil.Tokens_popExpected(this.tokens, ",");
+                tokensOut.Add(TokenStreamUtil.Tokens_popName(this.tokens, "argument name"));
                 Expression argValue = null;
-                if (this.tokens.popIfPresent("="))
+                if (TokenStreamUtil.Tokens_popIfPresent(this.tokens, "="))
                 {
                     argValue = this.expressionParser.ParseExpression();
                 }
@@ -32,16 +32,16 @@ namespace CommonScript.Compiler
 
         public AbstractEntity ParseField(Dictionary<string, Token> annotations)
         {
-            Token fieldKeyword = this.tokens.popKeyword("field");
-            Token nameToken = this.tokens.popName("field name");
+            Token fieldKeyword = TokenStreamUtil.Tokens_popKeyword(this.tokens, "field");
+            Token nameToken = TokenStreamUtil.Tokens_popName(this.tokens, "field name");
             Expression defaultValue = null;
             Token equalToken = null;
-            if (this.tokens.isNext("="))
+            if (TokenStreamUtil.Tokens_isNext(this.tokens, "="))
             {
-                equalToken = this.tokens.pop();
+                equalToken = TokenStreamUtil.Tokens_pop(this.tokens);
                 defaultValue = this.expressionParser.ParseExpression();
             }
-            this.tokens.popExpected(";");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, ";");
             AbstractEntity entity = new FieldEntity(fieldKeyword, nameToken, equalToken, defaultValue).baseData;
             entity.annotations = annotations;
             return entity;
@@ -51,8 +51,8 @@ namespace CommonScript.Compiler
             Dictionary<string, Token> annotations,
             ClassEntity optionalParentClass)
         {
-            Token functionKeyword = this.tokens.popKeyword("function");
-            Token nameToken = this.tokens.popName("function name");
+            Token functionKeyword = TokenStreamUtil.Tokens_popKeyword(this.tokens, "function");
+            Token nameToken = TokenStreamUtil.Tokens_popName(this.tokens, "function name");
             bool isStatic = annotations.ContainsKey("@static");
             List<Token> args = new List<Token>();
             List<Expression> argValues = new List<Expression>();
@@ -68,20 +68,20 @@ namespace CommonScript.Compiler
 
         public AbstractEntity ParseConstructor(Dictionary<string, Token> annotations)
         {
-            Token ctorKeyword = this.tokens.popKeyword("constructor");
+            Token ctorKeyword = TokenStreamUtil.Tokens_popKeyword(this.tokens, "constructor");
             List<Token> args = new List<Token>();
             List<Expression> argValues = new List<Expression>();
             this.ParseArgDefinitionList(args, argValues);
 
             Expression[] baseArgs = null;
-            if (this.tokens.popIfPresent(":"))
+            if (TokenStreamUtil.Tokens_popIfPresent(this.tokens, ":"))
             {
-                Token baseKeyword = this.tokens.popKeyword("base");
+                Token baseKeyword = TokenStreamUtil.Tokens_popKeyword(this.tokens, "base");
                 List<Expression> bargs = new List<Expression>();
-                this.tokens.popExpected("(");
-                while (!this.tokens.popIfPresent(")"))
+                TokenStreamUtil.Tokens_popExpected(this.tokens, "(");
+                while (!TokenStreamUtil.Tokens_popIfPresent(this.tokens, ")"))
                 {
-                    if (bargs.Count > 0) this.tokens.popExpected(",");
+                    if (bargs.Count > 0) TokenStreamUtil.Tokens_popExpected(this.tokens, ",");
                     bargs.Add(this.expressionParser.ParseExpression());
                 }
                 baseArgs = bargs.ToArray();
@@ -103,36 +103,36 @@ namespace CommonScript.Compiler
 
         public AbstractEntity ParseConst()
         {
-            Token constKeyword = this.tokens.popKeyword("const");
-            Token nameToken = this.tokens.popName("constant name");
-            this.tokens.popExpected("=");
+            Token constKeyword = TokenStreamUtil.Tokens_popKeyword(this.tokens, "const");
+            Token nameToken = TokenStreamUtil.Tokens_popName(this.tokens, "constant name");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, "=");
             Expression constValue = this.expressionParser.ParseExpression();
-            this.tokens.popExpected(";");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, ";");
 
             return new ConstEntity(constKeyword, nameToken, constValue).baseData;
         }
 
         public AbstractEntity ParseEnum()
         {
-            Token enumKeyword = this.tokens.popKeyword("enum");
-            Token nameToken = this.tokens.popName("enum name");
-            this.tokens.popExpected("{");
+            Token enumKeyword = TokenStreamUtil.Tokens_popKeyword(this.tokens, "enum");
+            Token nameToken = TokenStreamUtil.Tokens_popName(this.tokens, "enum name");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, "{");
             bool nextAllowed = true;
             List<Token> names = new List<Token>();
             List<Expression> values = new List<Expression>();
-            while (nextAllowed && !this.tokens.isNext("}"))
+            while (nextAllowed && !TokenStreamUtil.Tokens_isNext(this.tokens, "}"))
             {
-                names.Add(this.tokens.popName("enum member name"));
+                names.Add(TokenStreamUtil.Tokens_popName(this.tokens, "enum member name"));
                 Expression value = null;
-                if (this.tokens.popIfPresent("="))
+                if (TokenStreamUtil.Tokens_popIfPresent(this.tokens, "="))
                 {
                     value = this.expressionParser.ParseExpression();
                 }
                 values.Add(value);
-                nextAllowed = this.tokens.popIfPresent(",");
+                nextAllowed = TokenStreamUtil.Tokens_popIfPresent(this.tokens, ",");
             }
 
-            tokens.popExpected("}");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, "}");
 
             return new EnumEntity(enumKeyword, nameToken, names.ToArray(), values.ToArray()).baseData;
         }

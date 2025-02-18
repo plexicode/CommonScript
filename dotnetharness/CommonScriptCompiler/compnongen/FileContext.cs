@@ -20,7 +20,7 @@ namespace CommonScript.Compiler
         {
             this.content = content.Replace("\r\n", "\n").TrimEnd();
             this.path = path;
-            this.tokens = new TokenStream(path, FunctionWrapper.Tokenize(this.path, this.content, staticCtx));
+            this.tokens = FunctionWrapper.TokenStream_new(path, FunctionWrapper.Tokenize(this.path, this.content, staticCtx));
         }
 
         public void InitializeImportLookup()

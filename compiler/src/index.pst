@@ -12,6 +12,7 @@
 @import("Token.pst");
 @import("Tokenizer.pst");
 @import("TokenType.pst");
+@import("TokenStream.pst");
 
 object fail(string msg) {
     Array<object> failArgs = new Array<object>(1);

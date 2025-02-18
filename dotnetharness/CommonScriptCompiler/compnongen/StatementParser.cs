@@ -17,13 +17,13 @@ namespace CommonScript.Compiler
 
         public Statement[] ParseCodeBlock(bool requireCurlyBrace)
         {
-            bool curlyBraceNext = requireCurlyBrace || this.tokens.isNext("{");
+            bool curlyBraceNext = requireCurlyBrace || TokenStreamUtil.Tokens_isNext(this.tokens, "{");
 
             List<Statement> output = new List<Statement>();
             if (curlyBraceNext)
             {
-                this.tokens.popExpected("{"); // will throw when required but not present.
-                while (!this.tokens.popIfPresent("}"))
+                TokenStreamUtil.Tokens_popExpected(this.tokens, "{"); // will throw when required but not present.
+                while (!TokenStreamUtil.Tokens_popIfPresent(this.tokens, "}"))
                 {
                     output.Add(this.ParseStatement(false));
                 }
@@ -39,7 +39,7 @@ namespace CommonScript.Compiler
         {
             if (!isForLoop)
             {
-                switch (this.tokens.peekValueNonNull())
+                switch (TokenStreamUtil.Tokens_peekValueNonNull(this.tokens))
                 {
                     case "break": return this.ParseBreakContinue();
                     case "continue": return this.ParseBreakContinue();
@@ -72,7 +72,7 @@ namespace CommonScript.Compiler
 
             if (!isForLoop)
             {
-                this.tokens.popExpected(";");
+                TokenStreamUtil.Tokens_popExpected(this.tokens, ";");
             }
 
             return s;
@@ -80,7 +80,7 @@ namespace CommonScript.Compiler
 
         private Token TryPopAssignmentOp()
         {
-            string op = this.tokens.peekValue();
+            string op = TokenStreamUtil.Tokens_peekValue(this.tokens);
             if (op == null) return null;
             bool isOp = false;
             switch (op[0])
@@ -122,26 +122,26 @@ namespace CommonScript.Compiler
                     break;
             }
 
-            if (isOp) return this.tokens.pop();
+            if (isOp) return TokenStreamUtil.Tokens_pop(this.tokens);
             return null;
         }
 
         private Statement ParseBreakContinue()
         {
-            Token token = this.tokens.popKeyword(this.tokens.isNext("continue") ? "continue" : "break");
-            this.tokens.popExpected(";");
+            Token token = TokenStreamUtil.Tokens_popKeyword(this.tokens, TokenStreamUtil.Tokens_isNext(this.tokens, "continue") ? "continue" : "break");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, ";");
             return Statement.createBreakContinue(token);
         }
 
         private Statement ParseDoWhileLoop()
         {
-            Token doToken = this.tokens.popKeyword("do");
+            Token doToken = TokenStreamUtil.Tokens_popKeyword(this.tokens, "do");
             Statement[] code = this.ParseCodeBlock(false);
-            Token whileToken = this.tokens.popKeyword("while");
-            this.tokens.popExpected("(");
+            Token whileToken = TokenStreamUtil.Tokens_popKeyword(this.tokens, "while");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, "(");
             Expression condition = this.expressionParser.ParseExpression();
-            this.tokens.popExpected(")");
-            this.tokens.popExpected(";");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, ")");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, ";");
 
             return Statement.createDoWhile(doToken, code, whileToken, condition);
         }
@@ -149,11 +149,11 @@ namespace CommonScript.Compiler
         private Statement ParseAnyForLoop()
         {
             // assert that this isn't used on a non-for loop
-            if (!this.tokens.isNext("for")) this.tokens.popKeyword("for");
+            if (!TokenStreamUtil.Tokens_isNext(this.tokens, "for")) TokenStreamUtil.Tokens_popKeyword(this.tokens, "for");
 
-            Token openParen = this.tokens.PeekAhead(1);
-            Token varName = this.tokens.PeekAhead(2);
-            Token colon = this.tokens.PeekAhead(3);
+            Token openParen = TokenStreamUtil.Tokens_peekAhead(this.tokens, 1);
+            Token varName = TokenStreamUtil.Tokens_peekAhead(this.tokens, 2);
+            Token colon = TokenStreamUtil.Tokens_peekAhead(this.tokens, 3);
 
             if (colon != null &&
                 openParen.Value == "(" &&
@@ -168,48 +168,48 @@ namespace CommonScript.Compiler
 
         private Statement ParseForEachLoop()
         {
-            Token forToken = this.tokens.popKeyword("for");
-            this.tokens.popExpected("(");
-            Token varToken = this.tokens.popName("for loop iteration variable name");
-            this.tokens.popExpected(":");
+            Token forToken = TokenStreamUtil.Tokens_popKeyword(this.tokens, "for");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, "(");
+            Token varToken = TokenStreamUtil.Tokens_popName(this.tokens, "for loop iteration variable name");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, ":");
             Expression listExpr = this.expressionParser.ParseExpression();
-            this.tokens.popExpected(")");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, ")");
             Statement[] code = this.ParseCodeBlock(false);
             return Statement.createForEachLoop(forToken, varToken, listExpr, code);
         }
 
         private Statement ParseTraditionalForLoop()
         {
-            Token forToken = this.tokens.popKeyword("for");
-            this.tokens.popExpected("(");
+            Token forToken = TokenStreamUtil.Tokens_popKeyword(this.tokens, "for");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, "(");
             List<Statement> init = new List<Statement>();
             Expression condition = null;
             List<Statement> step = new List<Statement>();
-            if (!this.tokens.isNext(";"))
+            if (!TokenStreamUtil.Tokens_isNext(this.tokens, ";"))
             {
                 init.Add(this.ParseStatement(true));
-                while (this.tokens.popIfPresent(","))
+                while (TokenStreamUtil.Tokens_popIfPresent(this.tokens, ","))
                 {
                     init.Add(this.ParseStatement(true));
                 }
             }
 
-            this.tokens.popExpected(";");
-            if (!this.tokens.isNext(";"))
+            TokenStreamUtil.Tokens_popExpected(this.tokens, ";");
+            if (!TokenStreamUtil.Tokens_isNext(this.tokens, ";"))
             {
                 condition = this.expressionParser.ParseExpression();
             }
-            this.tokens.popExpected(";");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, ";");
 
-            if (!this.tokens.isNext(")"))
+            if (!TokenStreamUtil.Tokens_isNext(this.tokens, ")"))
             {
                 step.Add(this.ParseStatement(true));
-                while (this.tokens.popIfPresent(","))
+                while (TokenStreamUtil.Tokens_popIfPresent(this.tokens, ","))
                 {
                     step.Add(this.ParseStatement(true));
                 }
             }
-            this.tokens.popExpected(")");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, ")");
 
             Statement[] code = this.ParseCodeBlock(false);
 
@@ -218,13 +218,13 @@ namespace CommonScript.Compiler
 
         private Statement ParseIfStatement()
         {
-            Token ifToken = this.tokens.popKeyword("if");
-            this.tokens.popExpected("(");
+            Token ifToken = TokenStreamUtil.Tokens_popKeyword(this.tokens, "if");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, "(");
             Expression condition = this.expressionParser.ParseExpression();
-            this.tokens.popExpected(")");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, ")");
             Statement[] ifCode = this.ParseCodeBlock(false);
             Statement[] elseCode = [];
-            if (this.tokens.popIfPresent("else"))
+            if (TokenStreamUtil.Tokens_popIfPresent(this.tokens, "else"))
             {
                 elseCode = this.ParseCodeBlock(false);
             }
@@ -234,9 +234,9 @@ namespace CommonScript.Compiler
 
         private Statement ParseReturn()
         {
-            Token retToken = this.tokens.popKeyword("return");
+            Token retToken = TokenStreamUtil.Tokens_popKeyword(this.tokens, "return");
             Expression expr = null;
-            if (!this.tokens.isNext(";"))
+            if (!TokenStreamUtil.Tokens_isNext(this.tokens, ";"))
             {
                 expr = this.expressionParser.ParseExpression();
             }
@@ -244,52 +244,52 @@ namespace CommonScript.Compiler
             {
                 expr = Expression.createNullConstant(null);
             }
-            this.tokens.popExpected(";");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, ";");
             return Statement.createReturn(retToken, expr);
         }
 
         private Statement ParseSwitch()
         {
-            Token switchToken = this.tokens.popKeyword("switch");
-            this.tokens.popExpected("(");
+            Token switchToken = TokenStreamUtil.Tokens_popKeyword(this.tokens, "switch");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, "(");
             Expression condition = this.expressionParser.ParseExpression();
-            this.tokens.popExpected(")");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, ")");
             List<SwitchChunk> chunks = new List<SwitchChunk>();
-            this.tokens.popExpected("{");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, "{");
             bool defaultEncountered = false;
-            while (!this.tokens.popIfPresent("}"))
+            while (!TokenStreamUtil.Tokens_popIfPresent(this.tokens, "}"))
             {
-                this.tokens.ensureMore();
+                TokenStreamUtil.Tokens_ensureMore(this.tokens);
                 SwitchChunk activeChunk = new SwitchChunk();
                 chunks.Add(activeChunk);
-                while (this.tokens.isNext("case") || this.tokens.isNext("default"))
+                while (TokenStreamUtil.Tokens_isNext(this.tokens, "case") || TokenStreamUtil.Tokens_isNext(this.tokens, "default"))
                 {
                     if (defaultEncountered)
                     {
-                        FunctionWrapper.Errors_Throw(this.tokens.peek(), "The default case for a switch statement must appear at the end.");
+                        FunctionWrapper.Errors_Throw(TokenStreamUtil.Tokens_peek(this.tokens), "The default case for a switch statement must appear at the end.");
                     }
 
-                    if (this.tokens.isNext("case"))
+                    if (TokenStreamUtil.Tokens_isNext(this.tokens, "case"))
                     {
-                        Token caseToken = this.tokens.popKeyword("case");
+                        Token caseToken = TokenStreamUtil.Tokens_popKeyword(this.tokens, "case");
                         Expression caseValue = this.expressionParser.ParseExpression();
                         activeChunk.CaseTokens.Add(caseToken);
                         activeChunk.Cases.Add(caseValue);
                     }
                     else
                     {
-                        Token defaultToken = this.tokens.popKeyword("default");
+                        Token defaultToken = TokenStreamUtil.Tokens_popKeyword(this.tokens, "default");
                         activeChunk.CaseTokens.Add(defaultToken);
                         activeChunk.Cases.Add(null);
                         defaultEncountered = true;
                     }
-                    this.tokens.popExpected(":");
+                    TokenStreamUtil.Tokens_popExpected(this.tokens, ":");
                 }
 
-                while (!this.tokens.isNext("case") &&
-                    !this.tokens.isNext("default") &&
-                    !this.tokens.isNext("}") &&
-                    this.tokens.hasMore())
+                while (!TokenStreamUtil.Tokens_isNext(this.tokens, "case") &&
+                    !TokenStreamUtil.Tokens_isNext(this.tokens, "default") &&
+                    !TokenStreamUtil.Tokens_isNext(this.tokens, "}") &&
+                    TokenStreamUtil.Tokens_hasMore(this.tokens))
                 {
                     activeChunk.Code.Add(this.ParseStatement(false));
                 }
@@ -300,28 +300,28 @@ namespace CommonScript.Compiler
 
         private Statement ParseThrow()
         {
-            Token throwToken = this.tokens.popKeyword("throw");
+            Token throwToken = TokenStreamUtil.Tokens_popKeyword(this.tokens, "throw");
             Expression value = this.expressionParser.ParseExpression();
-            this.tokens.popExpected(";");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, ";");
             return Statement.createThrow(throwToken, value);
         }
 
         private Statement ParseTry()
         {
-            Token tryToken = this.tokens.popKeyword("try");
+            Token tryToken = TokenStreamUtil.Tokens_popKeyword(this.tokens, "try");
             Statement[] tryCode = this.ParseCodeBlock(true);
             List<CatchChunk> catches = new List<CatchChunk>();
             Token finallyToken = null;
             Statement[] finallyCode = null;
-            while (this.tokens.isNext("catch"))
+            while (TokenStreamUtil.Tokens_isNext(this.tokens, "catch"))
             {
-                this.tokens.popKeyword("catch");
+                TokenStreamUtil.Tokens_popKeyword(this.tokens, "catch");
                 List<Token[]> classNamesRaw = new List<Token[]>();
                 Token exceptionVarToken = null;
-                this.tokens.popExpected("(");
-                Token mysteryToken = this.tokens.popName("exception name or variable");
-                this.tokens.ensureMore();
-                if (this.tokens.popIfPresent(")"))
+                TokenStreamUtil.Tokens_popExpected(this.tokens, "(");
+                Token mysteryToken = TokenStreamUtil.Tokens_popName(this.tokens, "exception name or variable");
+                TokenStreamUtil.Tokens_ensureMore(this.tokens);
+                if (TokenStreamUtil.Tokens_popIfPresent(this.tokens, ")"))
                 {
                     // single variable catch
                     exceptionVarToken = mysteryToken;
@@ -329,27 +329,27 @@ namespace CommonScript.Compiler
                 else
                 {
                     List<Token> classNameBuilder = new List<Token>() { mysteryToken };
-                    while (this.tokens.popIfPresent("."))
+                    while (TokenStreamUtil.Tokens_popIfPresent(this.tokens, "."))
                     {
-                        classNameBuilder.Add(this.tokens.popName("exception name"));
+                        classNameBuilder.Add(TokenStreamUtil.Tokens_popName(this.tokens, "exception name"));
                     }
                     classNamesRaw.Add(classNameBuilder.ToArray());
-                    while (this.tokens.popIfPresent("|"))
+                    while (TokenStreamUtil.Tokens_popIfPresent(this.tokens, "|"))
                     {
                         classNameBuilder.Clear();
-                        classNameBuilder.Add(this.tokens.popName("exception name"));
-                        while (this.tokens.popIfPresent("."))
+                        classNameBuilder.Add(TokenStreamUtil.Tokens_popName(this.tokens, "exception name"));
+                        while (TokenStreamUtil.Tokens_popIfPresent(this.tokens, "."))
                         {
-                            classNameBuilder.Add(this.tokens.popName("exception name"));
+                            classNameBuilder.Add(TokenStreamUtil.Tokens_popName(this.tokens, "exception name"));
                         }
                         classNamesRaw.Add(classNameBuilder.ToArray());
                     }
 
-                    if (!this.tokens.isNext(")"))
+                    if (!TokenStreamUtil.Tokens_isNext(this.tokens, ")"))
                     {
-                        exceptionVarToken = this.tokens.popName("exception variable name");
+                        exceptionVarToken = TokenStreamUtil.Tokens_popName(this.tokens, "exception variable name");
                     }
-                    this.tokens.popExpected(")");
+                    TokenStreamUtil.Tokens_popExpected(this.tokens, ")");
                 }
                 Statement[] catchCode = this.ParseCodeBlock(true);
                 catches.Add(new CatchChunk()
@@ -360,9 +360,9 @@ namespace CommonScript.Compiler
                 });
             }
 
-            if (this.tokens.isNext("finally"))
+            if (TokenStreamUtil.Tokens_isNext(this.tokens, "finally"))
             {
-                finallyToken = this.tokens.popKeyword("finally");
+                finallyToken = TokenStreamUtil.Tokens_popKeyword(this.tokens, "finally");
                 finallyCode = this.ParseCodeBlock(true);
             }
             else
@@ -375,10 +375,10 @@ namespace CommonScript.Compiler
 
         private Statement ParseWhileLoop()
         {
-            Token whileToken = this.tokens.popKeyword("while");
-            this.tokens.popExpected("(");
+            Token whileToken = TokenStreamUtil.Tokens_popKeyword(this.tokens, "while");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, "(");
             Expression condition = this.expressionParser.ParseExpression();
-            this.tokens.popExpected(")");
+            TokenStreamUtil.Tokens_popExpected(this.tokens, ")");
             Statement[] code = this.ParseCodeBlock(false);
             return Statement.createWhileLoop(whileToken, condition, code);
         }

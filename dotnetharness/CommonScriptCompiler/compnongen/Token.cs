@@ -20,7 +20,7 @@ namespace CommonScript.Compiler
     {
         public static Token createFakeToken(TokenStream tokens, int type, string value, int line, int col)
         {
-            return FunctionWrapper.Token_new(value, type, tokens.GetFile(), line, col);
+            return FunctionWrapper.Token_new(value, type, tokens.file, line, col);
             
         }
     }

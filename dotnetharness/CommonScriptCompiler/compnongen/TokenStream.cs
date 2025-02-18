@@ -3,120 +3,106 @@ using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
-    internal class TokenStream
+    internal static class TokenStreamUtil
     {
-        private int index = 0;
-        private int length;
-        private Token[] tokens;
-        private string file;
-
-        public TokenStream(string file, Token[] tokens)
+        public static Token Tokens_peekAhead(TokenStream tokens, int distance)
         {
-            this.file = file;
-            this.tokens = tokens;
-            this.length = tokens.Length;
-        }
-
-        public string GetFile() { return this.file; }
-
-        public Token PeekAhead(int distance)
-        {
-            if (this.index + distance < this.length)
+            if (tokens.index + distance < tokens.length)
             {
-                return this.tokens[this.index + distance];
+                return tokens.tokens[tokens.index + distance];
             }
             return null;
         }
 
-        public Token pop()
+        public static Token Tokens_pop(TokenStream tokens)
         {
-            if (this.index >= this.length) return null;
-            Token t = this.tokens[this.index];
-            this.index++;
+            if (tokens.index >= tokens.length) return null;
+            Token t = tokens.tokens[tokens.index];
+            tokens.index++;
             return t;
         }
 
-        public Token peek()
+        public static Token Tokens_peek(TokenStream tokens)
         {
-            if (this.index >= this.length) return null;
-            return this.tokens[this.index];
+            if (tokens.index >= tokens.length) return null;
+            return tokens.tokens[tokens.index];
         }
 
-        public string peekValue()
+        public static string Tokens_peekValue(TokenStream tokens)
         {
-            Token t = this.peek();
+            Token t = Tokens_peek(tokens);
             if (t == null) return null;
             return t.Value;
         }
 
-        public string peekValueNonNull()
+        public static string Tokens_peekValueNonNull(TokenStream tokens)
         {
-            return this.peekValue() ?? "";
+            return Tokens_peekValue(tokens) ?? "";
         }
 
-        public bool hasMore()
+        public static bool Tokens_hasMore(TokenStream tokens)
         {
-            return this.index < this.length;
+            return tokens.index < tokens.length;
         }
 
-        public void ensureMore()
+        public static void Tokens_ensureMore(TokenStream tokens)
         {
-            if (!this.hasMore())
+            if (!Tokens_hasMore(tokens))
             {
-                FunctionWrapper.Errors_ThrowEof(this.file, "Unexpected end of file");
+                FunctionWrapper.Errors_ThrowEof(tokens.file, "Unexpected end of file");
             }
         }
 
-        public bool isSequenceNext2(string val1, string val2)
+        public static bool Tokens_isSequenceNext2(TokenStream tokens, string val1, string val2)
         {
-            return isSequenceNext4(val1, val2, null, null);
+            return Tokens_isSequenceNext4(tokens, val1, val2, null, null);
         }
 
-        public bool isSequenceNext3(string val1, string val2, string val3)
+        public static bool Tokens_isSequenceNext3(TokenStream tokens, string val1, string val2, string val3)
         {
-            return isSequenceNext4(val1, val2, val3, null);
+            return Tokens_isSequenceNext4(tokens, val1, val2, val3, null);
         }
 
-        public bool isSequenceNext4(string val1, string val2, string val3, string val4)
+        public static bool Tokens_isSequenceNext4(TokenStream tokens, string val1, string val2, string val3, string val4)
         {
-            if (val1 != null && this.index < this.length && this.tokens[this.index].Value != val1) return false;
-            if (val2 != null && this.index + 1 < this.length && this.tokens[this.index + 1].Value != val2) return false;
-            if (val3 != null && this.index + 2 < this.length && this.tokens[this.index + 2].Value != val3) return false;
-            if (val4 != null && this.index + 3 < this.length && this.tokens[this.index + 3].Value != val4) return false;
+            if (val1 != null && tokens.index < tokens.length && tokens.tokens[tokens.index].Value != val1) return false;
+            if (val2 != null && tokens.index + 1 < tokens.length && tokens.tokens[tokens.index + 1].Value != val2) return false;
+            if (val3 != null && tokens.index + 2 < tokens.length && tokens.tokens[tokens.index + 2].Value != val3) return false;
+            if (val4 != null && tokens.index + 3 < tokens.length && tokens.tokens[tokens.index + 3].Value != val4) return false;
             return true;
         }
 
-        public bool isNext(string value)
+        public static bool Tokens_isNext(TokenStream tokens, string value)
         {
-            return this.peekValue() == value;
+            return Tokens_peekValue(tokens) == value;
         }
 
-        public bool doesNextInclulde2(string val1, string val2)
+        public static bool Tokens_doesNextInclulde2(TokenStream tokens, string val1, string val2)
         {
-            return this.doesNextInclulde4(val1, val2, null, null);
+            return Tokens_doesNextInclulde4(tokens, val1, val2, null, null);
         }
 
-        public bool doesNextInclulde3(string val1, string val2, string val3)
+        public static bool Tokens_doesNextInclulde3(TokenStream tokens, string val1, string val2, string val3)
         {
-            return this.doesNextInclulde4(val1, val2, val3, null);
+            return Tokens_doesNextInclulde4(tokens, val1, val2, val3, null);
         }
 
-        public bool doesNextInclulde4(string val1, string val2, string val3, string val4)
+        public static bool Tokens_doesNextInclulde4(TokenStream tokens, string val1, string val2, string val3, string val4)
         {
-            string next = this.peekValue();
+            string next = Tokens_peekValue(tokens);
             return next == val1 || next == val2 || next == val3 || next == val4;
         }
 
-        public bool doesNextInclude5(string val1, string val2, string val3, string val4, string val5)
+        public static bool Tokens_doesNextInclude5(TokenStream tokens, string val1, string val2, string val3, string val4, string val5)
         {
-            string next = this.peekValue();
+            string next = Tokens_peekValue(tokens);
             return next == val1 || next == val2 || next == val3 || next == val4 || next == val5;
         }
 
-        public Token popKeyword(string value)
+        public static Token Tokens_popKeyword(TokenStream tokens, string value)
         {
-            Token next = this.pop();
-            if (next == null) this.ensureMore(); // throw
+            Token next = Tokens_pop(tokens);
+            if (next == null) Tokens_ensureMore(tokens); // throw
             if (next.Value != value || next.Type != (int) TokenType.KEYWORD)
             {
                 FunctionWrapper.Errors_Throw(next, "Expected '" + value + "' keyword but found '" + next.Value + "' instead.");
@@ -124,28 +110,28 @@ namespace CommonScript.Compiler
             return next;
         }
 
-        public bool popIfPresent(string value)
+        public static bool Tokens_popIfPresent(TokenStream tokens, string value)
         {
-            if (this.peekValue() == value)
+            if (Tokens_peekValue(tokens) == value)
             {
-                this.index++;
+                tokens.index++;
                 return true;
             }
             return false;
         }
 
-        public Token popName(string purposeForErrorMessage)
+        public static Token Tokens_popName(TokenStream tokens, string purposeForErrorMessage)
         {
-            Token t = this.pop();
-            if (t == null) this.ensureMore(); // throw 
+            Token t = Tokens_pop(tokens);
+            if (t == null) Tokens_ensureMore(tokens); // throw 
             if (t.Type != (int) TokenType.NAME) FunctionWrapper.Errors_Throw(t, "Expected " + purposeForErrorMessage + " but found '" + t.Value + "' instead.");
             return t;
         }
 
-        public Token popExpected(string value)
+        public static Token Tokens_popExpected(TokenStream tokens, string value)
         {
-            Token output = this.pop();
-            if (output == null) this.ensureMore(); // throw 
+            Token output = Tokens_pop(tokens);
+            if (output == null) Tokens_ensureMore(tokens); // throw 
             if (output.Value != value) FunctionWrapper.Errors_Throw(output, "Expected '" + value + "' but found '" + output.Value + "' instead.");
             
             // this is an internal assert and not a user error. Feel free to remove later.
@@ -154,10 +140,10 @@ namespace CommonScript.Compiler
             return output;
         }
 
-        public int peekType()
+        public static int Tokens_peekType(TokenStream tokens)
         {
-            if (!this.hasMore()) return (int) TokenType.EOF;
-            return this.peek().Type;
+            if (!Tokens_hasMore(tokens)) return (int) TokenType.EOF;
+            return Tokens_peek(tokens).Type;
         }
     }
 }

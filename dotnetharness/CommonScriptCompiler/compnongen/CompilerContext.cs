@@ -218,7 +218,7 @@ namespace CommonScript.Compiler
                     importStatement.compiledModuleRef = compiler.compiledModulesById[importStatement.flatName];
                 }
                 ParseOutEntities(compiler, file, rootEntities, null, "");
-                Token danglingToken = file.tokens.peek();
+                Token danglingToken = TokenStreamUtil.Tokens_peek(file.tokens);
                 if (danglingToken != null)
                 {
                     FunctionWrapper.Errors_Throw(danglingToken, "Unexpected token: '" + danglingToken.Value + "'. You might have too many close parentheses in this file.");
@@ -246,9 +246,9 @@ namespace CommonScript.Compiler
         private static Dictionary<string, Token> ParseOutAnnotations(TokenStream tokens)
         {
             Dictionary<string, Token> output = new Dictionary<string, Token>();
-            while (tokens.peekType() == (int) TokenType.ANNOTATION)
+            while (TokenStreamUtil.Tokens_peekType(tokens) == (int) TokenType.ANNOTATION)
             {
-                Token token = tokens.pop();
+                Token token = TokenStreamUtil.Tokens_pop(tokens);
                 string annotationName = token.Value.Substring(1);
                 if (output.ContainsKey(annotationName))
                 {
@@ -271,7 +271,7 @@ namespace CommonScript.Compiler
             string namespacePrefix)
         {
             TokenStream tokens = file.tokens;
-            bool keepChecking = tokens.hasMore();
+            bool keepChecking = TokenStreamUtil.Tokens_hasMore(tokens);
 
             EntityParser entityParser = new EntityParser(tokens);
             StatementParser statementParser = new StatementParser(tokens);
@@ -288,10 +288,10 @@ namespace CommonScript.Compiler
 
             while (keepChecking)
             {
-                Token firstToken = tokens.peek();
+                Token firstToken = TokenStreamUtil.Tokens_peek(tokens);
                 Dictionary<string, Token> annotationTokens = ParseOutAnnotations(tokens);
 
-                string nextToken = file.tokens.peekValueNonNull();
+                string nextToken = TokenStreamUtil.Tokens_peekValueNonNull(tokens);
                 AbstractEntity entity = null;
                 switch (nextToken)
                 {
@@ -327,7 +327,7 @@ namespace CommonScript.Compiler
                         throw new NotImplementedException(nextToken);
 
                     case "import":
-                        FunctionWrapper.Errors_Throw(tokens.peek(), "All imports must appear at the top of the file.");
+                        FunctionWrapper.Errors_Throw(TokenStreamUtil.Tokens_peek(tokens), "All imports must appear at the top of the file.");
                         break;
 
                     case "}":
@@ -336,8 +336,8 @@ namespace CommonScript.Compiler
 
                     default:
                         // Unexpected EOF or stray tokens.
-                        tokens.ensureMore();
-                        FunctionWrapper.Errors_Throw(tokens.peek(), "Unexpected token: '" + tokens.peekValueNonNull() + "'");
+                        TokenStreamUtil.Tokens_ensureMore(tokens);
+                        FunctionWrapper.Errors_Throw(TokenStreamUtil.Tokens_peek(tokens), "Unexpected token: '" + TokenStreamUtil.Tokens_peekValueNonNull(tokens) + "'");
                         break;
                 }
 
@@ -352,7 +352,7 @@ namespace CommonScript.Compiler
                     FunctionWrapper.Errors_Throw(firstToken, "This annotation is not attached to any entity.");
                 }
 
-                if (!tokens.hasMore())
+                if (!TokenStreamUtil.Tokens_hasMore(tokens))
                 {
                     keepChecking = false;
                 }
@@ -406,17 +406,17 @@ namespace CommonScript.Compiler
             string namespacePrefix)
         {
             TokenStream tokens = file.tokens;
-            Token classToken = tokens.popKeyword("class");
-            Token classNameToken = tokens.popName("class name");
+            Token classToken = TokenStreamUtil.Tokens_popKeyword(tokens, "class");
+            Token classNameToken = TokenStreamUtil.Tokens_popName(tokens, "class name");
             Token[] baseClassTokens = null;
-            if (tokens.popIfPresent(":"))
+            if (TokenStreamUtil.Tokens_popIfPresent(tokens, ":"))
             {
                 string errMsg = "base class or interface name";
-                List<Token> parent = new List<Token>() { tokens.popName(errMsg) };
-                while (tokens.isNext("."))
+                List<Token> parent = new List<Token>() { TokenStreamUtil.Tokens_popName(tokens, errMsg) };
+                while (TokenStreamUtil.Tokens_isNext(tokens, "."))
                 {
-                    parent.Add(tokens.pop());
-                    parent.Add(tokens.popName(errMsg));
+                    parent.Add(TokenStreamUtil.Tokens_pop(tokens));
+                    parent.Add(TokenStreamUtil.Tokens_popName(tokens, errMsg));
                 }
                 baseClassTokens = parent.ToArray();
             }
@@ -427,9 +427,9 @@ namespace CommonScript.Compiler
 
             ClassEntity classDef = FunctionWrapper.ClassEntity_new(classToken, classNameToken, classFqName);
             classDef.baseClassTokens = baseClassTokens;
-            tokens.popExpected("{");
+            TokenStreamUtil.Tokens_popExpected(tokens, "{");
             ParseOutEntities(ctx, file, classDef.classMembers, classDef.baseData, classFqName);
-            tokens.popExpected("}");
+            TokenStreamUtil.Tokens_popExpected(tokens, "}");
 
             // inject a fake do-nothing constructor if one was not declared.
             if (!classDef.classMembers.ContainsKey("@ctor"))
@@ -454,21 +454,21 @@ namespace CommonScript.Compiler
             string namespacePrefix)
         {
             TokenStream tokens = file.tokens;
-            Token nsToken = tokens.popKeyword("namespace");
+            Token nsToken = TokenStreamUtil.Tokens_popKeyword(tokens, "namespace");
             List<string> namespaceChain = new List<string>();
             if (namespacePrefix != "") namespaceChain.Add(namespacePrefix);
-            Token nsFirst = tokens.popName("namespace name");
+            Token nsFirst = TokenStreamUtil.Tokens_popName(tokens, "namespace name");
             namespaceChain.Add(nsFirst.Value);
             Dictionary<string, AbstractEntity> entityBucket = new Dictionary<string, AbstractEntity>();
-            while (tokens.popIfPresent("."))
+            while (TokenStreamUtil.Tokens_popIfPresent(tokens, "."))
             {
                 throw new NotImplementedException();
             }
             NamespaceEntity nsEntity = FunctionWrapper.NamespaceEntity_new(nsToken, nsFirst, namespacePrefix);
-            tokens.popExpected("{");
+            TokenStreamUtil.Tokens_popExpected(tokens, "{");
             namespacePrefix = string.Join(".", namespaceChain);
             ParseOutEntities(ctx, file, nsEntity.nestedMembers, nsEntity.baseData, namespacePrefix);
-            tokens.popExpected("}");
+            TokenStreamUtil.Tokens_popExpected(tokens, "}");
             return nsEntity.baseData;
         }
     }

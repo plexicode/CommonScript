@@ -781,6 +781,11 @@ namespace CommonScript.Compiler.Internal
             return ctx;
         }
 
+        public static TokenStream TokenStream_new(string file, Token[] tokens)
+        {
+            return new TokenStream(0, tokens.Length, tokens, file);
+        }
+
         public static string UnicodeArrayToString(int[] chars)
         {
             return UnicodeArrayToString_slice(chars, 0, chars.Length);
