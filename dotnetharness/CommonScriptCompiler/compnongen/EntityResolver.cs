@@ -141,8 +141,8 @@ namespace CommonScript.Compiler
                 // TODO: verify arg count
                 Token baseCtor = funcDef.baseData.firstToken; // TODO: this is wrong, get the actual 'base' token
                 Token baseCtorParen = funcDef.baseData.firstToken; // TODO: this is even more wrong 
-                Expression baseCtorRef = ExpressionUtil.createBaseCtorReference(baseCtor);
-                Expression baseCtorInvoke = ExpressionUtil.createFunctionInvocation(baseCtorRef, baseCtorParen, ctorEnt.baseCtorArgValues);
+                Expression baseCtorRef = FunctionWrapper.Expression_createBaseCtorReference(baseCtor);
+                Expression baseCtorInvoke = FunctionWrapper.Expression_createFunctionInvocation(baseCtorRef, baseCtorParen, ctorEnt.baseCtorArgValues);
                 Statement baseCtorStmnt = StatementUtil.createExpressionAsStatement(baseCtorInvoke);
                 baseCtorStmnt = this.statementResolver.ResolveStatementFirstPass(baseCtorStmnt);
                 baseCtorInvocation.Add(baseCtorStmnt);
@@ -162,7 +162,7 @@ namespace CommonScript.Compiler
                 (lastStatement.type != (int) StatementType.RETURN && lastStatement.type != (int) StatementType.THROW);
             if (autoReturnNeeded)
             {
-                flattened.Add(StatementUtil.createReturn(null, ExpressionUtil.createNullConstant(null)));
+                flattened.Add(StatementUtil.createReturn(null, FunctionWrapper.Expression_createNullConstant(null)));
             }
             funcDef.code = [.. flattened];
 
@@ -174,9 +174,9 @@ namespace CommonScript.Compiler
         {
             if (fld.opToken == null) throw new InvalidOperationException(); // only applicable to default-value-based fields.
             Expression root = fld.baseData.isStatic
-                ? ExpressionUtil.createClassReference(null, fld.baseData.nestParent)
-                : ExpressionUtil.createThisReference(null);
-            Expression target = ExpressionUtil.createDotField(root, null, fld.baseData.simpleName);
+                ? FunctionWrapper.Expression_createClassReference(null, fld.baseData.nestParent)
+                : FunctionWrapper.Expression_createThisReference(null);
+            Expression target = FunctionWrapper.Expression_createDotField(root, null, fld.baseData.simpleName);
             Token equal = fld.opToken;
             return StatementUtil.createAssignment(target, equal, fld.defaultValue);
         }
@@ -200,7 +200,7 @@ namespace CommonScript.Compiler
             if (funcDef.code.Length == 0 || funcDef.code[funcDef.code.Length - 1].type != (int) StatementType.RETURN)
             {
                 List<Statement> newCode = new List<Statement>(funcDef.code);
-                newCode.Add(StatementUtil.createReturn(null, ExpressionUtil.createNullConstant(null)));
+                newCode.Add(StatementUtil.createReturn(null, FunctionWrapper.Expression_createNullConstant(null)));
                 funcDef.code = newCode.ToArray();
             }
             this.resolver.activeEntity = null;

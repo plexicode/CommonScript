@@ -242,7 +242,7 @@ namespace CommonScript.Compiler
             }
             else
             {
-                expr = ExpressionUtil.createNullConstant(null);
+                expr = FunctionWrapper.Expression_createNullConstant(null);
             }
             FunctionWrapper.Tokens_popExpected(this.tokens, ";");
             return StatementUtil.createReturn(retToken, expr);

@@ -55,22 +55,19 @@ struct Expression {
     Array<Expression> values;
     Array<Token> argNames;
     Array<Statement> nestedCode;
-    
-    // Remember to add any new fields to BOTH the constructor and to the clone method.
-
 }
 
 Expression Expression_new(Token firstToken, int type) {
     return new Expression(
-        firstToken, 
+        firstToken,
         type,
-        null, 
-        null, 
         null,
         null,
-        false, 
-        null, 
-        0, 
+        null,
+        null,
+        false,
+        null,
+        0,
         0.0,
         null,
         null,
@@ -80,4 +77,282 @@ Expression Expression_new(Token firstToken, int type) {
         null,
         null
     );
+}
+
+Expression Expression_cloneWithNewToken(Token token, Expression expr) {
+    return new Expression(
+        token,
+        expr.type,
+        expr.root,
+        expr.left,
+        expr.right,
+        expr.opToken,
+        expr.boolVal,
+        expr.strVal,
+        expr.intVal,
+        expr.floatVal,
+        expr.entityPtr,
+        expr.importPtr,
+        expr.args,
+        expr.keys,
+        expr.values,
+        expr.argNames,
+        expr.nestedCode
+    );
+}
+
+Expression Expression_createNullConstant(Token token) {
+    return Expression_new(token, ExpressionType.NULL_CONST);
+}
+
+Expression Expression_createBoolConstant(Token token, bool val) {
+    Expression expr = Expression_new(token, ExpressionType.BOOL_CONST);
+    expr.boolVal = val;
+    return expr;
+}
+
+Expression Expression_createIntegerConstant(Token token, int val) {
+    Expression expr = Expression_new(token, ExpressionType.INTEGER_CONST);
+    expr.intVal = val;
+    return expr;
+}
+
+Expression Expression_createFloatConstant(Token token, double val) {
+    Expression expr = Expression_new(token, ExpressionType.FLOAT_CONST);
+    expr.floatVal = val;
+    return expr;
+}
+
+Expression Expression_createStringConstant(Token token, string val) {
+    Expression expr = Expression_new(token, ExpressionType.STRING_CONST);
+    expr.strVal = val;
+    return expr;
+}
+
+Expression Expression_createLambda(Token firstToken, Array<Token> argNameTokens, Array<Expression> argDefaultValues, Token arrowToken, Array<Statement> code) {
+    Expression expr = Expression_new(firstToken, ExpressionType.LAMBDA);
+    expr.argNames = argNameTokens;
+    expr.values = argDefaultValues;
+    expr.opToken = arrowToken;
+    expr.nestedCode = code;
+    return expr;
+}
+
+Expression Expression_createVariable(Token token, string varName) {
+    Expression expr = Expression_new(token, ExpressionType.VARIABLE);
+    expr.strVal = varName;
+    return expr;
+}
+
+Expression Expression_createThisReference(Token token) {
+    return Expression_new(token, ExpressionType.THIS);
+}
+
+Expression Expression_createBaseReference(Token token) {
+    return Expression_new(token, ExpressionType.BASE);
+}
+
+Expression Expression_createBaseCtorReference(Token token) {
+    return Expression_new(token, ExpressionType.BASE_CTOR_REFERENCE);
+}
+
+Expression Expression_createConstructorReference(Token newToken, Expression nameChain) {
+    Expression ctor = Expression_new(newToken, ExpressionType.CONSTRUCTOR_REFERENCE);
+    ctor.root = nameChain;
+    return ctor;
+}
+
+Expression Expression_createConstructorInvocation(Token firstToken, AbstractEntity classDef, Token invokeToken, Array<Expression> args) {
+    Expression ctorInvoke = Expression_new(firstToken, ExpressionType.CONSTRUCTOR_INVOCATION);
+    ctorInvoke.entityPtr = classDef;
+    ctorInvoke.args = args;
+    ctorInvoke.opToken = invokeToken;
+    return ctorInvoke;
+}
+
+Expression Expression_createListDefinition(Token openList, Array<Expression> items) {
+    Expression expr = Expression_new(openList, ExpressionType.LIST_DEFINITION);
+    expr.values = items;
+    return expr;
+}
+
+Expression Expression_createDictionaryDefinition(Token openDict, Array<Expression> keys, Array<Expression> values) {
+    Expression expr = Expression_new(openDict, ExpressionType.DICTIONARY_DEFINITION);
+    expr.keys = keys;
+    expr.values = values;
+    for (int i = 0; i < keys.Size(); i += 1) {
+        Expression key = keys[i];
+        if (key.type != ExpressionType.STRING_CONST && key.type != ExpressionType.INTEGER_CONST) {
+            Errors_Throw(key.firstToken, "Only string and integer constants can be used as dictionary keys");
+        }
+    }
+    return expr;
+}
+
+Expression Expression_createExtensionReference(Token prefixToken, string name) {
+    Expression extRef = Expression_new(prefixToken, ExpressionType.EXTENSION_REFERENCE);
+    extRef.strVal = name;
+    return extRef;
+}
+
+Expression Expression_createExtensionInvocation(Token firstToken, string name, Array<Expression> args) {
+    Expression extInvoke = Expression_new(firstToken, ExpressionType.EXTENSION_INVOCATION);
+    extInvoke.strVal = name;
+    extInvoke.args = args;
+    return extInvoke;
+}
+
+Expression Expression_createTernary(Expression condition, Token op, Expression trueValue, Expression falseValue) {
+    Expression ternary = Expression_new(condition.firstToken, ExpressionType.TERNARY);
+    ternary.root = condition;
+    ternary.opToken = op;
+    ternary.left = trueValue;
+    ternary.right = falseValue;
+    return ternary;
+}
+
+Expression Expression_createBinaryOp(Expression left, Token op, Expression right) {
+    Expression pair = Expression_new(left.firstToken, ExpressionType.BINARY_OP);
+    pair.opToken = op;
+    pair.left = left;
+    pair.right = right;
+    return pair;
+}
+
+Expression Expression_createInlineIncrement(Token firstToken, Expression root, Token incrementOp, bool isPrefix) {
+    Expression expr = Expression_new(firstToken, ExpressionType.INLINE_INCREMENT);
+    expr.opToken = incrementOp;
+    expr.root = root;
+    expr.boolVal = isPrefix;
+
+    switch (root.type) {
+        case ExpressionType.DOT_FIELD:
+        case ExpressionType.INDEX:
+        case ExpressionType.VARIABLE:
+            // These are fine.
+            break;
+
+        default:
+            Errors_Throw(incrementOp, "The '" + incrementOp.Value + "' operator is not allowed on this type of expression.");
+            break;
+    }
+
+    return expr;
+}
+
+Expression Expression_createNegatePrefix(Token opToken, Expression root) {
+    int t = ExpressionType.NEGATIVE_SIGN;
+    if (opToken.Value == "!") t = ExpressionType.BOOLEAN_NOT;
+    if (opToken.Value == "~") t = ExpressionType.BITWISE_NOT;
+    Expression expr = Expression_new(opToken, t);
+    expr.opToken = opToken;
+    expr.root = root;
+    return expr;
+}
+
+Expression Expression_createDotField(Expression root, Token dotToken, string name) {
+    Expression df = Expression_new(root.firstToken, ExpressionType.DOT_FIELD);
+    df.root = root;
+    df.opToken = dotToken;
+    df.strVal = name;
+    return df;
+}
+
+Array<string> DotField_getVariableRootedDottedChain(Expression outermostDotField, string errorMessage) {
+    List<string> chain = new List<string>();
+    chain.Add(outermostDotField.strVal);
+    Expression walker = outermostDotField.root;
+    while (walker != null) {
+        chain.Add(walker.strVal);
+        if (walker.type == ExpressionType.DOT_FIELD) {
+            walker = walker.root;
+        } else if (walker.type == ExpressionType.VARIABLE) {
+            walker = null;
+        } else if (errorMessage != null) {
+            Errors_Throw(walker.firstToken, errorMessage);
+        } else {
+            return null;
+        }
+    }
+    chain.Reverse();
+    return Core.ListToArray(chain);
+}
+
+Expression Expression_createFunctionInvocation(Expression root, Token parenToken, Array<Expression> args) {
+    Expression funcInvoke = Expression_new(root.firstToken, ExpressionType.FUNCTION_INVOKE);
+    funcInvoke.root = root;
+    funcInvoke.opToken = parenToken;
+    funcInvoke.args = args;
+    return funcInvoke;
+}
+
+Expression Expression_createBracketIndex(Expression root, Token bracketToken, Expression index) {
+    Expression bracketIndex = Expression_new(root.firstToken, ExpressionType.INDEX);
+    bracketIndex.root = root;
+    bracketIndex.opToken = bracketToken;
+    bracketIndex.right = index;
+    return bracketIndex;
+}
+
+Expression Expression_createClassReference(Token firstToken, AbstractEntity classDef) {
+    Expression classRef = Expression_new(firstToken, ExpressionType.CLASS_REFERENCE);
+    classRef.entityPtr = classDef;
+    classRef.boolVal = false; // verified safe usage
+    return classRef;
+}
+
+Expression Expression_createEnumConstant(Token firstToken, AbstractEntity enumDef, string name, int value) {
+    Expression enumConst = Expression_new(firstToken, ExpressionType.ENUM_CONST);
+    enumConst.entityPtr = enumDef;
+    enumConst.strVal = name;
+    enumConst.intVal = value;
+    return enumConst;
+}
+
+Expression Expression_createEnumReference(Token firstToken, AbstractEntity enumDef) {
+    Expression enumRef = Expression_new(firstToken, ExpressionType.ENUM_REFERENCE);
+    enumRef.entityPtr = enumDef;
+    return enumRef;
+}
+
+Expression Expression_createFunctionReference(Token firstToken, string name, AbstractEntity funcDef) {
+    Expression funcRef = Expression_new(firstToken, ExpressionType.FUNCTION_REFERENCE);
+    funcRef.strVal = name;
+    funcRef.entityPtr = funcDef;
+    return funcRef;
+}
+
+Expression Expression_createImportReference(Token firstToken, ImportStatement importStatement) {
+    Expression impRef = Expression_new(firstToken, ExpressionType.IMPORT_REFERENCE);
+    impRef.importPtr = importStatement;
+    return impRef;
+}
+
+Expression Expression_createNamespaceReference(Token firstToken, AbstractEntity nsDef) {
+    Expression nsRef = Expression_new(firstToken, ExpressionType.NAMESPACE_REFERENCE);
+    nsRef.entityPtr = nsDef;
+    return nsRef;
+}
+
+Expression Expression_createSliceExpression(
+    Expression rootExpression,
+    Token bracketToken,
+    Expression start,
+    Expression end,
+    Expression step) {
+    Expression sliceExpr = Expression_new(rootExpression.firstToken, ExpressionType.SLICE);
+    sliceExpr.root = rootExpression;
+    sliceExpr.opToken = bracketToken;
+    Array<Expression> args = new Array<Expression>(3);
+    args[0] = start;
+    args[1] = end;
+    args[2] = step;
+    sliceExpr.args = args;
+    return sliceExpr;
+}
+
+Expression Expression_createTypeof(Token typeofToken, Expression root) {
+    Expression typeofExpr = Expression_new(typeofToken, ExpressionType.TYPEOF);
+    typeofExpr.root = root;
+    return typeofExpr;
 }

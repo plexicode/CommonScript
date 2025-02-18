@@ -371,8 +371,8 @@ namespace CommonScript.Compiler
 
         private static Expression BuildFakeDotChain(string root, string field)
         {
-            Expression varRoot = ExpressionUtil.createVariable(null, root);
-            return ExpressionUtil.createDotField(varRoot, null, field);
+            Expression varRoot = FunctionWrapper.Expression_createVariable(null, root);
+            return FunctionWrapper.Expression_createDotField(varRoot, null, field);
         }
 
         // For all undefined values of an enum, make it equal to the previous value + 1 by
@@ -390,14 +390,14 @@ namespace CommonScript.Compiler
                     {
                         if (j == 0)
                         {
-                            enumEnt.memberValues[j] = ExpressionUtil.createIntegerConstant(token, 1);
+                            enumEnt.memberValues[j] = FunctionWrapper.Expression_createIntegerConstant(token, 1);
                         }
                         else
                         {
-                            enumEnt.memberValues[j] = ExpressionUtil.createBinaryOp(
+                            enumEnt.memberValues[j] = FunctionWrapper.Expression_createBinaryOp(
                                 BuildFakeDotChain(enumEnt.baseData.simpleName, enumEnt.memberNameTokens[j - 1].Value),
                                 BuildFakeToken(token, "+", true),
-                                ExpressionUtil.createIntegerConstant(null, 1)
+                                FunctionWrapper.Expression_createIntegerConstant(null, 1)
                             );
                         }
                     }
@@ -583,7 +583,7 @@ namespace CommonScript.Compiler
                     return expr;
 
                 case (int) ExpressionType.DOT_FIELD:
-                    string[] fullRefSegments = ExpressionUtil.DotField_getVariableRootedDottedChain(expr, "Cannot use this type of entity from a constant expression.");
+                    string[] fullRefSegments = FunctionWrapper.DotField_getVariableRootedDottedChain(expr, "Cannot use this type of entity from a constant expression.");
                     string fullRefDotted = string.Join('.', fullRefSegments);
                     AbstractEntity reffedEntity = this.TryDoExactLookupForConstantEntity(file, fqNamespace, fullRefDotted);
                     if (reffedEntity == null)

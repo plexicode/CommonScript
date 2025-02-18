@@ -196,6 +196,35 @@ namespace CommonScript.Compiler.Internal
             return Token_new(value, type, tokens.file, line, col);
         }
 
+        public static string[] DotField_getVariableRootedDottedChain(Expression outermostDotField, string errorMessage)
+        {
+            System.Collections.Generic.List<string> chain = new List<string>();
+            chain.Add(outermostDotField.strVal);
+            Expression walker = outermostDotField.root;
+            while (walker != null)
+            {
+                chain.Add(walker.strVal);
+                if (walker.type == 11)
+                {
+                    walker = walker.root;
+                }
+                else if (walker.type == 31)
+                {
+                    walker = null;
+                }
+                else if (errorMessage != null)
+                {
+                    Errors_Throw(walker.firstToken, errorMessage);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            chain.Reverse();
+            return chain.ToArray();
+        }
+
         public static System.Collections.Generic.Dictionary<string, AbstractEntity> Entity_getMemberLookup(StaticContext staticCtx, AbstractEntity entity)
         {
             if (entity.type == 1)
@@ -235,6 +264,282 @@ namespace CommonScript.Compiler.Internal
                 optionalMsg = "";
             }
             Errors_Throw(token, ("***NOT IMPLEMENTED*** " + optionalMsg).Trim());
+        }
+
+        public static Expression Expression_cloneWithNewToken(Token token, Expression expr)
+        {
+            return new Expression(token, expr.type, expr.root, expr.left, expr.right, expr.opToken, expr.boolVal, expr.strVal, expr.intVal, expr.floatVal, expr.entityPtr, expr.importPtr, expr.args, expr.keys, expr.values, expr.argNames, expr.nestedCode);
+        }
+
+        public static Expression Expression_createBaseCtorReference(Token token)
+        {
+            return Expression_new(token, 2);
+        }
+
+        public static Expression Expression_createBaseReference(Token token)
+        {
+            return Expression_new(token, 1);
+        }
+
+        public static Expression Expression_createBinaryOp(Expression left, Token op, Expression right)
+        {
+            Expression pair = Expression_new(left.firstToken, 3);
+            pair.opToken = op;
+            pair.left = left;
+            pair.right = right;
+            return pair;
+        }
+
+        public static Expression Expression_createBoolConstant(Token token, bool val)
+        {
+            Expression expr = Expression_new(token, 5);
+            expr.boolVal = val;
+            return expr;
+        }
+
+        public static Expression Expression_createBracketIndex(Expression root, Token bracketToken, Expression index)
+        {
+            Expression bracketIndex = Expression_new(root.firstToken, 20);
+            bracketIndex.root = root;
+            bracketIndex.opToken = bracketToken;
+            bracketIndex.right = index;
+            return bracketIndex;
+        }
+
+        public static Expression Expression_createClassReference(Token firstToken, AbstractEntity classDef)
+        {
+            Expression classRef = Expression_new(firstToken, 7);
+            classRef.entityPtr = classDef;
+            classRef.boolVal = false;
+            return classRef;
+        }
+
+        public static Expression Expression_createConstructorInvocation(Token firstToken, AbstractEntity classDef, Token invokeToken, Expression[] args)
+        {
+            Expression ctorInvoke = Expression_new(firstToken, 8);
+            ctorInvoke.entityPtr = classDef;
+            ctorInvoke.args = args;
+            ctorInvoke.opToken = invokeToken;
+            return ctorInvoke;
+        }
+
+        public static Expression Expression_createConstructorReference(Token newToken, Expression nameChain)
+        {
+            Expression ctor = Expression_new(newToken, 9);
+            ctor.root = nameChain;
+            return ctor;
+        }
+
+        public static Expression Expression_createDictionaryDefinition(Token openDict, Expression[] keys, Expression[] values)
+        {
+            Expression expr = Expression_new(openDict, 10);
+            expr.keys = keys;
+            expr.values = values;
+            int i = 0;
+            while (i < keys.Length)
+            {
+                Expression key = keys[i];
+                if (key.type != 28 && key.type != 22)
+                {
+                    Errors_Throw(key.firstToken, "Only string and integer constants can be used as dictionary keys");
+                }
+                i += 1;
+            }
+            return expr;
+        }
+
+        public static Expression Expression_createDotField(Expression root, Token dotToken, string name)
+        {
+            Expression df = Expression_new(root.firstToken, 11);
+            df.root = root;
+            df.opToken = dotToken;
+            df.strVal = name;
+            return df;
+        }
+
+        public static Expression Expression_createEnumConstant(Token firstToken, AbstractEntity enumDef, string name, int value)
+        {
+            Expression enumConst = Expression_new(firstToken, 12);
+            enumConst.entityPtr = enumDef;
+            enumConst.strVal = name;
+            enumConst.intVal = value;
+            return enumConst;
+        }
+
+        public static Expression Expression_createEnumReference(Token firstToken, AbstractEntity enumDef)
+        {
+            Expression enumRef = Expression_new(firstToken, 13);
+            enumRef.entityPtr = enumDef;
+            return enumRef;
+        }
+
+        public static Expression Expression_createExtensionInvocation(Token firstToken, string name, Expression[] args)
+        {
+            Expression extInvoke = Expression_new(firstToken, 14);
+            extInvoke.strVal = name;
+            extInvoke.args = args;
+            return extInvoke;
+        }
+
+        public static Expression Expression_createExtensionReference(Token prefixToken, string name)
+        {
+            Expression extRef = Expression_new(prefixToken, 15);
+            extRef.strVal = name;
+            return extRef;
+        }
+
+        public static Expression Expression_createFloatConstant(Token token, double val)
+        {
+            Expression expr = Expression_new(token, 16);
+            expr.floatVal = val;
+            return expr;
+        }
+
+        public static Expression Expression_createFunctionInvocation(Expression root, Token parenToken, Expression[] args)
+        {
+            Expression funcInvoke = Expression_new(root.firstToken, 17);
+            funcInvoke.root = root;
+            funcInvoke.opToken = parenToken;
+            funcInvoke.args = args;
+            return funcInvoke;
+        }
+
+        public static Expression Expression_createFunctionReference(Token firstToken, string name, AbstractEntity funcDef)
+        {
+            Expression funcRef = Expression_new(firstToken, 18);
+            funcRef.strVal = name;
+            funcRef.entityPtr = funcDef;
+            return funcRef;
+        }
+
+        public static Expression Expression_createImportReference(Token firstToken, ImportStatement importStatement)
+        {
+            Expression impRef = Expression_new(firstToken, 19);
+            impRef.importPtr = importStatement;
+            return impRef;
+        }
+
+        public static Expression Expression_createInlineIncrement(Token firstToken, Expression root, Token incrementOp, bool isPrefix)
+        {
+            Expression expr = Expression_new(firstToken, 21);
+            expr.opToken = incrementOp;
+            expr.root = root;
+            expr.boolVal = isPrefix;
+            switch (root.type)
+            {
+                case 11:
+                    break;
+                case 20:
+                    break;
+                case 31:
+                    break;
+                default:
+                    Errors_Throw(incrementOp, string.Join("", new string[] { "The '", incrementOp.Value, "' operator is not allowed on this type of expression." }));
+                    break;
+            }
+            return expr;
+        }
+
+        public static Expression Expression_createIntegerConstant(Token token, int val)
+        {
+            Expression expr = Expression_new(token, 22);
+            expr.intVal = val;
+            return expr;
+        }
+
+        public static Expression Expression_createLambda(Token firstToken, Token[] argNameTokens, Expression[] argDefaultValues, Token arrowToken, Statement[] code)
+        {
+            Expression expr = Expression_new(firstToken, 23);
+            expr.argNames = argNameTokens;
+            expr.values = argDefaultValues;
+            expr.opToken = arrowToken;
+            expr.nestedCode = code;
+            return expr;
+        }
+
+        public static Expression Expression_createListDefinition(Token openList, Expression[] items)
+        {
+            Expression expr = Expression_new(openList, 24);
+            expr.values = items;
+            return expr;
+        }
+
+        public static Expression Expression_createNamespaceReference(Token firstToken, AbstractEntity nsDef)
+        {
+            Expression nsRef = Expression_new(firstToken, 32);
+            nsRef.entityPtr = nsDef;
+            return nsRef;
+        }
+
+        public static Expression Expression_createNegatePrefix(Token opToken, Expression root)
+        {
+            int t = 25;
+            if (opToken.Value == "!")
+            {
+                t = 6;
+            }
+            if (opToken.Value == "~")
+            {
+                t = 4;
+            }
+            Expression expr = Expression_new(opToken, t);
+            expr.opToken = opToken;
+            expr.root = root;
+            return expr;
+        }
+
+        public static Expression Expression_createNullConstant(Token token)
+        {
+            return Expression_new(token, 26);
+        }
+
+        public static Expression Expression_createSliceExpression(Expression rootExpression, Token bracketToken, Expression start, Expression end, Expression step)
+        {
+            Expression sliceExpr = Expression_new(rootExpression.firstToken, 27);
+            sliceExpr.root = rootExpression;
+            sliceExpr.opToken = bracketToken;
+            Expression[] args = new Expression[3];
+            args[0] = start;
+            args[1] = end;
+            args[2] = step;
+            sliceExpr.args = args;
+            return sliceExpr;
+        }
+
+        public static Expression Expression_createStringConstant(Token token, string val)
+        {
+            Expression expr = Expression_new(token, 28);
+            expr.strVal = val;
+            return expr;
+        }
+
+        public static Expression Expression_createTernary(Expression condition, Token op, Expression trueValue, Expression falseValue)
+        {
+            Expression ternary = Expression_new(condition.firstToken, 29);
+            ternary.root = condition;
+            ternary.opToken = op;
+            ternary.left = trueValue;
+            ternary.right = falseValue;
+            return ternary;
+        }
+
+        public static Expression Expression_createThisReference(Token token)
+        {
+            return Expression_new(token, 30);
+        }
+
+        public static Expression Expression_createTypeof(Token typeofToken, Expression root)
+        {
+            Expression typeofExpr = Expression_new(typeofToken, 33);
+            typeofExpr.root = root;
+            return typeofExpr;
+        }
+
+        public static Expression Expression_createVariable(Token token, string varName)
+        {
+            Expression expr = Expression_new(token, 31);
+            expr.strVal = varName;
+            return expr;
         }
 
         public static Expression Expression_new(Token firstToken, int type)
