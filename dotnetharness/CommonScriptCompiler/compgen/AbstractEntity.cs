@@ -13,10 +13,10 @@ namespace CommonScript.Compiler.Internal
         public System.Collections.Generic.Dictionary<string, Token> annotations;
         public bool isStatic;
         public AbstractEntity nestParent;
-        public object OBJ_TEMP_CAST_fileContext;
+        public FileContext fileContext;
         public int serializationIndex;
 
-        public AbstractEntity(Token firstToken, int type, object specificData, string simpleName, Token nameToken, string fqName, System.Collections.Generic.Dictionary<string, Token> annotations, bool isStatic, AbstractEntity nestParent, object OBJ_TEMP_CAST_fileContext, int serializationIndex)
+        public AbstractEntity(Token firstToken, int type, object specificData, string simpleName, Token nameToken, string fqName, System.Collections.Generic.Dictionary<string, Token> annotations, bool isStatic, AbstractEntity nestParent, FileContext fileContext, int serializationIndex)
         {
             this.firstToken = firstToken;
             this.type = type;
@@ -27,7 +27,7 @@ namespace CommonScript.Compiler.Internal
             this.annotations = annotations;
             this.isStatic = isStatic;
             this.nestParent = nestParent;
-            this.OBJ_TEMP_CAST_fileContext = OBJ_TEMP_CAST_fileContext;
+            this.fileContext = fileContext;
             this.serializationIndex = serializationIndex;
         }
     }

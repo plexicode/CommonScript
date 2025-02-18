@@ -8,7 +8,7 @@ struct AbstractEntity {
     Dictionary<string, Token> annotations;
     bool isStatic;
     AbstractEntity nestParent;
-    object OBJ_TEMP_CAST_fileContext;
+    FileContext fileContext;
     int serializationIndex;
 }
 

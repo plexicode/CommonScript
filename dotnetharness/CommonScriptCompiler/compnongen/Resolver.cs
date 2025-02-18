@@ -423,7 +423,7 @@ namespace CommonScript.Compiler
                 string ns = c.baseData.nestParent == null ? "" : c.baseData.nestParent.fqName;
 
                 List<string> refsOut = new List<string>();
-                c.constValue = this.GetListOfUnresolvedConstReferences((FileContext)c.baseData.OBJ_TEMP_CAST_fileContext, ns, c.constValue, refsOut);
+                c.constValue = this.GetListOfUnresolvedConstReferences(c.baseData.fileContext, ns, c.constValue, refsOut);
                 referencesMadeByFqItem[c.baseData.fqName] = refsOut;
             }
 
@@ -437,7 +437,7 @@ namespace CommonScript.Compiler
                     string memFqName = e.baseData.fqName + "." + e.memberNameTokens[i].Value;
                     Expression val = e.memberValues[i];
                     List<string> refsOut = new List<string>();
-                    e.memberValues[i] = this.GetListOfUnresolvedConstReferences((FileContext)e.baseData.OBJ_TEMP_CAST_fileContext, ns, val, refsOut);
+                    e.memberValues[i] = this.GetListOfUnresolvedConstReferences(e.baseData.fileContext, ns, val, refsOut);
                     referencesMadeByFqItem[memFqName] = refsOut;
                 }
             }
@@ -551,7 +551,7 @@ namespace CommonScript.Compiler
                     }
                     else
                     {
-                        if (((FileContext)referenced.OBJ_TEMP_CAST_fileContext).compiledModule != file.compiledModule)
+                        if (referenced.fileContext.compiledModule != file.compiledModule)
                         {
                             if (referenced.type == (int)EntityType.CONST)
                             {
@@ -590,7 +590,7 @@ namespace CommonScript.Compiler
                     {
                         FunctionWrapper.Errors_Throw(expr.firstToken, "Invalid expression for constant.");
                     }
-                    if (((FileContext)reffedEntity.OBJ_TEMP_CAST_fileContext).compiledModule != file.compiledModule)
+                    if (reffedEntity.fileContext.compiledModule != file.compiledModule)
                     {
                         if (reffedEntity.type == (int)EntityType.CONST) return ((ConstEntity)reffedEntity.specificData).constValue;
 
@@ -702,9 +702,9 @@ namespace CommonScript.Compiler
                 return this.flattenedEntities[name];
             }
 
-            if (((FileContext)this.activeEntity.OBJ_TEMP_CAST_fileContext).importsByVar.ContainsKey(name))
+            if (this.activeEntity.fileContext.importsByVar.ContainsKey(name))
             {
-                return FunctionWrapper.ModuleWrapperEntity_new(throwToken, ((FileContext)this.activeEntity.OBJ_TEMP_CAST_fileContext).importsByVar[name]).baseData;
+                return FunctionWrapper.ModuleWrapperEntity_new(throwToken, this.activeEntity.fileContext.importsByVar[name]).baseData;
             }
 
             AbstractEntity walker = this.activeEntity;
@@ -718,7 +718,7 @@ namespace CommonScript.Compiler
                 walker = walker.nestParent;
             }
 
-            foreach (ImportStatement impStmnt in ((FileContext)this.activeEntity.OBJ_TEMP_CAST_fileContext).imports)
+            foreach (ImportStatement impStmnt in this.activeEntity.fileContext.imports)
             {
                 if (impStmnt.isPollutionImport)
                 {

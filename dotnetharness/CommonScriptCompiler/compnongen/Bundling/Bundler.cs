@@ -40,7 +40,7 @@ namespace CommonScript.Compiler
 
                         case (int)EntityType.FUNCTION:
                             FunctionLikeEntity func = (FunctionLikeEntity)tle.specificData;
-                            if (((FileContext)tle.OBJ_TEMP_CAST_fileContext).isCoreBuiltin)
+                            if (tle.fileContext.isCoreBuiltin)
                             {
                                 builtInFunctions.Add(func);
                             }

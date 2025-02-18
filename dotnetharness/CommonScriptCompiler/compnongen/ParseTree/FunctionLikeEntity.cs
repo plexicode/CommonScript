@@ -67,7 +67,7 @@ namespace CommonScript.Compiler
             {
                 FunctionSubtype = FunctionType.LAMBDA,
             };
-            fle.baseData.OBJ_TEMP_CAST_fileContext = ctx;
+            fle.baseData.fileContext = ctx;
             return fle;
         }
 

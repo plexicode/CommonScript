@@ -362,7 +362,7 @@ namespace CommonScript.Compiler
             Dictionary<string, AbstractEntity> activeEntityBucket,
             Dictionary<string, Token> annotationTokens)
         {
-            child.OBJ_TEMP_CAST_fileContext = file;
+            child.fileContext = file;
             child.annotations = annotationTokens;
 
             string fqName = child.simpleName;
@@ -436,7 +436,7 @@ namespace CommonScript.Compiler
                 }
                 AbstractEntity ctor = FunctionLikeEntity.BuildConstructor(classToken, [], [], baseArgs, [], false).baseData;
                 AttachEntityToParseTree(ctor, classDef.baseData,
-                    (FileContext)classDef.baseData.OBJ_TEMP_CAST_fileContext, classDef.baseData.fqName,
+                    classDef.baseData.fileContext, classDef.baseData.fqName,
                     classDef.classMembers, new Dictionary<string, Token>());
             }
 
