@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
     internal class Resolver
     {
+        public StaticContext staticCtx;
+        
         public Dictionary<string, AbstractEntity> nestedEntities;
         public Dictionary<string, AbstractEntity> enumsByMemberFqName;
         public Dictionary<string, AbstractEntity> flattenedEntities;
@@ -24,8 +27,9 @@ namespace CommonScript.Compiler
 
         private StringSet extensionNames;
 
-        public Resolver(Dictionary<string, AbstractEntity> rootEntities, List<string> extensionNames)
+        public Resolver(StaticContext staticCtx, Dictionary<string, AbstractEntity> rootEntities, List<string> extensionNames)
         {
+            this.staticCtx = staticCtx;
             this.extensionNames = FunctionWrapper.StringSet_fromList(extensionNames);
 
             this.expressionResolver = new ExpressionResolver(this);
@@ -44,7 +48,7 @@ namespace CommonScript.Compiler
             this.flattenedEntitiesAndEnumValues = new Dictionary<string, AbstractEntity>();
             this.flattenedEntitiesNoEnumParents = new Dictionary<string, AbstractEntity>();
 
-            this.entityList = Resolver.FlattenEntities(rootEntities);
+            this.entityList = Resolver.FlattenEntities(staticCtx, rootEntities);
             foreach (AbstractEntity tle in this.entityList)
             {
                 this.flattenedEntities[tle.fqName] = tle;
@@ -72,7 +76,7 @@ namespace CommonScript.Compiler
             return FunctionWrapper.StringSet_has(this.extensionNames, extensionName);
         }
 
-        internal static AbstractEntity[] FlattenEntities(Dictionary<string, AbstractEntity> rootEntities)
+        internal static AbstractEntity[] FlattenEntities(StaticContext staticCtx, Dictionary<string, AbstractEntity> rootEntities)
         {
             List<AbstractEntity> output = new List<AbstractEntity>();
             List<AbstractEntity> queue = new List<AbstractEntity>(rootEntities.Values);
@@ -81,7 +85,7 @@ namespace CommonScript.Compiler
                 AbstractEntity entity = queue[i];
                 output.Add(entity);
 
-                foreach (AbstractEntity mem in AbstractEntityUtil.getMemberLookup(entity).Values)
+                foreach (AbstractEntity mem in FunctionWrapper.Entity_getMemberLookup(staticCtx, entity).Values)
                 {
                     queue.Add(mem);
                 }
@@ -223,7 +227,7 @@ namespace CommonScript.Compiler
                         string next = bc.baseClassTokens[i].Value;
                         if (bcEntity != null)
                         {
-                            Dictionary<string, AbstractEntity> lookup = AbstractEntityUtil.getMemberLookup(bcEntity);
+                            Dictionary<string, AbstractEntity> lookup = FunctionWrapper.Entity_getMemberLookup(this.staticCtx, bcEntity);
                             if (lookup.ContainsKey(next))
                             {
                                 bcEntity = lookup[next];
@@ -706,7 +710,7 @@ namespace CommonScript.Compiler
             AbstractEntity walker = this.activeEntity;
             while (walker != null)
             {
-                Dictionary<string, AbstractEntity> lookup = AbstractEntityUtil.getMemberLookup(walker); 
+                Dictionary<string, AbstractEntity> lookup = FunctionWrapper.Entity_getMemberLookup(this.staticCtx, walker); 
                 if (lookup.ContainsKey(name))
                 {
                     return lookup[name];

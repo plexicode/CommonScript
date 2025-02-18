@@ -14,6 +14,7 @@ namespace CommonScript.Compiler
 
     internal class CompilerContext
     {
+        public StaticContext staticCtx;
         public string rootId;
         public Dictionary<string, List<string>> depIdsByModuleId;
         public Dictionary<string, List<FileContext>> filesByModuleId;
@@ -26,6 +27,7 @@ namespace CommonScript.Compiler
 
         public CompilerContext(string rootId, string flavorId, string extensionVersionId, string[] extensionNames)
         {
+            this.staticCtx = FunctionWrapper.StaticContext_new();
             this.rootId = rootId;
             this.flavorId = flavorId;
             this.extensionVersionId = extensionVersionId;
@@ -63,7 +65,7 @@ namespace CommonScript.Compiler
             Dictionary<string, ImportStatement> imports = new Dictionary<string, ImportStatement>();
             foreach (string path in fileLookup.Keys.OrderBy(n => n))
             {
-                FileContext fileCtx = new FileContext(path, fileLookup[path]);
+                FileContext fileCtx = new FileContext(compiler.staticCtx, path, fileLookup[path]);
                 fileCtx.isCoreBuiltin = isCoreBuiltin;
                 fileCtx.isBuiltInLib = isBuiltInLib;
                 files.Add(fileCtx);
@@ -225,7 +227,7 @@ namespace CommonScript.Compiler
                 }
             }
 
-            Resolver resolverCtx = new Resolver(rootEntities, compiler.extensionNames);
+            Resolver resolverCtx = new Resolver(compiler.staticCtx, rootEntities, compiler.extensionNames);
 
             resolverCtx.Resolve();
 

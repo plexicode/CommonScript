@@ -27,3 +27,10 @@ AbstractEntity AbstractEntity_new(Token firstToken, int type, object specificDat
         -1 // serializationIndex 
     );
 }
+
+Dictionary<string, AbstractEntity> Entity_getMemberLookup(StaticContext staticCtx, AbstractEntity entity) {
+    if (entity.type == EntityType.CLASS) return ((ClassEntity)entity.specificData).classMembers;
+    if (entity.type == EntityType.NAMESPACE) return ((NamespaceEntity)entity.specificData).nestedMembers;
+    if (entity.type == EntityType.MODULE_REF) return ((ModuleWrapperEntity)entity.specificData).publicMembers;
+    return staticCtx.emptyLookup;
+}

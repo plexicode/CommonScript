@@ -1,10 +1,12 @@
 struct StaticContext {
     TokenizerStaticContext tokenizerCtx;
+    Dictionary<string, AbstractEntity> emptyLookup;
 }
 
 StaticContext StaticContext_new() {
     return new StaticContext(
-        TokenizerStaticContext_new()
+        TokenizerStaticContext_new(),
+        new Dictionary<string, AbstractEntity>()
     );
 }
 

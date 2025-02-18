@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
@@ -328,7 +329,7 @@ namespace CommonScript.Compiler
             return typeofExpr;
         }
 
-        private static AbstractEntity FindLocallyReferencedEntity(Dictionary<string, AbstractEntity> lookup,
+        private static AbstractEntity FindLocallyReferencedEntity(StaticContext staticCtx, Dictionary<string, AbstractEntity> lookup,
             string name)
         {
             if (lookup.ContainsKey(name))
@@ -338,7 +339,8 @@ namespace CommonScript.Compiler
 
             if (lookup.ContainsKey(".."))
             {
-                return FindLocallyReferencedEntity(AbstractEntityUtil.getMemberLookup(lookup[".."]), name);
+                Dictionary<string, AbstractEntity> prevLevelLookup = FunctionWrapper.Entity_getMemberLookup(staticCtx, lookup[".."]);
+                return FindLocallyReferencedEntity(staticCtx, prevLevelLookup, name);
             }
 
             return null;
@@ -372,7 +374,7 @@ namespace CommonScript.Compiler
         {
             string name = varExpr.strVal;
 
-            AbstractEntity localEntity = FindLocallyReferencedEntity(this.resolver.nestedEntities, name);
+            AbstractEntity localEntity = FindLocallyReferencedEntity(this.resolver.staticCtx, this.resolver.nestedEntities, name);
             if (localEntity != null)
             {
                 return WrapEntityIntoReferenceExpression(varExpr.firstToken, localEntity);

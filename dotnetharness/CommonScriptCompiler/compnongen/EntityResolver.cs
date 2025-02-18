@@ -105,7 +105,7 @@ namespace CommonScript.Compiler
             {
                 ctorEnt = funcDef;
 
-                Dictionary<string, AbstractEntity> siblings = AbstractEntityUtil.getMemberLookup(funcDef.baseData.nestParent);
+                Dictionary<string, AbstractEntity> siblings = FunctionWrapper.Entity_getMemberLookup(this.resolver.staticCtx, funcDef.baseData.nestParent);
                 // TODO: this is wrong. The fields should be processed in the order that they appear in the code itself.
                 // This will affect runtime order of complex expressions which could have observable consequences.
                 // TODO: simple constant initial values should be conveyed in the metadata and direct-copied from a template.

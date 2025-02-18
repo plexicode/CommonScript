@@ -5,6 +5,7 @@ namespace CommonScript.Compiler
 {
     internal class FileContext
     {
+        public StaticContext staticCtx;
         public string path;
         public string content;
         public TokenStream tokens;
@@ -14,10 +15,9 @@ namespace CommonScript.Compiler
         public bool isCoreBuiltin = false;
         public CompiledModule compiledModule = null;
 
-        private static readonly StaticContext staticCtx = FunctionWrapper.StaticContext_new();
-        
-        public FileContext(string path, string content)
+        public FileContext(StaticContext staticCtx, string path, string content)
         {
+            this.staticCtx = staticCtx;
             this.content = content.Replace("\r\n", "\n").TrimEnd();
             this.path = path;
             this.tokens = FunctionWrapper.TokenStream_new(path, FunctionWrapper.Tokenize(this.path, this.content, staticCtx));

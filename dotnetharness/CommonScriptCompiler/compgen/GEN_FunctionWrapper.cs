@@ -191,6 +191,23 @@ namespace CommonScript.Compiler.Internal
             return Token_new(value, type, tokens.file, line, col);
         }
 
+        public static System.Collections.Generic.Dictionary<string, AbstractEntity> Entity_getMemberLookup(StaticContext staticCtx, AbstractEntity entity)
+        {
+            if (entity.type == 1)
+            {
+                return ((ClassEntity)entity.specificData).classMembers;
+            }
+            if (entity.type == 7)
+            {
+                return ((NamespaceEntity)entity.specificData).nestedMembers;
+            }
+            if (entity.type == 9)
+            {
+                return ((ModuleWrapperEntity)entity.specificData).publicMembers;
+            }
+            return staticCtx.emptyLookup;
+        }
+
         public static void Errors_Throw(Token token, string msg)
         {
             _Errors_ThrowImpl(1, token, msg, "");
@@ -397,7 +414,7 @@ namespace CommonScript.Compiler.Internal
 
         public static StaticContext StaticContext_new()
         {
-            return new StaticContext(TokenizerStaticContext_new());
+            return new StaticContext(TokenizerStaticContext_new(), new Dictionary<string, AbstractEntity>());
         }
 
         public static StringSet StringSet_add(StringSet s, string item)
