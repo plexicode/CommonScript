@@ -186,6 +186,11 @@ namespace CommonScript.Compiler.Internal
             return ByteCodeBuffer_fromRow(ByteCodeRow_new(opCode, token, stringArg, args));
         }
 
+        public static Token createFakeToken(TokenStream tokens, int type, string value, int line, int col)
+        {
+            return Token_new(value, type, tokens.file, line, col);
+        }
+
         public static void Errors_Throw(Token token, string msg)
         {
             _Errors_ThrowImpl(1, token, msg, "");

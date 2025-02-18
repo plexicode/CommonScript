@@ -15,13 +15,4 @@ namespace CommonScript.Compiler
 
         EOF = 9,
     }
-
-    internal class TokenUtil
-    {
-        public static Token createFakeToken(TokenStream tokens, int type, string value, int line, int col)
-        {
-            return FunctionWrapper.Token_new(value, type, tokens.file, line, col);
-            
-        }
-    }
 }

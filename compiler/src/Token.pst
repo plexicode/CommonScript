@@ -18,3 +18,7 @@ string Token_getFingerprint(Token t) {
     }
     return t.Fingerprint;
 }
+
+Token createFakeToken(TokenStream tokens, int type, string value, int line, int col) {
+    return Token_new(value, type, tokens.file, line, col);    
+}
