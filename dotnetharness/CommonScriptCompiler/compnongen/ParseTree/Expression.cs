@@ -3,45 +3,6 @@ using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
-    internal enum ExpressionType
-    {
-        BASE = 1,
-        BASE_CTOR_REFERENCE = 2,
-        BINARY_OP = 3,
-        BITWISE_NOT = 4,
-        BOOL_CONST = 5,
-        BOOLEAN_NOT = 6,
-        CLASS_REFERENCE = 7,
-        CONSTRUCTOR_INVOCATION = 8,
-        CONSTRUCTOR_REFERENCE = 9,
-        DICTIONARY_DEFINITION = 10,
-        DOT_FIELD = 11,
-        ENUM_CONST = 12, // generated in resolver, has both intVal and strVal set
-        ENUM_REFERENCE = 13,
-        EXTENSION_INVOCATION = 14,
-        EXTENSION_REFERENCE = 15,
-        FLOAT_CONST = 16,
-        FUNCTION_INVOKE = 17,
-        FUNCTION_REFERENCE = 18,
-        IMPORT_REFERENCE = 19,
-        INDEX = 20,
-        INLINE_INCREMENT = 21,
-        INTEGER_CONST = 22,
-        LAMBDA = 23,
-        LIST_DEFINITION = 24,
-        NAMESPACE_REFERENCE = 32,
-        NEGATIVE_SIGN = 25,
-        NULL_CONST = 26,
-        SLICE = 27,
-        STRING_CONST = 28,
-        TERNARY = 29,
-        THIS = 30,
-        TYPEOF = 33,
-        VARIABLE = 31,
-
-        MAX_VALUE = 34,
-    }
-
     internal class ExpressionUtil
     {
         public static Expression cloneExpressionWithNewToken(Token token, Expression other)

@@ -3,16 +3,6 @@ using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
-    public enum FunctionType
-    {
-        FUNCTION,
-        METHOD,
-        CONSTRUCTOR,
-        STATIC_METHOD,
-        STATIC_CONSTRUCTOR,
-        LAMBDA,
-    }
-
     internal class FunctionLikeEntity
     {
         public Token[] argTokens;

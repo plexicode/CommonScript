@@ -5,13 +5,6 @@ using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
-    internal enum ModuleType
-    {
-        CORE_BUILTIN,
-        LIB_BUILTIN,
-        USER,
-    }
-
     internal class CompilerContext
     {
         public StaticContext staticCtx;

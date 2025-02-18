@@ -2,36 +2,6 @@
 
 namespace CommonScript.Compiler
 {
-    internal class SpecialActionCodes
-    {
-        public const int B64_FROM_BYTES = 16;
-        public const int B64_TO_BYTES = 17;
-        public const int CMP = 6;
-        public const int JSON_PARSE = 20;
-        public const int JSON_SERIALIZE = 21;
-        public const int MATH_ARCCOS = 8;
-        public const int MATH_ARCSIN = 9;
-        public const int MATH_ARCTAN = 10;
-        public const int MATH_COS = 11;
-        public const int MATH_LOG = 12;
-        public const int MATH_SIN = 13;
-        public const int MATH_TAN = 14;
-        public const int PARSE_INT = 15;
-        public const int PARSE_FLOAT = 25;
-        public const int RANDOM_FLOAT = 7;
-        public const int SORT_START = 2;
-        public const int SORT_END = 3;
-        public const int SORT_GET_NEXT_CMP = 4;
-        public const int SORT_PROCEED = 5;
-        public const int TXT_BYTES_TO_STRING = 23;
-        public const int TXT_IS_VALID_ENC = 22;
-        public const int TXT_STRING_TO_BYTES = 24;
-        public const int UNIX_TIME = 1;
-        public const int XML_PARSE = 26;
-
-        // Next ID: 27
-    }
-
     internal static class SpecialActionUtil
     {
         private static readonly Dictionary<string, int> SPECIAL_ACTION_BY_FUNC_NAME = new Dictionary<string, int>()

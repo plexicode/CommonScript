@@ -2,23 +2,6 @@
 
 namespace CommonScript.Compiler
 {
-    internal enum StatementType
-    {
-        ASSIGNMENT = 1,
-        BREAK = 2,
-        CONTINUE = 3,
-        DO_WHILE_LOOP = 4,
-        EXPRESSION_AS_STATEMENT = 5,
-        FOR_LOOP = 6,
-        FOR_EACH_LOOP = 7,
-        IF_STATEMENT = 8,
-        RETURN = 9,
-        SWITCH_STATEMENT = 10,
-        THROW = 11,
-        TRY = 12,
-        WHILE_LOOP = 13,
-    }
-
     internal class StatementUtil
     {
         public static Statement createAssignment(Expression targetExpr, Token assignOp, Expression valueExpr)
