@@ -27,11 +27,11 @@ namespace CommonScript.Compiler
         private Expression ParseTernary()
         {
             Expression root = this.ParseNullCoalesce();
-            if (TokenStreamUtil.Tokens_isNext(this.tokens, "?"))
+            if (FunctionWrapper.Tokens_isNext(this.tokens, "?"))
             {
-                Token qmark = TokenStreamUtil.Tokens_pop(this.tokens);
+                Token qmark = FunctionWrapper.Tokens_pop(this.tokens);
                 Expression trueValue = this.ParseTernary();
-                TokenStreamUtil.Tokens_popExpected(this.tokens, ":");
+                FunctionWrapper.Tokens_popExpected(this.tokens, ":");
                 Expression falseValue = this.ParseTernary();
                 root = Expression.createTernary(root, qmark, trueValue, falseValue);
             }
@@ -41,9 +41,9 @@ namespace CommonScript.Compiler
         private Expression ParseNullCoalesce()
         {
             Expression root = this.ParseBooleanCombination();
-            if (TokenStreamUtil.Tokens_isNext(this.tokens, "??"))
+            if (FunctionWrapper.Tokens_isNext(this.tokens, "??"))
             {
-                Token op = TokenStreamUtil.Tokens_pop(this.tokens);
+                Token op = FunctionWrapper.Tokens_pop(this.tokens);
                 Expression next = this.ParseNullCoalesce();
                 root = Expression.createBinaryOp(root, op, next);
             }
@@ -53,13 +53,13 @@ namespace CommonScript.Compiler
         private Expression ParseBooleanCombination()
         {
             Expression root = this.ParseBitwise();
-            if (TokenStreamUtil.Tokens_doesNextInclulde2(this.tokens, "||", "&&"))
+            if (FunctionWrapper.Tokens_doesNextInclulde2(this.tokens, "||", "&&"))
             {
                 List<Expression> expressions = new List<Expression>() { root };
                 List<Token> ops = new List<Token>();
-                while (TokenStreamUtil.Tokens_doesNextInclulde2(this.tokens, "||", "&&"))
+                while (FunctionWrapper.Tokens_doesNextInclulde2(this.tokens, "||", "&&"))
                 {
-                    ops.Add(TokenStreamUtil.Tokens_pop(this.tokens));
+                    ops.Add(FunctionWrapper.Tokens_pop(this.tokens));
                     expressions.Add(this.ParseBitwise());
                 }
                 return FlattenBinaryOpChain(expressions, ops);
@@ -70,14 +70,14 @@ namespace CommonScript.Compiler
         private Expression ParseBitwise()
         {
             Expression root = this.ParseEquality();
-            if (TokenStreamUtil.Tokens_doesNextInclulde3(this.tokens, "&", "|", "^"))
+            if (FunctionWrapper.Tokens_doesNextInclulde3(this.tokens, "&", "|", "^"))
             {
                 List<Expression> expressions = new List<Expression>() { root };
                 List<Token> ops = new List<Token>();
 
-                while (TokenStreamUtil.Tokens_doesNextInclulde3(this.tokens, "&", "|", "^"))
+                while (FunctionWrapper.Tokens_doesNextInclulde3(this.tokens, "&", "|", "^"))
                 {
-                    ops.Add(TokenStreamUtil.Tokens_pop(this.tokens));
+                    ops.Add(FunctionWrapper.Tokens_pop(this.tokens));
                     expressions.Add(this.ParseEquality());
                 }
                 return FlattenBinaryOpChain(expressions, ops);
@@ -88,9 +88,9 @@ namespace CommonScript.Compiler
         private Expression ParseEquality()
         {
             Expression root = this.ParseInequality();
-            if (TokenStreamUtil.Tokens_doesNextInclulde2(this.tokens, "==", "!="))
+            if (FunctionWrapper.Tokens_doesNextInclulde2(this.tokens, "==", "!="))
             {
-                Token op = TokenStreamUtil.Tokens_pop(this.tokens);
+                Token op = FunctionWrapper.Tokens_pop(this.tokens);
                 Expression right = this.ParseInequality();
                 return Expression.createBinaryOp(root, op, right);
             }
@@ -100,9 +100,9 @@ namespace CommonScript.Compiler
         private Expression ParseInequality()
         {
             Expression root = this.ParseBitshift();
-            if (TokenStreamUtil.Tokens_doesNextInclude5(this.tokens, "<", ">", "<=", ">=", "is"))
+            if (FunctionWrapper.Tokens_doesNextInclude5(this.tokens, "<", ">", "<=", ">=", "is"))
             {
-                Token op = TokenStreamUtil.Tokens_pop(this.tokens);
+                Token op = FunctionWrapper.Tokens_pop(this.tokens);
                 Expression right = this.ParseBitshift();
                 root = Expression.createBinaryOp(root, op, right);
             }
@@ -112,13 +112,13 @@ namespace CommonScript.Compiler
         private Expression ParseBitshift()
         {
             Expression root = this.ParseAddition();
-            if (TokenStreamUtil.Tokens_doesNextInclulde3(this.tokens, "<<", ">>", ">>>"))
+            if (FunctionWrapper.Tokens_doesNextInclulde3(this.tokens, "<<", ">>", ">>>"))
             {
                 List<Expression> expressions = new List<Expression>() { root };
                 List<Token> ops = new List<Token>();
-                while (TokenStreamUtil.Tokens_doesNextInclulde3(this.tokens, "<<", ">>", ">>>"))
+                while (FunctionWrapper.Tokens_doesNextInclulde3(this.tokens, "<<", ">>", ">>>"))
                 {
-                    ops.Add(TokenStreamUtil.Tokens_pop(this.tokens));
+                    ops.Add(FunctionWrapper.Tokens_pop(this.tokens));
                     expressions.Add(this.ParseAddition());
                 }
                 root = FlattenBinaryOpChain(expressions, ops);
@@ -129,13 +129,13 @@ namespace CommonScript.Compiler
         private Expression ParseAddition()
         {
             Expression root = this.ParseMultiplication();
-            if (TokenStreamUtil.Tokens_doesNextInclulde2(this.tokens, "+", "-"))
+            if (FunctionWrapper.Tokens_doesNextInclulde2(this.tokens, "+", "-"))
             {
                 List<Expression> expressions = new List<Expression>() { root };
                 List<Token> ops = new List<Token>();
-                while (TokenStreamUtil.Tokens_doesNextInclulde2(this.tokens, "+", "-"))
+                while (FunctionWrapper.Tokens_doesNextInclulde2(this.tokens, "+", "-"))
                 {
-                    ops.Add(TokenStreamUtil.Tokens_pop(this.tokens));
+                    ops.Add(FunctionWrapper.Tokens_pop(this.tokens));
                     expressions.Add(this.ParseMultiplication());
                 }
                 root = FlattenBinaryOpChain(expressions, ops);
@@ -146,13 +146,13 @@ namespace CommonScript.Compiler
         private Expression ParseMultiplication()
         {
             Expression root = this.ParseExponent();
-            if (TokenStreamUtil.Tokens_doesNextInclulde3(this.tokens, "*", "/", "%"))
+            if (FunctionWrapper.Tokens_doesNextInclulde3(this.tokens, "*", "/", "%"))
             {
                 List<Expression> expressions = new List<Expression>() { root };
                 List<Token> ops = new List<Token>();
-                while (TokenStreamUtil.Tokens_doesNextInclulde3(this.tokens, "*", "/", "%"))
+                while (FunctionWrapper.Tokens_doesNextInclulde3(this.tokens, "*", "/", "%"))
                 {
-                    ops.Add(TokenStreamUtil.Tokens_pop(this.tokens));
+                    ops.Add(FunctionWrapper.Tokens_pop(this.tokens));
                     expressions.Add(this.ParseExponent());
                 }
                 root = FlattenBinaryOpChain(expressions, ops);
@@ -163,13 +163,13 @@ namespace CommonScript.Compiler
         private Expression ParseExponent()
         {
             Expression root = this.ParseUnaryPrefix();
-            if (TokenStreamUtil.Tokens_isNext(this.tokens, "**"))
+            if (FunctionWrapper.Tokens_isNext(this.tokens, "**"))
             {
                 List<Expression> expressions = new List<Expression>() { root };
                 List<Token> ops = new List<Token>();
-                while (TokenStreamUtil.Tokens_isNext(this.tokens, "**"))
+                while (FunctionWrapper.Tokens_isNext(this.tokens, "**"))
                 {
-                    ops.Add(TokenStreamUtil.Tokens_pop(this.tokens));
+                    ops.Add(FunctionWrapper.Tokens_pop(this.tokens));
                     expressions.Add(this.ParseUnaryPrefix());
                 }
                 root = FlattenBinaryOpChain(expressions, ops);
@@ -179,8 +179,8 @@ namespace CommonScript.Compiler
 
         private Expression ParseUnaryPrefix()
         {
-            string next = TokenStreamUtil.Tokens_peekValue(this.tokens);
-            if (next == null) TokenStreamUtil.Tokens_ensureMore(this.tokens);
+            string next = FunctionWrapper.Tokens_peekValue(this.tokens);
+            if (next == null) FunctionWrapper.Tokens_ensureMore(this.tokens);
             switch (next[0])
             {
                 case '-':
@@ -206,18 +206,18 @@ namespace CommonScript.Compiler
 
         private Expression ParseTypeofPrefix()
         {
-            Token typeofToken = TokenStreamUtil.Tokens_popKeyword(this.tokens, "typeof");
+            Token typeofToken = FunctionWrapper.Tokens_popKeyword(this.tokens, "typeof");
             Expression root = this.ParseUnaryPrefix();
             return Expression.createTypeof(typeofToken, root);
         }
 
         private Expression ParseNegatePrefix()
         {
-            if (!TokenStreamUtil.Tokens_doesNextInclulde3(this.tokens, "-", "!", "~"))
+            if (!FunctionWrapper.Tokens_doesNextInclulde3(this.tokens, "-", "!", "~"))
             {
-                TokenStreamUtil.Tokens_popExpected(this.tokens, "-"); // assert
+                FunctionWrapper.Tokens_popExpected(this.tokens, "-"); // assert
             }
-            Token op = TokenStreamUtil.Tokens_pop(this.tokens);
+            Token op = FunctionWrapper.Tokens_pop(this.tokens);
             Expression root = this.ParseUnaryPrefix();
             return Expression.createNegatePrefix(op, root);
         }
@@ -225,7 +225,7 @@ namespace CommonScript.Compiler
         private Expression ParseUnarySuffix()
         {
             Expression root = this.ParseAtomicExpression();
-            string next = TokenStreamUtil.Tokens_peekValue(this.tokens);
+            string next = FunctionWrapper.Tokens_peekValue(this.tokens);
             bool checkForSuffixes = true;
             while (checkForSuffixes && next != null)
             {
@@ -233,18 +233,18 @@ namespace CommonScript.Compiler
                 switch (next)
                 {
                     case ".":
-                        Token dotToken = TokenStreamUtil.Tokens_pop(this.tokens);
-                        Token nameToken = TokenStreamUtil.Tokens_popName(this.tokens, "field name");
+                        Token dotToken = FunctionWrapper.Tokens_pop(this.tokens);
+                        Token nameToken = FunctionWrapper.Tokens_popName(this.tokens, "field name");
                         root = Expression.createDotField(root, dotToken, nameToken.Value);
                         checkForSuffixes = true;
                         break;
 
                     case "(":
-                        Token openParen = TokenStreamUtil.Tokens_pop(this.tokens);
+                        Token openParen = FunctionWrapper.Tokens_pop(this.tokens);
                         List<Expression> args = new List<Expression>();
-                        while (!TokenStreamUtil.Tokens_popIfPresent(this.tokens, ")"))
+                        while (!FunctionWrapper.Tokens_popIfPresent(this.tokens, ")"))
                         {
-                            if (args.Count > 0) TokenStreamUtil.Tokens_popExpected(this.tokens, ",");
+                            if (args.Count > 0) FunctionWrapper.Tokens_popExpected(this.tokens, ",");
                             args.Add(this.ParseExpression());
                         }
                         root = Expression.createFunctionInvocation(root, openParen, args.ToArray());
@@ -253,19 +253,19 @@ namespace CommonScript.Compiler
 
                     case "[":
 
-                        Token openBracket = TokenStreamUtil.Tokens_pop(this.tokens);
-                        TokenStreamUtil.Tokens_ensureMore(this.tokens);
-                        Token throwTokenOnInvalidSlice = TokenStreamUtil.Tokens_peek(this.tokens);
+                        Token openBracket = FunctionWrapper.Tokens_pop(this.tokens);
+                        FunctionWrapper.Tokens_ensureMore(this.tokens);
+                        Token throwTokenOnInvalidSlice = FunctionWrapper.Tokens_peek(this.tokens);
                         List<Expression> sliceNums = new List<Expression>();
                         bool nextExpected = true;
 
-                        while (nextExpected && TokenStreamUtil.Tokens_hasMore(this.tokens))
+                        while (nextExpected && FunctionWrapper.Tokens_hasMore(this.tokens))
                         {
-                            if (TokenStreamUtil.Tokens_popIfPresent(this.tokens, ":"))
+                            if (FunctionWrapper.Tokens_popIfPresent(this.tokens, ":"))
                             {
                                 sliceNums.Add(null);
                             }
-                            else if (TokenStreamUtil.Tokens_isNext(this.tokens, "]"))
+                            else if (FunctionWrapper.Tokens_isNext(this.tokens, "]"))
                             {
                                 sliceNums.Add(null);
                                 nextExpected = false;
@@ -273,14 +273,14 @@ namespace CommonScript.Compiler
                             else
                             {
                                 sliceNums.Add(this.ParseExpression());
-                                if (!TokenStreamUtil.Tokens_popIfPresent(this.tokens, ":"))
+                                if (!FunctionWrapper.Tokens_popIfPresent(this.tokens, ":"))
                                 {
                                     nextExpected = false;
                                 }
                             }
                         }
 
-                        TokenStreamUtil.Tokens_popExpected(this.tokens, "]");
+                        FunctionWrapper.Tokens_popExpected(this.tokens, "]");
 
                         if (sliceNums.Count < 0 || sliceNums.Count > 3)
                         {
@@ -306,26 +306,26 @@ namespace CommonScript.Compiler
 
                     case "++":
                     case "--":
-                        Token ppToken = TokenStreamUtil.Tokens_pop(this.tokens);
+                        Token ppToken = FunctionWrapper.Tokens_pop(this.tokens);
                         root = Expression.createInlineIncrement(root.firstToken, root, ppToken, false);
                         break;
 
                     default:
                         break;
                 }
-                next = TokenStreamUtil.Tokens_peekValue(this.tokens);
+                next = FunctionWrapper.Tokens_peekValue(this.tokens);
             }
             return root;
         }
 
         private Expression ParseInlineIncrementPrefix()
         {
-            if (!TokenStreamUtil.Tokens_doesNextInclulde2(this.tokens, "++", "--"))
+            if (!FunctionWrapper.Tokens_doesNextInclulde2(this.tokens, "++", "--"))
             {
                 // more of an assert
-                TokenStreamUtil.Tokens_popExpected(this.tokens, "++");
+                FunctionWrapper.Tokens_popExpected(this.tokens, "++");
             }
-            Token op = TokenStreamUtil.Tokens_pop(this.tokens);
+            Token op = FunctionWrapper.Tokens_pop(this.tokens);
             Expression root = this.ParseUnarySuffix();
             return Expression.createInlineIncrement(op, root, op, true);
         }
@@ -359,39 +359,39 @@ namespace CommonScript.Compiler
 
         private Expression ParseListDefinition()
         {
-            Token openListToken = TokenStreamUtil.Tokens_popExpected(this.tokens, "[");
+            Token openListToken = FunctionWrapper.Tokens_popExpected(this.tokens, "[");
             List<Expression> items = new List<Expression>();
             bool nextAllowed = true;
-            while (nextAllowed && !TokenStreamUtil.Tokens_isNext(this.tokens, "]"))
+            while (nextAllowed && !FunctionWrapper.Tokens_isNext(this.tokens, "]"))
             {
                 items.Add(this.ParseExpression());
-                nextAllowed = TokenStreamUtil.Tokens_popIfPresent(this.tokens, ",");
+                nextAllowed = FunctionWrapper.Tokens_popIfPresent(this.tokens, ",");
             }
-            TokenStreamUtil.Tokens_popExpected(this.tokens, "]");
+            FunctionWrapper.Tokens_popExpected(this.tokens, "]");
             return Expression.createListDefinition(openListToken, items.ToArray());
         }
 
         private Expression ParseDictionaryDefinition()
         {
-            Token openDictionaryToken = TokenStreamUtil.Tokens_popExpected(this.tokens, "{");
+            Token openDictionaryToken = FunctionWrapper.Tokens_popExpected(this.tokens, "{");
             List<Expression> keys = new List<Expression>();
             List<Expression> values = new List<Expression>();
             bool nextAllowed = true;
-            while (nextAllowed && !TokenStreamUtil.Tokens_isNext(this.tokens, "}"))
+            while (nextAllowed && !FunctionWrapper.Tokens_isNext(this.tokens, "}"))
             {
                 keys.Add(this.ParseExpression());
-                TokenStreamUtil.Tokens_popExpected(this.tokens, ":");
+                FunctionWrapper.Tokens_popExpected(this.tokens, ":");
                 values.Add(this.ParseExpression());
-                nextAllowed = TokenStreamUtil.Tokens_popIfPresent(this.tokens, ",");
+                nextAllowed = FunctionWrapper.Tokens_popIfPresent(this.tokens, ",");
             }
-            TokenStreamUtil.Tokens_popExpected(this.tokens, "}");
+            FunctionWrapper.Tokens_popExpected(this.tokens, "}");
             return Expression.createDictionaryDefinition(openDictionaryToken, keys.ToArray(), values.ToArray());
         }
 
         private Expression ParseAtomicExpression()
         {
-            Token nextToken = TokenStreamUtil.Tokens_peek(this.tokens);
-            if (nextToken == null) TokenStreamUtil.Tokens_ensureMore(this.tokens);
+            Token nextToken = FunctionWrapper.Tokens_peek(this.tokens);
+            if (nextToken == null) FunctionWrapper.Tokens_ensureMore(this.tokens);
             string next = nextToken.Value;
             switch (nextToken.Type)
             {
@@ -400,22 +400,22 @@ namespace CommonScript.Compiler
                     if (next == "(")
                     {
                         // () =>
-                        if (TokenStreamUtil.Tokens_isSequenceNext3(this.tokens, "(", ")", "=>")) return this.ParseLambda();
+                        if (FunctionWrapper.Tokens_isSequenceNext3(this.tokens, "(", ")", "=>")) return this.ParseLambda();
 
                         // (a, ...
-                        if (TokenStreamUtil.Tokens_isSequenceNext3(this.tokens, "(", null, ",") &&
-                            TokenStreamUtil.Tokens_peekAhead(this.tokens, 1).Type == (int)TokenType.NAME) return this.ParseLambda();
+                        if (FunctionWrapper.Tokens_isSequenceNext3(this.tokens, "(", null, ",") &&
+                            FunctionWrapper.Tokens_peekAhead(this.tokens, 1).Type == (int)TokenType.NAME) return this.ParseLambda();
 
                         // (a = ...
-                        if (TokenStreamUtil.Tokens_isSequenceNext3(this.tokens, "(", null, "=") &&
-                            TokenStreamUtil.Tokens_peekAhead(this.tokens, 1).Type == (int)TokenType.NAME) return this.ParseLambda();
+                        if (FunctionWrapper.Tokens_isSequenceNext3(this.tokens, "(", null, "=") &&
+                            FunctionWrapper.Tokens_peekAhead(this.tokens, 1).Type == (int)TokenType.NAME) return this.ParseLambda();
 
                         // (a) => 
-                        if (TokenStreamUtil.Tokens_isSequenceNext4(this.tokens, "(", null, ")", "=>")) return this.ParseLambda();
+                        if (FunctionWrapper.Tokens_isSequenceNext4(this.tokens, "(", null, ")", "=>")) return this.ParseLambda();
 
-                        TokenStreamUtil.Tokens_pop(this.tokens);
+                        FunctionWrapper.Tokens_pop(this.tokens);
                         Expression expr = this.ParseExpression();
-                        TokenStreamUtil.Tokens_popExpected(this.tokens, ")");
+                        FunctionWrapper.Tokens_popExpected(this.tokens, ")");
                         return expr;
 
                     }
@@ -423,8 +423,8 @@ namespace CommonScript.Compiler
                     if (next == "{") return this.ParseDictionaryDefinition();
                     if (next == "$")
                     {
-                        Token builtinPrefix = TokenStreamUtil.Tokens_pop(this.tokens);
-                        Token builtinName = TokenStreamUtil.Tokens_popName(this.tokens, "built-in function name");
+                        Token builtinPrefix = FunctionWrapper.Tokens_pop(this.tokens);
+                        Token builtinName = FunctionWrapper.Tokens_popName(this.tokens, "built-in function name");
                         return Expression.createExtensionReference(builtinPrefix, builtinName.Value);
                     }
                     break;
@@ -432,23 +432,23 @@ namespace CommonScript.Compiler
                 case (int) TokenType.KEYWORD:
                     if (next == "true" || next == "false")
                     {
-                        Token boolTok = TokenStreamUtil.Tokens_pop(this.tokens);
+                        Token boolTok = FunctionWrapper.Tokens_pop(this.tokens);
                         return Expression.createBoolConstant(boolTok, next == "true");
                     }
 
                     if (next == "null")
                     {
-                        return Expression.createNullConstant(TokenStreamUtil.Tokens_pop(this.tokens));
+                        return Expression.createNullConstant(FunctionWrapper.Tokens_pop(this.tokens));
                     }
 
                     if (next == "new")
                     {
-                        Token newTok = TokenStreamUtil.Tokens_pop(this.tokens);
-                        List<Token> nameChain = new List<Token>() { TokenStreamUtil.Tokens_popName(this.tokens, "class name") };
-                        while (TokenStreamUtil.Tokens_isNext(this.tokens, "."))
+                        Token newTok = FunctionWrapper.Tokens_pop(this.tokens);
+                        List<Token> nameChain = new List<Token>() { FunctionWrapper.Tokens_popName(this.tokens, "class name") };
+                        while (FunctionWrapper.Tokens_isNext(this.tokens, "."))
                         {
-                            nameChain.Add(TokenStreamUtil.Tokens_pop(this.tokens));
-                            nameChain.Add(TokenStreamUtil.Tokens_popName(this.tokens, "class name"));
+                            nameChain.Add(FunctionWrapper.Tokens_pop(this.tokens));
+                            nameChain.Add(FunctionWrapper.Tokens_popName(this.tokens, "class name"));
                         }
                         Expression ctorChain = Expression.createVariable(nameChain[0], nameChain[0].Value);
                         for (int i = 1; i < nameChain.Count; i += 2)
@@ -460,36 +460,36 @@ namespace CommonScript.Compiler
 
                     if (next == "this")
                     {
-                        return Expression.createThisReference(TokenStreamUtil.Tokens_pop(this.tokens));
+                        return Expression.createThisReference(FunctionWrapper.Tokens_pop(this.tokens));
                     }
 
                     if (next == "base")
                     {
-                        return Expression.createBaseReference(TokenStreamUtil.Tokens_pop(this.tokens));
+                        return Expression.createBaseReference(FunctionWrapper.Tokens_pop(this.tokens));
                     }
 
                     break;
 
                 case (int) TokenType.INTEGER:
                     int intVal = ExpressionParser.TryParseInteger(nextToken, next, false);
-                    return Expression.createIntegerConstant(TokenStreamUtil.Tokens_pop(this.tokens), intVal);
+                    return Expression.createIntegerConstant(FunctionWrapper.Tokens_pop(this.tokens), intVal);
 
                 case (int) TokenType.FLOAT:
                     double floatVal = ExpressionParser.TryParseFloat(nextToken, next);
-                    return Expression.createFloatConstant(TokenStreamUtil.Tokens_pop(this.tokens), floatVal);
+                    return Expression.createFloatConstant(FunctionWrapper.Tokens_pop(this.tokens), floatVal);
 
                 case (int) TokenType.HEX_INTEGER:
                     int intValHex = ExpressionParser.TryParseInteger(nextToken, next, true);
-                    return Expression.createIntegerConstant(TokenStreamUtil.Tokens_pop(this.tokens), intValHex);
+                    return Expression.createIntegerConstant(FunctionWrapper.Tokens_pop(this.tokens), intValHex);
 
                 case (int) TokenType.STRING:
                     string strVal = ExpressionParser.TryParseString(nextToken, next);
-                    return Expression.createStringConstant(TokenStreamUtil.Tokens_pop(this.tokens), strVal);
+                    return Expression.createStringConstant(FunctionWrapper.Tokens_pop(this.tokens), strVal);
 
                 case (int) TokenType.NAME:
-                    if (TokenStreamUtil.Tokens_isSequenceNext2(this.tokens, null, "=>")) return this.ParseLambda();
+                    if (FunctionWrapper.Tokens_isSequenceNext2(this.tokens, null, "=>")) return this.ParseLambda();
 
-                    Token varName = TokenStreamUtil.Tokens_popName(this.tokens, "variable name");
+                    Token varName = FunctionWrapper.Tokens_popName(this.tokens, "variable name");
                     return Expression.createVariable(varName, varName.Value);
             }
 
@@ -499,17 +499,17 @@ namespace CommonScript.Compiler
 
         private Expression ParseLambda()
         {
-            Token firstToken = TokenStreamUtil.Tokens_peek(this.tokens);
+            Token firstToken = FunctionWrapper.Tokens_peek(this.tokens);
             List<Token> argTokens = new List<Token>();
             List<Expression> argDefaultValues = new List<Expression>();
-            if (TokenStreamUtil.Tokens_popIfPresent(this.tokens, "("))
+            if (FunctionWrapper.Tokens_popIfPresent(this.tokens, "("))
             {
-                while (!TokenStreamUtil.Tokens_popIfPresent(this.tokens, ")"))
+                while (!FunctionWrapper.Tokens_popIfPresent(this.tokens, ")"))
                 {
-                    if (argTokens.Count > 0) TokenStreamUtil.Tokens_popExpected(this.tokens, ",");
-                    argTokens.Add(TokenStreamUtil.Tokens_popName(this.tokens, "argument name"));
+                    if (argTokens.Count > 0) FunctionWrapper.Tokens_popExpected(this.tokens, ",");
+                    argTokens.Add(FunctionWrapper.Tokens_popName(this.tokens, "argument name"));
                     Expression defaultVal = null;
-                    if (TokenStreamUtil.Tokens_popIfPresent(this.tokens, "="))
+                    if (FunctionWrapper.Tokens_popIfPresent(this.tokens, "="))
                     {
                         defaultVal = this.ParseExpression();
                     }
@@ -518,14 +518,14 @@ namespace CommonScript.Compiler
             }
             else
             {
-                argTokens.Add(TokenStreamUtil.Tokens_popName(this.tokens, "argument name"));
+                argTokens.Add(FunctionWrapper.Tokens_popName(this.tokens, "argument name"));
                 argDefaultValues.Add(null);
             }
 
-            Token arrow = TokenStreamUtil.Tokens_popExpected(this.tokens, "=>");
+            Token arrow = FunctionWrapper.Tokens_popExpected(this.tokens, "=>");
 
             Statement[] code;
-            if (TokenStreamUtil.Tokens_isNext(this.tokens, "{"))
+            if (FunctionWrapper.Tokens_isNext(this.tokens, "{"))
             {
                 code = this.statementParser.ParseCodeBlock(true);
             }
