@@ -996,6 +996,78 @@ namespace CommonScript.Compiler.Internal
             return ns;
         }
 
+        public static int SpecialActionUtil_GetSpecialActionArgc(SpecialActionUtil sau, string name)
+        {
+            return sau.SPECIAL_ACTION_ARGC[name];
+        }
+
+        public static int SpecialActionUtil_GetSpecialActionOpCode(SpecialActionUtil sau, string name)
+        {
+            return sau.SPECIAL_ACTION_BY_FUNC_NAME[name];
+        }
+
+        public static bool SpecialActionUtil_IsSpecialActionAndNotExtension(SpecialActionUtil sau, string name)
+        {
+            return sau.SPECIAL_ACTION_BY_FUNC_NAME.ContainsKey(name);
+        }
+
+        public static SpecialActionUtil SpecialActionUtil_new()
+        {
+            System.Collections.Generic.Dictionary<string, int> idByName = new Dictionary<string, int>();
+            idByName["b64_from_bytes"] = 16;
+            idByName["b64_to_bytes"] = 17;
+            idByName["cmp"] = 6;
+            idByName["json_parse"] = 20;
+            idByName["json_serialize"] = 21;
+            idByName["math_arccos"] = 8;
+            idByName["math_arcsin"] = 9;
+            idByName["math_arctan"] = 10;
+            idByName["math_cos"] = 11;
+            idByName["math_floor"] = -1;
+            idByName["math_log"] = 12;
+            idByName["math_sin"] = 13;
+            idByName["math_tan"] = 14;
+            idByName["parse_float"] = 25;
+            idByName["parse_int"] = 15;
+            idByName["random_float"] = 7;
+            idByName["sort_end"] = 3;
+            idByName["sort_get_next_cmp"] = 4;
+            idByName["sort_proceed"] = 5;
+            idByName["sort_start"] = 2;
+            idByName["txt_bytes_to_string"] = 23;
+            idByName["txt_is_valid_enc"] = 22;
+            idByName["txt_string_to_bytes"] = 24;
+            idByName["unix_time"] = 1;
+            idByName["xml_parse"] = 26;
+            System.Collections.Generic.Dictionary<string, int> argcByName = new Dictionary<string, int>();
+            argcByName["b64_from_bytes"] = 2;
+            argcByName["b64_to_bytes"] = 1;
+            argcByName["cmp"] = 2;
+            argcByName["json_parse"] = 2;
+            argcByName["json_serialize"] = 2;
+            argcByName["math_arccos"] = 1;
+            argcByName["math_arcsin"] = 1;
+            argcByName["math_arctan"] = 2;
+            argcByName["math_cos"] = 1;
+            argcByName["math_floor"] = 1;
+            argcByName["math_log"] = 2;
+            argcByName["math_sin"] = 1;
+            argcByName["math_tan"] = 1;
+            argcByName["parse_float"] = 1;
+            argcByName["parse_int"] = 1;
+            argcByName["random_float"] = 0;
+            argcByName["sort_end"] = 1;
+            argcByName["sort_get_next_cmp"] = 2;
+            argcByName["sort_proceed"] = 2;
+            argcByName["sort_start"] = 2;
+            argcByName["txt_bytes_to_string"] = 2;
+            argcByName["txt_is_valid_enc"] = 1;
+            argcByName["txt_string_to_bytes"] = 2;
+            argcByName["unix_time"] = 1;
+            argcByName["xml_parse"] = 2;
+            return new SpecialActionUtil(idByName, argcByName);
+        }
+
         public static Statement Statement_new(Token firstToken, int type)
         {
             return new Statement(firstToken, type, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0);
@@ -1003,7 +1075,7 @@ namespace CommonScript.Compiler.Internal
 
         public static StaticContext StaticContext_new()
         {
-            return new StaticContext(TokenizerStaticContext_new(), new Dictionary<string, AbstractEntity>());
+            return new StaticContext(TokenizerStaticContext_new(), new Dictionary<string, AbstractEntity>(), SpecialActionUtil_new());
         }
 
         public static StringSet StringSet_add(StringSet s, string item)
@@ -1054,7 +1126,6 @@ namespace CommonScript.Compiler.Internal
             int c = 0;
             int i = 0;
             int j = 0;
-            int val = 0;
             while (i < length)
             {
                 c = bytes[i];

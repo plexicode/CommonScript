@@ -1,0 +1,77 @@
+// This is a member of the StaticContext
+struct SpecialActionUtil {
+    Dictionary<string, int> SPECIAL_ACTION_BY_FUNC_NAME;
+    Dictionary<string, int> SPECIAL_ACTION_ARGC;
+}
+
+SpecialActionUtil SpecialActionUtil_new() {
+    Dictionary<string, int> idByName = new Dictionary<string, int>();
+
+    idByName["b64_from_bytes"] = SpecialActionCodes.B64_FROM_BYTES;
+    idByName["b64_to_bytes"] = SpecialActionCodes.B64_TO_BYTES;
+    idByName["cmp"] = SpecialActionCodes.CMP;
+    idByName["json_parse"] = SpecialActionCodes.JSON_PARSE;
+    idByName["json_serialize"] = SpecialActionCodes.JSON_SERIALIZE;
+    idByName["math_arccos"] = SpecialActionCodes.MATH_ARCCOS;
+    idByName["math_arcsin"] = SpecialActionCodes.MATH_ARCSIN;
+    idByName["math_arctan"] = SpecialActionCodes.MATH_ARCTAN;
+    idByName["math_cos"] = SpecialActionCodes.MATH_COS;
+    idByName["math_floor"] = -1; // compiled as a main op
+    idByName["math_log"] = SpecialActionCodes.MATH_LOG;
+    idByName["math_sin"] = SpecialActionCodes.MATH_SIN;
+    idByName["math_tan"] = SpecialActionCodes.MATH_TAN;
+    idByName["parse_float"] = SpecialActionCodes.PARSE_FLOAT;
+    idByName["parse_int"] = SpecialActionCodes.PARSE_INT;
+    idByName["random_float"] = SpecialActionCodes.RANDOM_FLOAT;
+    idByName["sort_end"] = SpecialActionCodes.SORT_END;
+    idByName["sort_get_next_cmp"] = SpecialActionCodes.SORT_GET_NEXT_CMP;
+    idByName["sort_proceed"] = SpecialActionCodes.SORT_PROCEED;
+    idByName["sort_start"] = SpecialActionCodes.SORT_START;
+    idByName["txt_bytes_to_string"] = SpecialActionCodes.TXT_BYTES_TO_STRING;
+    idByName["txt_is_valid_enc"] = SpecialActionCodes.TXT_IS_VALID_ENC;
+    idByName["txt_string_to_bytes"] = SpecialActionCodes.TXT_STRING_TO_BYTES;
+    idByName["unix_time"] = SpecialActionCodes.UNIX_TIME;
+    idByName["xml_parse"] = SpecialActionCodes.XML_PARSE;
+
+    Dictionary<string, int> argcByName = new Dictionary<string, int>();
+
+    argcByName["b64_from_bytes"] = 2;
+    argcByName["b64_to_bytes"] = 1;
+    argcByName["cmp"] = 2;
+    argcByName["json_parse"] = 2;
+    argcByName["json_serialize"] = 2;
+    argcByName["math_arccos"] = 1;
+    argcByName["math_arcsin"] = 1;
+    argcByName["math_arctan"] = 2;
+    argcByName["math_cos"] = 1;
+    argcByName["math_floor"] = 1;
+    argcByName["math_log"] = 2;
+    argcByName["math_sin"] = 1;
+    argcByName["math_tan"] = 1;
+    argcByName["parse_float"] = 1;
+    argcByName["parse_int"] = 1;
+    argcByName["random_float"] = 0;
+    argcByName["sort_end"] = 1;
+    argcByName["sort_get_next_cmp"] = 2;
+    argcByName["sort_proceed"] = 2;
+    argcByName["sort_start"] = 2;
+    argcByName["txt_bytes_to_string"] = 2;
+    argcByName["txt_is_valid_enc"] = 1;
+    argcByName["txt_string_to_bytes"] = 2;
+    argcByName["unix_time"] = 1;
+    argcByName["xml_parse"] = 2;
+
+    return new SpecialActionUtil(idByName, argcByName);
+}
+
+bool SpecialActionUtil_IsSpecialActionAndNotExtension(SpecialActionUtil sau, string name) {
+    return sau.SPECIAL_ACTION_BY_FUNC_NAME.Contains(name);
+}
+
+int SpecialActionUtil_GetSpecialActionOpCode(SpecialActionUtil sau, string name) {
+    return sau.SPECIAL_ACTION_BY_FUNC_NAME[name];
+}
+
+int SpecialActionUtil_GetSpecialActionArgc(SpecialActionUtil sau, string name) {
+    return sau.SPECIAL_ACTION_ARGC[name];
+}

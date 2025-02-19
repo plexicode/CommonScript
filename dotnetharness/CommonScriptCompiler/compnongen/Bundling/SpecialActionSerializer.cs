@@ -5,6 +5,7 @@ namespace CommonScript.Compiler
 {
     internal class SpecialActionSerializer
     {
+        private static StaticContext staticCtx = FunctionWrapper.StaticContext_new();
         public static ByteCodeBuffer serializeSpecialAction(Expression action)
         {
             ByteCodeBuffer argBuffer = null;
@@ -28,7 +29,8 @@ namespace CommonScript.Compiler
                     return FunctionWrapper.create2(OpCodes.OP_SPECIAL_ACTION, null, null, SpecialActionCodes.UNIX_TIME, action.args[0].intVal);
 
                 default:
-                    actionBuf = FunctionWrapper.create1(OpCodes.OP_SPECIAL_ACTION, null, null, SpecialActionUtil.GetSpecialActionOpCode(action.strVal));
+                    int specialActionOpCode = FunctionWrapper.SpecialActionUtil_GetSpecialActionOpCode(staticCtx.specialActionUtil, action.strVal);
+                    actionBuf = FunctionWrapper.create1(OpCodes.OP_SPECIAL_ACTION, null, null, specialActionOpCode);
                     break;
 
             }

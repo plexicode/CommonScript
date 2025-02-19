@@ -3,6 +3,8 @@
 @import("bundler/index.pst");
 @import("builtins/index.pst");
 @import("parsenodes/index.pst");
+@import("specialactions/index.pst");
+
 @import("util/StringSet.pst");
 @import("util/errors.pst");
 @import("util/unicode.pst");

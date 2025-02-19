@@ -6,7 +6,6 @@ Array<int> StringToUnicodeArray(string strVal) {
     int c = 0;
     int i = 0;
     int j = 0;
-    int val = 0;
     // 11110000 -> 0xF0 | 11100000 -> 0xE0 | 11000000 -> 0xC0 | 10000000 -> 0x80
     while (i < length) {
         c = bytes[i];

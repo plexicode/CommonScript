@@ -784,9 +784,9 @@ namespace CommonScript.Compiler
         {
             this.ResolveExpressionArraySecondPass(expr.args);
             int argc = -1;
-            if (SpecialActionUtil.IsSpecialActionAndNotExtension(expr.strVal))
+            if (FunctionWrapper.SpecialActionUtil_IsSpecialActionAndNotExtension(this.resolver.staticCtx.specialActionUtil, expr.strVal))
             {
-                argc = SpecialActionUtil.GetSpecialActionArgc(expr.strVal);
+                argc = FunctionWrapper.SpecialActionUtil_GetSpecialActionArgc(this.resolver.staticCtx.specialActionUtil, expr.strVal);
             }
             else
             {

@@ -5,6 +5,7 @@ namespace CommonScript.Compiler
 {
     internal static class ExpressionSerializer
     {
+        private static StaticContext staticCtx = FunctionWrapper.StaticContext_new(); 
         public static ByteCodeBuffer serializeExpression(Expression expr)
         {
             switch (expr.type)
@@ -96,7 +97,7 @@ namespace CommonScript.Compiler
 
         private static ByteCodeBuffer serializeExtensionInvocation(Expression extInvoke)
         {
-            if (SpecialActionUtil.IsSpecialActionAndNotExtension(extInvoke.strVal))
+            if (FunctionWrapper.SpecialActionUtil_IsSpecialActionAndNotExtension(staticCtx.specialActionUtil, extInvoke.strVal))
             {
                 return SpecialActionSerializer.serializeSpecialAction(extInvoke);
             }
