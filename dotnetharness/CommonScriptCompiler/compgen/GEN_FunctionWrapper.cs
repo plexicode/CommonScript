@@ -846,6 +846,47 @@ namespace CommonScript.Compiler.Internal
             return null;
         }
 
+        public static ImportStatement[] ImportParser_AdvanceThroughImports(TokenStream tokens, bool isCoreBuiltin)
+        {
+            System.Collections.Generic.List<ImportStatement> output = new List<ImportStatement>();
+            if (!isCoreBuiltin)
+            {
+                output.Add(ImportParser_createBuiltinImport(tokens));
+            }
+            while (Tokens_hasMore(tokens) && Tokens_isNext(tokens, "import"))
+            {
+                Token importToken = Tokens_popKeyword(tokens, "import");
+                System.Collections.Generic.List<Token> tokenChain = new List<Token>();
+                tokenChain.Add(Tokens_popName(tokens, "module name"));
+                while (Tokens_popIfPresent(tokens, "."))
+                {
+                    tokenChain.Add(Tokens_popName(tokens, "module name"));
+                }
+                Token importTargetName = null;
+                if (Tokens_popIfPresent(tokens, "->"))
+                {
+                    if (Tokens_isNext(tokens, "*"))
+                    {
+                        importTargetName = Tokens_pop(tokens);
+                    }
+                    else
+                    {
+                        importTargetName = Tokens_popName(tokens, "import target variable");
+                    }
+                }
+                Tokens_popExpected(tokens, ";");
+                output.Add(ImportStatement_new(importToken, tokenChain, importTargetName));
+            }
+            return output.ToArray();
+        }
+
+        public static ImportStatement ImportParser_createBuiltinImport(TokenStream tokens)
+        {
+            System.Collections.Generic.List<Token> builtinName = new List<Token>();
+            builtinName.Add(createFakeToken(tokens, 2, "{BUILTIN}", 0, 0));
+            return ImportStatement_new(createFakeToken(tokens, 1, "import", 0, 0), builtinName, createFakeToken(tokens, 3, "*", 0, 0));
+        }
+
         public static ImportStatement ImportStatement_new(Token importToken, System.Collections.Generic.List<Token> tokenChain, Token targetVarName)
         {
             System.Collections.Generic.List<string> flatName = new List<string>();

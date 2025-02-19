@@ -62,7 +62,7 @@ namespace CommonScript.Compiler
                 fileCtx.isCoreBuiltin = isCoreBuiltin;
                 fileCtx.isBuiltInLib = isBuiltInLib;
                 files.Add(fileCtx);
-                fileCtx.imports = ImportParser.AdvanceThroughImports(fileCtx.tokens, isCoreBuiltin);
+                fileCtx.imports = FunctionWrapper.ImportParser_AdvanceThroughImports(fileCtx.tokens, isCoreBuiltin);
                 FunctionWrapper.FileContext_initializeImportLookup(fileCtx);
                 foreach (ImportStatement impStmnt in fileCtx.imports)
                 {

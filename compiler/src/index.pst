@@ -9,6 +9,7 @@
 
 @import("CompiledModule.pst");
 @import("FileContext.pst");
+@import("ImportParser.pst");
 @import("StaticContext.pst");
 @import("Token.pst");
 @import("Tokenizer.pst");
