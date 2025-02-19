@@ -1,0 +1,13 @@
+struct FieldEntity {
+    Expression defaultValue;
+    Token opToken;
+    AbstractEntity baseData;
+}
+
+FieldEntity FieldEntity_new(Token fieldToken, Token nameToken, Token equalToken, Expression defaultValueOrNull) {
+    FieldEntity fe = new FieldEntity(defaultValueOrNull, equalToken, null);
+    fe.baseData = AbstractEntity_new(fieldToken, EntityType.FIELD, fe);
+    fe.baseData.nameToken = nameToken;
+    fe.baseData.simpleName = nameToken.Value;
+    return fe;
+}

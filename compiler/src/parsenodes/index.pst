@@ -5,6 +5,9 @@
 @import("parsenodes/EnumEntity.pst");
 @import("parsenodes/EntityType.pst");
 @import("parsenodes/Expression.pst");
+@import("parsenodes/FieldEntity.pst");
+@import("parsenodes/FunctionEntity.pst");
+@import("parsenodes/FunctionType.pst");
 @import("parsenodes/ImportStatement.pst");
 @import("parsenodes/ModuleWrapperEntity.pst");
 @import("parsenodes/NamespaceEntity.pst");

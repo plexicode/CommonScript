@@ -264,12 +264,12 @@ namespace CommonScript.Compiler
 
         private Expression FirstPass_Lambda(Expression lamb)
         {
-            FunctionLikeEntity lambdaEnt = FunctionLikeEntity.BuildLambda(
+            FunctionEntity lambdaEnt = FunctionWrapper.FunctionEntity_BuildLambda(
                 this.resolver.activeEntity.fileContext,
                 lamb.firstToken,
-                lamb.argNames,
-                lamb.values,
-                lamb.nestedCode);
+                [..lamb.argNames],
+                [..lamb.values],
+                [..lamb.nestedCode]);
             this.resolver.ReportNewLambda(lambdaEnt);
             lamb.entityPtr = lambdaEnt.baseData;
             return lamb;
@@ -1030,7 +1030,7 @@ namespace CommonScript.Compiler
         private Expression SecondPass_Variable(Expression varExpr)
         {
             if (varExpr.strVal == "print") throw new InvalidOperationException();
-            if (((FunctionLikeEntity)this.resolver.activeEntity.specificData).variableScope.ContainsKey(varExpr.strVal)) return varExpr;
+            if (((FunctionEntity)this.resolver.activeEntity.specificData).variableScope.ContainsKey(varExpr.strVal)) return varExpr;
 
             // TODO: come up with a list of suggestions.
             FunctionWrapper.Errors_Throw(varExpr.firstToken, "There is no variable by the name of '" + varExpr.strVal + "'.");

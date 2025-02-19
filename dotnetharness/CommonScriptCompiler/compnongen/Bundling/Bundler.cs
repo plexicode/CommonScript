@@ -12,13 +12,13 @@ namespace CommonScript.Compiler
             CompiledModule[] deterministicOrder = modules.OrderBy(m => m.id).ToArray();
             CompilationBundle bundle = new CompilationBundle();
 
-            List<FunctionLikeEntity> functions = new List<FunctionLikeEntity>();
-            List<FunctionLikeEntity> builtInFunctions = new List<FunctionLikeEntity>(); // these get flattened into functions.
+            List<FunctionEntity> functions = new List<FunctionEntity>();
+            List<FunctionEntity> builtInFunctions = new List<FunctionEntity>(); // these get flattened into functions.
             List<EnumEntity> enums = new List<EnumEntity>();
             List<ClassEntity> classes = new List<ClassEntity>();
             List<FieldEntity> fields = new List<FieldEntity>();
-            List<FunctionLikeEntity> lambdas = new List<FunctionLikeEntity>();
-            FunctionLikeEntity mainFunc = null;
+            List<FunctionEntity> lambdas = new List<FunctionEntity>();
+            FunctionEntity mainFunc = null;
 
             foreach (CompiledModule m in deterministicOrder)
             {
@@ -39,7 +39,7 @@ namespace CommonScript.Compiler
                         case (int)EntityType.CONST: break;
 
                         case (int)EntityType.FUNCTION:
-                            FunctionLikeEntity func = (FunctionLikeEntity)tle.specificData;
+                            FunctionEntity func = (FunctionEntity)tle.specificData;
                             if (tle.fileContext.isCoreBuiltin)
                             {
                                 builtInFunctions.Add(func);
@@ -56,7 +56,7 @@ namespace CommonScript.Compiler
                             break;
 
                         case (int)EntityType.LAMBDA_ENTITY:
-                            lambdas.Add((FunctionLikeEntity)tle.specificData);
+                            lambdas.Add((FunctionEntity)tle.specificData);
                             break;
 
                         case (int)EntityType.FIELD:
@@ -73,7 +73,7 @@ namespace CommonScript.Compiler
                             break;
 
                         case (int)EntityType.CONSTRUCTOR:
-                            functions.Add((FunctionLikeEntity)tle.specificData);
+                            functions.Add((FunctionEntity)tle.specificData);
                             break;
 
                         case (int)EntityType.NAMESPACE:
@@ -88,7 +88,7 @@ namespace CommonScript.Compiler
 
             List<AbstractEntity> finalOrder = new List<AbstractEntity>();
 
-            functions = new List<FunctionLikeEntity>(builtInFunctions.Concat(functions));
+            functions = new List<FunctionEntity>(builtInFunctions.Concat(functions));
 
             for (int i = 0; i < functions.Count; i++)
             {
@@ -261,7 +261,7 @@ namespace CommonScript.Compiler
                 case (int)EntityType.FUNCTION:
                 case (int)EntityType.CONSTRUCTOR:
                 case (int)EntityType.LAMBDA_ENTITY:
-                    bundleFunction((FunctionLikeEntity)entity.specificData, bundle);
+                    bundleFunction((FunctionEntity)entity.specificData, bundle);
                     break;
 
                 case (int)EntityType.PROPERTY:
@@ -321,7 +321,7 @@ namespace CommonScript.Compiler
             bundle.enumById.Add(bei);
         }
 
-        private static void bundleFunction(FunctionLikeEntity entity, CompilationBundle bundle)
+        private static void bundleFunction(FunctionEntity entity, CompilationBundle bundle)
         {
             bool isLambda = entity.baseData.type == (int)EntityType.LAMBDA_ENTITY;
             ByteCodeBuffer buffer = null;

@@ -42,7 +42,7 @@ namespace CommonScript.Compiler
                 defaultValue = this.expressionParser.ParseExpression();
             }
             FunctionWrapper.Tokens_popExpected(this.tokens, ";");
-            AbstractEntity entity = new FieldEntity(fieldKeyword, nameToken, equalToken, defaultValue).baseData;
+            AbstractEntity entity = FunctionWrapper.FieldEntity_new(fieldKeyword, nameToken, equalToken, defaultValue).baseData;
             entity.annotations = annotations;
             return entity;
         }
@@ -60,8 +60,8 @@ namespace CommonScript.Compiler
 
             Statement[] code = this.statementParser.ParseCodeBlock(true);
 
-            AbstractEntity entity = FunctionLikeEntity.BuildMethodOrStandalone(
-                functionKeyword, nameToken, args, argValues, code, isStatic, optionalParentClass).baseData;
+            AbstractEntity entity = FunctionWrapper.FunctionEntity_BuildMethodOrStandalone(
+                functionKeyword, nameToken, args, argValues, [..code], isStatic, optionalParentClass).baseData;
             entity.annotations = annotations;
             return entity;
         }
@@ -89,12 +89,12 @@ namespace CommonScript.Compiler
 
             Statement[] code = this.statementParser.ParseCodeBlock(true);
 
-            AbstractEntity ctor = FunctionLikeEntity.BuildConstructor(
+            AbstractEntity ctor = FunctionWrapper.FunctionEntity_BuildConstructor(
                 ctorKeyword,
                 args,
                 argValues,
-                baseArgs,
-                code,
+                baseArgs == null ? null : [..baseArgs],
+                [..code],
                 annotations.ContainsKey("static")).baseData;
 
             ctor.annotations = annotations;

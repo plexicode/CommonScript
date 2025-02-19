@@ -597,6 +597,15 @@ namespace CommonScript.Compiler.Internal
             return PST_ExtCallbacks.ContainsKey("hardCrash") ? PST_ExtCallbacks["hardCrash"].Invoke(failArgs) : null;
         }
 
+        public static FieldEntity FieldEntity_new(Token fieldToken, Token nameToken, Token equalToken, Expression defaultValueOrNull)
+        {
+            FieldEntity fe = new FieldEntity(defaultValueOrNull, equalToken, null);
+            fe.baseData = AbstractEntity_new(fieldToken, 5, fe);
+            fe.baseData.nameToken = nameToken;
+            fe.baseData.simpleName = nameToken.Value;
+            return fe;
+        }
+
         public static void FileContext_initializeImportLookup(FileContext fileCtx)
         {
             fileCtx.importsByVar = new Dictionary<string, ImportStatement>();
@@ -655,6 +664,66 @@ namespace CommonScript.Compiler.Internal
                 }
             }
             return output.ToArray();
+        }
+
+        public static FunctionEntity FunctionEntity_BuildConstructor(Token ctorToken, System.Collections.Generic.List<Token> args, System.Collections.Generic.List<Expression> argDefaultValues, System.Collections.Generic.List<Expression> baseArgs, System.Collections.Generic.List<Statement> code, bool isStatic)
+        {
+            FunctionEntity fle = FunctionEntity_new(ctorToken, 3, args, argDefaultValues, code);
+            if (isStatic)
+            {
+                fle.FunctionSubtype = 5;
+                fle.baseData.simpleName = "@cctor";
+            }
+            else
+            {
+                fle.FunctionSubtype = 3;
+                fle.baseData.simpleName = "@ctor";
+            }
+            if (baseArgs != null)
+            {
+                fle.baseCtorArgValues = baseArgs.ToArray();
+            }
+            fle.baseData.isStatic = isStatic;
+            return fle;
+        }
+
+        public static FunctionEntity FunctionEntity_BuildLambda(FileContext ctx, Token firstToken, System.Collections.Generic.List<Token> argNames, System.Collections.Generic.List<Expression> argDefaultValues, System.Collections.Generic.List<Statement> code)
+        {
+            FunctionEntity fle = FunctionEntity_new(firstToken, 10, argNames, argDefaultValues, code);
+            fle.FunctionSubtype = 6;
+            fle.baseData.fileContext = ctx;
+            return fle;
+        }
+
+        public static FunctionEntity FunctionEntity_BuildMethodOrStandalone(Token funcToken, Token nameToken, System.Collections.Generic.List<Token> args, System.Collections.Generic.List<Expression> argValues, System.Collections.Generic.List<Statement> code, bool isStatic, ClassEntity classParent)
+        {
+            bool isMethod = classParent != null;
+            FunctionEntity fle = FunctionEntity_new(funcToken, 6, args, argValues, code);
+            if (isMethod)
+            {
+                if (isStatic)
+                {
+                    fle.FunctionSubtype = 4;
+                }
+                else
+                {
+                    fle.FunctionSubtype = 2;
+                }
+            }
+            else
+            {
+                fle.FunctionSubtype = 1;
+            }
+            fle.baseData.nameToken = nameToken;
+            fle.baseData.simpleName = nameToken.Value;
+            return fle;
+        }
+
+        public static FunctionEntity FunctionEntity_new(Token firstToken, int type, System.Collections.Generic.List<Token> argNames, System.Collections.Generic.List<Expression> argDefaultValues, System.Collections.Generic.List<Statement> code)
+        {
+            FunctionEntity fn = new FunctionEntity(argNames.ToArray(), argDefaultValues.ToArray(), null, null, code.ToArray(), null, -1);
+            fn.baseData = AbstractEntity_new(firstToken, type, fn);
+            return fn;
         }
 
         public static string GEN_BUILTINS_base64()

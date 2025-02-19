@@ -6,7 +6,7 @@ namespace CommonScript.Compiler
 {
     internal static class CompiledModuleUtil
     {
-        public static void AddLambdas(CompiledModule m, IList<FunctionLikeEntity> lambdas)
+        public static void AddLambdas(CompiledModule m, IList<FunctionEntity> lambdas)
         {
             m.lambdaEntities = [.. lambdas.Select(fn => fn.baseData)];
         }

@@ -1,0 +1,101 @@
+struct FunctionEntity {
+
+    Array<Token> argTokens;
+    Array<Expression> argDefaultValues;
+    Array<Expression> baseCtorArgValues;
+    AbstractEntity baseData;
+    Array<Statement> code;
+
+    Dictionary<string, bool> variableScope;
+    int FunctionSubtype;
+}
+
+FunctionEntity FunctionEntity_new(
+    Token firstToken,
+    int type,
+    List<Token> argNames,
+    List<Expression> argDefaultValues,
+    List<Statement> code) {
+
+    FunctionEntity fn = new FunctionEntity(
+        Core.ListToArray(argNames),
+        Core.ListToArray(argDefaultValues),
+        null,
+        null,
+        Core.ListToArray(code),
+        null,
+        -1
+    );
+
+    fn.baseData = AbstractEntity_new(firstToken, type, fn);
+    return fn;
+}
+
+
+FunctionEntity FunctionEntity_BuildMethodOrStandalone(
+    Token funcToken,
+    Token nameToken,
+    List<Token> args,
+    List<Expression> argValues,
+    List<Statement> code,
+    bool isStatic,
+    ClassEntity classParent) {
+
+    bool isMethod = classParent != null;
+    FunctionEntity fle = FunctionEntity_new(
+        funcToken,
+        EntityType.FUNCTION,
+        args,
+        argValues,
+        code);
+    if (isMethod) {
+        if (isStatic) {
+            fle.FunctionSubtype = FunctionType.STATIC_METHOD;
+        } else {
+            fle.FunctionSubtype = FunctionType.METHOD;
+        }
+    } else {
+        fle.FunctionSubtype = FunctionType.FUNCTION;
+    }
+
+    fle.baseData.nameToken = nameToken;
+    fle.baseData.simpleName = nameToken.Value;
+    return fle;
+}
+
+FunctionEntity FunctionEntity_BuildLambda(
+    FileContext ctx,
+    Token firstToken,
+    List<Token> argNames,
+    List<Expression> argDefaultValues,
+    List<Statement> code) {
+
+    FunctionEntity fle = FunctionEntity_new(firstToken, EntityType.LAMBDA_ENTITY, argNames, argDefaultValues, code);
+    fle.FunctionSubtype = FunctionType.LAMBDA;
+    fle.baseData.fileContext = ctx;
+    return fle;
+}
+
+FunctionEntity FunctionEntity_BuildConstructor(
+    Token ctorToken,
+    List<Token> args,
+    List<Expression> argDefaultValues,
+    List<Expression> baseArgs,
+    List<Statement> code,
+    bool isStatic) {
+    FunctionEntity fle = FunctionEntity_new(ctorToken, EntityType.CONSTRUCTOR, args, argDefaultValues, code);
+    if (isStatic) {
+        fle.FunctionSubtype = FunctionType.STATIC_CONSTRUCTOR;
+        fle.baseData.simpleName = "@cctor";
+    } else {
+        fle.FunctionSubtype = FunctionType.CONSTRUCTOR;
+        fle.baseData.simpleName = "@ctor";
+    }
+
+    if (baseArgs != null) {
+        fle.baseCtorArgValues = Core.ListToArray(baseArgs);
+    }
+
+    fle.baseData.isStatic = isStatic;
+    return fle;
+}

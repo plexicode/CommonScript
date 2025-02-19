@@ -434,7 +434,13 @@ namespace CommonScript.Compiler
                 {
                     baseArgs = [];
                 }
-                AbstractEntity ctor = FunctionLikeEntity.BuildConstructor(classToken, [], [], baseArgs, [], false).baseData;
+                AbstractEntity ctor = FunctionWrapper.FunctionEntity_BuildConstructor(
+                    classToken, 
+                    [], 
+                    [], 
+                    baseArgs == null ? null : [..baseArgs], 
+                    [], 
+                    false).baseData;
                 AttachEntityToParseTree(ctor, classDef.baseData,
                     classDef.baseData.fileContext, classDef.baseData.fqName,
                     classDef.classMembers, new Dictionary<string, Token>());

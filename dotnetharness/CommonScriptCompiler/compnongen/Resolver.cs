@@ -14,7 +14,7 @@ namespace CommonScript.Compiler
         public Dictionary<string, AbstractEntity> flattenedEntities;
         public Dictionary<string, AbstractEntity> flattenedEntitiesAndEnumValues;
         public Dictionary<string, AbstractEntity> flattenedEntitiesNoEnumParents;
-        public List<FunctionLikeEntity> lambdas = [];
+        public List<FunctionEntity> lambdas = [];
 
         public AbstractEntity activeEntity = null;
         public AbstractEntity[] entityList = null;
@@ -94,11 +94,11 @@ namespace CommonScript.Compiler
 
         public void Resolve()
         {
-            List<FunctionLikeEntity> functions = new List<FunctionLikeEntity>();
+            List<FunctionEntity> functions = new List<FunctionEntity>();
             List<ClassEntity> classes = new List<ClassEntity>();
             List<ConstEntity> constants = new List<ConstEntity>();
             List<EnumEntity> enums = new List<EnumEntity>();
-            List<FunctionLikeEntity> constructors = new List<FunctionLikeEntity>();
+            List<FunctionEntity> constructors = new List<FunctionEntity>();
             List<FieldEntity> fields = new List<FieldEntity>();
 
             AbstractEntity[] entities = this.flattenedEntities.Values.ToArray();
@@ -117,7 +117,7 @@ namespace CommonScript.Compiler
                 }
                 else if (tle.type == (int)EntityType.FUNCTION)
                 {
-                    functions.Add((FunctionLikeEntity)tle.specificData);
+                    functions.Add((FunctionEntity)tle.specificData);
                 }
                 else if (tle.type == (int)EntityType.CLASS)
                 {
@@ -125,7 +125,7 @@ namespace CommonScript.Compiler
                 }
                 else if (tle.type == (int)EntityType.CONSTRUCTOR)
                 {
-                    constructors.Add((FunctionLikeEntity)tle.specificData);
+                    constructors.Add((FunctionEntity)tle.specificData);
                 }
                 else if (tle.type == (int)EntityType.FIELD)
                 {
@@ -189,7 +189,7 @@ namespace CommonScript.Compiler
             }
         }
 
-        internal void ReportNewLambda(FunctionLikeEntity lamb)
+        internal void ReportNewLambda(FunctionEntity lamb)
         {
             this.lambdas.Add(lamb);
         }

@@ -74,7 +74,7 @@ namespace CommonScript.Compiler
             classDef.newDirectMemberOffsets = newDirectMembers.ToArray();
         }
 
-        public void ResolveFunctionFirstPass(FunctionLikeEntity funcDef)
+        public void ResolveFunctionFirstPass(FunctionEntity funcDef)
         {
             funcDef.variableScope = new Dictionary<string, bool>();
 
@@ -99,7 +99,7 @@ namespace CommonScript.Compiler
             List<Statement> baseCtorInvocation = new List<Statement>();
 
             bool isCtor = funcDef.baseData.type == (int)EntityType.CONSTRUCTOR;
-            FunctionLikeEntity ctorEnt = null;
+            FunctionEntity ctorEnt = null;
 
             if (isCtor)
             {
@@ -181,7 +181,7 @@ namespace CommonScript.Compiler
             return StatementUtil.createAssignment(target, equal, fld.defaultValue);
         }
 
-        public void ResolveFunctionSecondPass(FunctionLikeEntity funcDef)
+        public void ResolveFunctionSecondPass(FunctionEntity funcDef)
         {
             this.resolver.activeEntity = funcDef.baseData;
             this.resolver.breakContext = null;

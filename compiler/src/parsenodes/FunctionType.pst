@@ -1,0 +1,8 @@
+enum FunctionType {
+    FUNCTION = 1,
+    METHOD = 2,
+    CONSTRUCTOR = 3,
+    STATIC_METHOD = 4,
+    STATIC_CONSTRUCTOR = 5,
+    LAMBDA = 6,
+}
