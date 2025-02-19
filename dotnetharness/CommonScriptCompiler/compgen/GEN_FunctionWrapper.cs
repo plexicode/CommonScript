@@ -144,6 +144,47 @@ namespace CommonScript.Compiler.Internal
             return cd;
         }
 
+        public static void CompiledModule_AddLambdas(CompiledModule m, System.Collections.Generic.List<FunctionEntity> lambdas)
+        {
+            m.lambdaEntities = new List<AbstractEntity>();
+            int i = 0;
+            while (i < lambdas.Count)
+            {
+                m.lambdaEntities.Add(lambdas[i].baseData);
+                i += 1;
+            }
+        }
+
+        public static void CompiledModule_InitializeLookups(CompiledModule m, System.Collections.Generic.Dictionary<string, AbstractEntity> rootEntities, System.Collections.Generic.Dictionary<string, AbstractEntity> flatEntities)
+        {
+            m.nestedEntities = rootEntities;
+            m.flattenedEntities = flatEntities;
+            m.entitiesNoEnumParents = new Dictionary<string, AbstractEntity>();
+            string[] fqNames = m.flattenedEntities.Keys.ToArray();
+            int i = 0;
+            while (i < fqNames.Length)
+            {
+                string fqName = fqNames[i];
+                AbstractEntity entity = m.flattenedEntities[fqName];
+                if (entity.type == 4)
+                {
+                    Token[] enumMemberNameTokens = ((EnumEntity)entity.specificData).memberNameTokens;
+                    int j = 0;
+                    while (j < enumMemberNameTokens.Length)
+                    {
+                        Token enumMem = enumMemberNameTokens[j];
+                        m.entitiesNoEnumParents[string.Join("", new string[] { fqName, ".", enumMem.Value })] = entity;
+                        j += 1;
+                    }
+                }
+                else
+                {
+                    m.entitiesNoEnumParents[fqName] = entity;
+                }
+                i += 1;
+            }
+        }
+
         public static CompiledModule CompiledModule_new(string id)
         {
             return new CompiledModule(id, new Dictionary<string, string>(), null, null, null, null);

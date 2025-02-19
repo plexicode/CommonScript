@@ -9,11 +9,44 @@ struct CompiledModule {
 
 CompiledModule CompiledModule_new(string id) {
     return new CompiledModule(
-        id, 
+        id,
         new Dictionary<string, string>(),
-        null, 
-        null, 
-        null, 
+        null,
+        null,
+        null,
         null
     );
+}
+
+void CompiledModule_AddLambdas(CompiledModule m, List<FunctionEntity> lambdas) {
+    m.lambdaEntities = new List<AbstractEntity>();
+    for (int i = 0; i < lambdas.Size(); i += 1) {
+        m.lambdaEntities.Add(lambdas[i].baseData);
+    }
+}
+
+void CompiledModule_InitializeLookups(
+    CompiledModule m,
+    Dictionary<string, AbstractEntity> rootEntities,
+    Dictionary<string, AbstractEntity> flatEntities) {
+    
+    m.nestedEntities = rootEntities;
+    m.flattenedEntities = flatEntities;
+    m.entitiesNoEnumParents = new Dictionary<string, AbstractEntity>();
+    Array<string> fqNames = m.flattenedEntities.Keys();
+    for (int i = 0; i < fqNames.Size(); i += 1) {
+        string fqName = fqNames[i];
+        AbstractEntity entity = m.flattenedEntities[fqName];
+        if (entity.type == EntityType.ENUM) {
+            // for no-enum-parents, add all the children but not the entity itself. This is
+            // used for situations where a specific enum member is desired instead of the definition.
+            Array<Token> enumMemberNameTokens = ((EnumEntity)entity.specificData).memberNameTokens;
+            for (int j = 0; j < enumMemberNameTokens.Size(); j += 1) {
+                Token enumMem = enumMemberNameTokens[j];
+                m.entitiesNoEnumParents[fqName + "." + enumMem.Value] = entity;
+            }
+        } else {
+            m.entitiesNoEnumParents[fqName] = entity;
+        }
+    }
 }

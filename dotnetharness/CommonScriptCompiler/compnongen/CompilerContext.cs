@@ -226,8 +226,8 @@ namespace CommonScript.Compiler
 
             CompiledModule m = FunctionWrapper.CompiledModule_new(moduleId);
             m.codeFiles = sourceCode;
-            CompiledModuleUtil.AddLambdas(m, resolverCtx.lambdas);
-            CompiledModuleUtil.InitializeCompieldModuleLookups(m, resolverCtx.nestedEntities, resolverCtx.flattenedEntities);
+            FunctionWrapper.CompiledModule_AddLambdas(m, resolverCtx.lambdas);
+            FunctionWrapper.CompiledModule_InitializeLookups(m, resolverCtx.nestedEntities, resolverCtx.flattenedEntities);
             foreach (FileContext file in files)
             {
                 file.compiledModule = m;
