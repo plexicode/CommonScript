@@ -1,0 +1,109 @@
+struct CompilationBundle {
+    Array<string> stringById;
+    List<Array<ByteCodeRow>> byteCodeById;
+    List<BundleFunctionInfo> functionById;
+    List<BundleFunctionInfo> lambdaById;
+    List<BundleClassInfo> classById;
+    List<BundleEnumInfo> enumById;
+    Array<Token> tokensById;
+    int mainFunctionId;
+    int builtInCount;
+}
+
+CompilationBundle CompilationBundle_new() {
+
+    CompilationBundle b = new CompilationBundle(
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        0,
+        0);
+
+    b.byteCodeById = new List<Array<ByteCodeRow>>();
+    b.byteCodeById.Add(null);
+
+    b.functionById = new List<BundleFunctionInfo>();
+    b.functionById.Add(null);
+
+    b.classById = new List<BundleClassInfo>();
+    b.classById.Add(null);
+
+    b.enumById = new List<BundleEnumInfo>();
+    b.enumById.Add(null);
+
+    b.lambdaById = new List<BundleFunctionInfo>();
+    b.lambdaById.Add(null);
+
+    return b;
+}
+
+struct BundleClassInfo {
+    int id;
+    int parentId;
+    string name;
+    int ctorId;
+    int staticCtorId;
+    Dictionary<string, int> methodsToId;
+    Array<string> newDirectMembersByNextOffsets;
+    List<string> staticMethods;
+    List<string> staticFields;
+}
+
+BundleClassInfo BundleClassInfo_new(
+    int classId, 
+    int parentId,
+    string name, 
+    int ctorId, 
+    int staticCtorId, 
+    Dictionary<string, int> methodsToId, 
+    Array<string> newDirectMembersByNextOffsets, 
+    List<string> staticMethods, 
+    List<string> staticFields
+) {
+    return new BundleClassInfo(
+        classId,
+        parentId,
+        name,
+        ctorId,
+        staticCtorId,
+        methodsToId,
+        newDirectMembersByNextOffsets,
+        staticMethods,
+        staticFields);
+}
+
+struct BundleFunctionInfo {
+    Array<ByteCodeRow> code;
+    int argcMin;
+    int argcMax;
+    string name;
+}
+
+BundleFunctionInfo BundleFunctionInfo_new(List<ByteCodeRow> code, int argcMin, int argcMax, string name) {
+    return new BundleFunctionInfo(Core.ListToArray(code), argcMin, argcMax, name);
+}
+
+struct BundleEnumInfo {
+    int enumId;
+    Array<string> names;
+    Array<int> values;
+}
+
+BundleEnumInfo BundleEnumInfo_createFromEntity(EnumEntity e) {
+    int sz = e.memberValues.Size();
+    Array<string> names = new Array<string>(sz);
+    Array<int> values = new Array<int>(sz);
+    for (int i = 0; i < sz; i += 1) {
+        names[i] = e.memberNameTokens[i].Value;
+        values[i] = e.memberValues[i].intVal;
+    }
+
+    return new BundleEnumInfo(
+        e.baseData.serializationIndex,
+        names,
+        values);
+}

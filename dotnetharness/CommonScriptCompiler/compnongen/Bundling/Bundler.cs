@@ -10,7 +10,7 @@ namespace CommonScript.Compiler
         public static CompilationBundle bundleCompilation(string rootId, CompiledModule[] modules)
         {
             CompiledModule[] deterministicOrder = modules.OrderBy(m => m.id).ToArray();
-            CompilationBundle bundle = new CompilationBundle();
+            CompilationBundle bundle = FunctionWrapper.CompilationBundle_new();
 
             List<FunctionEntity> functions = new List<FunctionEntity>();
             List<FunctionEntity> builtInFunctions = new List<FunctionEntity>(); // these get flattened into functions.
@@ -280,18 +280,16 @@ namespace CommonScript.Compiler
                 baseClassId = classEntity.baseClassEntity.baseData.serializationIndex;
             }
             Dictionary<string, AbstractEntity> mems = classEntity.classMembers;
-            BundleClassInfo bci = new BundleClassInfo()
-            {
-                id = classEntity.baseData.serializationIndex,
-                parentId = baseClassId,
-                name = classEntity.baseData.simpleName,
-                ctorId = mems["@ctor"].serializationIndex,
-                staticCtorId = mems.ContainsKey("@cctor") ? mems["@cctor"].serializationIndex : 0,
-                methodsToId = new Dictionary<string, int>(),
-                newDirectMembersByNextOffsets = classEntity.newDirectMemberOffsets,
-                staticMethods = new List<string>(),
-                staticFields = new List<string>(),
-            };
+            BundleClassInfo bci = FunctionWrapper.BundleClassInfo_new(
+                classEntity.baseData.serializationIndex,
+                baseClassId,
+                classEntity.baseData.simpleName,
+                mems["@ctor"].serializationIndex,
+                mems.ContainsKey("@cctor") ? mems["@cctor"].serializationIndex : 0,
+                new Dictionary<string, int>(),
+                classEntity.newDirectMemberOffsets,
+                new List<string>(),
+                new List<string>());
 
             foreach (string memberName in classEntity.classMembers.Keys)
             {
@@ -317,7 +315,7 @@ namespace CommonScript.Compiler
 
         private static void bundleEnum(EnumEntity enumEntity, CompilationBundle bundle)
         {
-            BundleEnumInfo bei = BundleEnumInfo.createFromEntity(enumEntity);
+            BundleEnumInfo bei = FunctionWrapper.BundleEnumInfo_createFromEntity(enumEntity);
             bundle.enumById.Add(bei);
         }
 
@@ -369,13 +367,12 @@ namespace CommonScript.Compiler
                 }
             }
 
-            BundleFunctionInfo fd = new BundleFunctionInfo()
-            {
-                code = flatByteCode.ToArray(),
-                argcMin = argcMin,
-                argcMax = argc,
-                name = isLambda ? null : entity.baseData.simpleName,
-            };
+            BundleFunctionInfo fd = FunctionWrapper.BundleFunctionInfo_new(
+                flatByteCode, 
+                argcMin, 
+                argc, 
+                isLambda ? null : entity.baseData.simpleName);
+            
             if (isLambda)
             {
                 bundle.lambdaById.Add(fd);

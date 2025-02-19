@@ -64,6 +64,31 @@ namespace CommonScript.Compiler.Internal
             return new AbstractEntity(firstToken, type, specificData, null, null, null, null, false, null, null, -1);
         }
 
+        public static BundleClassInfo BundleClassInfo_new(int classId, int parentId, string name, int ctorId, int staticCtorId, System.Collections.Generic.Dictionary<string, int> methodsToId, string[] newDirectMembersByNextOffsets, System.Collections.Generic.List<string> staticMethods, System.Collections.Generic.List<string> staticFields)
+        {
+            return new BundleClassInfo(classId, parentId, name, ctorId, staticCtorId, methodsToId, newDirectMembersByNextOffsets, staticMethods, staticFields);
+        }
+
+        public static BundleEnumInfo BundleEnumInfo_createFromEntity(EnumEntity e)
+        {
+            int sz = e.memberValues.Length;
+            string[] names = new string[sz];
+            int[] values = new int[sz];
+            int i = 0;
+            while (i < sz)
+            {
+                names[i] = e.memberNameTokens[i].Value;
+                values[i] = e.memberValues[i].intVal;
+                i += 1;
+            }
+            return new BundleEnumInfo(e.baseData.serializationIndex, names, values);
+        }
+
+        public static BundleFunctionInfo BundleFunctionInfo_new(System.Collections.Generic.List<ByteCodeRow> code, int argcMin, int argcMax, string name)
+        {
+            return new BundleFunctionInfo(code.ToArray(), argcMin, argcMax, name);
+        }
+
         public static ByteCodeBuffer ByteCodeBuffer_from2(ByteCodeBuffer left, ByteCodeBuffer right)
         {
             return new ByteCodeBuffer(left.length + right.length, false, left, right, null, left.first, right.last);
@@ -142,6 +167,22 @@ namespace CommonScript.Compiler.Internal
             cd.baseData.simpleName = nameToken.Value;
             cd.baseData.fqName = fqName;
             return cd;
+        }
+
+        public static CompilationBundle CompilationBundle_new()
+        {
+            CompilationBundle b = new CompilationBundle(null, null, null, null, null, null, null, 0, 0);
+            b.byteCodeById = new List<ByteCodeRow[]>();
+            b.byteCodeById.Add(null);
+            b.functionById = new List<BundleFunctionInfo>();
+            b.functionById.Add(null);
+            b.classById = new List<BundleClassInfo>();
+            b.classById.Add(null);
+            b.enumById = new List<BundleEnumInfo>();
+            b.enumById.Add(null);
+            b.lambdaById = new List<BundleFunctionInfo>();
+            b.lambdaById.Add(null);
+            return b;
         }
 
         public static void CompiledModule_AddLambdas(CompiledModule m, System.Collections.Generic.List<FunctionEntity> lambdas)

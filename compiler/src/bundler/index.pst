@@ -1,3 +1,4 @@
 @import("bundler/ByteCodeBuffer.pst");
 @import("bundler/ByteCodeRow.pst");
 @import("bundler/ByteCodeUtil.pst");
+@import("bundler/CompilationBundle.pst");
