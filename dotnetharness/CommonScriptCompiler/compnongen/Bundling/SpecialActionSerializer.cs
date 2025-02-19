@@ -5,14 +5,13 @@ namespace CommonScript.Compiler
 {
     internal class SpecialActionSerializer
     {
-        private static StaticContext staticCtx = FunctionWrapper.StaticContext_new();
-        public static ByteCodeBuffer serializeSpecialAction(Expression action)
+        public static ByteCodeBuffer serializeSpecialAction(StaticContext staticCtx, Expression action)
         {
             ByteCodeBuffer argBuffer = null;
             int argc = action.args.Length;
             for (int i = 0; i < argc; i++)
             {
-                argBuffer = FunctionWrapper.join2(argBuffer, ExpressionSerializer.serializeExpression(action.args[i]));
+                argBuffer = FunctionWrapper.join2(argBuffer, ExpressionSerializer.serializeExpression(staticCtx, action.args[i]));
             }
 
             ByteCodeBuffer actionBuf;

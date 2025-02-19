@@ -7,7 +7,7 @@ namespace CommonScript.Compiler
 {
     internal class Bundler
     {
-        public static CompilationBundle bundleCompilation(string rootId, CompiledModule[] modules)
+        public static CompilationBundle bundleCompilation(StaticContext staticCtx, string rootId, CompiledModule[] modules)
         {
             CompiledModule[] deterministicOrder = modules.OrderBy(m => m.id).ToArray();
             CompilationBundle bundle = FunctionWrapper.CompilationBundle_new();
@@ -120,7 +120,7 @@ namespace CommonScript.Compiler
 
             foreach (AbstractEntity entity in finalOrder)
             {
-                bundleEntity(entity, bundle);
+                bundleEntity(staticCtx, entity, bundle);
             }
 
             allocateStringAndTokenIds(bundle);
@@ -239,7 +239,7 @@ namespace CommonScript.Compiler
             bundle.stringById = stringById.ToArray();
         }
 
-        private static void bundleEntity(AbstractEntity entity, CompilationBundle bundle)
+        private static void bundleEntity(StaticContext staticCtx, AbstractEntity entity, CompilationBundle bundle)
         {
             switch (entity.type)
             {
@@ -261,7 +261,7 @@ namespace CommonScript.Compiler
                 case (int)EntityType.FUNCTION:
                 case (int)EntityType.CONSTRUCTOR:
                 case (int)EntityType.LAMBDA_ENTITY:
-                    bundleFunction((FunctionEntity)entity.specificData, bundle);
+                    bundleFunction(staticCtx, (FunctionEntity)entity.specificData, bundle);
                     break;
 
                 case (int)EntityType.PROPERTY:
@@ -319,7 +319,7 @@ namespace CommonScript.Compiler
             bundle.enumById.Add(bei);
         }
 
-        private static void bundleFunction(FunctionEntity entity, CompilationBundle bundle)
+        private static void bundleFunction(StaticContext staticCtx, FunctionEntity entity, CompilationBundle bundle)
         {
             bool isLambda = entity.baseData.type == (int)EntityType.LAMBDA_ENTITY;
             ByteCodeBuffer buffer = null;
@@ -338,7 +338,7 @@ namespace CommonScript.Compiler
                 }
                 else
                 {
-                    ByteCodeBuffer defaultValBuffer = ExpressionSerializer.serializeExpression(argValue);
+                    ByteCodeBuffer defaultValBuffer = ExpressionSerializer.serializeExpression(staticCtx, argValue);
                     argBuffer = FunctionWrapper.create2(OpCodes.OP_PUSH_ARG_IF_PRESENT, argToken, null, i, defaultValBuffer.length);
                     argBuffer = FunctionWrapper.join2(argBuffer, defaultValBuffer);
                 }
@@ -350,7 +350,7 @@ namespace CommonScript.Compiler
 
             foreach (Statement stmnt in entity.code)
             {
-                buffer = FunctionWrapper.join2(buffer, StatementSerializer.serializeStatement(stmnt));
+                buffer = FunctionWrapper.join2(buffer, StatementSerializer.serializeStatement(staticCtx, stmnt));
             }
             List<ByteCodeRow> flatByteCode = new List<ByteCodeRow>(FunctionWrapper.flatten(buffer));
 

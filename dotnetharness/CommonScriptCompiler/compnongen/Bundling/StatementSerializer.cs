@@ -9,7 +9,7 @@ namespace CommonScript.Compiler
 {
     internal static class StatementSerializer
     {
-        public static ByteCodeBuffer serializeStatement(Statement stmnt)
+        public static ByteCodeBuffer serializeStatement(StaticContext staticCtx, Statement stmnt)
         {
             switch (stmnt.type)
             {
@@ -18,43 +18,43 @@ namespace CommonScript.Compiler
                     op = op == "=" ? op : op.Substring(0, op.Length - 1);
                     switch (stmnt.assignTarget.type)
                     {
-                        case (int) ExpressionType.VARIABLE: return serializeAssignVariable(stmnt, op);
-                        case (int) ExpressionType.INDEX: return serializeAssignIndex(stmnt, op);
-                        case (int) ExpressionType.DOT_FIELD: return serializeAssignField(stmnt, op);
+                        case (int) ExpressionType.VARIABLE: return serializeAssignVariable(staticCtx, stmnt, op);
+                        case (int) ExpressionType.INDEX: return serializeAssignIndex(staticCtx, stmnt, op);
+                        case (int) ExpressionType.DOT_FIELD: return serializeAssignField(staticCtx, stmnt, op);
                     }
                     throw new InvalidOperationException(); // should have been removed by now.
 
                 case (int) StatementType.BREAK: return serializeBreak(stmnt);
                 case (int) StatementType.CONTINUE: return serializeContinue(stmnt);
-                case (int) StatementType.DO_WHILE_LOOP: return serializeDoWhileLoop(stmnt);
-                case (int) StatementType.EXPRESSION_AS_STATEMENT: return serializeExpressionStatement(stmnt);
-                case (int) StatementType.FOR_LOOP: return serializeForLoop(stmnt);
-                case (int) StatementType.FOR_EACH_LOOP: return serializeForEachLoop(stmnt);
-                case (int) StatementType.IF_STATEMENT: return serializeIfStatement(stmnt);
-                case (int) StatementType.RETURN: return serializeReturn(stmnt);
-                case (int) StatementType.SWITCH_STATEMENT: return serializeSwitchStatement(stmnt);
-                case (int) StatementType.THROW: return serializeThrowStatement(stmnt);
-                case (int) StatementType.TRY: return serializeTryStatement(stmnt);
-                case (int) StatementType.WHILE_LOOP: return serializeWhileLoop(stmnt);
+                case (int) StatementType.DO_WHILE_LOOP: return serializeDoWhileLoop(staticCtx, stmnt);
+                case (int) StatementType.EXPRESSION_AS_STATEMENT: return serializeExpressionStatement(staticCtx, stmnt);
+                case (int) StatementType.FOR_LOOP: return serializeForLoop(staticCtx, stmnt);
+                case (int) StatementType.FOR_EACH_LOOP: return serializeForEachLoop(staticCtx, stmnt);
+                case (int) StatementType.IF_STATEMENT: return serializeIfStatement(staticCtx, stmnt);
+                case (int) StatementType.RETURN: return serializeReturn(staticCtx, stmnt);
+                case (int) StatementType.SWITCH_STATEMENT: return serializeSwitchStatement(staticCtx, stmnt);
+                case (int) StatementType.THROW: return serializeThrowStatement(staticCtx, stmnt);
+                case (int) StatementType.TRY: return serializeTryStatement(staticCtx, stmnt);
+                case (int) StatementType.WHILE_LOOP: return serializeWhileLoop(staticCtx, stmnt);
 
                 default: throw new NotImplementedException();
             }
         }
 
-        public static ByteCodeBuffer serializeCodeBlock(Statement[] block)
+        public static ByteCodeBuffer serializeCodeBlock(StaticContext staticCtx, Statement[] block)
         {
             ByteCodeBuffer buf = null;
             for (int i = 0; i < block.Length; i++)
             {
-                buf = FunctionWrapper.join2(buf, serializeStatement(block[i]));
+                buf = FunctionWrapper.join2(buf, serializeStatement(staticCtx, block[i]));
             }
             return buf;
         }
 
-        private static ByteCodeBuffer serializeAssignVariable(Statement assignVar, string baseOp)
+        private static ByteCodeBuffer serializeAssignVariable(StaticContext staticCtx, Statement assignVar, string baseOp)
         {
-            ByteCodeBuffer bufVal = ExpressionSerializer.serializeExpression(assignVar.assignValue);
-            ByteCodeBuffer bufVar = ExpressionSerializer.serializeExpression(assignVar.assignTarget);
+            ByteCodeBuffer bufVal = ExpressionSerializer.serializeExpression(staticCtx, assignVar.assignValue);
+            ByteCodeBuffer bufVar = ExpressionSerializer.serializeExpression(staticCtx, assignVar.assignTarget);
             if (baseOp != "=")
             {
                 bufVal = FunctionWrapper.join3(
@@ -68,12 +68,12 @@ namespace CommonScript.Compiler
                 FunctionWrapper.create0(OpCodes.OP_ASSIGN_VAR, assignVar.assignOp, assignVar.assignTarget.strVal));
         }
 
-        private static ByteCodeBuffer serializeAssignIndex(Statement assignIndex, string baseOp)
+        private static ByteCodeBuffer serializeAssignIndex(StaticContext staticCtx, Statement assignIndex, string baseOp)
         {
             Token bracketToken = assignIndex.assignTarget.opToken;
-            ByteCodeBuffer bufVal = ExpressionSerializer.serializeExpression(assignIndex.assignValue);
-            ByteCodeBuffer bufIndex = ExpressionSerializer.serializeExpression(assignIndex.assignTarget.right);
-            ByteCodeBuffer bufRoot = ExpressionSerializer.serializeExpression(assignIndex.assignTarget.root);
+            ByteCodeBuffer bufVal = ExpressionSerializer.serializeExpression(staticCtx, assignIndex.assignValue);
+            ByteCodeBuffer bufIndex = ExpressionSerializer.serializeExpression(staticCtx, assignIndex.assignTarget.right);
+            ByteCodeBuffer bufRoot = ExpressionSerializer.serializeExpression(staticCtx, assignIndex.assignTarget.root);
             if (baseOp != "=")
             {
                 ByteCodeBuffer incrBuf = FunctionWrapper.join3(
@@ -96,12 +96,12 @@ namespace CommonScript.Compiler
             );
         }
 
-        private static ByteCodeBuffer serializeAssignField(Statement assignField, string baseOp)
+        private static ByteCodeBuffer serializeAssignField(StaticContext staticCtx, Statement assignField, string baseOp)
         {
             Expression df = assignField.assignTarget;
             string fieldName = df.strVal;
-            ByteCodeBuffer bufVal = ExpressionSerializer.serializeExpression(assignField.assignValue);
-            ByteCodeBuffer bufRoot = ExpressionSerializer.serializeExpression(df.root);
+            ByteCodeBuffer bufVal = ExpressionSerializer.serializeExpression(staticCtx, assignField.assignValue);
+            ByteCodeBuffer bufRoot = ExpressionSerializer.serializeExpression(staticCtx, df.root);
             if (baseOp != "=")
             {
                 ByteCodeBuffer incrBuf = FunctionWrapper.join2(
@@ -134,10 +134,10 @@ namespace CommonScript.Compiler
             return FunctionWrapper.create0(OpCodes.OP_CONTINUE_DUMMY, cont.firstToken, null);
         }
 
-        private static ByteCodeBuffer serializeDoWhileLoop(Statement doWhileLoop)
+        private static ByteCodeBuffer serializeDoWhileLoop(StaticContext staticCtx, Statement doWhileLoop)
         {
-            ByteCodeBuffer body = serializeCodeBlock(doWhileLoop.code);
-            ByteCodeBuffer condition = FunctionWrapper.ByteCodeUtil_ensureBooleanExpression(doWhileLoop.condition.firstToken, ExpressionSerializer.serializeExpression(doWhileLoop.condition));
+            ByteCodeBuffer body = serializeCodeBlock(staticCtx, doWhileLoop.code);
+            ByteCodeBuffer condition = FunctionWrapper.ByteCodeUtil_ensureBooleanExpression(doWhileLoop.condition.firstToken, ExpressionSerializer.serializeExpression(staticCtx, doWhileLoop.condition));
             return FunctionWrapper.join4(
                 finalizeBreakContinue(body, condition.length + 2, true, 0),
                 condition,
@@ -145,25 +145,25 @@ namespace CommonScript.Compiler
                 FunctionWrapper.create1(OpCodes.OP_JUMP, null, null, -(1 + 1 + condition.length + body.length)));
         }
 
-        private static ByteCodeBuffer serializeExpressionStatement(Statement exprStmnt)
+        private static ByteCodeBuffer serializeExpressionStatement(StaticContext staticCtx, Statement exprStmnt)
         {
             return FunctionWrapper.join2(
-                ExpressionSerializer.serializeExpression(exprStmnt.expression),
+                ExpressionSerializer.serializeExpression(staticCtx, exprStmnt.expression),
                 FunctionWrapper.create0(OpCodes.OP_POP, null, null)
             );
         }
 
-        private static ByteCodeBuffer serializeForLoop(Statement forLoop)
+        private static ByteCodeBuffer serializeForLoop(StaticContext staticCtx, Statement forLoop)
         {
             Expression condition = forLoop.condition;
             Statement[] code = forLoop.code;
             Statement[] init = forLoop.forInit;
             Statement[] step = forLoop.forStep;
 
-            ByteCodeBuffer bufInit = serializeCodeBlock(init);
-            ByteCodeBuffer bufStep = serializeCodeBlock(step);
-            ByteCodeBuffer bufBody = serializeCodeBlock(code);
-            ByteCodeBuffer bufCondition = ExpressionSerializer.serializeExpression(condition);
+            ByteCodeBuffer bufInit = serializeCodeBlock(staticCtx, init);
+            ByteCodeBuffer bufStep = serializeCodeBlock(staticCtx, step);
+            ByteCodeBuffer bufBody = serializeCodeBlock(staticCtx, code);
+            ByteCodeBuffer bufCondition = ExpressionSerializer.serializeExpression(staticCtx, condition);
 
             bufCondition = FunctionWrapper.ByteCodeUtil_ensureBooleanExpression(condition.firstToken, bufCondition);
 
@@ -182,20 +182,20 @@ namespace CommonScript.Compiler
                 FunctionWrapper.create1(OpCodes.OP_JUMP, null, null, -(1 + bodySize + stepSize + 1 + conditionSize)));
         }
 
-        private static ByteCodeBuffer serializeForEachLoop(Statement forEachLoop)
+        private static ByteCodeBuffer serializeForEachLoop(StaticContext staticCtx, Statement forEachLoop)
         {
             string loopExpr = "@fe" + forEachLoop.autoId;
             string iteratorVar = "@fi" + forEachLoop.autoId;
 
             ByteCodeBuffer setup = FunctionWrapper.join5(
-                ExpressionSerializer.serializeExpression(forEachLoop.expression),
+                ExpressionSerializer.serializeExpression(staticCtx, forEachLoop.expression),
                 FunctionWrapper.create0(OpCodes.OP_ENSURE_LIST, forEachLoop.expression.firstToken, null),
                 FunctionWrapper.create0(OpCodes.OP_ASSIGN_VAR, null, loopExpr),
                 FunctionWrapper.create1(OpCodes.OP_PUSH_INT, null, null, 0),
                 FunctionWrapper.create0(OpCodes.OP_ASSIGN_VAR, null, iteratorVar)
             );
 
-            ByteCodeBuffer bufBody = serializeCodeBlock(forEachLoop.code);
+            ByteCodeBuffer bufBody = serializeCodeBlock(staticCtx, forEachLoop.code);
 
             ByteCodeBuffer increment = FunctionWrapper.join4(
                 FunctionWrapper.create0(OpCodes.OP_PUSH_VAR, null, iteratorVar),
@@ -235,15 +235,15 @@ namespace CommonScript.Compiler
             return fullCode;
         }
 
-        private static ByteCodeBuffer serializeIfStatement(Statement ifStmnt)
+        private static ByteCodeBuffer serializeIfStatement(StaticContext staticCtx, Statement ifStmnt)
         {
             Expression condition = ifStmnt.condition;
             Statement[] ifCode = ifStmnt.code;
             Statement[] elseCode = ifStmnt.elseCode; // if not present, it's an empty array, not null
 
-            ByteCodeBuffer buf = ExpressionSerializer.serializeExpression(condition);
-            ByteCodeBuffer bufTrue = serializeCodeBlock(ifCode);
-            ByteCodeBuffer bufFalse = serializeCodeBlock(elseCode);
+            ByteCodeBuffer buf = ExpressionSerializer.serializeExpression(staticCtx, condition);
+            ByteCodeBuffer bufTrue = serializeCodeBlock(staticCtx, ifCode);
+            ByteCodeBuffer bufFalse = serializeCodeBlock(staticCtx, elseCode);
             buf = FunctionWrapper.ByteCodeUtil_ensureBooleanExpression(condition.firstToken, buf);
 
             int trueSize = 0;
@@ -282,7 +282,7 @@ namespace CommonScript.Compiler
             throw new NotImplementedException();
         }
 
-        private static ByteCodeBuffer serializeReturn(Statement ret)
+        private static ByteCodeBuffer serializeReturn(StaticContext staticCtx, Statement ret)
         {
             ByteCodeBuffer buf;
             if (ret.expression == null)
@@ -291,18 +291,18 @@ namespace CommonScript.Compiler
             }
             else
             {
-                buf = ExpressionSerializer.serializeExpression(ret.expression);
+                buf = ExpressionSerializer.serializeExpression(staticCtx, ret.expression);
             }
             return FunctionWrapper.join2(buf, FunctionWrapper.create0(OpCodes.OP_RETURN, ret.firstToken, null));
         }
 
-        private static ByteCodeBuffer serializeSwitchStatement(Statement switchStmnt)
+        private static ByteCodeBuffer serializeSwitchStatement(StaticContext staticCtx, Statement switchStmnt)
         {
             // switch (cond) { } <-- needs to ensure that the condition is an int or string.
             if (switchStmnt.switchChunks.Length == 0)
             {
                 return FunctionWrapper.join3(
-                    ExpressionSerializer.serializeExpression(switchStmnt.condition),
+                    ExpressionSerializer.serializeExpression(staticCtx, switchStmnt.condition),
                     FunctionWrapper.create0(OpCodes.OP_ENSURE_INT_OR_STRING, switchStmnt.condition.firstToken, null),
                     FunctionWrapper.create0(OpCodes.OP_POP, null, null));
             }
@@ -326,7 +326,7 @@ namespace CommonScript.Compiler
             }
 
             ByteCodeBuffer condBuf = FunctionWrapper.join2(
-                ExpressionSerializer.serializeExpression(switchStmnt.condition),
+                ExpressionSerializer.serializeExpression(staticCtx, switchStmnt.condition),
                 FunctionWrapper.create0(conditionTypeEnsuranceOpCode, switchStmnt.condition.firstToken, null));
 
             ByteCodeBuffer caseBuf = null;
@@ -358,7 +358,7 @@ namespace CommonScript.Compiler
                     }
                 }
 
-                ByteCodeBuffer chunkBuf = serializeCodeBlock(chunk.Code.ToArray());
+                ByteCodeBuffer chunkBuf = serializeCodeBlock(staticCtx, chunk.Code.ToArray());
                 currentJumpOffset += chunkBuf.length;
                 caseBuf = FunctionWrapper.join2(caseBuf, chunkBuf);
             }
@@ -473,20 +473,20 @@ namespace CommonScript.Compiler
             return output;
         }
 
-        private static ByteCodeBuffer serializeThrowStatement(Statement thrw)
+        private static ByteCodeBuffer serializeThrowStatement(StaticContext staticCtx, Statement thrw)
         {
             return FunctionWrapper.join2(
-                ExpressionSerializer.serializeExpression(thrw.expression),
+                ExpressionSerializer.serializeExpression(staticCtx, thrw.expression),
                 FunctionWrapper.create0(OpCodes.OP_THROW, thrw.firstToken, null));
         }
 
-        private static ByteCodeBuffer serializeTryStatement(Statement tryStmnt)
+        private static ByteCodeBuffer serializeTryStatement(StaticContext staticCtx, Statement tryStmnt)
         {
-            ByteCodeBuffer tryBuf = serializeCodeBlock(tryStmnt.code);
+            ByteCodeBuffer tryBuf = serializeCodeBlock(staticCtx, tryStmnt.code);
             List<ByteCodeBuffer> catchBufs = new List<ByteCodeBuffer>();
             foreach (CatchChunk cc in tryStmnt.catchChunks)
             {
-                ByteCodeBuffer catchBuf = serializeCodeBlock(cc.Code);
+                ByteCodeBuffer catchBuf = serializeCodeBlock(staticCtx, cc.Code);
 
                 // the value stack is cleared to its base level and the exception is added as the only item.
                 catchBuf = FunctionWrapper.join2(
@@ -499,7 +499,7 @@ namespace CommonScript.Compiler
             }
 
             ByteCodeBuffer finallyBuf = FunctionWrapper.join2(
-                serializeCodeBlock(tryStmnt.finallyCode),
+                serializeCodeBlock(staticCtx, tryStmnt.finallyCode),
                 FunctionWrapper.create0(OpCodes.OP_TRY_FINALLY_END, null, null));
 
             // Add the jumps at the end of each catch to the finally
@@ -563,11 +563,11 @@ namespace CommonScript.Compiler
             return FunctionWrapper.join3(tryBuf, routeAndCatches, finallyBuf);
         }
 
-        private static ByteCodeBuffer serializeWhileLoop(Statement whileLoop)
+        private static ByteCodeBuffer serializeWhileLoop(StaticContext staticCtx, Statement whileLoop)
         {
-            ByteCodeBuffer condBuf = ExpressionSerializer.serializeExpression(whileLoop.condition);
+            ByteCodeBuffer condBuf = ExpressionSerializer.serializeExpression(staticCtx, whileLoop.condition);
             condBuf = FunctionWrapper.ByteCodeUtil_ensureBooleanExpression(whileLoop.condition.firstToken, condBuf);
-            ByteCodeBuffer loopBody = serializeCodeBlock(whileLoop.code);
+            ByteCodeBuffer loopBody = serializeCodeBlock(staticCtx, whileLoop.code);
             return FunctionWrapper.join4(
                 condBuf,
                 FunctionWrapper.create1(OpCodes.OP_POP_AND_JUMP_IF_FALSE, null, null, loopBody.length + 1),

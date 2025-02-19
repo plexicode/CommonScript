@@ -194,7 +194,7 @@ namespace CommonScript.Compiler
             }
 
             CompiledModule[] modules = compiler.compiledModulesById.Values.ToArray();
-            CompilationBundle bundle = Bundler.bundleCompilation(compiler.rootId, modules);
+            CompilationBundle bundle = Bundler.bundleCompilation(compiler.staticCtx, compiler.rootId, modules);
 
             return Exporter.exportBundle(compiler.flavorId, compiler.extensionVersionId, bundle);
         }

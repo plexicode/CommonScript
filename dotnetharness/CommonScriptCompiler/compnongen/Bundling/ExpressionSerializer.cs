@@ -4,9 +4,8 @@ using CommonScript.Compiler.Internal;
 namespace CommonScript.Compiler
 {
     internal static class ExpressionSerializer
-    {
-        private static StaticContext staticCtx = FunctionWrapper.StaticContext_new(); 
-        public static ByteCodeBuffer serializeExpression(Expression expr)
+    { 
+        public static ByteCodeBuffer serializeExpression(StaticContext staticCtx, Expression expr)
         {
             switch (expr.type)
             {
@@ -15,30 +14,30 @@ namespace CommonScript.Compiler
                     throw new InvalidOperationException();
 
                 case (int) ExpressionType.BASE_CTOR_REFERENCE: return serializeBaseCtorReference(expr);
-                case (int) ExpressionType.BINARY_OP: return serializeBinaryOp(expr);
-                case (int) ExpressionType.BITWISE_NOT: return serializeBitwiseNot(expr);
+                case (int) ExpressionType.BINARY_OP: return serializeBinaryOp(staticCtx, expr);
+                case (int) ExpressionType.BITWISE_NOT: return serializeBitwiseNot(staticCtx, expr);
                 case (int) ExpressionType.BOOL_CONST: return serializeBoolConst(expr);
-                case (int) ExpressionType.BOOLEAN_NOT: return serializeBooleanNot(expr);
+                case (int) ExpressionType.BOOLEAN_NOT: return serializeBooleanNot(staticCtx, expr);
                 case (int) ExpressionType.CLASS_REFERENCE: return serializeClassReference(expr);
-                case (int) ExpressionType.CONSTRUCTOR_INVOCATION: return serializeConstructorInvocation(expr);
-                case (int) ExpressionType.DICTIONARY_DEFINITION: return serializeDictionaryDefinition(expr);
-                case (int) ExpressionType.DOT_FIELD: return serializeDotField(expr);
-                case (int) ExpressionType.EXTENSION_INVOCATION: return serializeExtensionInvocation(expr);
+                case (int) ExpressionType.CONSTRUCTOR_INVOCATION: return serializeConstructorInvocation(staticCtx, expr);
+                case (int) ExpressionType.DICTIONARY_DEFINITION: return serializeDictionaryDefinition(staticCtx, expr);
+                case (int) ExpressionType.DOT_FIELD: return serializeDotField(staticCtx, expr);
+                case (int) ExpressionType.EXTENSION_INVOCATION: return serializeExtensionInvocation(staticCtx, expr);
                 case (int) ExpressionType.FLOAT_CONST: return serializeFloatConstant(expr);
-                case (int) ExpressionType.FUNCTION_INVOKE: return serializeFunctionInvocation(expr);
+                case (int) ExpressionType.FUNCTION_INVOKE: return serializeFunctionInvocation(staticCtx, expr);
                 case (int) ExpressionType.FUNCTION_REFERENCE: return serializeFunctionReference(expr);
-                case (int) ExpressionType.INDEX: return serializeIndex(expr);
-                case (int) ExpressionType.INLINE_INCREMENT: return serializeInlineIncrement(expr);
+                case (int) ExpressionType.INDEX: return serializeIndex(staticCtx, expr);
+                case (int) ExpressionType.INLINE_INCREMENT: return serializeInlineIncrement(staticCtx, expr);
                 case (int) ExpressionType.INTEGER_CONST: return serializeIntegerConstant(expr);
                 case (int) ExpressionType.LAMBDA: return serializeLambda(expr);
-                case (int) ExpressionType.LIST_DEFINITION: return serializeListDefinition(expr);
-                case (int) ExpressionType.NEGATIVE_SIGN: return serializeNegativeSign(expr);
+                case (int) ExpressionType.LIST_DEFINITION: return serializeListDefinition(staticCtx, expr);
+                case (int) ExpressionType.NEGATIVE_SIGN: return serializeNegativeSign(staticCtx, expr);
                 case (int) ExpressionType.NULL_CONST: return serializeNullConstant(expr);
-                case (int) ExpressionType.SLICE: return serializeSlice(expr);
+                case (int) ExpressionType.SLICE: return serializeSlice(staticCtx, expr);
                 case (int) ExpressionType.STRING_CONST: return serializeStringConstant(expr);
-                case (int) ExpressionType.TERNARY: return serializeTernary(expr);
+                case (int) ExpressionType.TERNARY: return serializeTernary(staticCtx, expr);
                 case (int) ExpressionType.THIS: return serializeThis(expr);
-                case (int) ExpressionType.TYPEOF: return serializeTypeOf(expr);
+                case (int) ExpressionType.TYPEOF: return serializeTypeOf(staticCtx, expr);
                 case (int) ExpressionType.VARIABLE: return serializeVariable(expr);
                 default:
                     throw new NotImplementedException();
@@ -51,15 +50,15 @@ namespace CommonScript.Compiler
             return FunctionWrapper.create1(OpCodes.OP_PUSH_BASE_CTOR, baseCtor.firstToken, null, baseClass.serializationIndex);
         }
 
-        private static ByteCodeBuffer serializeBinaryOp(Expression binOp)
+        private static ByteCodeBuffer serializeBinaryOp(StaticContext staticCtx, Expression binOp)
         {
             Token opToken = binOp.opToken;
             string op = opToken.Value;
             Expression left = binOp.left;
             Expression right = binOp.right;
 
-            ByteCodeBuffer leftBuf = serializeExpression(left);
-            ByteCodeBuffer rightBuf = serializeExpression(right);
+            ByteCodeBuffer leftBuf = serializeExpression(staticCtx, left);
+            ByteCodeBuffer rightBuf = serializeExpression(staticCtx, right);
 
             if (op == "??")
             {
@@ -88,25 +87,25 @@ namespace CommonScript.Compiler
             );
         }
 
-        private static ByteCodeBuffer serializeDotField(Expression df)
+        private static ByteCodeBuffer serializeDotField(StaticContext staticCtx, Expression df)
         {
             return FunctionWrapper.join2(
-                serializeExpression(df.root),
+                serializeExpression(staticCtx, df.root),
                 FunctionWrapper.create0(OpCodes.OP_DOT_FIELD, df.opToken, df.strVal));
         }
 
-        private static ByteCodeBuffer serializeExtensionInvocation(Expression extInvoke)
+        private static ByteCodeBuffer serializeExtensionInvocation(StaticContext staticCtx, Expression extInvoke)
         {
             if (FunctionWrapper.SpecialActionUtil_IsSpecialActionAndNotExtension(staticCtx.specialActionUtil, extInvoke.strVal))
             {
-                return SpecialActionSerializer.serializeSpecialAction(extInvoke);
+                return SpecialActionSerializer.serializeSpecialAction(staticCtx, extInvoke);
             }
 
             ByteCodeBuffer buf = null;
             int argc = extInvoke.args.Length;
             for (int i = 0; i < argc; i++)
             {
-                buf = FunctionWrapper.join2(buf, serializeExpression(extInvoke.args[i]));
+                buf = FunctionWrapper.join2(buf, serializeExpression(staticCtx, extInvoke.args[i]));
             }
 
             return FunctionWrapper.join2(
@@ -114,10 +113,10 @@ namespace CommonScript.Compiler
                 FunctionWrapper.create1(OpCodes.OP_EXT_INVOKE, extInvoke.firstToken, extInvoke.strVal, argc));
         }
 
-        private static ByteCodeBuffer serializeBitwiseNot(Expression bwn)
+        private static ByteCodeBuffer serializeBitwiseNot(StaticContext staticCtx, Expression bwn)
         {
             return FunctionWrapper.join2(
-                FunctionWrapper.ByteCodeUtil_ensureIntegerExpression(bwn.root.firstToken, serializeExpression(bwn.root)),
+                FunctionWrapper.ByteCodeUtil_ensureIntegerExpression(bwn.root.firstToken, serializeExpression(staticCtx, bwn.root)),
                 FunctionWrapper.create0(OpCodes.OP_BITWISE_NOT, bwn.firstToken, null)
                 );
         }
@@ -127,12 +126,12 @@ namespace CommonScript.Compiler
             return FunctionWrapper.create1(OpCodes.OP_PUSH_BOOL, bc.firstToken, null, bc.boolVal ? 1 : 0); ;
         }
 
-        private static ByteCodeBuffer serializeBooleanNot(Expression bn)
+        private static ByteCodeBuffer serializeBooleanNot(StaticContext staticCtx, Expression bn)
         {
             // OP_BOOLEAN_NOT includes assertions for a boolean value, so ensureBooleanExpression is not needed here.
             // ! unary op is unlikely to be used in expressions that are verifiable as boolean at compile time, so it's faster to just bundle them together. 
             return FunctionWrapper.join2(
-                serializeExpression(bn.root),
+                serializeExpression(staticCtx, bn.root),
                 FunctionWrapper.create0(OpCodes.OP_BOOLEAN_NOT, bn.firstToken, null));
         }
 
@@ -141,13 +140,13 @@ namespace CommonScript.Compiler
             return FunctionWrapper.create1(OpCodes.OP_PUSH_CLASS_REF, classRef.firstToken, null, classRef.entityPtr.serializationIndex);
         }
 
-        private static ByteCodeBuffer serializeConstructorInvocation(Expression ctorInvoke)
+        private static ByteCodeBuffer serializeConstructorInvocation(StaticContext staticCtx, Expression ctorInvoke)
         {
             AbstractEntity classDef = ctorInvoke.entityPtr;
             ByteCodeBuffer buf = null;
             for (int i = 0; i < ctorInvoke.args.Length; i++)
             {
-                buf = FunctionWrapper.join2(buf, serializeExpression(ctorInvoke.args[i]));
+                buf = FunctionWrapper.join2(buf, serializeExpression(staticCtx, ctorInvoke.args[i]));
             }
             return FunctionWrapper.join3(
                 FunctionWrapper.create1(OpCodes.OP_CTOR_REF, ctorInvoke.firstToken, null, classDef.serializationIndex),
@@ -155,15 +154,15 @@ namespace CommonScript.Compiler
                 FunctionWrapper.create1(OpCodes.OP_FUNCTION_INVOKE, ctorInvoke.opToken, null, ctorInvoke.args.Length));
         }
 
-        private static ByteCodeBuffer serializeDictionaryDefinition(Expression dictDef)
+        private static ByteCodeBuffer serializeDictionaryDefinition(StaticContext staticCtx, Expression dictDef)
         {
             ByteCodeBuffer buf = null;
             for (int i = 0; i < dictDef.keys.Length; i++)
             {
                 buf = FunctionWrapper.join3(
                     buf,
-                    serializeExpression(dictDef.keys[i]),
-                    serializeExpression(dictDef.values[i]));
+                    serializeExpression(staticCtx, dictDef.keys[i]),
+                    serializeExpression(staticCtx, dictDef.values[i]));
             }
             return FunctionWrapper.join2(
                 buf,
@@ -180,13 +179,13 @@ namespace CommonScript.Compiler
             return FunctionWrapper.create0(OpCodes.OP_PUSH_FLOAT, null, val + "");
         }
 
-        private static ByteCodeBuffer serializeFunctionInvocation(Expression funcInvoke)
+        private static ByteCodeBuffer serializeFunctionInvocation(StaticContext staticCtx, Expression funcInvoke)
         {
-            ByteCodeBuffer buf = serializeExpression(funcInvoke.root);
+            ByteCodeBuffer buf = serializeExpression(staticCtx, funcInvoke.root);
             int argc = funcInvoke.args.Length;
             for (int i = 0; i < argc; i++)
             {
-                buf = FunctionWrapper.join2(buf, serializeExpression(funcInvoke.args[i]));
+                buf = FunctionWrapper.join2(buf, serializeExpression(staticCtx, funcInvoke.args[i]));
             }
             return FunctionWrapper.join2(
                 buf,
@@ -201,36 +200,36 @@ namespace CommonScript.Compiler
             return FunctionWrapper.create1(OpCodes.OP_PUSH_FUNC_PTR, funcRef.firstToken, null, index);
         }
 
-        private static ByteCodeBuffer serializeIndex(Expression index)
+        private static ByteCodeBuffer serializeIndex(StaticContext staticCtx, Expression index)
         {
             return FunctionWrapper.join3(
-                serializeExpression(index.root),
-                serializeExpression(index.right),
+                serializeExpression(staticCtx, index.root),
+                serializeExpression(staticCtx, index.right),
                 FunctionWrapper.create0(OpCodes.OP_INDEX, index.opToken, null)
             );
         }
 
-        private static ByteCodeBuffer serializeInlineIncrement(Expression ii)
+        private static ByteCodeBuffer serializeInlineIncrement(StaticContext staticCtx, Expression ii)
         {
             switch (ii.root.type)
             {
-                case (int) ExpressionType.VARIABLE: return serializeInlineIncrementVar(ii);
-                case (int) ExpressionType.INDEX: return serializeInlineIncrementIndex(ii);
-                case (int) ExpressionType.DOT_FIELD: return serializeInlineIncrementDotField(ii);
+                case (int) ExpressionType.VARIABLE: return serializeInlineIncrementVar(staticCtx, ii);
+                case (int) ExpressionType.INDEX: return serializeInlineIncrementIndex(staticCtx, ii);
+                case (int) ExpressionType.DOT_FIELD: return serializeInlineIncrementDotField(staticCtx, ii);
                 default:
                     break;
             }
             throw new InvalidOperationException(); // should have been caught before now.
         }
 
-        private static ByteCodeBuffer serializeInlineIncrementVar(Expression ii)
+        private static ByteCodeBuffer serializeInlineIncrementVar(StaticContext staticCtx, Expression ii)
         {
             // TODO: expression as statement -- remove duplication and pop.
 
             if (ii.boolVal) // is prefix? duplicate after incrementation
             {
                 return FunctionWrapper.join4(
-                    serializeExpression(ii.root),
+                    serializeExpression(staticCtx, ii.root),
                     FunctionWrapper.create1(OpCodes.OP_INT_INCR, ii.opToken, null, ii.opToken.Value == "++" ? 1 : -1),
                     FunctionWrapper.create0(OpCodes.OP_STACK_DUPLICATE, null, null),
                     FunctionWrapper.create0(OpCodes.OP_ASSIGN_VAR, null, ii.root.strVal)
@@ -239,7 +238,7 @@ namespace CommonScript.Compiler
             else // suffix. duplicate before incrementation
             {
                 return FunctionWrapper.join4(
-                    serializeExpression(ii.root),
+                    serializeExpression(staticCtx, ii.root),
                     FunctionWrapper.create0(OpCodes.OP_STACK_DUPLICATE, null, null),
                     FunctionWrapper.create1(OpCodes.OP_INT_INCR, ii.opToken, null, ii.opToken.Value == "++" ? 1 : -1),
                     FunctionWrapper.create0(OpCodes.OP_ASSIGN_VAR, null, ii.root.strVal)
@@ -247,9 +246,9 @@ namespace CommonScript.Compiler
             }
         }
 
-        private static ByteCodeBuffer serializeInlineIncrementDotField(Expression ii)
+        private static ByteCodeBuffer serializeInlineIncrementDotField(StaticContext staticCtx, Expression ii)
         {
-            ByteCodeBuffer root = serializeExpression(ii.root.root);
+            ByteCodeBuffer root = serializeExpression(staticCtx, ii.root.root);
             bool isPrefix = ii.boolVal;
 
             return FunctionWrapper.join5(
@@ -287,10 +286,10 @@ namespace CommonScript.Compiler
             //*/
         }
 
-        private static ByteCodeBuffer serializeInlineIncrementIndex(Expression ii)
+        private static ByteCodeBuffer serializeInlineIncrementIndex(StaticContext staticCtx, Expression ii)
         {
-            ByteCodeBuffer root = serializeExpression(ii.root.root);
-            ByteCodeBuffer index = serializeExpression(ii.root.right);
+            ByteCodeBuffer root = serializeExpression(staticCtx, ii.root.root);
+            ByteCodeBuffer index = serializeExpression(staticCtx, ii.root.right);
             return FunctionWrapper.join7(
                 root, // root 
                 index, // root, index
@@ -321,22 +320,22 @@ namespace CommonScript.Compiler
             return FunctionWrapper.create1(OpCodes.OP_PUSH_LAMBDA, lambda.firstToken, null, lambdaEntity.baseData.serializationIndex);
         }
 
-        private static ByteCodeBuffer serializeListDefinition(Expression listDef)
+        private static ByteCodeBuffer serializeListDefinition(StaticContext staticCtx, Expression listDef)
         {
             ByteCodeBuffer buf = null;
             for (int i = 0; i < listDef.values.Length; i++)
             {
-                buf = FunctionWrapper.join2(buf, serializeExpression(listDef.values[i]));
+                buf = FunctionWrapper.join2(buf, serializeExpression(staticCtx, listDef.values[i]));
             }
             return FunctionWrapper.join2(
                 buf,
                 FunctionWrapper.create1(OpCodes.OP_BUILD_LIST, listDef.firstToken, null, listDef.values.Length));
         }
 
-        private static ByteCodeBuffer serializeNegativeSign(Expression negSign)
+        private static ByteCodeBuffer serializeNegativeSign(StaticContext staticCtx, Expression negSign)
         {
             return FunctionWrapper.join2(
-                serializeExpression(negSign.root),
+                serializeExpression(staticCtx, negSign.root),
                 FunctionWrapper.create0(OpCodes.OP_NEGATIVE_SIGN, negSign.opToken, null)
             );
         }
@@ -346,7 +345,7 @@ namespace CommonScript.Compiler
             return FunctionWrapper.create0(OpCodes.OP_PUSH_NULL, nullConst.firstToken, null);
         }
 
-        private static ByteCodeBuffer serializeSlice(Expression slice)
+        private static ByteCodeBuffer serializeSlice(StaticContext staticCtx, Expression slice)
         {
             Expression start = slice.args[0];
             Expression end = slice.args[1];
@@ -357,10 +356,10 @@ namespace CommonScript.Compiler
                 (step != null ? 4 : 0);
 
             return FunctionWrapper.join5(
-                serializeExpression(slice.root),
-                start != null ? FunctionWrapper.ByteCodeUtil_ensureIntegerExpression(start.firstToken, serializeExpression(start)) : null,
-                end != null ? FunctionWrapper.ByteCodeUtil_ensureIntegerExpression(end.firstToken, serializeExpression(end)) : null,
-                step != null ? FunctionWrapper.ByteCodeUtil_ensureIntegerExpression(step.firstToken, serializeExpression(step)) : null,
+                serializeExpression(staticCtx, slice.root),
+                start != null ? FunctionWrapper.ByteCodeUtil_ensureIntegerExpression(start.firstToken, serializeExpression(staticCtx, start)) : null,
+                end != null ? FunctionWrapper.ByteCodeUtil_ensureIntegerExpression(end.firstToken, serializeExpression(staticCtx, end)) : null,
+                step != null ? FunctionWrapper.ByteCodeUtil_ensureIntegerExpression(step.firstToken, serializeExpression(staticCtx, step)) : null,
                 FunctionWrapper.create1(OpCodes.OP_SLICE, slice.opToken, null, sliceMask));
         }
 
@@ -369,11 +368,11 @@ namespace CommonScript.Compiler
             return FunctionWrapper.create0(OpCodes.OP_PUSH_STRING, strConst.firstToken, strConst.strVal);
         }
 
-        private static ByteCodeBuffer serializeTernary(Expression ternaryExpression)
+        private static ByteCodeBuffer serializeTernary(StaticContext staticCtx, Expression ternaryExpression)
         {
-            ByteCodeBuffer condBuf = serializeExpression(ternaryExpression.root);
-            ByteCodeBuffer leftBuf = serializeExpression(ternaryExpression.left);
-            ByteCodeBuffer rightBuf = serializeExpression(ternaryExpression.right);
+            ByteCodeBuffer condBuf = serializeExpression(staticCtx, ternaryExpression.root);
+            ByteCodeBuffer leftBuf = serializeExpression(staticCtx, ternaryExpression.left);
+            ByteCodeBuffer rightBuf = serializeExpression(staticCtx, ternaryExpression.right);
             condBuf = FunctionWrapper.ByteCodeUtil_ensureBooleanExpression(ternaryExpression.opToken, condBuf);
 
             return FunctionWrapper.join5(
@@ -389,9 +388,9 @@ namespace CommonScript.Compiler
             return FunctionWrapper.create0(OpCodes.OP_PUSH_THIS, thisKeyword.firstToken, null);
         }
 
-        private static ByteCodeBuffer serializeTypeOf(Expression typeOfExpr)
+        private static ByteCodeBuffer serializeTypeOf(StaticContext staticCtx, Expression typeOfExpr)
         {
-            ByteCodeBuffer root = serializeExpression(typeOfExpr.root);
+            ByteCodeBuffer root = serializeExpression(staticCtx, typeOfExpr.root);
             return FunctionWrapper.join2(
                 root,
                 FunctionWrapper.create0(OpCodes.OP_TYPEOF, typeOfExpr.firstToken, null));
@@ -399,7 +398,7 @@ namespace CommonScript.Compiler
 
         private static ByteCodeBuffer serializeVariable(Expression v)
         {
-            if (v.strVal == "print") throw new InvalidOperationException();
+            if (v.strVal == "print") FunctionWrapper.fail("");
             return FunctionWrapper.create0(OpCodes.OP_PUSH_VAR, v.firstToken, v.strVal);
         }
     }
