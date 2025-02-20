@@ -53,8 +53,8 @@ namespace CommonScript.Compiler
 
         private static ByteCodeBuffer serializeAssignVariable(StaticContext staticCtx, Statement assignVar, string baseOp)
         {
-            ByteCodeBuffer bufVal = ExpressionSerializer.serializeExpression(staticCtx, assignVar.assignValue);
-            ByteCodeBuffer bufVar = ExpressionSerializer.serializeExpression(staticCtx, assignVar.assignTarget);
+            ByteCodeBuffer bufVal = FunctionWrapper.serializeExpression(staticCtx, assignVar.assignValue);
+            ByteCodeBuffer bufVar = FunctionWrapper.serializeExpression(staticCtx, assignVar.assignTarget);
             if (baseOp != "=")
             {
                 bufVal = FunctionWrapper.join3(
@@ -71,9 +71,9 @@ namespace CommonScript.Compiler
         private static ByteCodeBuffer serializeAssignIndex(StaticContext staticCtx, Statement assignIndex, string baseOp)
         {
             Token bracketToken = assignIndex.assignTarget.opToken;
-            ByteCodeBuffer bufVal = ExpressionSerializer.serializeExpression(staticCtx, assignIndex.assignValue);
-            ByteCodeBuffer bufIndex = ExpressionSerializer.serializeExpression(staticCtx, assignIndex.assignTarget.right);
-            ByteCodeBuffer bufRoot = ExpressionSerializer.serializeExpression(staticCtx, assignIndex.assignTarget.root);
+            ByteCodeBuffer bufVal = FunctionWrapper.serializeExpression(staticCtx, assignIndex.assignValue);
+            ByteCodeBuffer bufIndex = FunctionWrapper.serializeExpression(staticCtx, assignIndex.assignTarget.right);
+            ByteCodeBuffer bufRoot = FunctionWrapper.serializeExpression(staticCtx, assignIndex.assignTarget.root);
             if (baseOp != "=")
             {
                 ByteCodeBuffer incrBuf = FunctionWrapper.join3(
@@ -100,8 +100,8 @@ namespace CommonScript.Compiler
         {
             Expression df = assignField.assignTarget;
             string fieldName = df.strVal;
-            ByteCodeBuffer bufVal = ExpressionSerializer.serializeExpression(staticCtx, assignField.assignValue);
-            ByteCodeBuffer bufRoot = ExpressionSerializer.serializeExpression(staticCtx, df.root);
+            ByteCodeBuffer bufVal = FunctionWrapper.serializeExpression(staticCtx, assignField.assignValue);
+            ByteCodeBuffer bufRoot = FunctionWrapper.serializeExpression(staticCtx, df.root);
             if (baseOp != "=")
             {
                 ByteCodeBuffer incrBuf = FunctionWrapper.join2(
@@ -137,7 +137,7 @@ namespace CommonScript.Compiler
         private static ByteCodeBuffer serializeDoWhileLoop(StaticContext staticCtx, Statement doWhileLoop)
         {
             ByteCodeBuffer body = serializeCodeBlock(staticCtx, doWhileLoop.code);
-            ByteCodeBuffer condition = FunctionWrapper.ByteCodeUtil_ensureBooleanExpression(doWhileLoop.condition.firstToken, ExpressionSerializer.serializeExpression(staticCtx, doWhileLoop.condition));
+            ByteCodeBuffer condition = FunctionWrapper.ByteCodeUtil_ensureBooleanExpression(doWhileLoop.condition.firstToken, FunctionWrapper.serializeExpression(staticCtx, doWhileLoop.condition));
             return FunctionWrapper.join4(
                 finalizeBreakContinue(body, condition.length + 2, true, 0),
                 condition,
@@ -148,7 +148,7 @@ namespace CommonScript.Compiler
         private static ByteCodeBuffer serializeExpressionStatement(StaticContext staticCtx, Statement exprStmnt)
         {
             return FunctionWrapper.join2(
-                ExpressionSerializer.serializeExpression(staticCtx, exprStmnt.expression),
+                FunctionWrapper.serializeExpression(staticCtx, exprStmnt.expression),
                 FunctionWrapper.create0(OpCodes.OP_POP, null, null)
             );
         }
@@ -163,7 +163,7 @@ namespace CommonScript.Compiler
             ByteCodeBuffer bufInit = serializeCodeBlock(staticCtx, init);
             ByteCodeBuffer bufStep = serializeCodeBlock(staticCtx, step);
             ByteCodeBuffer bufBody = serializeCodeBlock(staticCtx, code);
-            ByteCodeBuffer bufCondition = ExpressionSerializer.serializeExpression(staticCtx, condition);
+            ByteCodeBuffer bufCondition = FunctionWrapper.serializeExpression(staticCtx, condition);
 
             bufCondition = FunctionWrapper.ByteCodeUtil_ensureBooleanExpression(condition.firstToken, bufCondition);
 
@@ -188,7 +188,7 @@ namespace CommonScript.Compiler
             string iteratorVar = "@fi" + forEachLoop.autoId;
 
             ByteCodeBuffer setup = FunctionWrapper.join5(
-                ExpressionSerializer.serializeExpression(staticCtx, forEachLoop.expression),
+                FunctionWrapper.serializeExpression(staticCtx, forEachLoop.expression),
                 FunctionWrapper.create0(OpCodes.OP_ENSURE_LIST, forEachLoop.expression.firstToken, null),
                 FunctionWrapper.create0(OpCodes.OP_ASSIGN_VAR, null, loopExpr),
                 FunctionWrapper.create1(OpCodes.OP_PUSH_INT, null, null, 0),
@@ -241,7 +241,7 @@ namespace CommonScript.Compiler
             Statement[] ifCode = ifStmnt.code;
             Statement[] elseCode = ifStmnt.elseCode; // if not present, it's an empty array, not null
 
-            ByteCodeBuffer buf = ExpressionSerializer.serializeExpression(staticCtx, condition);
+            ByteCodeBuffer buf = FunctionWrapper.serializeExpression(staticCtx, condition);
             ByteCodeBuffer bufTrue = serializeCodeBlock(staticCtx, ifCode);
             ByteCodeBuffer bufFalse = serializeCodeBlock(staticCtx, elseCode);
             buf = FunctionWrapper.ByteCodeUtil_ensureBooleanExpression(condition.firstToken, buf);
@@ -291,7 +291,7 @@ namespace CommonScript.Compiler
             }
             else
             {
-                buf = ExpressionSerializer.serializeExpression(staticCtx, ret.expression);
+                buf = FunctionWrapper.serializeExpression(staticCtx, ret.expression);
             }
             return FunctionWrapper.join2(buf, FunctionWrapper.create0(OpCodes.OP_RETURN, ret.firstToken, null));
         }
@@ -302,7 +302,7 @@ namespace CommonScript.Compiler
             if (switchStmnt.switchChunks.Length == 0)
             {
                 return FunctionWrapper.join3(
-                    ExpressionSerializer.serializeExpression(staticCtx, switchStmnt.condition),
+                    FunctionWrapper.serializeExpression(staticCtx, switchStmnt.condition),
                     FunctionWrapper.create0(OpCodes.OP_ENSURE_INT_OR_STRING, switchStmnt.condition.firstToken, null),
                     FunctionWrapper.create0(OpCodes.OP_POP, null, null));
             }
@@ -326,7 +326,7 @@ namespace CommonScript.Compiler
             }
 
             ByteCodeBuffer condBuf = FunctionWrapper.join2(
-                ExpressionSerializer.serializeExpression(staticCtx, switchStmnt.condition),
+                FunctionWrapper.serializeExpression(staticCtx, switchStmnt.condition),
                 FunctionWrapper.create0(conditionTypeEnsuranceOpCode, switchStmnt.condition.firstToken, null));
 
             ByteCodeBuffer caseBuf = null;
@@ -476,7 +476,7 @@ namespace CommonScript.Compiler
         private static ByteCodeBuffer serializeThrowStatement(StaticContext staticCtx, Statement thrw)
         {
             return FunctionWrapper.join2(
-                ExpressionSerializer.serializeExpression(staticCtx, thrw.expression),
+                FunctionWrapper.serializeExpression(staticCtx, thrw.expression),
                 FunctionWrapper.create0(OpCodes.OP_THROW, thrw.firstToken, null));
         }
 
@@ -565,7 +565,7 @@ namespace CommonScript.Compiler
 
         private static ByteCodeBuffer serializeWhileLoop(StaticContext staticCtx, Statement whileLoop)
         {
-            ByteCodeBuffer condBuf = ExpressionSerializer.serializeExpression(staticCtx, whileLoop.condition);
+            ByteCodeBuffer condBuf = FunctionWrapper.serializeExpression(staticCtx, whileLoop.condition);
             condBuf = FunctionWrapper.ByteCodeUtil_ensureBooleanExpression(whileLoop.condition.firstToken, condBuf);
             ByteCodeBuffer loopBody = serializeCodeBlock(staticCtx, whileLoop.code);
             return FunctionWrapper.join4(

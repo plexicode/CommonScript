@@ -1,0 +1,21 @@
+ByteCodeBuffer serializeSpecialAction(StaticContext staticCtx, Expression action) {
+    ByteCodeBuffer argBuffer = null;
+    int argc = action.args.Size();
+    for (int i = 0; i < argc; i++) {
+        argBuffer = join2(argBuffer, serializeExpression(staticCtx, action.args[i]));
+    }
+
+    if (action.strVal == "math_floor") {
+        // Uses a specific op code for speed, rather than a special action nested op code.
+        return join2(argBuffer, create0(OP_MATH_FLOOR, action.firstToken, null));
+    }
+    
+    if (action.strVal == "unix_time") {
+        // return the arg as a hard-coded op, discard the arg buffer.
+        return create2(OP_SPECIAL_ACTION, null, null, SpecialActionCodes.UNIX_TIME, action.args[0].intVal);
+    }
+    
+    int specialActionOpCode = SpecialActionUtil_GetSpecialActionOpCode(staticCtx.specialActionUtil, action.strVal);
+    ByteCodeBuffer actionBuf = create1(OP_SPECIAL_ACTION, null, null, specialActionOpCode);    
+    return join2(argBuffer, actionBuf);
+}

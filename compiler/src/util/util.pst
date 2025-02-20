@@ -1,0 +1,9 @@
+string FloatToStringWorkaround(double val) {
+    string str = Core.FloatToString(val);
+    // This is a Pastel bug. .0 is being appended when '.' is not included.
+    str = str.ToLower();
+    if (str.Contains("e") && str.EndsWith(".0")) {
+        str = str.SubString(0, str.Size() - 2).Replace("e", ".0e");
+    }
+    return str;
+}

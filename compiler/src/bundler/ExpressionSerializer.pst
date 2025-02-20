@@ -1,0 +1,449 @@
+ByteCodeBuffer serializeExpression(StaticContext staticCtx, Expression expr) {
+    switch (expr.type) {
+        // These should have been resolved out with proper errors thrown before this point.
+        case ExpressionType.EXTENSION_REFERENCE:
+            fail("");
+            return null;
+
+        case ExpressionType.BASE_CTOR_REFERENCE: return serializeBaseCtorReference(expr);
+        case ExpressionType.BINARY_OP: return serializeBinaryOp(staticCtx, expr);
+        case ExpressionType.BITWISE_NOT: return serializeBitwiseNot(staticCtx, expr);
+        case ExpressionType.BOOL_CONST: return serializeBoolConst(expr);
+        case ExpressionType.BOOLEAN_NOT: return serializeBooleanNot(staticCtx, expr);
+        case ExpressionType.CLASS_REFERENCE: return serializeClassReference(expr);
+        case ExpressionType.CONSTRUCTOR_INVOCATION: return serializeConstructorInvocation(staticCtx, expr);
+        case ExpressionType.DICTIONARY_DEFINITION: return serializeDictionaryDefinition(staticCtx, expr);
+        case ExpressionType.DOT_FIELD: return serializeDotField(staticCtx, expr);
+        case ExpressionType.EXTENSION_INVOCATION: return serializeExtensionInvocation(staticCtx, expr);
+        case ExpressionType.FLOAT_CONST: return serializeFloatConstant(expr);
+        case ExpressionType.FUNCTION_INVOKE: return serializeFunctionInvocation(staticCtx, expr);
+        case ExpressionType.FUNCTION_REFERENCE: return serializeFunctionReference(expr);
+        case ExpressionType.INDEX: return serializeIndex(staticCtx, expr);
+        case ExpressionType.INLINE_INCREMENT: return serializeInlineIncrement(staticCtx, expr);
+        case ExpressionType.INTEGER_CONST: return serializeIntegerConstant(expr);
+        case ExpressionType.LAMBDA: return serializeLambda(expr);
+        case ExpressionType.LIST_DEFINITION: return serializeListDefinition(staticCtx, expr);
+        case ExpressionType.NEGATIVE_SIGN: return serializeNegativeSign(staticCtx, expr);
+        case ExpressionType.NULL_CONST: return serializeNullConstant(expr);
+        case ExpressionType.SLICE: return serializeSlice(staticCtx, expr);
+        case ExpressionType.STRING_CONST: return serializeStringConstant(expr);
+        case ExpressionType.TERNARY: return serializeTernary(staticCtx, expr);
+        case ExpressionType.THIS: return serializeThis(expr);
+        case ExpressionType.TYPEOF: return serializeTypeOf(staticCtx, expr);
+        case ExpressionType.VARIABLE: return serializeVariable(expr);
+        default:
+            fail("Not implemented");
+            return null;
+    }
+}
+
+ByteCodeBuffer serializeBaseCtorReference(Expression baseCtor) {
+    AbstractEntity baseClass = baseCtor.entityPtr;
+    return create1(OP_PUSH_BASE_CTOR, baseCtor.firstToken, null, baseClass.serializationIndex);
+}
+
+ByteCodeBuffer serializeBinaryOp(StaticContext staticCtx, Expression binOp) {
+    Token opToken = binOp.opToken;
+    string op = opToken.Value;
+    Expression left = binOp.left;
+    Expression right = binOp.right;
+
+    ByteCodeBuffer leftBuf = serializeExpression(staticCtx, left);
+    ByteCodeBuffer rightBuf = serializeExpression(staticCtx, right);
+
+    if (op == "??") {
+        return join3(
+            leftBuf,
+            create1(OP_POP_IF_NULL_OR_JUMP, opToken, null, rightBuf.length),
+            rightBuf);
+    }
+
+    if (op == "&&" || op == "||") {
+        leftBuf = ByteCodeUtil_ensureBooleanExpression(left.firstToken, leftBuf);
+        rightBuf = ByteCodeUtil_ensureBooleanExpression(right.firstToken, rightBuf);
+
+        int opCode = OP_POP_IF_FALSE_OR_JUMP;
+        if (op == "&&") opCode = OP_POP_IF_TRUE_OR_JUMP;
+
+        return join3(
+            leftBuf,
+            create1(
+                opCode,
+                null, null, rightBuf.length),
+            rightBuf);
+    }
+
+    return join3(
+        leftBuf,
+        rightBuf,
+        create0(OP_BIN_OP, opToken, op)
+    );
+}
+
+ByteCodeBuffer serializeDotField(StaticContext staticCtx, Expression df) {
+    return join2(
+        serializeExpression(staticCtx, df.root),
+        create0(OP_DOT_FIELD, df.opToken, df.strVal));
+}
+
+ByteCodeBuffer serializeExtensionInvocation(StaticContext staticCtx, Expression extInvoke) {
+    if (SpecialActionUtil_IsSpecialActionAndNotExtension(staticCtx.specialActionUtil, extInvoke.strVal)) {
+        return serializeSpecialAction(staticCtx, extInvoke);
+    }
+
+    ByteCodeBuffer buf = null;
+    int argc = extInvoke.args.Size();
+    for (int i = 0; i < argc; i++) {
+        buf = join2(buf, serializeExpression(staticCtx, extInvoke.args[i]));
+    }
+
+    return join2(
+        buf,
+        create1(OP_EXT_INVOKE, extInvoke.firstToken, extInvoke.strVal, argc));
+}
+
+ByteCodeBuffer serializeBitwiseNot(StaticContext staticCtx, Expression bwn) {
+    return join2(
+        ByteCodeUtil_ensureIntegerExpression(bwn.root.firstToken, serializeExpression(staticCtx, bwn.root)),
+        create0(OP_BITWISE_NOT, bwn.firstToken, null));
+}
+
+ByteCodeBuffer serializeBoolConst(Expression bc) {
+    int boolVal = 0;
+    if (bc.boolVal) boolVal = 1;
+
+    return create1(OP_PUSH_BOOL, bc.firstToken, null, boolVal);
+}
+
+ByteCodeBuffer serializeBooleanNot(StaticContext staticCtx, Expression bn) {
+    // OP_BOOLEAN_NOT includes assertions for a boolean value, so ensureBooleanExpression is not needed here.
+    // ! unary op is unlikely to be used in expressions that are verifiable as boolean at compile time, so it's faster to just bundle them together.
+    return join2(
+        serializeExpression(staticCtx, bn.root),
+        create0(OP_BOOLEAN_NOT, bn.firstToken, null));
+}
+
+ByteCodeBuffer serializeClassReference(Expression classRef) {
+    return create1(OP_PUSH_CLASS_REF, classRef.firstToken, null, classRef.entityPtr.serializationIndex);
+}
+
+ByteCodeBuffer serializeConstructorInvocation(StaticContext staticCtx, Expression ctorInvoke) {
+    AbstractEntity classDef = ctorInvoke.entityPtr;
+    ByteCodeBuffer buf = null;
+    int argc = ctorInvoke.args.Size();
+    for (int i = 0; i < argc; i += 1) {
+        buf = join2(buf, serializeExpression(staticCtx, ctorInvoke.args[i]));
+    }
+
+    return join3(
+        create1(OP_CTOR_REF, ctorInvoke.firstToken, null, classDef.serializationIndex),
+        buf,
+        create1(OP_FUNCTION_INVOKE, ctorInvoke.opToken, null, argc));
+}
+
+ByteCodeBuffer serializeDictionaryDefinition(StaticContext staticCtx, Expression dictDef) {
+    int sz = dictDef.keys.Size();
+    ByteCodeBuffer buf = null;
+    for (int i = 0; i < sz; i += 1) {
+        buf = join3(
+            buf,
+            serializeExpression(staticCtx, dictDef.keys[i]),
+            serializeExpression(staticCtx, dictDef.values[i]));
+    }
+
+    return join2(
+        buf,
+        create1(OP_BUILD_DICT, dictDef.firstToken, null, sz));
+}
+
+ByteCodeBuffer serializeFloatConstant(Expression floatConst) {
+    double val = floatConst.floatVal;
+    if (val * 4 % 1 == 0) {
+        return create1(OP_PUSH_FLOAT, null, null, (int)(val * 4));
+    }
+    return create0(OP_PUSH_FLOAT, null, FloatToStringWorkaround(val));
+}
+
+ByteCodeBuffer serializeFunctionInvocation(StaticContext staticCtx, Expression funcInvoke) {
+    ByteCodeBuffer buf = serializeExpression(staticCtx, funcInvoke.root);
+    int argc = funcInvoke.args.Size();
+    for (int i = 0; i < argc; i += 1) {
+        buf = join2(buf, serializeExpression(staticCtx, funcInvoke.args[i]));
+    }
+
+    return join2(
+        buf,
+        create1(OP_FUNCTION_INVOKE, funcInvoke.opToken, null, argc));
+}
+
+ByteCodeBuffer serializeFunctionReference(Expression funcRef) {
+    AbstractEntity funcDef = (AbstractEntity) funcRef.entityPtr;
+    int index = funcDef.serializationIndex;
+    if (index == -1) fail("");
+    return create1(OP_PUSH_FUNC_PTR, funcRef.firstToken, null, index);
+}
+
+ByteCodeBuffer serializeIndex(StaticContext staticCtx, Expression index) {
+    return join3(
+        serializeExpression(staticCtx, index.root),
+        serializeExpression(staticCtx, index.right),
+        create0(OP_INDEX, index.opToken, null)
+    );
+}
+
+ByteCodeBuffer serializeInlineIncrement(StaticContext staticCtx, Expression ii) {
+    switch (ii.root.type) {
+        case ExpressionType.VARIABLE: return serializeInlineIncrementVar(staticCtx, ii);
+        case ExpressionType.INDEX: return serializeInlineIncrementIndex(staticCtx, ii);
+        case ExpressionType.DOT_FIELD: return serializeInlineIncrementDotField(staticCtx, ii);
+    }
+    fail(""); // should have been caught before now.
+    return null;
+}
+
+ByteCodeBuffer serializeInlineIncrementVar(StaticContext staticCtx, Expression ii) {
+    // TODO: expression as statement -- remove duplication and pop.
+
+    bool isPrefix = ii.boolVal;
+
+    int incrAmt = 1;
+    if (ii.opToken.Value == "--") incrAmt = -1;
+
+    if (isPrefix) {
+        return join4(
+            serializeExpression(staticCtx, ii.root),
+            create1(OP_INT_INCR, ii.opToken, null, incrAmt),
+            create0(OP_STACK_DUPLICATE, null, null),
+            create0(OP_ASSIGN_VAR, null, ii.root.strVal)
+        );
+    } else { // suffix
+        return join4(
+            serializeExpression(staticCtx, ii.root),
+            create0(OP_STACK_DUPLICATE, null, null),
+            create1(OP_INT_INCR, ii.opToken, null, incrAmt),
+            create0(OP_ASSIGN_VAR, null, ii.root.strVal)
+        );
+    }
+}
+
+ByteCodeBuffer serializeInlineIncrementDotField(StaticContext staticCtx, Expression ii) {
+    bool isPrefix = ii.boolVal;
+    ByteCodeBuffer root = serializeExpression(staticCtx, ii.root.root);
+
+    int incrAmt = 1;
+    if (ii.opToken.Value == "--") incrAmt = -1;
+
+    // Interleaved comments indicate what the value stack looks like between each step.
+
+    ByteCodeBuffer buf = root;
+
+    // [root]
+
+    buf = join2(buf,
+        create0(OP_STACK_DUPLICATE, null, null));
+
+    // [root, root]
+
+    buf = join2(buf,
+        create0(OP_DOT_FIELD, ii.root.opToken, ii.root.strVal));
+
+    // [root, originalValue]
+
+    if (isPrefix) {
+
+        buf = join2(buf,
+            create1(OP_INT_INCR, ii.opToken, null, incrAmt));
+
+        // [root, return/finalValue]
+
+        buf = join2(buf,
+            create0(OP_STACK_DO_SI_DUP_1, null, null));
+
+        // [returnValue, finalValue, root]
+
+    } else {
+
+        buf = join2(buf,
+            create0(OP_STACK_DUPLICATE, null, null));
+
+        // [root, returnValue, originalValue]
+
+        buf = join2(buf,
+            create1(OP_INT_INCR, ii.opToken, null, incrAmt));
+
+        // [root, returnValue, finalValue]
+
+        buf = join2(buf,
+            create0(OP_STACK_DO_SI_DUP_2, null, null));
+
+        // [returnValue, finalValue, root]
+    }
+
+    buf = join2(buf,
+        create0(OP_ASSIGN_FIELD, ii.opToken, ii.root.strVal));
+
+    // [returnValue]
+
+    return buf;
+}
+
+ByteCodeBuffer serializeInlineIncrementIndex(StaticContext staticCtx, Expression ii) {
+    bool isPrefix = ii.boolVal;
+
+    ByteCodeBuffer root = serializeExpression(staticCtx, ii.root.root);
+    ByteCodeBuffer index = serializeExpression(staticCtx, ii.root.right);
+
+    int incrAmt = 1;
+    if (ii.opToken.Value == "--") incrAmt = -1;
+
+    // Interleaved comments indicate what the value stack looks like between each step.
+
+    ByteCodeBuffer buf = join2(root, index);
+
+    // [root, index]
+
+    buf = join2(buf,
+        create0(OP_STACK_DUPLICATE_2, null, null));
+
+    // [root, index, root, index]
+
+    buf = join2(buf,
+        create0(OP_INDEX, ii.root.opToken, null));
+
+    // [root, index, value]
+
+    if (isPrefix) {
+
+        buf = join2(buf,
+            create1(OP_INT_INCR, ii.opToken, null, incrAmt));
+
+        // [root, index, value + 1]
+
+        buf = join2(buf,
+            create0(OP_STACK_DUPLICATE, null, null));
+
+        // [root, index, returnValue, value + 1]
+
+    } else {
+        buf = join2(buf,
+            create0(OP_STACK_DUPLICATE, null, null));
+
+        // [root, index, returnValue, value]
+
+        buf = join2(buf,
+            create1(OP_INT_INCR, ii.opToken, null, incrAmt));
+
+        // [root, index, returnValue, value + 1]
+    }
+
+    buf = join2(buf,
+        create0(OP_STACK_DO_SI_DO_4A, null, null));
+
+    // [returnValue, value+1, root, index]
+
+    buf = join2(buf,
+        create0(OP_ASSIGN_INDEX, ii.root.opToken, null));
+
+    // [returnValue]
+
+    return buf;
+}
+
+ByteCodeBuffer serializeIntegerConstant(Expression intConst) {
+    return create1(OP_PUSH_INT, intConst.firstToken, null, intConst.intVal);
+}
+
+ByteCodeBuffer serializeLambda(Expression lambda) {
+    FunctionEntity lambdaEntity = (FunctionEntity) lambda.entityPtr.specificData;
+    return create1(OP_PUSH_LAMBDA, lambda.firstToken, null, lambdaEntity.baseData.serializationIndex);
+}
+
+ByteCodeBuffer serializeListDefinition(StaticContext staticCtx, Expression listDef) {
+    ByteCodeBuffer buf = null;
+    int sz = listDef.values.Size();
+    for (int i = 0; i < sz; i += 1) {
+        buf = join2(buf, serializeExpression(staticCtx, listDef.values[i]));
+    }
+
+    return join2(
+        buf,
+        create1(OP_BUILD_LIST, listDef.firstToken, null, sz));
+}
+
+ByteCodeBuffer serializeNegativeSign(StaticContext staticCtx, Expression negSign) {
+    return join2(
+        serializeExpression(staticCtx, negSign.root),
+        create0(OP_NEGATIVE_SIGN, negSign.opToken, null)
+    );
+}
+
+ByteCodeBuffer serializeNullConstant(Expression nullConst) {
+    return create0(OP_PUSH_NULL, nullConst.firstToken, null);
+}
+
+ByteCodeBuffer serializeSlice(StaticContext staticCtx, Expression slice) {
+    Expression start = slice.args[0];
+    Expression end = slice.args[1];
+    Expression step = slice.args[2];
+    int sliceMask = 0;
+
+    ByteCodeBuffer rootBuf = serializeExpression(staticCtx, slice.root);
+    ByteCodeBuffer startBuf = null;
+    ByteCodeBuffer endBuf = null;
+    ByteCodeBuffer stepBuf = null;
+    if (start != null) {
+        sliceMask += 1;
+        startBuf = ByteCodeUtil_ensureIntegerExpression(start.firstToken, serializeExpression(staticCtx, start));
+    }
+
+    if (end != null) {
+        sliceMask += 2;
+        endBuf = ByteCodeUtil_ensureIntegerExpression(end.firstToken, serializeExpression(staticCtx, end));
+    }
+
+    if (step != null) {
+        sliceMask += 4;
+        stepBuf = ByteCodeUtil_ensureIntegerExpression(step.firstToken, serializeExpression(staticCtx, step));
+    }
+
+    return join5(
+        rootBuf,
+        startBuf,
+        endBuf,
+        stepBuf,
+        create1(OP_SLICE, slice.opToken, null, sliceMask));
+}
+
+ByteCodeBuffer serializeStringConstant(Expression strConst) {
+    return create0(OP_PUSH_STRING, strConst.firstToken, strConst.strVal);
+}
+
+ByteCodeBuffer serializeTernary(StaticContext staticCtx, Expression ternaryExpression) {
+    ByteCodeBuffer condBuf = serializeExpression(staticCtx, ternaryExpression.root);
+    ByteCodeBuffer leftBuf = serializeExpression(staticCtx, ternaryExpression.left);
+    ByteCodeBuffer rightBuf = serializeExpression(staticCtx, ternaryExpression.right);
+    condBuf = ByteCodeUtil_ensureBooleanExpression(ternaryExpression.opToken, condBuf);
+
+    return join5(
+        condBuf,
+        create1(OP_POP_AND_JUMP_IF_FALSE, null, null, leftBuf.length + 1),
+        leftBuf,
+        create1(OP_JUMP, null, null, rightBuf.length),
+        rightBuf);
+}
+
+ByteCodeBuffer serializeThis(Expression thisKeyword) {
+    return create0(OP_PUSH_THIS, thisKeyword.firstToken, null);
+}
+
+ByteCodeBuffer serializeTypeOf(StaticContext staticCtx, Expression typeOfExpr) {
+    ByteCodeBuffer root = serializeExpression(staticCtx, typeOfExpr.root);
+    return join2(
+        root,
+        create0(OP_TYPEOF, typeOfExpr.firstToken, null));
+}
+
+ByteCodeBuffer serializeVariable(Expression v) {
+    if (v.strVal == "print") fail("");
+    return create0(OP_PUSH_VAR, v.firstToken, v.strVal);
+}

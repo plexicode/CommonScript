@@ -11,6 +11,14 @@ namespace CommonScript.Compiler.Internal
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         private static Dictionary<string, System.Func<object[], object>> PST_ExtCallbacks = new Dictionary<string, System.Func<object[], object>>();
 
+        private static string PST_FloatToString(double value)
+        {
+            string output = value.ToString();
+            if (output[0] == '.') output = "0" + output;
+            if (!output.Contains('.')) output += ".0";
+            return output;
+        }
+
         private static int[] PST_stringToUtf8Bytes(string str)
         {
             byte[] bytes = System.Text.Encoding.UTF8.GetBytes(str);
@@ -748,6 +756,17 @@ namespace CommonScript.Compiler.Internal
             return output.ToArray();
         }
 
+        public static string FloatToStringWorkaround(double val)
+        {
+            string str = PST_FloatToString(val);
+            str = str.ToLower();
+            if (str.Contains("e") && str.EndsWith(".0"))
+            {
+                str = str.Substring(0, str.Length - 2).Replace("e", ".0e");
+            }
+            return str;
+        }
+
         public static FunctionEntity FunctionEntity_BuildConstructor(Token ctorToken, System.Collections.Generic.List<Token> args, System.Collections.Generic.List<Expression> argDefaultValues, System.Collections.Generic.List<Expression> baseArgs, System.Collections.Generic.List<Statement> code, bool isStatic)
         {
             FunctionEntity fle = FunctionEntity_new(ctorToken, 3, args, argDefaultValues, code);
@@ -994,6 +1013,423 @@ namespace CommonScript.Compiler.Internal
             ns.baseData.simpleName = nameToken.Value;
             ns.baseData.fqName = fqName;
             return ns;
+        }
+
+        public static ByteCodeBuffer serializeBaseCtorReference(Expression baseCtor)
+        {
+            AbstractEntity baseClass = baseCtor.entityPtr;
+            return create1(35, baseCtor.firstToken, null, baseClass.serializationIndex);
+        }
+
+        public static ByteCodeBuffer serializeBinaryOp(StaticContext staticCtx, Expression binOp)
+        {
+            Token opToken = binOp.opToken;
+            string op = opToken.Value;
+            Expression left = binOp.left;
+            Expression right = binOp.right;
+            ByteCodeBuffer leftBuf = serializeExpression(staticCtx, left);
+            ByteCodeBuffer rightBuf = serializeExpression(staticCtx, right);
+            if (op == "??")
+            {
+                return join3(leftBuf, create1(31, opToken, null, rightBuf.length), rightBuf);
+            }
+            if (op == "&&" || op == "||")
+            {
+                leftBuf = ByteCodeUtil_ensureBooleanExpression(left.firstToken, leftBuf);
+                rightBuf = ByteCodeUtil_ensureBooleanExpression(right.firstToken, rightBuf);
+                int opCode = 30;
+                if (op == "&&")
+                {
+                    opCode = 32;
+                }
+                return join3(leftBuf, create1(opCode, null, null, rightBuf.length), rightBuf);
+            }
+            return join3(leftBuf, rightBuf, create0(4, opToken, op));
+        }
+
+        public static ByteCodeBuffer serializeBitwiseNot(StaticContext staticCtx, Expression bwn)
+        {
+            return join2(ByteCodeUtil_ensureIntegerExpression(bwn.root.firstToken, serializeExpression(staticCtx, bwn.root)), create0(10, bwn.firstToken, null));
+        }
+
+        public static ByteCodeBuffer serializeBoolConst(Expression bc)
+        {
+            int boolVal = 0;
+            if (bc.boolVal)
+            {
+                boolVal = 1;
+            }
+            return create1(36, bc.firstToken, null, boolVal);
+        }
+
+        public static ByteCodeBuffer serializeBooleanNot(StaticContext staticCtx, Expression bn)
+        {
+            return join2(serializeExpression(staticCtx, bn.root), create0(11, bn.firstToken, null));
+        }
+
+        public static ByteCodeBuffer serializeClassReference(Expression classRef)
+        {
+            return create1(37, classRef.firstToken, null, classRef.entityPtr.serializationIndex);
+        }
+
+        public static ByteCodeBuffer serializeConstructorInvocation(StaticContext staticCtx, Expression ctorInvoke)
+        {
+            AbstractEntity classDef = ctorInvoke.entityPtr;
+            ByteCodeBuffer buf = null;
+            int argc = ctorInvoke.args.Length;
+            int i = 0;
+            while (i < argc)
+            {
+                buf = join2(buf, serializeExpression(staticCtx, ctorInvoke.args[i]));
+                i += 1;
+            }
+            return join3(create1(14, ctorInvoke.firstToken, null, classDef.serializationIndex), buf, create1(21, ctorInvoke.opToken, null, argc));
+        }
+
+        public static ByteCodeBuffer serializeDictionaryDefinition(StaticContext staticCtx, Expression dictDef)
+        {
+            int sz = dictDef.keys.Length;
+            ByteCodeBuffer buf = null;
+            int i = 0;
+            while (i < sz)
+            {
+                buf = join3(buf, serializeExpression(staticCtx, dictDef.keys[i]), serializeExpression(staticCtx, dictDef.values[i]));
+                i += 1;
+            }
+            return join2(buf, create1(13, dictDef.firstToken, null, sz));
+        }
+
+        public static ByteCodeBuffer serializeDotField(StaticContext staticCtx, Expression df)
+        {
+            return join2(serializeExpression(staticCtx, df.root), create0(15, df.opToken, df.strVal));
+        }
+
+        public static ByteCodeBuffer serializeExpression(StaticContext staticCtx, Expression expr)
+        {
+            switch (expr.type)
+            {
+                case 15:
+                    fail("");
+                    return null;
+                case 2:
+                    return serializeBaseCtorReference(expr);
+                case 3:
+                    return serializeBinaryOp(staticCtx, expr);
+                case 4:
+                    return serializeBitwiseNot(staticCtx, expr);
+                case 5:
+                    return serializeBoolConst(expr);
+                case 6:
+                    return serializeBooleanNot(staticCtx, expr);
+                case 7:
+                    return serializeClassReference(expr);
+                case 8:
+                    return serializeConstructorInvocation(staticCtx, expr);
+                case 10:
+                    return serializeDictionaryDefinition(staticCtx, expr);
+                case 11:
+                    return serializeDotField(staticCtx, expr);
+                case 14:
+                    return serializeExtensionInvocation(staticCtx, expr);
+                case 16:
+                    return serializeFloatConstant(expr);
+                case 17:
+                    return serializeFunctionInvocation(staticCtx, expr);
+                case 18:
+                    return serializeFunctionReference(expr);
+                case 20:
+                    return serializeIndex(staticCtx, expr);
+                case 21:
+                    return serializeInlineIncrement(staticCtx, expr);
+                case 22:
+                    return serializeIntegerConstant(expr);
+                case 23:
+                    return serializeLambda(expr);
+                case 24:
+                    return serializeListDefinition(staticCtx, expr);
+                case 25:
+                    return serializeNegativeSign(staticCtx, expr);
+                case 26:
+                    return serializeNullConstant(expr);
+                case 27:
+                    return serializeSlice(staticCtx, expr);
+                case 28:
+                    return serializeStringConstant(expr);
+                case 29:
+                    return serializeTernary(staticCtx, expr);
+                case 30:
+                    return serializeThis(expr);
+                case 33:
+                    return serializeTypeOf(staticCtx, expr);
+                case 31:
+                    return serializeVariable(expr);
+                default:
+                    fail("Not implemented");
+                    return null;
+            }
+        }
+
+        public static ByteCodeBuffer serializeExtensionInvocation(StaticContext staticCtx, Expression extInvoke)
+        {
+            if (SpecialActionUtil_IsSpecialActionAndNotExtension(staticCtx.specialActionUtil, extInvoke.strVal))
+            {
+                return serializeSpecialAction(staticCtx, extInvoke);
+            }
+            ByteCodeBuffer buf = null;
+            int argc = extInvoke.args.Length;
+            int i = 0;
+            while (i < argc)
+            {
+                buf = join2(buf, serializeExpression(staticCtx, extInvoke.args[i]));
+                i++;
+            }
+            return join2(buf, create1(20, extInvoke.firstToken, extInvoke.strVal, argc));
+        }
+
+        public static ByteCodeBuffer serializeFloatConstant(Expression floatConst)
+        {
+            double val = floatConst.floatVal;
+            if (val * 4 % 1 == 0)
+            {
+                return create1(38, null, null, (int)(val * 4));
+            }
+            return create0(38, null, FloatToStringWorkaround(val));
+        }
+
+        public static ByteCodeBuffer serializeFunctionInvocation(StaticContext staticCtx, Expression funcInvoke)
+        {
+            ByteCodeBuffer buf = serializeExpression(staticCtx, funcInvoke.root);
+            int argc = funcInvoke.args.Length;
+            int i = 0;
+            while (i < argc)
+            {
+                buf = join2(buf, serializeExpression(staticCtx, funcInvoke.args[i]));
+                i += 1;
+            }
+            return join2(buf, create1(21, funcInvoke.opToken, null, argc));
+        }
+
+        public static ByteCodeBuffer serializeFunctionReference(Expression funcRef)
+        {
+            AbstractEntity funcDef = (AbstractEntity)funcRef.entityPtr;
+            int index = funcDef.serializationIndex;
+            if (index == -1)
+            {
+                fail("");
+            }
+            return create1(39, funcRef.firstToken, null, index);
+        }
+
+        public static ByteCodeBuffer serializeIndex(StaticContext staticCtx, Expression index)
+        {
+            return join3(serializeExpression(staticCtx, index.root), serializeExpression(staticCtx, index.right), create0(22, index.opToken, null));
+        }
+
+        public static ByteCodeBuffer serializeInlineIncrement(StaticContext staticCtx, Expression ii)
+        {
+            switch (ii.root.type)
+            {
+                case 31:
+                    return serializeInlineIncrementVar(staticCtx, ii);
+                case 20:
+                    return serializeInlineIncrementIndex(staticCtx, ii);
+                case 11:
+                    return serializeInlineIncrementDotField(staticCtx, ii);
+            }
+            fail("");
+            return null;
+        }
+
+        public static ByteCodeBuffer serializeInlineIncrementDotField(StaticContext staticCtx, Expression ii)
+        {
+            bool isPrefix = ii.boolVal;
+            ByteCodeBuffer root = serializeExpression(staticCtx, ii.root.root);
+            int incrAmt = 1;
+            if (ii.opToken.Value == "--")
+            {
+                incrAmt = -1;
+            }
+            ByteCodeBuffer buf = root;
+            buf = join2(buf, create0(52, null, null));
+            buf = join2(buf, create0(15, ii.root.opToken, ii.root.strVal));
+            if (isPrefix)
+            {
+                buf = join2(buf, create1(23, ii.opToken, null, incrAmt));
+                buf = join2(buf, create0(50, null, null));
+            }
+            else
+            {
+                buf = join2(buf, create0(52, null, null));
+                buf = join2(buf, create1(23, ii.opToken, null, incrAmt));
+                buf = join2(buf, create0(51, null, null));
+            }
+            buf = join2(buf, create0(1, ii.opToken, ii.root.strVal));
+            return buf;
+        }
+
+        public static ByteCodeBuffer serializeInlineIncrementIndex(StaticContext staticCtx, Expression ii)
+        {
+            bool isPrefix = ii.boolVal;
+            ByteCodeBuffer root = serializeExpression(staticCtx, ii.root.root);
+            ByteCodeBuffer index = serializeExpression(staticCtx, ii.root.right);
+            int incrAmt = 1;
+            if (ii.opToken.Value == "--")
+            {
+                incrAmt = -1;
+            }
+            ByteCodeBuffer buf = join2(root, index);
+            buf = join2(buf, create0(53, null, null));
+            buf = join2(buf, create0(22, ii.root.opToken, null));
+            if (isPrefix)
+            {
+                buf = join2(buf, create1(23, ii.opToken, null, incrAmt));
+                buf = join2(buf, create0(52, null, null));
+            }
+            else
+            {
+                buf = join2(buf, create0(52, null, null));
+                buf = join2(buf, create1(23, ii.opToken, null, incrAmt));
+            }
+            buf = join2(buf, create0(49, null, null));
+            buf = join2(buf, create0(2, ii.root.opToken, null));
+            return buf;
+        }
+
+        public static ByteCodeBuffer serializeInlineIncrementVar(StaticContext staticCtx, Expression ii)
+        {
+            bool isPrefix = ii.boolVal;
+            int incrAmt = 1;
+            if (ii.opToken.Value == "--")
+            {
+                incrAmt = -1;
+            }
+            if (isPrefix)
+            {
+                return join4(serializeExpression(staticCtx, ii.root), create1(23, ii.opToken, null, incrAmt), create0(52, null, null), create0(3, null, ii.root.strVal));
+            }
+            else
+            {
+                return join4(serializeExpression(staticCtx, ii.root), create0(52, null, null), create1(23, ii.opToken, null, incrAmt), create0(3, null, ii.root.strVal));
+            }
+        }
+
+        public static ByteCodeBuffer serializeIntegerConstant(Expression intConst)
+        {
+            return create1(40, intConst.firstToken, null, intConst.intVal);
+        }
+
+        public static ByteCodeBuffer serializeLambda(Expression lambda)
+        {
+            FunctionEntity lambdaEntity = (FunctionEntity)lambda.entityPtr.specificData;
+            return create1(63, lambda.firstToken, null, lambdaEntity.baseData.serializationIndex);
+        }
+
+        public static ByteCodeBuffer serializeListDefinition(StaticContext staticCtx, Expression listDef)
+        {
+            ByteCodeBuffer buf = null;
+            int sz = listDef.values.Length;
+            int i = 0;
+            while (i < sz)
+            {
+                buf = join2(buf, serializeExpression(staticCtx, listDef.values[i]));
+                i += 1;
+            }
+            return join2(buf, create1(12, listDef.firstToken, null, sz));
+        }
+
+        public static ByteCodeBuffer serializeNegativeSign(StaticContext staticCtx, Expression negSign)
+        {
+            return join2(serializeExpression(staticCtx, negSign.root), create0(26, negSign.opToken, null));
+        }
+
+        public static ByteCodeBuffer serializeNullConstant(Expression nullConst)
+        {
+            return create0(41, nullConst.firstToken, null);
+        }
+
+        public static ByteCodeBuffer serializeSlice(StaticContext staticCtx, Expression slice)
+        {
+            Expression start = slice.args[0];
+            Expression end = slice.args[1];
+            Expression step = slice.args[2];
+            int sliceMask = 0;
+            ByteCodeBuffer rootBuf = serializeExpression(staticCtx, slice.root);
+            ByteCodeBuffer startBuf = null;
+            ByteCodeBuffer endBuf = null;
+            ByteCodeBuffer stepBuf = null;
+            if (start != null)
+            {
+                sliceMask += 1;
+                startBuf = ByteCodeUtil_ensureIntegerExpression(start.firstToken, serializeExpression(staticCtx, start));
+            }
+            if (end != null)
+            {
+                sliceMask += 2;
+                endBuf = ByteCodeUtil_ensureIntegerExpression(end.firstToken, serializeExpression(staticCtx, end));
+            }
+            if (step != null)
+            {
+                sliceMask += 4;
+                stepBuf = ByteCodeUtil_ensureIntegerExpression(step.firstToken, serializeExpression(staticCtx, step));
+            }
+            return join5(rootBuf, startBuf, endBuf, stepBuf, create1(47, slice.opToken, null, sliceMask));
+        }
+
+        public static ByteCodeBuffer serializeSpecialAction(StaticContext staticCtx, Expression action)
+        {
+            ByteCodeBuffer argBuffer = null;
+            int argc = action.args.Length;
+            int i = 0;
+            while (i < argc)
+            {
+                argBuffer = join2(argBuffer, serializeExpression(staticCtx, action.args[i]));
+                i++;
+            }
+            if (action.strVal == "math_floor")
+            {
+                return join2(argBuffer, create0(25, action.firstToken, null));
+            }
+            if (action.strVal == "unix_time")
+            {
+                return create2(48, null, null, 1, action.args[0].intVal);
+            }
+            int specialActionOpCode = SpecialActionUtil_GetSpecialActionOpCode(staticCtx.specialActionUtil, action.strVal);
+            ByteCodeBuffer actionBuf = create1(48, null, null, specialActionOpCode);
+            return join2(argBuffer, actionBuf);
+        }
+
+        public static ByteCodeBuffer serializeStringConstant(Expression strConst)
+        {
+            return create0(42, strConst.firstToken, strConst.strVal);
+        }
+
+        public static ByteCodeBuffer serializeTernary(StaticContext staticCtx, Expression ternaryExpression)
+        {
+            ByteCodeBuffer condBuf = serializeExpression(staticCtx, ternaryExpression.root);
+            ByteCodeBuffer leftBuf = serializeExpression(staticCtx, ternaryExpression.left);
+            ByteCodeBuffer rightBuf = serializeExpression(staticCtx, ternaryExpression.right);
+            condBuf = ByteCodeUtil_ensureBooleanExpression(ternaryExpression.opToken, condBuf);
+            return join5(condBuf, create1(28, null, null, leftBuf.length + 1), leftBuf, create1(24, null, null, rightBuf.length), rightBuf);
+        }
+
+        public static ByteCodeBuffer serializeThis(Expression thisKeyword)
+        {
+            return create0(43, thisKeyword.firstToken, null);
+        }
+
+        public static ByteCodeBuffer serializeTypeOf(StaticContext staticCtx, Expression typeOfExpr)
+        {
+            ByteCodeBuffer root = serializeExpression(staticCtx, typeOfExpr.root);
+            return join2(root, create0(65, typeOfExpr.firstToken, null));
+        }
+
+        public static ByteCodeBuffer serializeVariable(Expression v)
+        {
+            if (v.strVal == "print")
+            {
+                fail("");
+            }
+            return create0(45, v.firstToken, v.strVal);
         }
 
         public static int SpecialActionUtil_GetSpecialActionArgc(SpecialActionUtil sau, string name)

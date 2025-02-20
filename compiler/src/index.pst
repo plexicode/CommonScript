@@ -8,6 +8,7 @@
 @import("util/StringSet.pst");
 @import("util/errors.pst");
 @import("util/unicode.pst");
+@import("util/util.pst");
 
 @import("CompiledModule.pst");
 @import("FileContext.pst");

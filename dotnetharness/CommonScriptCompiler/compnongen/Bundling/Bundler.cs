@@ -338,7 +338,7 @@ namespace CommonScript.Compiler
                 }
                 else
                 {
-                    ByteCodeBuffer defaultValBuffer = ExpressionSerializer.serializeExpression(staticCtx, argValue);
+                    ByteCodeBuffer defaultValBuffer = FunctionWrapper.serializeExpression(staticCtx, argValue);
                     argBuffer = FunctionWrapper.create2(OpCodes.OP_PUSH_ARG_IF_PRESENT, argToken, null, i, defaultValBuffer.length);
                     argBuffer = FunctionWrapper.join2(argBuffer, defaultValBuffer);
                 }

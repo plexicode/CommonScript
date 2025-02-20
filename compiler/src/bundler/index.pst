@@ -2,3 +2,5 @@
 @import("bundler/ByteCodeRow.pst");
 @import("bundler/ByteCodeUtil.pst");
 @import("bundler/CompilationBundle.pst");
+@import("bundler/ExpressionSerializer.pst");
+@import("bundler/SpecialActionSerializer.pst");
