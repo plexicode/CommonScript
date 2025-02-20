@@ -1,4 +1,8 @@
 
+// TODO: Pastel bug: negative signs aren't resolved as constant expressions
+const int OP_BREAK_DUMMY = 0-1;
+const int OP_CONTINUE_DUMMY = 0-2;
+
 const int OP_ASSIGN_FIELD = 1;
 const int OP_ASSIGN_INDEX = 2;
 const int OP_ASSIGN_VAR = 3;

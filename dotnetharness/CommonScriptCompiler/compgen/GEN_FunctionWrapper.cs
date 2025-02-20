@@ -730,6 +730,42 @@ namespace CommonScript.Compiler.Internal
             return new FileContext(staticCtx, path, content, TokenStream_new(path, Tokenize(path, content, staticCtx)), null, null, false, false, null);
         }
 
+        public static ByteCodeBuffer finalizeBreakContinue(ByteCodeBuffer originalBuffer, int additionalBreakOffset, bool allowContinue, int additionalContinueOffset)
+        {
+            int i = 0;
+            ByteCodeRow[] rows = flatten(originalBuffer);
+            i = 0;
+            while (i < rows.Length)
+            {
+                int op = rows[i].opCode;
+                if (op == -1 || op == -2)
+                {
+                    int additionalOffset = additionalBreakOffset;
+                    if (op == -2)
+                    {
+                        if (!allowContinue)
+                        {
+                            fail("");
+                        }
+                        additionalOffset = additionalContinueOffset;
+                    }
+                    rows[i].opCode = 24;
+                    int offsetToEnd = rows.Length - i - 1 + additionalOffset;
+                    rows[i].args = new int[1];
+                    rows[i].args[0] = offsetToEnd;
+                }
+                i += 1;
+            }
+            ByteCodeBuffer output = null;
+            i = 0;
+            while (i < rows.Length)
+            {
+                output = join2(output, ByteCodeBuffer_fromRow(rows[i]));
+                i += 1;
+            }
+            return output;
+        }
+
         public static ByteCodeRow[] flatten(ByteCodeBuffer buffer)
         {
             if (buffer == null)
@@ -1015,6 +1051,49 @@ namespace CommonScript.Compiler.Internal
             return ns;
         }
 
+        public static ByteCodeBuffer serializeAssignField(StaticContext staticCtx, Statement assignField, string baseOp)
+        {
+            Expression df = assignField.assignTarget;
+            string fieldName = df.strVal;
+            ByteCodeBuffer bufVal = serializeExpression(staticCtx, assignField.assignValue);
+            ByteCodeBuffer bufRoot = serializeExpression(staticCtx, df.root);
+            if (baseOp != "=")
+            {
+                ByteCodeBuffer incrBuf = join2(bufRoot, create0(52, null, null));
+                incrBuf = join2(incrBuf, create0(15, df.opToken, fieldName));
+                incrBuf = join3(incrBuf, bufVal, create0(4, assignField.assignOp, baseOp));
+                return join2(incrBuf, create1(1, assignField.assignOp, fieldName, 1));
+            }
+            return join3(bufVal, bufRoot, create0(1, assignField.assignOp, fieldName));
+        }
+
+        public static ByteCodeBuffer serializeAssignIndex(StaticContext staticCtx, Statement assignIndex, string baseOp)
+        {
+            Token bracketToken = assignIndex.assignTarget.opToken;
+            ByteCodeBuffer bufVal = serializeExpression(staticCtx, assignIndex.assignValue);
+            ByteCodeBuffer bufIndex = serializeExpression(staticCtx, assignIndex.assignTarget.right);
+            ByteCodeBuffer bufRoot = serializeExpression(staticCtx, assignIndex.assignTarget.root);
+            if (baseOp != "=")
+            {
+                ByteCodeBuffer incrBuf = join3(bufRoot, bufIndex, create0(53, null, null));
+                incrBuf = join2(incrBuf, create0(22, bracketToken, null));
+                incrBuf = join3(incrBuf, bufVal, create0(4, assignIndex.assignOp, baseOp));
+                return join2(incrBuf, create1(2, assignIndex.assignOp, null, 1));
+            }
+            return join4(bufVal, bufRoot, bufIndex, create0(2, assignIndex.assignOp, null));
+        }
+
+        public static ByteCodeBuffer serializeAssignVariable(StaticContext staticCtx, Statement assignVar, string baseOp)
+        {
+            ByteCodeBuffer bufVal = serializeExpression(staticCtx, assignVar.assignValue);
+            ByteCodeBuffer bufVar = serializeExpression(staticCtx, assignVar.assignTarget);
+            if (baseOp != "=")
+            {
+                bufVal = join3(bufVar, bufVal, create0(4, assignVar.assignOp, baseOp));
+            }
+            return join2(bufVal, create0(3, assignVar.assignOp, assignVar.assignTarget.strVal));
+        }
+
         public static ByteCodeBuffer serializeBaseCtorReference(Expression baseCtor)
         {
             AbstractEntity baseClass = baseCtor.entityPtr;
@@ -1067,9 +1146,26 @@ namespace CommonScript.Compiler.Internal
             return join2(serializeExpression(staticCtx, bn.root), create0(11, bn.firstToken, null));
         }
 
+        public static ByteCodeBuffer serializeBreak(Statement br)
+        {
+            return create0(-1, br.firstToken, null);
+        }
+
         public static ByteCodeBuffer serializeClassReference(Expression classRef)
         {
             return create1(37, classRef.firstToken, null, classRef.entityPtr.serializationIndex);
+        }
+
+        public static ByteCodeBuffer serializeCodeBlock(StaticContext staticCtx, Statement[] block)
+        {
+            ByteCodeBuffer buf = null;
+            int i = 0;
+            while (i < block.Length)
+            {
+                buf = join2(buf, serializeStatement(staticCtx, block[i]));
+                i += 1;
+            }
+            return buf;
         }
 
         public static ByteCodeBuffer serializeConstructorInvocation(StaticContext staticCtx, Expression ctorInvoke)
@@ -1084,6 +1180,11 @@ namespace CommonScript.Compiler.Internal
                 i += 1;
             }
             return join3(create1(14, ctorInvoke.firstToken, null, classDef.serializationIndex), buf, create1(21, ctorInvoke.opToken, null, argc));
+        }
+
+        public static ByteCodeBuffer serializeContinue(Statement cont)
+        {
+            return create0(-2, cont.firstToken, null);
         }
 
         public static ByteCodeBuffer serializeDictionaryDefinition(StaticContext staticCtx, Expression dictDef)
@@ -1102,6 +1203,13 @@ namespace CommonScript.Compiler.Internal
         public static ByteCodeBuffer serializeDotField(StaticContext staticCtx, Expression df)
         {
             return join2(serializeExpression(staticCtx, df.root), create0(15, df.opToken, df.strVal));
+        }
+
+        public static ByteCodeBuffer serializeDoWhileLoop(StaticContext staticCtx, Statement doWhileLoop)
+        {
+            ByteCodeBuffer body = serializeCodeBlock(staticCtx, doWhileLoop.code);
+            ByteCodeBuffer condition = ByteCodeUtil_ensureBooleanExpression(doWhileLoop.condition.firstToken, serializeExpression(staticCtx, doWhileLoop.condition));
+            return join4(finalizeBreakContinue(body, condition.length + 2, true, 0), condition, create1(28, null, null, 1), create1(24, null, null, -(2 + condition.length + body.length)));
         }
 
         public static ByteCodeBuffer serializeExpression(StaticContext staticCtx, Expression expr)
@@ -1169,6 +1277,11 @@ namespace CommonScript.Compiler.Internal
             }
         }
 
+        public static ByteCodeBuffer serializeExpressionStatement(StaticContext staticCtx, Statement exprStmnt)
+        {
+            return join2(serializeExpression(staticCtx, exprStmnt.expression), create0(27, null, null));
+        }
+
         public static ByteCodeBuffer serializeExtensionInvocation(StaticContext staticCtx, Expression extInvoke)
         {
             if (SpecialActionUtil_IsSpecialActionAndNotExtension(staticCtx.specialActionUtil, extInvoke.strVal))
@@ -1196,6 +1309,46 @@ namespace CommonScript.Compiler.Internal
             return create0(38, null, FloatToStringWorkaround(val));
         }
 
+        public static ByteCodeBuffer serializeForEachLoop(StaticContext staticCtx, Statement forEachLoop)
+        {
+            string loopExpr = "@fe" + forEachLoop.autoId.ToString();
+            string iteratorVar = "@fi" + forEachLoop.autoId.ToString();
+            ByteCodeBuffer setup = join5(serializeExpression(staticCtx, forEachLoop.expression), create0(66, forEachLoop.expression.firstToken, null), create0(3, null, loopExpr), create1(40, null, null, 0), create0(3, null, iteratorVar));
+            ByteCodeBuffer bufBody = serializeCodeBlock(staticCtx, forEachLoop.code);
+            ByteCodeBuffer increment = join4(create0(45, null, iteratorVar), create1(40, null, null, 1), create0(4, null, "+"), create0(3, null, iteratorVar));
+            ByteCodeBuffer doAssign = join4(create0(45, null, loopExpr), create0(45, null, iteratorVar), create0(22, null, null), create0(3, forEachLoop.varToken, forEachLoop.varToken.Value));
+            ByteCodeBuffer lengthCheck = join5(create0(45, null, iteratorVar), create0(45, null, loopExpr), create0(15, null, "length"), create0(4, null, ">="), create1(29, null, null, doAssign.length + bufBody.length + increment.length + 1));
+            bufBody = finalizeBreakContinue(bufBody, 5, true, 0);
+            int reverseJumpDistance = -1 - increment.length - bufBody.length - doAssign.length - lengthCheck.length;
+            ByteCodeBuffer fullCode = join6(setup, lengthCheck, doAssign, bufBody, increment, create1(24, null, null, reverseJumpDistance));
+            return fullCode;
+        }
+
+        public static ByteCodeBuffer serializeForLoop(StaticContext staticCtx, Statement forLoop)
+        {
+            Expression condition = forLoop.condition;
+            Statement[] code = forLoop.code;
+            Statement[] init = forLoop.forInit;
+            Statement[] step = forLoop.forStep;
+            ByteCodeBuffer bufInit = serializeCodeBlock(staticCtx, init);
+            ByteCodeBuffer bufStep = serializeCodeBlock(staticCtx, step);
+            ByteCodeBuffer bufBody = serializeCodeBlock(staticCtx, code);
+            ByteCodeBuffer bufCondition = serializeExpression(staticCtx, condition);
+            bufCondition = ByteCodeUtil_ensureBooleanExpression(condition.firstToken, bufCondition);
+            int stepSize = 0;
+            int bodySize = 0;
+            int conditionSize = bufCondition.length;
+            if (bufStep != null)
+            {
+                stepSize = bufStep.length;
+            }
+            if (bufBody != null)
+            {
+                bodySize = bufBody.length;
+            }
+            return join6(bufInit, bufCondition, create1(28, null, null, bodySize + stepSize + 1), finalizeBreakContinue(bufBody, bufStep.length + 1, true, 0), bufStep, create1(24, null, null, -(1 + bodySize + stepSize + 1 + conditionSize)));
+        }
+
         public static ByteCodeBuffer serializeFunctionInvocation(StaticContext staticCtx, Expression funcInvoke)
         {
             ByteCodeBuffer buf = serializeExpression(staticCtx, funcInvoke.root);
@@ -1218,6 +1371,40 @@ namespace CommonScript.Compiler.Internal
                 fail("");
             }
             return create1(39, funcRef.firstToken, null, index);
+        }
+
+        public static ByteCodeBuffer serializeIfStatement(StaticContext staticCtx, Statement ifStmnt)
+        {
+            Expression condition = ifStmnt.condition;
+            Statement[] ifCode = ifStmnt.code;
+            Statement[] elseCode = ifStmnt.elseCode;
+            ByteCodeBuffer buf = serializeExpression(staticCtx, condition);
+            ByteCodeBuffer bufTrue = serializeCodeBlock(staticCtx, ifCode);
+            ByteCodeBuffer bufFalse = serializeCodeBlock(staticCtx, elseCode);
+            buf = ByteCodeUtil_ensureBooleanExpression(condition.firstToken, buf);
+            int trueSize = 0;
+            int falseSize = 0;
+            if (bufTrue != null)
+            {
+                trueSize = bufTrue.length;
+            }
+            if (bufFalse != null)
+            {
+                falseSize = bufFalse.length;
+            }
+            if (trueSize + falseSize == 0)
+            {
+                return join2(buf, create0(27, null, null));
+            }
+            if (falseSize == 0)
+            {
+                return join3(buf, create1(28, null, null, trueSize), bufTrue);
+            }
+            if (trueSize == 0)
+            {
+                return join3(buf, create1(29, null, null, falseSize), bufFalse);
+            }
+            return join5(buf, create1(28, null, null, trueSize + 1), bufTrue, create1(24, null, null, falseSize), bufFalse);
         }
 
         public static ByteCodeBuffer serializeIndex(StaticContext staticCtx, Expression index)
@@ -1347,6 +1534,20 @@ namespace CommonScript.Compiler.Internal
             return create0(41, nullConst.firstToken, null);
         }
 
+        public static ByteCodeBuffer serializeReturn(StaticContext staticCtx, Statement ret)
+        {
+            ByteCodeBuffer buf = null;
+            if (ret.expression == null)
+            {
+                buf = create0(41, null, null);
+            }
+            else
+            {
+                buf = serializeExpression(staticCtx, ret.expression);
+            }
+            return join2(buf, create0(46, ret.firstToken, null));
+        }
+
         public static ByteCodeBuffer serializeSlice(StaticContext staticCtx, Expression slice)
         {
             Expression start = slice.args[0];
@@ -1398,9 +1599,167 @@ namespace CommonScript.Compiler.Internal
             return join2(argBuffer, actionBuf);
         }
 
+        public static ByteCodeBuffer serializeStatement(StaticContext staticCtx, Statement stmnt)
+        {
+            switch (stmnt.type)
+            {
+                case 1:
+                    string op = stmnt.assignOp.Value;
+                    if (op != "=")
+                    {
+                        op = op.Substring(0, op.Length - 1);
+                    }
+                    switch (stmnt.assignTarget.type)
+                    {
+                        case 31:
+                            return serializeAssignVariable(staticCtx, stmnt, op);
+                        case 20:
+                            return serializeAssignIndex(staticCtx, stmnt, op);
+                        case 11:
+                            return serializeAssignField(staticCtx, stmnt, op);
+                    }
+                    fail("");
+                    return null;
+                case 2:
+                    return serializeBreak(stmnt);
+                case 3:
+                    return serializeContinue(stmnt);
+                case 4:
+                    return serializeDoWhileLoop(staticCtx, stmnt);
+                case 5:
+                    return serializeExpressionStatement(staticCtx, stmnt);
+                case 6:
+                    return serializeForLoop(staticCtx, stmnt);
+                case 7:
+                    return serializeForEachLoop(staticCtx, stmnt);
+                case 8:
+                    return serializeIfStatement(staticCtx, stmnt);
+                case 9:
+                    return serializeReturn(staticCtx, stmnt);
+                case 10:
+                    return serializeSwitchStatement(staticCtx, stmnt);
+                case 11:
+                    return serializeThrowStatement(staticCtx, stmnt);
+                case 12:
+                    return serializeTryStatement(staticCtx, stmnt);
+                case 13:
+                    return serializeWhileLoop(staticCtx, stmnt);
+                default:
+                    fail("");
+                    return null;
+            }
+        }
+
         public static ByteCodeBuffer serializeStringConstant(Expression strConst)
         {
             return create0(42, strConst.firstToken, strConst.strVal);
+        }
+
+        public static ByteCodeBuffer serializeSwitchStatement(StaticContext staticCtx, Statement switchStmnt)
+        {
+            int i = 0;
+            int j = 0;
+            if (switchStmnt.switchChunks.Length == 0)
+            {
+                return join3(serializeExpression(staticCtx, switchStmnt.condition), create0(17, switchStmnt.condition.firstToken, null), create0(27, null, null));
+            }
+            int conditionTypeEnsuranceOpCode = 17;
+            Expression firstCaseExpr = switchStmnt.switchChunks[0].Cases[0];
+            if (firstCaseExpr != null)
+            {
+                if (firstCaseExpr.type == 22)
+                {
+                    conditionTypeEnsuranceOpCode = 18;
+                }
+                else if (firstCaseExpr.type == 28)
+                {
+                    conditionTypeEnsuranceOpCode = 19;
+                }
+                else
+                {
+                    fail("");
+                }
+            }
+            ByteCodeBuffer condBuf = join2(serializeExpression(staticCtx, switchStmnt.condition), create0(conditionTypeEnsuranceOpCode, switchStmnt.condition.firstToken, null));
+            ByteCodeBuffer caseBuf = null;
+            int currentJumpOffset = 0;
+            bool hasDefault = false;
+            System.Collections.Generic.Dictionary<string, int> stringJumpOffset = new Dictionary<string, int>();
+            System.Collections.Generic.Dictionary<int, int> intJumpOffset = new Dictionary<int, int>();
+            int defaultJumpOffset = -1;
+            i = 0;
+            while (i < switchStmnt.switchChunks.Length)
+            {
+                SwitchChunk chunk = switchStmnt.switchChunks[i];
+                j = 0;
+                while (j < chunk.Cases.Count)
+                {
+                    Expression expr = chunk.Cases[j];
+                    if (expr == null)
+                    {
+                        defaultJumpOffset = currentJumpOffset;
+                        hasDefault = true;
+                    }
+                    else if (conditionTypeEnsuranceOpCode == 18)
+                    {
+                        intJumpOffset[expr.intVal] = currentJumpOffset;
+                    }
+                    else if (conditionTypeEnsuranceOpCode == 19)
+                    {
+                        stringJumpOffset[expr.strVal] = currentJumpOffset;
+                    }
+                    else
+                    {
+                        fail("");
+                    }
+                    j += 1;
+                }
+                ByteCodeBuffer chunkBuf = serializeCodeBlock(staticCtx, chunk.Code.ToArray());
+                currentJumpOffset += chunkBuf.length;
+                caseBuf = join2(caseBuf, chunkBuf);
+                i += 1;
+            }
+            if (!hasDefault)
+            {
+                defaultJumpOffset = currentJumpOffset;
+            }
+            caseBuf = finalizeBreakContinue(caseBuf, 0, false, 0);
+            ByteCodeBuffer jumpBuf = null;
+            if (conditionTypeEnsuranceOpCode == 18)
+            {
+                System.Collections.Generic.List<int> jumpArgs = new List<int>();
+                jumpArgs.Add(-1);
+                int[] intKeys = intJumpOffset.Keys.ToArray().OrderBy<int, int>(_PST_GEN_arg => _PST_GEN_arg).ToArray();
+                i = 0;
+                while (i < intKeys.Length)
+                {
+                    int k = intKeys[i];
+                    jumpArgs.Add(intJumpOffset[k] + 2);
+                    jumpArgs.Add(k);
+                    i += 1;
+                }
+                ByteCodeBuffer lookup = create0(54, null, null);
+                lookup.row.args = jumpArgs.ToArray();
+                jumpBuf = join3(create2(55, null, null, defaultJumpOffset + 2, 1), lookup, create1(56, null, null, 2));
+            }
+            else if (conditionTypeEnsuranceOpCode == 19)
+            {
+                string[] keys = stringJumpOffset.Keys.ToArray().OrderBy<string, string>(_PST_GEN_arg => _PST_GEN_arg).ToArray();
+                jumpBuf = create2(55, null, null, defaultJumpOffset + keys.Length + 1, 2);
+                i = 0;
+                while (i < keys.Length)
+                {
+                    string key = keys[i];
+                    jumpBuf = join2(jumpBuf, create1(54, null, key, stringJumpOffset[key] + keys.Length + 1));
+                    i += 1;
+                }
+                jumpBuf = join2(jumpBuf, create1(56, null, null, jumpBuf.length));
+            }
+            else
+            {
+                jumpBuf = create0(27, null, null);
+            }
+            return join3(condBuf, jumpBuf, caseBuf);
         }
 
         public static ByteCodeBuffer serializeTernary(StaticContext staticCtx, Expression ternaryExpression)
@@ -1417,6 +1776,82 @@ namespace CommonScript.Compiler.Internal
             return create0(43, thisKeyword.firstToken, null);
         }
 
+        public static ByteCodeBuffer serializeThrowStatement(StaticContext staticCtx, Statement thrw)
+        {
+            return join2(serializeExpression(staticCtx, thrw.expression), create0(59, thrw.firstToken, null));
+        }
+
+        public static ByteCodeBuffer serializeTryStatement(StaticContext staticCtx, Statement tryStmnt)
+        {
+            int i = 0;
+            ByteCodeBuffer tryBuf = serializeCodeBlock(staticCtx, tryStmnt.code);
+            System.Collections.Generic.List<ByteCodeBuffer> catchBufs = new List<ByteCodeBuffer>();
+            i = 0;
+            while (i < tryStmnt.catchChunks.Length)
+            {
+                CatchChunk cc = tryStmnt.catchChunks[i];
+                ByteCodeBuffer catchBuf = serializeCodeBlock(staticCtx, cc.Code);
+                if (cc.exceptionVarName == null)
+                {
+                    catchBuf = join2(create0(27, null, null), catchBuf);
+                }
+                else
+                {
+                    catchBuf = join2(create0(3, cc.exceptionVarName, cc.exceptionVarName.Value), catchBuf);
+                }
+                catchBufs.Add(catchBuf);
+                i += 1;
+            }
+            ByteCodeBuffer finallyBuf = join2(serializeCodeBlock(staticCtx, tryStmnt.finallyCode), create0(60, null, null));
+            int jumpOffset = 0;
+            i = catchBufs.Count - 2;
+            while (i >= 0)
+            {
+                jumpOffset += catchBufs[i + 1].length;
+                catchBufs[i] = join2(catchBufs[i], create1(24, null, null, jumpOffset));
+                i -= 1;
+            }
+            jumpOffset = 0;
+            System.Collections.Generic.List<int> catchRouterArgs = new List<int>();
+            i = 0;
+            while (i < catchBufs.Count)
+            {
+                if (i > 0)
+                {
+                    catchRouterArgs.Add(0);
+                }
+                catchRouterArgs.Add(jumpOffset);
+                CatchChunk cc = tryStmnt.catchChunks[i];
+                int j = 0;
+                while (j < cc.ClassDefinitions.Length)
+                {
+                    ClassEntity cdef = cc.ClassDefinitions[j];
+                    catchRouterArgs.Add(cdef.baseData.serializationIndex);
+                    j += 1;
+                }
+                jumpOffset += catchBufs[i].length;
+                i += 1;
+            }
+            catchRouterArgs.Insert(0, jumpOffset);
+            ByteCodeBuffer catchRouterBuf = ByteCodeBuffer_fromRow(ByteCodeRow_new(61, null, null, catchRouterArgs.ToArray()));
+            ByteCodeBuffer routeAndCatches = catchRouterBuf;
+            i = 0;
+            while (i < catchBufs.Count)
+            {
+                ByteCodeBuffer catchBuf = catchBufs[i];
+                routeAndCatches = join2(routeAndCatches, catchBuf);
+                i += 1;
+            }
+            tryBuf = join2(tryBuf, create1(24, null, null, routeAndCatches.length));
+            int[] tryCatchInfo = new int[4];
+            tryCatchInfo[0] = 0;
+            tryCatchInfo[1] = tryBuf.length;
+            tryCatchInfo[2] = routeAndCatches.length;
+            tryCatchInfo[3] = finallyBuf.length;
+            tryBuf.first.tryCatchInfo = tryCatchInfo;
+            return join3(tryBuf, routeAndCatches, finallyBuf);
+        }
+
         public static ByteCodeBuffer serializeTypeOf(StaticContext staticCtx, Expression typeOfExpr)
         {
             ByteCodeBuffer root = serializeExpression(staticCtx, typeOfExpr.root);
@@ -1430,6 +1865,14 @@ namespace CommonScript.Compiler.Internal
                 fail("");
             }
             return create0(45, v.firstToken, v.strVal);
+        }
+
+        public static ByteCodeBuffer serializeWhileLoop(StaticContext staticCtx, Statement whileLoop)
+        {
+            ByteCodeBuffer condBuf = serializeExpression(staticCtx, whileLoop.condition);
+            condBuf = ByteCodeUtil_ensureBooleanExpression(whileLoop.condition.firstToken, condBuf);
+            ByteCodeBuffer loopBody = serializeCodeBlock(staticCtx, whileLoop.code);
+            return join4(condBuf, create1(28, null, null, loopBody.length + 1), finalizeBreakContinue(loopBody, 1, true, -loopBody.length - 1 - condBuf.length), create1(24, null, null, -(loopBody.length + condBuf.length + 1 + 1)));
         }
 
         public static int SpecialActionUtil_GetSpecialActionArgc(SpecialActionUtil sau, string name)

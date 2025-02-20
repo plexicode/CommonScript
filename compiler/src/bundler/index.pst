@@ -4,3 +4,4 @@
 @import("bundler/CompilationBundle.pst");
 @import("bundler/ExpressionSerializer.pst");
 @import("bundler/SpecialActionSerializer.pst");
+@import("bundler/StatementSerializer.pst");

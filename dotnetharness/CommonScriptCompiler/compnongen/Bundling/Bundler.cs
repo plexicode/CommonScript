@@ -350,7 +350,7 @@ namespace CommonScript.Compiler
 
             foreach (Statement stmnt in entity.code)
             {
-                buffer = FunctionWrapper.join2(buffer, StatementSerializer.serializeStatement(staticCtx, stmnt));
+                buffer = FunctionWrapper.join2(buffer, FunctionWrapper.serializeStatement(staticCtx, stmnt));
             }
             List<ByteCodeRow> flatByteCode = new List<ByteCodeRow>(FunctionWrapper.flatten(buffer));
 
