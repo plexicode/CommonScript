@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
@@ -15,14 +13,19 @@ namespace CommonScript.Compiler
             {
                 case (int) StatementType.ASSIGNMENT:
                     string op = stmnt.assignOp.Value;
-                    op = op == "=" ? op : op.Substring(0, op.Length - 1);
+                    
+                    if (op != "=") op = op.Substring(0, op.Length - 1);
+                    
                     switch (stmnt.assignTarget.type)
                     {
                         case (int) ExpressionType.VARIABLE: return serializeAssignVariable(staticCtx, stmnt, op);
                         case (int) ExpressionType.INDEX: return serializeAssignIndex(staticCtx, stmnt, op);
                         case (int) ExpressionType.DOT_FIELD: return serializeAssignField(staticCtx, stmnt, op);
                     }
-                    throw new InvalidOperationException(); // should have been removed by now.
+
+                    // should have been removed by now.
+                    FunctionWrapper.fail(""); 
+                    return null;
 
                 case (int) StatementType.BREAK: return serializeBreak(stmnt);
                 case (int) StatementType.CONTINUE: return serializeContinue(stmnt);
@@ -37,7 +40,9 @@ namespace CommonScript.Compiler
                 case (int) StatementType.TRY: return serializeTryStatement(staticCtx, stmnt);
                 case (int) StatementType.WHILE_LOOP: return serializeWhileLoop(staticCtx, stmnt);
 
-                default: throw new NotImplementedException();
+                default:
+                    FunctionWrapper.fail(""); // not implemented
+                    return null;
             }
         }
 
@@ -278,8 +283,6 @@ namespace CommonScript.Compiler
                 bufTrue,
                 FunctionWrapper.create1(OpCodes.OP_JUMP, null, null, falseSize),
                 bufFalse);
-
-            throw new NotImplementedException();
         }
 
         private static ByteCodeBuffer serializeReturn(StaticContext staticCtx, Statement ret)
@@ -298,6 +301,9 @@ namespace CommonScript.Compiler
 
         private static ByteCodeBuffer serializeSwitchStatement(StaticContext staticCtx, Statement switchStmnt)
         {
+            int i = 0;
+            int j = 0;
+            
             // switch (cond) { } <-- needs to ensure that the condition is an int or string.
             if (switchStmnt.switchChunks.Length == 0)
             {
@@ -321,7 +327,7 @@ namespace CommonScript.Compiler
                 }
                 else
                 {
-                    throw new InvalidOperationException();
+                    FunctionWrapper.fail(""); // Invalid Operation
                 }
             }
 
@@ -335,10 +341,12 @@ namespace CommonScript.Compiler
             Dictionary<string, int> stringJumpOffset = new Dictionary<string, int>();
             Dictionary<int, int> intJumpOffset = new Dictionary<int, int>();
             int defaultJumpOffset = -1;
-            foreach (SwitchChunk chunk in switchStmnt.switchChunks)
+            for (i = 0; i < switchStmnt.switchChunks.Length; i += 1)
             {
-                foreach (Expression expr in chunk.Cases)
+                SwitchChunk chunk = switchStmnt.switchChunks[i];
+                for (j = 0; j < chunk.Cases.Count; j += 1)
                 {
+                    Expression expr = chunk.Cases[j];
                     if (expr == null)
                     {
                         defaultJumpOffset = currentJumpOffset;
@@ -354,7 +362,7 @@ namespace CommonScript.Compiler
                     }
                     else
                     {
-                        throw new InvalidOperationException();
+                        FunctionWrapper.fail(""); // Invalid operation
                     }
                 }
 
@@ -393,8 +401,10 @@ namespace CommonScript.Compiler
             if (conditionTypeEnsuranceOpCode == OpCodes.OP_ENSURE_INT)
             {
                 List<int> jumpArgs = new List<int>() { -1 };
-                foreach (int k in intJumpOffset.Keys.OrderBy(k => k).ToArray())
+                int[] intKeys = intJumpOffset.Keys.OrderBy(k => k).ToArray();
+                for (i = 0; i < intKeys.Length; i += 1)
                 {
+                    int k = intKeys[i];
                     jumpArgs.Add(intJumpOffset[k] + 2);
                     jumpArgs.Add(k);
                 }
@@ -413,19 +423,13 @@ namespace CommonScript.Compiler
             {
                 string[] keys = stringJumpOffset.Keys.OrderBy(k => k).ToArray();
                 jumpBuf = FunctionWrapper.create2(OpCodes.OP_SWITCH_BUILD, null, null, defaultJumpOffset + keys.Length + 1, 2);
-                foreach (string key in keys)
+                for (i = 0; i < keys.Length; i += 1)
                 {
+                    string key = keys[i];
                     jumpBuf = FunctionWrapper.join2(
                         jumpBuf,
                         FunctionWrapper.create1(OpCodes.OP_SWITCH_ADD, null, key, stringJumpOffset[key] + keys.Length + 1));
                 }
-                /*
-                ByteCodeRow[] rows = ByteCode.flatten(jumpBuf);
-                int additionalOffset = jumpBuf.length - 1;
-                for (int i = 1; i < rows.Length; i++)
-                {
-                    rows[i].args[0] += additionalOffset;
-                }//*/
 
                 jumpBuf = FunctionWrapper.join2(
                     jumpBuf,
@@ -446,8 +450,9 @@ namespace CommonScript.Compiler
         // then the break offset will be 0 and the continue offset will be -1.
         private static ByteCodeBuffer finalizeBreakContinue(ByteCodeBuffer originalBuffer, int additionalBreakOffset, bool allowContinue, int additionalContinueOffset)
         {
+            int i = 0;
             ByteCodeRow[] rows = FunctionWrapper.flatten(originalBuffer);
-            for (int i = 0; i < rows.Length; i++)
+            for (i = 0; i < rows.Length; i++)
             {
                 int op = rows[i].opCode;
                 if (op == OpCodes.OP_BREAK_DUMMY || op == OpCodes.OP_CONTINUE_DUMMY)
@@ -455,7 +460,9 @@ namespace CommonScript.Compiler
                     int additionalOffset = additionalBreakOffset;
                     if (op == OpCodes.OP_CONTINUE_DUMMY)
                     {
-                        if (!allowContinue) throw new InvalidOperationException(); // this should have been caught before now. 
+                        // this should have been caught before now. 
+                        if (!allowContinue) FunctionWrapper.fail(""); 
+                        
                         additionalOffset = additionalContinueOffset;
                     }
                     rows[i].opCode = OpCodes.OP_JUMP;
@@ -465,7 +472,7 @@ namespace CommonScript.Compiler
             }
 
             ByteCodeBuffer output = null;
-            for (int i = 0; i < rows.Length; i++)
+            for (i = 0; i < rows.Length; i++)
             {
                 output = FunctionWrapper.join2(output, FunctionWrapper.ByteCodeBuffer_fromRow(rows[i]));
             }
@@ -482,19 +489,29 @@ namespace CommonScript.Compiler
 
         private static ByteCodeBuffer serializeTryStatement(StaticContext staticCtx, Statement tryStmnt)
         {
+            int i = 0;
+            
             ByteCodeBuffer tryBuf = serializeCodeBlock(staticCtx, tryStmnt.code);
             List<ByteCodeBuffer> catchBufs = new List<ByteCodeBuffer>();
-            foreach (CatchChunk cc in tryStmnt.catchChunks)
+            for (i = 0; i < tryStmnt.catchChunks.Length; i += 1)
             {
+                CatchChunk cc = tryStmnt.catchChunks[i];
                 ByteCodeBuffer catchBuf = serializeCodeBlock(staticCtx, cc.Code);
 
                 // the value stack is cleared to its base level and the exception is added as the only item.
-                catchBuf = FunctionWrapper.join2(
-                    cc.exceptionVarName != null
-                        ? FunctionWrapper.create0(OpCodes.OP_ASSIGN_VAR, cc.exceptionVarName, cc.exceptionVarName.Value)
-                        : FunctionWrapper.create0(OpCodes.OP_POP, null, null),
-                    catchBuf);
-
+                if (cc.exceptionVarName == null)
+                {
+                    catchBuf = FunctionWrapper.join2(
+                        FunctionWrapper.create0(OpCodes.OP_POP, null, null),
+                        catchBuf);
+                }
+                else
+                {
+                    catchBuf = FunctionWrapper.join2(
+                        FunctionWrapper.create0(OpCodes.OP_ASSIGN_VAR, cc.exceptionVarName, cc.exceptionVarName.Value),
+                        catchBuf);
+                }
+                
                 catchBufs.Add(catchBuf);
             }
 
@@ -504,7 +521,7 @@ namespace CommonScript.Compiler
 
             // Add the jumps at the end of each catch to the finally
             int jumpOffset = 0;
-            for (int i = catchBufs.Count - 2; i >= 0; i--)
+            for (i = catchBufs.Count - 2; i >= 0; i--)
             {
                 jumpOffset += catchBufs[i + 1].length;
                 catchBufs[i] = FunctionWrapper.join2(
@@ -528,13 +545,14 @@ namespace CommonScript.Compiler
             // If a jump offset has no class associated with it, then that's the general Exception catcher
             jumpOffset = 0;
             List<int> catchRouterArgs = new List<int>();
-            for (int i = 0; i < catchBufs.Count; i++)
+            for (i = 0; i < catchBufs.Count; i++)
             {
                 if (i > 0) catchRouterArgs.Add(0);
                 catchRouterArgs.Add(jumpOffset);
                 CatchChunk cc = tryStmnt.catchChunks[i];
-                foreach (ClassEntity cdef in cc.ClassDefinitions)
+                for (int j = 0; j < cc.ClassDefinitions.Length; j += 1)
                 {
+                    ClassEntity cdef = cc.ClassDefinitions[j];
                     catchRouterArgs.Add(cdef.baseData.serializationIndex);
                 }
 
@@ -547,11 +565,16 @@ namespace CommonScript.Compiler
             ByteCodeBuffer catchRouterBuf = FunctionWrapper.ByteCodeBuffer_fromRow(FunctionWrapper.ByteCodeRow_new(OpCodes.OP_TRY_CATCH_ROUTER, null, null, catchRouterArgs.ToArray()));
 
             ByteCodeBuffer routeAndCatches = catchRouterBuf;
-            foreach (ByteCodeBuffer catchBuf in catchBufs)
+            for (i = 0; i < catchBufs.Count; i += 1)
             {
+                ByteCodeBuffer catchBuf = catchBufs[i];
                 routeAndCatches = FunctionWrapper.join2(routeAndCatches, catchBuf);
             }
-            tryBuf = FunctionWrapper.join2(tryBuf, FunctionWrapper.create1(OpCodes.OP_JUMP, null, null, routeAndCatches.length)); // jump to finally
+            
+            // jump to finally
+            tryBuf = FunctionWrapper.join2(
+                tryBuf, 
+                FunctionWrapper.create1(OpCodes.OP_JUMP, null, null, routeAndCatches.length)); 
 
             tryBuf.first.tryCatchInfo = new int[] {
                 0, // offset to where the try starts.
