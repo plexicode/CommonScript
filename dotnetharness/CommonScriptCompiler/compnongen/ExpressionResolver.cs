@@ -1,49 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
-    internal class ExpressionResolver
+    internal class ExpressionResolverUtil
     {
-        private Resolver resolver;
-        public StatementResolver statementResolver;
-        public EntityResolver entityResolver;
-
-        public ExpressionResolver(Resolver resolver)
-        {
-            this.resolver = resolver;
-        }
-
-        public Expression ResolveExpressionFirstPass(Expression expr)
+        public static Expression ExpressionResolver_ResolveExpressionFirstPass(Resolver resolver, Expression expr)
         {
             switch (expr.type)
             {
-                case (int) ExpressionType.BASE_CTOR_REFERENCE: return this.FirstPass_BaseCtorReference(expr);
-                case (int) ExpressionType.BINARY_OP: return this.FirstPass_BinaryOp(expr);
-                case (int) ExpressionType.BITWISE_NOT: return this.FirstPass_BitwiseNot(expr);
-                case (int) ExpressionType.BOOL_CONST: return this.FirstPass_BoolConst(expr);
-                case (int) ExpressionType.BOOLEAN_NOT: return this.FirstPass_BoolNot(expr);
-                case (int) ExpressionType.CONSTRUCTOR_INVOCATION: return this.FirstPass_ConstructorInvocation(expr);
-                case (int) ExpressionType.CONSTRUCTOR_REFERENCE: return this.FirstPass_ConstructorReference(expr);
-                case (int) ExpressionType.DICTIONARY_DEFINITION: return this.FirstPass_DictionaryDefinition(expr);
-                case (int) ExpressionType.DOT_FIELD: return this.FirstPass_DotField(expr);
-                case (int) ExpressionType.FLOAT_CONST: return this.FirstPass_FloatConstant(expr);
-                case (int) ExpressionType.FUNCTION_INVOKE: return this.FirstPass_FunctionInvocation(expr);
-                case (int) ExpressionType.INDEX: return this.FirstPass_Index(expr);
-                case (int) ExpressionType.INLINE_INCREMENT: return this.FirstPass_InlineIncrement(expr);
-                case (int) ExpressionType.INTEGER_CONST: return this.FirstPass_IntegerConstant(expr);
-                case (int) ExpressionType.LAMBDA: return this.FirstPass_Lambda(expr);
-                case (int) ExpressionType.LIST_DEFINITION: return this.FirstPass_ListDefinition(expr);
-                case (int) ExpressionType.NEGATIVE_SIGN: return this.FirstPass_NegativeSign(expr);
-                case (int) ExpressionType.NULL_CONST: return this.FirstPass_NullConst(expr);
-                case (int) ExpressionType.SLICE: return this.FirstPass_Slice(expr);
-                case (int) ExpressionType.STRING_CONST: return this.FirstPass_StringConstant(expr);
-                case (int) ExpressionType.TERNARY: return this.FirstPass_Ternary(expr);
-                case (int) ExpressionType.THIS: return this.FirstPass_This(expr);
-                case (int) ExpressionType.TYPEOF: return this.FirstPass_TypeOf(expr);
-                case (int) ExpressionType.VARIABLE: return this.FirstPass_Variable(expr);
+                case (int) ExpressionType.BASE_CTOR_REFERENCE: return ExpressionResolver_FirstPass_BaseCtorReference(resolver, expr);
+                case (int) ExpressionType.BINARY_OP: return ExpressionResolver_FirstPass_BinaryOp(resolver, expr);
+                case (int) ExpressionType.BITWISE_NOT: return ExpressionResolver_FirstPass_BitwiseNot(resolver, expr);
+                case (int) ExpressionType.BOOL_CONST: return ExpressionResolver_FirstPass_BoolConst(resolver, expr);
+                case (int) ExpressionType.BOOLEAN_NOT: return ExpressionResolver_FirstPass_BoolNot(resolver, expr);
+                case (int) ExpressionType.CONSTRUCTOR_INVOCATION: return ExpressionResolver_FirstPass_ConstructorInvocation(resolver, expr);
+                case (int) ExpressionType.CONSTRUCTOR_REFERENCE: return ExpressionResolver_FirstPass_ConstructorReference(resolver, expr);
+                case (int) ExpressionType.DICTIONARY_DEFINITION: return ExpressionResolver_FirstPass_DictionaryDefinition(resolver, expr);
+                case (int) ExpressionType.DOT_FIELD: return ExpressionResolver_FirstPass_DotField(resolver, expr);
+                case (int) ExpressionType.FLOAT_CONST: return ExpressionResolver_FirstPass_FloatConstant(resolver, expr);
+                case (int) ExpressionType.FUNCTION_INVOKE: return ExpressionResolver_FirstPass_FunctionInvocation(resolver, expr);
+                case (int) ExpressionType.INDEX: return ExpressionResolver_FirstPass_Index(resolver, expr);
+                case (int) ExpressionType.INLINE_INCREMENT: return ExpressionResolver_FirstPass_InlineIncrement(resolver, expr);
+                case (int) ExpressionType.INTEGER_CONST: return ExpressionResolver_FirstPass_IntegerConstant(resolver, expr);
+                case (int) ExpressionType.LAMBDA: return ExpressionResolver_FirstPass_Lambda(resolver, expr);
+                case (int) ExpressionType.LIST_DEFINITION: return ExpressionResolver_FirstPass_ListDefinition(resolver, expr);
+                case (int) ExpressionType.NEGATIVE_SIGN: return ExpressionResolver_FirstPass_NegativeSign(resolver, expr);
+                case (int) ExpressionType.NULL_CONST: return ExpressionResolver_FirstPass_NullConst(resolver, expr);
+                case (int) ExpressionType.SLICE: return ExpressionResolver_FirstPass_Slice(resolver, expr);
+                case (int) ExpressionType.STRING_CONST: return ExpressionResolver_FirstPass_StringConstant(resolver, expr);
+                case (int) ExpressionType.TERNARY: return ExpressionResolver_FirstPass_Ternary(resolver, expr);
+                case (int) ExpressionType.THIS: return ExpressionResolver_FirstPass_This(resolver, expr);
+                case (int) ExpressionType.TYPEOF: return ExpressionResolver_FirstPass_TypeOf(resolver, expr);
+                case (int) ExpressionType.VARIABLE: return ExpressionResolver_FirstPass_Variable(resolver, expr);
 
                 case (int) ExpressionType.EXTENSION_REFERENCE:
                     FunctionWrapper.Errors_Throw(expr.firstToken, "Extension method references must be invoked immediately.");
@@ -56,39 +46,39 @@ namespace CommonScript.Compiler
             return expr;
         }
 
-        public Expression ResolveExpressionSecondPass(Expression expr)
+        public static Expression ExpressionResolver_ResolveExpressionSecondPass(Resolver resolver, Expression expr)
         {
             switch (expr.type)
             {
-                case (int) ExpressionType.BASE_CTOR_REFERENCE: return this.SecondPass_BaseCtorReference(expr);
-                case (int) ExpressionType.BINARY_OP: return this.SecondPass_BinaryOp(expr);
-                case (int) ExpressionType.BITWISE_NOT: return this.SecondPass_BitwiseNot(expr);
-                case (int) ExpressionType.BOOL_CONST: return this.SecondPass_BoolConst(expr);
-                case (int) ExpressionType.BOOLEAN_NOT: return this.SecondPass_BoolNot(expr);
-                case (int) ExpressionType.CLASS_REFERENCE: return this.SecondPass_ClassReference(expr);
-                case (int) ExpressionType.CONSTRUCTOR_REFERENCE: return this.SecondPass_ConstructorReference(expr, false);
-                case (int) ExpressionType.DICTIONARY_DEFINITION: return this.SecondPass_DictionaryDefinition(expr);
-                case (int) ExpressionType.DOT_FIELD: return this.SecondPass_DotField(expr);
-                case (int) ExpressionType.ENUM_CONST: return this.SecondPass_EnumConstant(expr);
-                case (int) ExpressionType.EXTENSION_INVOCATION: return this.SecondPass_ExtensionInvocation(expr);
-                case (int) ExpressionType.FLOAT_CONST: return this.SecondPass_FloatConstant(expr);
-                case (int) ExpressionType.FUNCTION_INVOKE: return this.SecondPass_FunctionInvocation(expr);
-                case (int) ExpressionType.FUNCTION_REFERENCE: return this.SecondPass_FunctionReference(expr);
-                case (int) ExpressionType.IMPORT_REFERENCE: return this.SecondPass_ImportReference(expr);
-                case (int) ExpressionType.INDEX: return this.SecondPass_Index(expr);
-                case (int) ExpressionType.INLINE_INCREMENT: return this.SecondPass_InlineIncrement(expr);
-                case (int) ExpressionType.INTEGER_CONST: return this.SecondPass_IntegerConstant(expr);
-                case (int) ExpressionType.LAMBDA: return this.SecondPass_Lambda(expr);
-                case (int) ExpressionType.LIST_DEFINITION: return this.SecondPass_ListDefinition(expr);
-                case (int) ExpressionType.NAMESPACE_REFERENCE: return this.SecondPass_NamespaceReference(expr);
-                case (int) ExpressionType.NEGATIVE_SIGN: return this.SecondPass_NegativeSign(expr);
-                case (int) ExpressionType.NULL_CONST: return this.SecondPass_NullConstant(expr);
-                case (int) ExpressionType.SLICE: return this.SecondPass_Slice(expr);
-                case (int) ExpressionType.STRING_CONST: return this.SecondPass_StringConstant(expr);
-                case (int) ExpressionType.TERNARY: return this.SecondPass_Ternary(expr);
-                case (int) ExpressionType.THIS: return this.SecondPass_ThisConstant(expr);
-                case (int) ExpressionType.TYPEOF: return this.SecondPass_TypeOf(expr);
-                case (int) ExpressionType.VARIABLE: return this.SecondPass_Variable(expr);
+                case (int) ExpressionType.BASE_CTOR_REFERENCE: return ExpressionResolver_SecondPass_BaseCtorReference(resolver, expr);
+                case (int) ExpressionType.BINARY_OP: return ExpressionResolver_SecondPass_BinaryOp(resolver, expr);
+                case (int) ExpressionType.BITWISE_NOT: return ExpressionResolver_SecondPass_BitwiseNot(resolver, expr);
+                case (int) ExpressionType.BOOL_CONST: return ExpressionResolver_SecondPass_BoolConst(resolver, expr);
+                case (int) ExpressionType.BOOLEAN_NOT: return ExpressionResolver_SecondPass_BoolNot(resolver, expr);
+                case (int) ExpressionType.CLASS_REFERENCE: return ExpressionResolver_SecondPass_ClassReference(resolver, expr);
+                case (int) ExpressionType.CONSTRUCTOR_REFERENCE: return ExpressionResolver_SecondPass_ConstructorReference(resolver, expr, false);
+                case (int) ExpressionType.DICTIONARY_DEFINITION: return ExpressionResolver_SecondPass_DictionaryDefinition(resolver, expr);
+                case (int) ExpressionType.DOT_FIELD: return ExpressionResolver_SecondPass_DotField(resolver, expr);
+                case (int) ExpressionType.ENUM_CONST: return ExpressionResolver_SecondPass_EnumConstant(resolver, expr);
+                case (int) ExpressionType.EXTENSION_INVOCATION: return ExpressionResolver_SecondPass_ExtensionInvocation(resolver, expr);
+                case (int) ExpressionType.FLOAT_CONST: return ExpressionResolver_SecondPass_FloatConstant(resolver, expr);
+                case (int) ExpressionType.FUNCTION_INVOKE: return ExpressionResolver_SecondPass_FunctionInvocation(resolver, expr);
+                case (int) ExpressionType.FUNCTION_REFERENCE: return ExpressionResolver_SecondPass_FunctionReference(resolver, expr);
+                case (int) ExpressionType.IMPORT_REFERENCE: return ExpressionResolver_SecondPass_ImportReference(resolver, expr);
+                case (int) ExpressionType.INDEX: return ExpressionResolver_SecondPass_Index(resolver, expr);
+                case (int) ExpressionType.INLINE_INCREMENT: return ExpressionResolver_SecondPass_InlineIncrement(resolver, expr);
+                case (int) ExpressionType.INTEGER_CONST: return ExpressionResolver_SecondPass_IntegerConstant(resolver, expr);
+                case (int) ExpressionType.LAMBDA: return ExpressionResolver_SecondPass_Lambda(resolver, expr);
+                case (int) ExpressionType.LIST_DEFINITION: return ExpressionResolver_SecondPass_ListDefinition(resolver, expr);
+                case (int) ExpressionType.NAMESPACE_REFERENCE: return ExpressionResolver_SecondPass_NamespaceReference(resolver, expr);
+                case (int) ExpressionType.NEGATIVE_SIGN: return ExpressionResolver_SecondPass_NegativeSign(resolver, expr);
+                case (int) ExpressionType.NULL_CONST: return ExpressionResolver_SecondPass_NullConstant(resolver, expr);
+                case (int) ExpressionType.SLICE: return ExpressionResolver_SecondPass_Slice(resolver, expr);
+                case (int) ExpressionType.STRING_CONST: return ExpressionResolver_SecondPass_StringConstant(resolver, expr);
+                case (int) ExpressionType.TERNARY: return ExpressionResolver_SecondPass_Ternary(resolver, expr);
+                case (int) ExpressionType.THIS: return ExpressionResolver_SecondPass_ThisConstant(resolver, expr);
+                case (int) ExpressionType.TYPEOF: return ExpressionResolver_SecondPass_TypeOf(resolver, expr);
+                case (int) ExpressionType.VARIABLE: return ExpressionResolver_SecondPass_Variable(resolver, expr);
                 default:
                     FunctionWrapper.Errors_ThrowNotImplemented(expr.firstToken, "second pass for this type");
                     break;
@@ -96,31 +86,31 @@ namespace CommonScript.Compiler
             return expr;
         }
 
-        public void ResolveExpressionArrayFirstPass(Expression[] arr)
+        public static void ExpressionResolver_ResolveExpressionArrayFirstPass(Resolver resolver, Expression[] arr)
         {
             for (int i = 0; i < arr.Length; i++)
             {
-                arr[i] = this.ResolveExpressionFirstPass(arr[i]);
+                arr[i] = ExpressionResolver_ResolveExpressionFirstPass(resolver, arr[i]);
             }
         }
 
-        public void ResolveExpressionArraySecondPass(Expression[] arr)
+        public static void ExpressionResolver_ResolveExpressionArraySecondPass(Resolver resolver, Expression[] arr)
         {
             for (int i = 0; i < arr.Length; i++)
             {
-                arr[i] = this.ResolveExpressionSecondPass(arr[i]);
+                arr[i] = ExpressionResolver_ResolveExpressionSecondPass(resolver, arr[i]);
             }
         }
 
-        private Expression FirstPass_BaseCtorReference(Expression baseCtor)
+        private static Expression ExpressionResolver_FirstPass_BaseCtorReference(Resolver resolver, Expression baseCtor)
         {
             return baseCtor;
         }
 
-        private Expression FirstPass_BinaryOp(Expression binOp)
+        private static Expression ExpressionResolver_FirstPass_BinaryOp(Resolver resolver, Expression binOp)
         {
-            binOp.left = this.ResolveExpressionFirstPass(binOp.left);
-            binOp.right = this.ResolveExpressionFirstPass(binOp.right);
+            binOp.left = ExpressionResolver_ResolveExpressionFirstPass(resolver, binOp.left);
+            binOp.right = ExpressionResolver_ResolveExpressionFirstPass(resolver, binOp.right);
             switch (binOp.opToken.Value)
             {
                 case "|":
@@ -128,32 +118,32 @@ namespace CommonScript.Compiler
                 case "^":
                 case "<<":
                 case ">>":
-                    binOp.left = this.IntegerRequired(binOp.left);
-                    binOp.right = this.IntegerRequired(binOp.right);
+                    binOp.left = ExpressionResolver_IntegerRequired(resolver, binOp.left);
+                    binOp.right = ExpressionResolver_IntegerRequired(resolver, binOp.right);
                     break;
             }
             return binOp;
         }
 
-        private Expression FirstPass_BitwiseNot(Expression bwn)
+        private static Expression ExpressionResolver_FirstPass_BitwiseNot(Resolver resolver, Expression bwn)
         {
-            bwn.root = this.ResolveExpressionFirstPass(bwn.root);
-            bwn.root = this.IntegerRequired(bwn.root);
+            bwn.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, bwn.root);
+            bwn.root = ExpressionResolver_IntegerRequired(resolver, bwn.root);
             return bwn;
         }
 
-        private Expression FirstPass_BoolConst(Expression bc)
+        private static Expression ExpressionResolver_FirstPass_BoolConst(Resolver resolver, Expression bc)
         {
             return bc;
         }
 
-        private Expression FirstPass_BoolNot(Expression booNot)
+        private static Expression ExpressionResolver_FirstPass_BoolNot(Resolver resolver, Expression booNot)
         {
-            booNot.root = this.ResolveExpressionFirstPass(booNot.root);
+            booNot.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, booNot.root);
             return booNot;
         }
 
-        private Expression FirstPass_ConstructorInvocation(Expression ctorInvoke)
+        private static Expression ExpressionResolver_FirstPass_ConstructorInvocation(Resolver resolver, Expression ctorInvoke)
         {
             // You left off here realizing that it's actually better to just use CONSTRUCTOR_REF as a parse node, that way 
             // the resolver for the path of the item can be resolve in a normal way e.g. "new myModuleAlias.SomeClass()" should
@@ -161,26 +151,26 @@ namespace CommonScript.Compiler
             throw new NotImplementedException();
         }
 
-        private Expression FirstPass_ConstructorReference(Expression ctorRef)
+        private static Expression ExpressionResolver_FirstPass_ConstructorReference(Resolver resolver, Expression ctorRef)
         {
-            ctorRef.root = this.ResolveExpressionFirstPass(ctorRef.root);
+            ctorRef.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, ctorRef.root);
             return ctorRef;
         }
 
-        private Expression FirstPass_DictionaryDefinition(Expression dictDef)
+        private static Expression ExpressionResolver_FirstPass_DictionaryDefinition(Resolver resolver, Expression dictDef)
         {
             int length = dictDef.keys.Length;
             for (int i = 0; i < length; i++)
             {
-                dictDef.keys[i] = this.ResolveExpressionFirstPass(dictDef.keys[i]);
-                dictDef.values[i] = this.ResolveExpressionFirstPass(dictDef.values[i]);
+                dictDef.keys[i] = ExpressionResolver_ResolveExpressionFirstPass(resolver, dictDef.keys[i]);
+                dictDef.values[i] = ExpressionResolver_ResolveExpressionFirstPass(resolver, dictDef.values[i]);
             }
             return dictDef;
         }
 
-        private Expression FirstPass_DotField(Expression dotField)
+        private static Expression ExpressionResolver_FirstPass_DotField(Resolver resolver, Expression dotField)
         {
-            dotField.root = this.ResolveExpressionFirstPass(dotField.root);
+            dotField.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, dotField.root);
             string fieldName = dotField.strVal;
 
             switch (dotField.root.type)
@@ -217,119 +207,119 @@ namespace CommonScript.Compiler
                         FunctionWrapper.Errors_Throw(dotField.opToken, "There is no member of this namespace named '" + fieldName + "'.");
                     }
                     AbstractEntity referencedEntity = nsEntity.nestedMembers[fieldName];
-                    return WrapEntityIntoReferenceExpression(dotField.firstToken, referencedEntity);
+                    return ExpressionResolver_WrapEntityIntoReferenceExpression(resolver, dotField.firstToken, referencedEntity);
             }
 
             return dotField;
         }
 
-        private Expression FirstPass_FloatConstant(Expression floatConst)
+        private static Expression ExpressionResolver_FirstPass_FloatConstant(Resolver resolver, Expression floatConst)
         {
             return floatConst;
         }
 
-        private Expression FirstPass_FunctionInvocation(Expression funcInvoke)
+        private static Expression ExpressionResolver_FirstPass_FunctionInvocation(Resolver resolver, Expression funcInvoke)
         {
             if (funcInvoke.root.type == (int) ExpressionType.EXTENSION_REFERENCE)
             {
-                this.ResolveExpressionArrayFirstPass(funcInvoke.args);
+                ExpressionResolver_ResolveExpressionArrayFirstPass(resolver, funcInvoke.args);
                 return FunctionWrapper.Expression_createExtensionInvocation(funcInvoke.firstToken, funcInvoke.root.strVal, funcInvoke.args);
             }
             else
             {
-                funcInvoke.root = this.ResolveExpressionFirstPass(funcInvoke.root);
-                this.ResolveExpressionArrayFirstPass(funcInvoke.args);
+                funcInvoke.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, funcInvoke.root);
+                ExpressionResolver_ResolveExpressionArrayFirstPass(resolver, funcInvoke.args);
             }
 
             return funcInvoke;
         }
 
-        private Expression FirstPass_Index(Expression indexExpr)
+        private static Expression ExpressionResolver_FirstPass_Index(Resolver resolver, Expression indexExpr)
         {
-            indexExpr.root = this.ResolveExpressionFirstPass(indexExpr.root);
-            indexExpr.right = this.ResolveExpressionFirstPass(indexExpr.right);
+            indexExpr.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, indexExpr.root);
+            indexExpr.right = ExpressionResolver_ResolveExpressionFirstPass(resolver, indexExpr.right);
             return indexExpr;
         }
 
-        private Expression FirstPass_InlineIncrement(Expression inlineIncr)
+        private static Expression ExpressionResolver_FirstPass_InlineIncrement(Resolver resolver, Expression inlineIncr)
         {
-            inlineIncr.root = this.ResolveExpressionFirstPass(inlineIncr.root);
+            inlineIncr.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, inlineIncr.root);
             return inlineIncr;
         }
 
-        private Expression FirstPass_IntegerConstant(Expression intConst)
+        private static Expression ExpressionResolver_FirstPass_IntegerConstant(Resolver resolver, Expression intConst)
         {
             return intConst;
         }
 
-        private Expression FirstPass_Lambda(Expression lamb)
+        private static Expression ExpressionResolver_FirstPass_Lambda(Resolver resolver, Expression lamb)
         {
             FunctionEntity lambdaEnt = FunctionWrapper.FunctionEntity_BuildLambda(
-                this.resolver.activeEntity.fileContext,
+                resolver.activeEntity.fileContext,
                 lamb.firstToken,
                 [..lamb.argNames],
                 [..lamb.values],
                 [..lamb.nestedCode]);
-            this.resolver.ReportNewLambda(lambdaEnt);
+            ResolverUtil.ReportNewLambda(resolver, lambdaEnt);
             lamb.entityPtr = lambdaEnt.baseData;
             return lamb;
         }
 
-        private Expression FirstPass_ListDefinition(Expression listDef)
+        private static Expression ExpressionResolver_FirstPass_ListDefinition(Resolver resolver, Expression listDef)
         {
             for (int i = 0; i < listDef.values.Length; i++)
             {
-                listDef.values[i] = this.ResolveExpressionFirstPass(listDef.values[i]);
+                listDef.values[i] = ExpressionResolver_ResolveExpressionFirstPass(resolver, listDef.values[i]);
             }
             return listDef;
         }
 
-        private Expression FirstPass_NegativeSign(Expression negSign)
+        private static Expression ExpressionResolver_FirstPass_NegativeSign(Resolver resolver, Expression negSign)
         {
-            negSign.root = this.ResolveExpressionFirstPass(negSign.root);
+            negSign.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, negSign.root);
             return negSign;
         }
 
-        private Expression FirstPass_NullConst(Expression nullConst)
+        private static Expression ExpressionResolver_FirstPass_NullConst(Resolver resolver, Expression nullConst)
         {
             return nullConst;
         }
 
-        private Expression FirstPass_Slice(Expression slice)
+        private static Expression ExpressionResolver_FirstPass_Slice(Resolver resolver, Expression slice)
         {
-            slice.root = this.ResolveExpressionFirstPass(slice.root);
+            slice.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, slice.root);
             for (int i = 0; i < 3; i++)
             {
-                if (slice.args[i] != null) slice.args[i] = this.ResolveExpressionFirstPass(slice.args[i]);
+                if (slice.args[i] != null) slice.args[i] = ExpressionResolver_ResolveExpressionFirstPass(resolver, slice.args[i]);
             }
             return slice;
         }
 
-        private Expression FirstPass_StringConstant(Expression strConst)
+        private static Expression ExpressionResolver_FirstPass_StringConstant(Resolver resolver, Expression strConst)
         {
             return strConst;
         }
 
-        private Expression FirstPass_Ternary(Expression ternary)
+        private static Expression ExpressionResolver_FirstPass_Ternary(Resolver resolver, Expression ternary)
         {
-            ternary.root = this.ResolveExpressionFirstPass(ternary.root);
-            ternary.left = this.ResolveExpressionFirstPass(ternary.left);
-            ternary.right = this.ResolveExpressionFirstPass(ternary.right);
+            ternary.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, ternary.root);
+            ternary.left = ExpressionResolver_ResolveExpressionFirstPass(resolver, ternary.left);
+            ternary.right = ExpressionResolver_ResolveExpressionFirstPass(resolver, ternary.right);
             return ternary;
         }
 
-        private Expression FirstPass_This(Expression thisExpr)
+        private static Expression ExpressionResolver_FirstPass_This(Resolver resolver, Expression thisExpr)
         {
             return thisExpr;
         }
 
-        private Expression FirstPass_TypeOf(Expression typeofExpr)
+        private static Expression ExpressionResolver_FirstPass_TypeOf(Resolver resolver, Expression typeofExpr)
         {
-            typeofExpr.root = this.ResolveExpressionFirstPass(typeofExpr.root);
+            typeofExpr.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, typeofExpr.root);
             return typeofExpr;
         }
 
-        private static AbstractEntity FindLocallyReferencedEntity(StaticContext staticCtx, Dictionary<string, AbstractEntity> lookup,
+        private static AbstractEntity ExpressionResolver_FindLocallyReferencedEntity(StaticContext staticCtx, Dictionary<string, AbstractEntity> lookup,
             string name)
         {
             if (lookup.ContainsKey(name))
@@ -340,13 +330,13 @@ namespace CommonScript.Compiler
             if (lookup.ContainsKey(".."))
             {
                 Dictionary<string, AbstractEntity> prevLevelLookup = FunctionWrapper.Entity_getMemberLookup(staticCtx, lookup[".."]);
-                return FindLocallyReferencedEntity(staticCtx, prevLevelLookup, name);
+                return ExpressionResolver_FindLocallyReferencedEntity(staticCtx, prevLevelLookup, name);
             }
 
             return null;
         }
 
-        private Expression WrapEntityIntoReferenceExpression(Token token, AbstractEntity entity)
+        private static Expression ExpressionResolver_WrapEntityIntoReferenceExpression(Resolver resolver, Token token, AbstractEntity entity)
         {
             switch (entity.type)
             {
@@ -370,17 +360,17 @@ namespace CommonScript.Compiler
             return null;
         }
 
-        private Expression FirstPass_Variable(Expression varExpr)
+        private static Expression ExpressionResolver_FirstPass_Variable(Resolver resolver, Expression varExpr)
         {
             string name = varExpr.strVal;
 
-            AbstractEntity localEntity = FindLocallyReferencedEntity(this.resolver.staticCtx, this.resolver.nestedEntities, name);
+            AbstractEntity localEntity = ExpressionResolver_FindLocallyReferencedEntity(resolver.staticCtx, resolver.nestedEntities, name);
             if (localEntity != null)
             {
-                return WrapEntityIntoReferenceExpression(varExpr.firstToken, localEntity);
+                return ExpressionResolver_WrapEntityIntoReferenceExpression(resolver, varExpr.firstToken, localEntity);
             }
 
-            Expression importedRef = LookupEngine.DoFirstPassVariableLookupThroughImports(this.resolver, varExpr.firstToken, name);
+            Expression importedRef = LookupEngine.DoFirstPassVariableLookupThroughImports(resolver, varExpr.firstToken, name);
             if (importedRef != null) return importedRef;
 
             return varExpr;
@@ -395,7 +385,7 @@ namespace CommonScript.Compiler
                 t == (int) ExpressionType.ENUM_CONST;
         }
 
-        private static double GetNumericValueOfConstant(Expression exprConst)
+        private static double ExpressionResolver_GetNumericValueOfConstant(Expression exprConst)
         {
             return exprConst.type == (int) ExpressionType.FLOAT_CONST ? exprConst.floatVal : exprConst.intVal;
         }
@@ -419,28 +409,28 @@ namespace CommonScript.Compiler
             FunctionWrapper.Errors_Throw(throwToken, "The operation '" + SimpleExprToTypeName(left) + " " + op + " " + SimpleExprToTypeName(right) + "' is not defined.");
         }
 
-        private Expression SecondPass_BaseCtorReference(Expression baseCtor)
+        private static Expression ExpressionResolver_SecondPass_BaseCtorReference(Resolver resolver, Expression baseCtor)
         {
-            baseCtor.entityPtr = ((ClassEntity)this.resolver.activeEntity.nestParent.specificData).baseClassEntity.baseData;
+            baseCtor.entityPtr = ((ClassEntity)resolver.activeEntity.nestParent.specificData).baseClassEntity.baseData;
             return baseCtor;
         }
 
-        private Expression SecondPass_BinaryOp(Expression expr)
+        private static Expression ExpressionResolver_SecondPass_BinaryOp(Resolver resolver, Expression expr)
         {
             Token firstToken = expr.firstToken;
             Token opToken = expr.opToken;
             string op = opToken.Value;
 
-            expr.left = this.ResolveExpressionSecondPass(expr.left);
+            expr.left = ExpressionResolver_ResolveExpressionSecondPass(resolver, expr.left);
             if (expr.right.type == (int)ExpressionType.CLASS_REFERENCE && op == "is")
             {
                 expr.right.boolVal = true;
             }
-            expr.right = this.ResolveExpressionSecondPass(expr.right);
+            expr.right = ExpressionResolver_ResolveExpressionSecondPass(resolver, expr.right);
 
 
             // TODO: resolve constants
-            if (Resolver.IsExpressionConstant(expr.left) && Resolver.IsExpressionConstant(expr.right))
+            if (ResolverUtil.IsExpressionConstant(expr.left) && ResolverUtil.IsExpressionConstant(expr.right))
             {
                 bool isLeftNumeric = IsExpressionNumericConstant(expr.left);
                 bool isRightNumeric = IsExpressionNumericConstant(expr.right);
@@ -460,8 +450,8 @@ namespace CommonScript.Compiler
 
                 if (isLeftNumeric && isRightNumeric)
                 {
-                    double floatLeft = GetNumericValueOfConstant(expr.left);
-                    double floatRight = GetNumericValueOfConstant(expr.right);
+                    double floatLeft = ExpressionResolver_GetNumericValueOfConstant(expr.left);
+                    double floatRight = ExpressionResolver_GetNumericValueOfConstant(expr.right);
 
                     if (op == "<") return FunctionWrapper.Expression_createBoolConstant(firstToken, floatLeft < floatRight);
                     if (op == ">") return FunctionWrapper.Expression_createBoolConstant(firstToken, floatLeft > floatRight);
@@ -540,8 +530,8 @@ namespace CommonScript.Compiler
                     case (int)ExpressionType.FLOAT_CONST * (int)ExpressionType.MAX_VALUE + (int)ExpressionType.INTEGER_CONST:
                     case (int)ExpressionType.ENUM_CONST * (int)ExpressionType.MAX_VALUE + (int)ExpressionType.FLOAT_CONST:
                     case (int)ExpressionType.FLOAT_CONST * (int)ExpressionType.MAX_VALUE + (int)ExpressionType.ENUM_CONST:
-                        double floatLeft = GetNumericValueOfConstant(expr.left);
-                        double floatRight = GetNumericValueOfConstant(expr.right);
+                        double floatLeft = ExpressionResolver_GetNumericValueOfConstant(expr.left);
+                        double floatRight = ExpressionResolver_GetNumericValueOfConstant(expr.right);
                         double floatResult = 0.0;
                         switch (op)
                         {
@@ -626,12 +616,12 @@ namespace CommonScript.Compiler
             throw new NotImplementedException();
         }
 
-        private Expression SecondPass_ConstructorReference(Expression ctorRef, bool isExpected)
+        private static Expression ExpressionResolver_SecondPass_ConstructorReference(Resolver resolver, Expression ctorRef, bool isExpected)
         {
             if (isExpected)
             {
                 ctorRef.root.boolVal = true;
-                ctorRef.root = this.ResolveExpressionSecondPass(ctorRef.root);
+                ctorRef.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, ctorRef.root);
                 if (ctorRef.root.type != (int) ExpressionType.CLASS_REFERENCE) FunctionWrapper.Errors_Throw(ctorRef.root.firstToken, "This is not a valid class definition.");
                 ctorRef.entityPtr = ctorRef.root.entityPtr;
                 ctorRef.root = null;
@@ -642,11 +632,11 @@ namespace CommonScript.Compiler
             return ctorRef;
         }
 
-        private Expression SecondPass_BitwiseNot(Expression bwn)
+        private static Expression ExpressionResolver_SecondPass_BitwiseNot(Resolver resolver, Expression bwn)
         {
-            bwn.root = this.ResolveExpressionSecondPass(bwn.root);
+            bwn.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, bwn.root);
 
-            if (Resolver.IsExpressionConstant(bwn.root))
+            if (ResolverUtil.IsExpressionConstant(bwn.root))
             {
                 if (bwn.root.type != (int) ExpressionType.INTEGER_CONST)
                 {
@@ -657,16 +647,16 @@ namespace CommonScript.Compiler
             return bwn;
         }
 
-        private Expression SecondPass_BoolConst(Expression bc)
+        private static Expression ExpressionResolver_SecondPass_BoolConst(Resolver resolver, Expression bc)
         {
             return bc;
         }
 
-        private Expression SecondPass_BoolNot(Expression bn)
+        private static Expression ExpressionResolver_SecondPass_BoolNot(Resolver resolver, Expression bn)
         {
-            bn.root = this.ResolveExpressionSecondPass(bn.root);
+            bn.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, bn.root);
 
-            if (Resolver.IsExpressionConstant(bn.root))
+            if (ResolverUtil.IsExpressionConstant(bn.root))
             {
                 if (bn.root.type != (int) ExpressionType.BOOLEAN_NOT)
                 {
@@ -678,7 +668,7 @@ namespace CommonScript.Compiler
             return bn;
         }
 
-        private Expression SecondPass_ClassReference(Expression classRef)
+        private static Expression ExpressionResolver_SecondPass_ClassReference(Resolver resolver, Expression classRef)
         {
             if (!classRef.boolVal)
             {
@@ -687,14 +677,14 @@ namespace CommonScript.Compiler
             return classRef;
         }
 
-        private Expression SecondPass_DictionaryDefinition(Expression dictDef)
+        private static Expression ExpressionResolver_SecondPass_DictionaryDefinition(Resolver resolver, Expression dictDef)
         {
             int length = dictDef.keys.Length;
             Dictionary<string, bool> strCollide = new Dictionary<string, bool>();
             Dictionary<int, bool> intCollide = new Dictionary<int, bool>();
             for (int i = 0; i < length; i++)
             {
-                Expression key = this.ResolveExpressionSecondPass(dictDef.keys[i]);
+                Expression key = ExpressionResolver_ResolveExpressionSecondPass(resolver, dictDef.keys[i]);
                 bool isMixed = false;
                 bool isCollide = false;
                 if (key.type == (int) ExpressionType.INTEGER_CONST)
@@ -725,17 +715,17 @@ namespace CommonScript.Compiler
                 }
 
                 dictDef.keys[i] = key;
-                dictDef.values[i] = this.ResolveExpressionSecondPass(dictDef.values[i]);
+                dictDef.values[i] = ExpressionResolver_ResolveExpressionSecondPass(resolver, dictDef.values[i]);
             }
             return dictDef;
         }
 
-        private Expression SecondPass_DotField(Expression df)
+        private static Expression ExpressionResolver_SecondPass_DotField(Resolver resolver, Expression df)
         {
             // This is the only way to refer to a class reference.
             if (df.root.type == (int) ExpressionType.CLASS_REFERENCE) df.root.boolVal = true;
 
-            df.root = this.ResolveExpressionSecondPass(df.root);
+            df.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, df.root);
             switch (df.root.type)
             {
                 case (int) ExpressionType.STRING_CONST:
@@ -775,18 +765,18 @@ namespace CommonScript.Compiler
             return df;
         }
 
-        private Expression SecondPass_EnumConstant(Expression enumConst)
+        private static Expression ExpressionResolver_SecondPass_EnumConstant(Resolver resolver, Expression enumConst)
         {
             return enumConst;
         }
 
-        private Expression SecondPass_ExtensionInvocation(Expression expr)
+        private static Expression ExpressionResolver_SecondPass_ExtensionInvocation(Resolver resolver, Expression expr)
         {
-            this.ResolveExpressionArraySecondPass(expr.args);
+            ExpressionResolver_ResolveExpressionArraySecondPass(resolver, expr.args);
             int argc = -1;
-            if (FunctionWrapper.SpecialActionUtil_IsSpecialActionAndNotExtension(this.resolver.staticCtx.specialActionUtil, expr.strVal))
+            if (FunctionWrapper.SpecialActionUtil_IsSpecialActionAndNotExtension(resolver.staticCtx.specialActionUtil, expr.strVal))
             {
-                argc = FunctionWrapper.SpecialActionUtil_GetSpecialActionArgc(this.resolver.staticCtx.specialActionUtil, expr.strVal);
+                argc = FunctionWrapper.SpecialActionUtil_GetSpecialActionArgc(resolver.staticCtx.specialActionUtil, expr.strVal);
             }
             else
             {
@@ -797,7 +787,7 @@ namespace CommonScript.Compiler
                     case "sleep": argc = 1; break;
 
                     default:
-                        if (this.resolver.isValidRegisteredExtension(expr.strVal))
+                        if (ResolverUtil.isValidRegisteredExtension(resolver, expr.strVal))
                         {
                             return expr;
                         }
@@ -814,24 +804,24 @@ namespace CommonScript.Compiler
             return expr;
         }
 
-        private Expression SecondPass_FloatConstant(Expression floatConst)
+        private static Expression ExpressionResolver_SecondPass_FloatConstant(Resolver resolver, Expression floatConst)
         {
             return floatConst;
         }
 
-        private Expression SecondPass_FunctionInvocation(Expression funcInvoke)
+        private static Expression ExpressionResolver_SecondPass_FunctionInvocation(Resolver resolver, Expression funcInvoke)
         {
             if (funcInvoke.root.type == (int) ExpressionType.CONSTRUCTOR_REFERENCE)
             {
-                Expression ctorRef = this.SecondPass_ConstructorReference(funcInvoke.root, true);
+                Expression ctorRef = ExpressionResolver_SecondPass_ConstructorReference(resolver, funcInvoke.root, true);
                 if (ctorRef.type != (int) ExpressionType.CONSTRUCTOR_REFERENCE) throw new InvalidOperationException(); // this shouldn't happen. 
 
-                this.ResolveExpressionArraySecondPass(funcInvoke.args);
+                ExpressionResolver_ResolveExpressionArraySecondPass(resolver, funcInvoke.args);
 
                 return FunctionWrapper.Expression_createConstructorInvocation(funcInvoke.firstToken, (AbstractEntity)ctorRef.entityPtr, funcInvoke.opToken, funcInvoke.args);
             }
 
-            funcInvoke.root = this.ResolveExpressionSecondPass(funcInvoke.root);
+            funcInvoke.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, funcInvoke.root);
 
             switch (funcInvoke.root.type)
             {
@@ -848,32 +838,32 @@ namespace CommonScript.Compiler
                     break;
             }
 
-            this.ResolveExpressionArraySecondPass(funcInvoke.args);
+            ExpressionResolver_ResolveExpressionArraySecondPass(resolver, funcInvoke.args);
 
             return funcInvoke;
         }
 
-        private Expression SecondPass_FunctionReference(Expression funcRef)
+        private static Expression ExpressionResolver_SecondPass_FunctionReference(Resolver resolver, Expression funcRef)
         {
             return funcRef;
         }
 
-        private Expression SecondPass_ImportReference(Expression importRef)
+        private static Expression ExpressionResolver_SecondPass_ImportReference(Resolver resolver, Expression importRef)
         {
             FunctionWrapper.Errors_Throw(importRef.firstToken, "An import reference cannot be passed as a reference. You must reference the imported entity directly.");
             return null;
         }
 
-        private Expression SecondPass_Index(Expression indexExpr)
+        private static Expression ExpressionResolver_SecondPass_Index(Resolver resolver, Expression indexExpr)
         {
-            indexExpr.root = this.ResolveExpressionSecondPass(indexExpr.root);
-            indexExpr.right = this.ResolveExpressionSecondPass(indexExpr.right);
+            indexExpr.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, indexExpr.root);
+            indexExpr.right = ExpressionResolver_ResolveExpressionSecondPass(resolver, indexExpr.right);
             return indexExpr;
         }
 
-        private Expression SecondPass_InlineIncrement(Expression inlineIncr)
+        private static Expression ExpressionResolver_SecondPass_InlineIncrement(Resolver resolver, Expression inlineIncr)
         {
-            inlineIncr.root = this.ResolveExpressionSecondPass(inlineIncr.root);
+            inlineIncr.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, inlineIncr.root);
             switch (inlineIncr.root.type)
             {
                 case (int) ExpressionType.VARIABLE:
@@ -889,34 +879,34 @@ namespace CommonScript.Compiler
             return inlineIncr;
         }
 
-        private Expression SecondPass_IntegerConstant(Expression intConst)
+        private static Expression ExpressionResolver_SecondPass_IntegerConstant(Resolver resolver, Expression intConst)
         {
             return intConst;
         }
 
-        private Expression SecondPass_Lambda(Expression lambda)
+        private static Expression ExpressionResolver_SecondPass_Lambda(Resolver resolver, Expression lambda)
         {
             return lambda;
         }
 
-        private Expression SecondPass_ListDefinition(Expression listDef)
+        private static Expression ExpressionResolver_SecondPass_ListDefinition(Resolver resolver, Expression listDef)
         {
             for (int i = 0; i < listDef.values.Length; i++)
             {
-                listDef.values[i] = this.ResolveExpressionSecondPass(listDef.values[i]);
+                listDef.values[i] = ExpressionResolver_ResolveExpressionSecondPass(resolver, listDef.values[i]);
             }
             return listDef;
         }
 
-        private Expression SecondPass_NamespaceReference(Expression nsRef)
+        private static Expression ExpressionResolver_SecondPass_NamespaceReference(Resolver resolver, Expression nsRef)
         {
             FunctionWrapper.Errors_Throw(nsRef.firstToken, "You cannot use a namespace reference like this.");
             return null;
         }
 
-        private Expression SecondPass_NegativeSign(Expression negSign)
+        private static Expression ExpressionResolver_SecondPass_NegativeSign(Resolver resolver, Expression negSign)
         {
-            Expression root = this.ResolveExpressionSecondPass(negSign.root);
+            Expression root = ExpressionResolver_ResolveExpressionSecondPass(resolver, negSign.root);
             negSign.root = root;
             if (IsExpressionNumericConstant(root))
             {
@@ -932,7 +922,8 @@ namespace CommonScript.Compiler
                         root = FunctionWrapper.Expression_createIntegerConstant(root.firstToken, -root.intVal);
                         break;
                     default:
-                        throw new NotImplementedException();
+                        FunctionWrapper.fail("Not implemented");
+                        break;
                 }
                 return root;
             }
@@ -940,21 +931,21 @@ namespace CommonScript.Compiler
             return negSign;
         }
 
-        private Expression SecondPass_NullConstant(Expression nullConst)
+        private static Expression ExpressionResolver_SecondPass_NullConstant(Resolver resolver, Expression nullConst)
         {
             return nullConst;
         }
 
-        private Expression SecondPass_Slice(Expression slice)
+        private static Expression ExpressionResolver_SecondPass_Slice(Resolver resolver, Expression slice)
         {
-            slice.root = this.ResolveExpressionSecondPass(slice.root);
+            slice.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, slice.root);
             for (int i = 0; i < 3; i++)
             {
                 if (slice.args[i] != null)
                 {
-                    Expression expr = this.ResolveExpressionSecondPass(slice.args[i]);
+                    Expression expr = ExpressionResolver_ResolveExpressionSecondPass(resolver, slice.args[i]);
                     slice.args[i] = expr;
-                    if (Resolver.IsExpressionConstant(expr))
+                    if (ResolverUtil.IsExpressionConstant(expr))
                     {
                         if (expr.type != (int) ExpressionType.INTEGER_CONST && expr.type != (int) ExpressionType.ENUM_CONST)
                         {
@@ -967,18 +958,18 @@ namespace CommonScript.Compiler
             return slice;
         }
 
-        private Expression SecondPass_StringConstant(Expression strConst)
+        private static Expression ExpressionResolver_SecondPass_StringConstant(Resolver resolver, Expression strConst)
         {
             return strConst;
         }
 
-        private Expression SecondPass_Ternary(Expression ternary)
+        private static Expression ExpressionResolver_SecondPass_Ternary(Resolver resolver, Expression ternary)
         {
-            ternary.root = this.ResolveExpressionSecondPass(ternary.root);
-            ternary.left = this.ResolveExpressionSecondPass(ternary.left);
-            ternary.right = this.ResolveExpressionSecondPass(ternary.right);
+            ternary.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, ternary.root);
+            ternary.left = ExpressionResolver_ResolveExpressionSecondPass(resolver, ternary.left);
+            ternary.right = ExpressionResolver_ResolveExpressionSecondPass(resolver, ternary.right);
 
-            if (Resolver.IsExpressionConstant(ternary.root))
+            if (ResolverUtil.IsExpressionConstant(ternary.root))
             {
                 if (ternary.root.type != (int) ExpressionType.BOOL_CONST)
                 {
@@ -991,15 +982,15 @@ namespace CommonScript.Compiler
             return ternary;
         }
 
-        private Expression SecondPass_ThisConstant(Expression thisExpr)
+        private static Expression ExpressionResolver_SecondPass_ThisConstant(Resolver resolver, Expression thisExpr)
         {
-            if (this.resolver.activeEntity.nestParent == null) throw new NotImplementedException();
+            if (resolver.activeEntity.nestParent == null) throw new NotImplementedException();
             return thisExpr;
         }
 
-        private Expression SecondPass_TypeOf(Expression typeofExpr)
+        private static Expression ExpressionResolver_SecondPass_TypeOf(Resolver resolver, Expression typeofExpr)
         {
-            typeofExpr.root = this.ResolveExpressionSecondPass(typeofExpr.root);
+            typeofExpr.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, typeofExpr.root);
             string stringConst = null;
             switch (typeofExpr.root.type)
             {
@@ -1027,17 +1018,17 @@ namespace CommonScript.Compiler
             return typeofExpr;
         }
 
-        private Expression SecondPass_Variable(Expression varExpr)
+        private static Expression ExpressionResolver_SecondPass_Variable(Resolver resolver, Expression varExpr)
         {
             if (varExpr.strVal == "print") throw new InvalidOperationException();
-            if (((FunctionEntity)this.resolver.activeEntity.specificData).variableScope.ContainsKey(varExpr.strVal)) return varExpr;
+            if (((FunctionEntity)resolver.activeEntity.specificData).variableScope.ContainsKey(varExpr.strVal)) return varExpr;
 
             // TODO: come up with a list of suggestions.
             FunctionWrapper.Errors_Throw(varExpr.firstToken, "There is no variable by the name of '" + varExpr.strVal + "'.");
             return null;
         }
 
-        private Expression IntegerRequired(Expression expr)
+        private static Expression ExpressionResolver_IntegerRequired(Resolver resolver, Expression expr)
         {
             switch (expr.type)
             {

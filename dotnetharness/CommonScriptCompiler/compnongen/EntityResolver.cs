@@ -5,35 +5,25 @@ using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
-    internal class EntityResolver
+    internal static class EntityResolverUtil
     {
-        private Resolver resolver;
-        public ExpressionResolver expressionResolver;
-        public StatementResolver statementResolver;
-        private int autoVarId = 0;
-
-        public EntityResolver(Resolver resolver)
+        public static void EntityResolver_ResetAutoVarId(Resolver resolver)
         {
-            this.resolver = resolver;
+            resolver.autoVarId = 0;
         }
 
-        public void ResetAutoVarId()
+        public static int EntityResolver_GetNextAutoVarId(Resolver resolver)
         {
-            this.autoVarId = 0;
+            return resolver.autoVarId++;
         }
 
-        public int GetNextAutoVarId()
-        {
-            return autoVarId++;
-        }
-
-        public static void DetermineMemberOffsets(ClassEntity classDef)
+        public static void EntityResolver_DetermineMemberOffsets(ClassEntity classDef)
         {
             // TODO: you need to ensure that the overridden members are exclusively methods, not fields.
 
             if (classDef.directMemberToOffset != null) return;
             ClassEntity parent = classDef.baseClassEntity;
-            if (parent != null) DetermineMemberOffsets(parent);
+            if (parent != null) EntityResolver_DetermineMemberOffsets(parent);
 
             classDef.directMemberToOffset = new Dictionary<string, int>();
             classDef.flattenedMemberOffsetLookup = new Dictionary<string, int>();
@@ -74,12 +64,12 @@ namespace CommonScript.Compiler
             classDef.newDirectMemberOffsets = newDirectMembers.ToArray();
         }
 
-        public void ResolveFunctionFirstPass(FunctionEntity funcDef)
+        public static void EntityResolver_ResolveFunctionFirstPass(Resolver resolver, FunctionEntity funcDef)
         {
             funcDef.variableScope = new Dictionary<string, bool>();
 
-            this.resolver.activeEntity = funcDef.baseData;
-            this.resolver.breakContext = null;
+            resolver.activeEntity = funcDef.baseData;
+            resolver.breakContext = null;
 
             for (int i = 0; i < funcDef.argTokens.Length; i++)
             {
@@ -91,7 +81,7 @@ namespace CommonScript.Compiler
                 funcDef.variableScope[arg.Value] = true;
 
                 Expression defVal = funcDef.argDefaultValues[i];
-                if (defVal != null) funcDef.argDefaultValues[i] = this.expressionResolver.ResolveExpressionFirstPass(defVal);
+                if (defVal != null) funcDef.argDefaultValues[i] = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, defVal);
             }
 
             List<Statement> preBaseFieldInit = new List<Statement>();
@@ -105,7 +95,7 @@ namespace CommonScript.Compiler
             {
                 ctorEnt = funcDef;
 
-                Dictionary<string, AbstractEntity> siblings = FunctionWrapper.Entity_getMemberLookup(this.resolver.staticCtx, funcDef.baseData.nestParent);
+                Dictionary<string, AbstractEntity> siblings = FunctionWrapper.Entity_getMemberLookup(resolver.staticCtx, funcDef.baseData.nestParent);
                 // TODO: this is wrong. The fields should be processed in the order that they appear in the code itself.
                 // This will affect runtime order of complex expressions which could have observable consequences.
                 // TODO: simple constant initial values should be conveyed in the metadata and direct-copied from a template.
@@ -121,9 +111,9 @@ namespace CommonScript.Compiler
                 for (int i = 0; i < fields.Length; i++)
                 {
                     FieldEntity fld = fields[i];
-                    fld.defaultValue = this.expressionResolver.ResolveExpressionFirstPass(fld.defaultValue);
-                    Statement setter = ConvertFieldDefaultValueIntoSetter(fld);
-                    if (Resolver.IsExpressionConstant(fld.defaultValue))
+                    fld.defaultValue = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, fld.defaultValue);
+                    Statement setter = EntityResolver_ConvertFieldDefaultValueIntoSetter(fld);
+                    if (ResolverUtil.IsExpressionConstant(fld.defaultValue))
                     {
                         preBaseFieldInit.Add(setter);
                     }
@@ -144,11 +134,11 @@ namespace CommonScript.Compiler
                 Expression baseCtorRef = FunctionWrapper.Expression_createBaseCtorReference(baseCtor);
                 Expression baseCtorInvoke = FunctionWrapper.Expression_createFunctionInvocation(baseCtorRef, baseCtorParen, ctorEnt.baseCtorArgValues);
                 Statement baseCtorStmnt = StatementUtil.createExpressionAsStatement(baseCtorInvoke);
-                baseCtorStmnt = this.statementResolver.ResolveStatementFirstPass(baseCtorStmnt);
+                baseCtorStmnt = StatementResolverUtil.StatementResolver_ResolveStatementFirstPass(resolver, baseCtorStmnt);
                 baseCtorInvocation.Add(baseCtorStmnt);
             }
 
-            this.statementResolver.ResolveStatementArrayFirstPass(funcDef.code);
+            StatementResolverUtil.StatementResolver_ResolveStatementArrayFirstPass(resolver, funcDef.code);
 
             List<Statement> flattened = [
                 .. preBaseFieldInit,
@@ -166,11 +156,11 @@ namespace CommonScript.Compiler
             }
             funcDef.code = [.. flattened];
 
-            this.resolver.activeEntity = null;
-            this.resolver.breakContext = null;
+            resolver.activeEntity = null;
+            resolver.breakContext = null;
         }
 
-        private static Statement ConvertFieldDefaultValueIntoSetter(FieldEntity fld)
+        private static Statement EntityResolver_ConvertFieldDefaultValueIntoSetter(FieldEntity fld)
         {
             if (fld.opToken == null) throw new InvalidOperationException(); // only applicable to default-value-based fields.
             Expression root = fld.baseData.isStatic
@@ -181,21 +171,21 @@ namespace CommonScript.Compiler
             return StatementUtil.createAssignment(target, equal, fld.defaultValue);
         }
 
-        public void ResolveFunctionSecondPass(FunctionEntity funcDef)
+        public static void EntityResolver_ResolveFunctionSecondPass(Resolver resolver, FunctionEntity funcDef)
         {
-            this.resolver.activeEntity = funcDef.baseData;
-            this.resolver.breakContext = null;
+            resolver.activeEntity = funcDef.baseData;
+            resolver.breakContext = null;
 
             for (int i = 0; i < funcDef.argDefaultValues.Length; i++)
             {
                 Expression defVal = funcDef.argDefaultValues[i];
                 if (defVal != null)
                 {
-                    funcDef.argDefaultValues[i] = this.expressionResolver.ResolveExpressionSecondPass(defVal);
+                    funcDef.argDefaultValues[i] = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, defVal);
                 }
             }
 
-            this.statementResolver.ResolveStatementArraySecondPass(funcDef.code);
+            StatementResolverUtil.StatementResolver_ResolveStatementArraySecondPass(resolver, funcDef.code);
 
             if (funcDef.code.Length == 0 || funcDef.code[funcDef.code.Length - 1].type != (int) StatementType.RETURN)
             {
@@ -203,8 +193,8 @@ namespace CommonScript.Compiler
                 newCode.Add(StatementUtil.createReturn(null, FunctionWrapper.Expression_createNullConstant(null)));
                 funcDef.code = newCode.ToArray();
             }
-            this.resolver.activeEntity = null;
-            this.resolver.breakContext = null;
+            resolver.activeEntity = null;
+            resolver.breakContext = null;
         }
     }
 }

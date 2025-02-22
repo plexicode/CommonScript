@@ -1,0 +1,77 @@
+struct Resolver {
+    StaticContext staticCtx;
+    Dictionary<string, AbstractEntity> nestedEntities;
+    Dictionary<string, AbstractEntity> enumsByMemberFqName;
+    Dictionary<string, AbstractEntity> flattenedEntities;
+    Dictionary<string, AbstractEntity> flattenedEntitiesAndEnumValues;
+    Dictionary<string, AbstractEntity> flattenedEntitiesNoEnumParents;
+    List<FunctionEntity> lambdas;
+    AbstractEntity activeEntity;
+    Array<AbstractEntity> entityList;
+    Statement breakContext;
+    int autoVarId;
+    StringSet extensionNames;
+}
+
+Resolver Resolver_new(StaticContext staticCtx, Dictionary<string, AbstractEntity> rootEntities, List<string> extensionNames) {
+    Resolver r = new Resolver(
+        staticCtx,
+        rootEntities, // nested entities
+        new Dictionary<string, AbstractEntity>(), // enumsByMemberFqName
+        new Dictionary<string, AbstractEntity>(), // flattenedEntities
+        new Dictionary<string, AbstractEntity>(), // flattenedEntitiesAndEnumValues
+        new Dictionary<string, AbstractEntity>(), // flattenedEntitiesNoEnumParents
+        new List<FunctionEntity>(), // lambdas
+        null, // activeEntity
+        null, // entityList
+        null, // breakContext
+        0, // autoVarId
+        StringSet_fromList(extensionNames) // nested entities
+    );
+
+    r.entityList = FlattenEntities(staticCtx, rootEntities);
+
+    for (int i = 0; i < r.entityList.Size(); i += 1) {
+        AbstractEntity tle = r.entityList[i];
+        r.flattenedEntities[tle.fqName] = tle;
+        r.flattenedEntitiesAndEnumValues[tle.fqName] = tle;
+        if (tle.type == EntityType.ENUM) {
+            EnumEntity enumDef = (EnumEntity) tle.specificData;
+            for (int j = 0; j < enumDef.memberNameTokens.Size(); j++) {
+                string fqName = enumDef.baseData.fqName + "." + enumDef.memberNameTokens[j].Value;
+                r.enumsByMemberFqName[fqName] = enumDef.baseData;
+                r.flattenedEntitiesAndEnumValues[fqName] = enumDef.baseData;
+                r.flattenedEntitiesNoEnumParents[fqName] = enumDef.baseData;
+            }
+        } else {
+            r.flattenedEntitiesNoEnumParents[tle.fqName] = tle;
+        }
+    }
+
+    return r;
+}
+
+Array<AbstractEntity> FlattenEntities(StaticContext staticCtx, Dictionary<string, AbstractEntity> rootEntities) {
+    List<AbstractEntity> output = new List<AbstractEntity>();
+    List<AbstractEntity> queue = new List<AbstractEntity>();
+
+    // TODO: surely there's a way to copy an Array to a List in Pastel.
+    // If not, it needs to be added.
+    Array<AbstractEntity> arrTemp = rootEntities.Values();
+    for (int j = 0; j < arrTemp.Size(); j += 1) {
+        queue.Add(arrTemp[j]);
+    }
+
+    for (int i = 0; i < queue.Size(); i += 1) {
+        AbstractEntity entity = queue[i];
+        output.Add(entity);
+
+        Array<AbstractEntity> lookupMembers = Entity_getMemberLookup(staticCtx, entity).Values();
+        for (j = 0; j < lookupMembers.Size(); j += 1) {
+            AbstractEntity mem = lookupMembers[j];
+            queue.Add(mem);
+        }
+    }
+
+    return Core.ListToArray(output);
+}

@@ -4,52 +4,43 @@ using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
-    internal class StatementResolver
+    internal static class StatementResolverUtil
     {
-        private Resolver resolver;
-        public ExpressionResolver expressionResolver;
-        public EntityResolver entityResolver;
-
-        public StatementResolver(Resolver resolver)
-        {
-            this.resolver = resolver;
-        }
-
-        public void ResolveStatementArrayFirstPass(Statement[] arr)
+        public static void StatementResolver_ResolveStatementArrayFirstPass(Resolver resolver, Statement[] arr)
         {
             for (int i = 0; i < arr.Length; i++)
             {
-                arr[i] = this.ResolveStatementFirstPass(arr[i]);
+                arr[i] = StatementResolver_ResolveStatementFirstPass(resolver, arr[i]);
             }
         }
 
-        public void ResolveStatementArraySecondPass(Statement[] arr)
+        public static void StatementResolver_ResolveStatementArraySecondPass(Resolver resolver, Statement[] arr)
         {
             for (int i = 0; i < arr.Length; i++)
             {
-                arr[i] = this.ResolveStatementSecondPass(arr[i]);
+                arr[i] = StatementResolver_ResolveStatementSecondPass(resolver, arr[i]);
             }
         }
 
-        public Statement ResolveStatementFirstPass(Statement s)
+        public static Statement StatementResolver_ResolveStatementFirstPass(Resolver resolver, Statement s)
         {
             switch (s.type)
             {
-                case (int) StatementType.ASSIGNMENT: return FirstPass_Assignment(s);
-                case (int) StatementType.BREAK: return FirstPass_Break(s);
-                case (int) StatementType.CONTINUE: return FirstPass_Continue(s);
-                case (int) StatementType.DO_WHILE_LOOP: return FirstPass_DoWhileLoop(s);
-                case (int) StatementType.FOR_EACH_LOOP: return FirstPass_ForEachLoop(s);
-                case (int) StatementType.FOR_LOOP: return FirstPass_ForLoop(s);
-                case (int) StatementType.IF_STATEMENT: return FirstPass_IfStatement(s);
-                case (int) StatementType.SWITCH_STATEMENT: return FirstPass_SwitchStatement(s);
-                case (int) StatementType.TRY: return FirstPass_Try(s);
-                case (int) StatementType.WHILE_LOOP: return FirstPass_WhileLoop(s);
+                case (int) StatementType.ASSIGNMENT: return StatementResolver_FirstPass_Assignment(resolver, s);
+                case (int) StatementType.BREAK: return StatementResolver_FirstPass_Break(resolver, s);
+                case (int) StatementType.CONTINUE: return StatementResolver_FirstPass_Continue(resolver, s);
+                case (int) StatementType.DO_WHILE_LOOP: return StatementResolver_FirstPass_DoWhileLoop(resolver, s);
+                case (int) StatementType.FOR_EACH_LOOP: return StatementResolver_FirstPass_ForEachLoop(resolver, s);
+                case (int) StatementType.FOR_LOOP: return StatementResolver_FirstPass_ForLoop(resolver, s);
+                case (int) StatementType.IF_STATEMENT: return StatementResolver_FirstPass_IfStatement(resolver, s);
+                case (int) StatementType.SWITCH_STATEMENT: return StatementResolver_FirstPass_SwitchStatement(resolver, s);
+                case (int) StatementType.TRY: return StatementResolver_FirstPass_Try(resolver, s);
+                case (int) StatementType.WHILE_LOOP: return StatementResolver_FirstPass_WhileLoop(resolver, s);
 
                 case (int) StatementType.RETURN:
                 case (int) StatementType.THROW:
                 case (int) StatementType.EXPRESSION_AS_STATEMENT:
-                    s.expression = this.expressionResolver.ResolveExpressionFirstPass(s.expression);
+                    s.expression = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, s.expression);
                     break;
 
                 default:
@@ -58,49 +49,50 @@ namespace CommonScript.Compiler
             return s;
         }
 
-        public Statement ResolveStatementSecondPass(Statement s)
+        public static Statement StatementResolver_ResolveStatementSecondPass(Resolver resolver, Statement s)
         {
             switch (s.type)
             {
-                case (int) StatementType.ASSIGNMENT: return SecondPass_Assignment(s);
-                case (int) StatementType.BREAK: return SecondPass_Break(s);
-                case (int) StatementType.CONTINUE: return SecondPass_Continue(s);
-                case (int) StatementType.DO_WHILE_LOOP: return SecondPass_DoWhileLoop(s);
-                case (int) StatementType.EXPRESSION_AS_STATEMENT: return SecondPass_ExpressionAsStatement(s);
-                case (int) StatementType.FOR_LOOP: return SecondPass_ForLoop(s);
-                case (int) StatementType.FOR_EACH_LOOP: return SecondPass_ForEachLoop(s);
-                case (int) StatementType.IF_STATEMENT: return SecondPass_IfStatement(s);
-                case (int) StatementType.RETURN: return SecondPass_Return(s);
-                case (int) StatementType.SWITCH_STATEMENT: return SecondPass_SwitchStatement(s);
-                case (int) StatementType.THROW: return SecondPass_ThrowStatement(s);
-                case (int) StatementType.TRY: return SecondPass_TryStatement(s);
-                case (int) StatementType.WHILE_LOOP: return SecondPass_WhileLoop(s);
+                case (int) StatementType.ASSIGNMENT: return StatementResolver_SecondPass_Assignment(resolver, s);
+                case (int) StatementType.BREAK: return StatementResolver_SecondPass_Break(resolver, s);
+                case (int) StatementType.CONTINUE: return StatementResolver_SecondPass_Continue(resolver, s);
+                case (int) StatementType.DO_WHILE_LOOP: return StatementResolver_SecondPass_DoWhileLoop(resolver, s);
+                case (int) StatementType.EXPRESSION_AS_STATEMENT: return StatementResolver_SecondPass_ExpressionAsStatement(resolver, s);
+                case (int) StatementType.FOR_LOOP: return StatementResolver_SecondPass_ForLoop(resolver, s);
+                case (int) StatementType.FOR_EACH_LOOP: return StatementResolver_SecondPass_ForEachLoop(resolver, s);
+                case (int) StatementType.IF_STATEMENT: return StatementResolver_SecondPass_IfStatement(resolver, s);
+                case (int) StatementType.RETURN: return StatementResolver_SecondPass_Return(resolver, s);
+                case (int) StatementType.SWITCH_STATEMENT: return StatementResolver_SecondPass_SwitchStatement(resolver, s);
+                case (int) StatementType.THROW: return StatementResolver_SecondPass_ThrowStatement(resolver, s);
+                case (int) StatementType.TRY: return StatementResolver_SecondPass_TryStatement(resolver, s);
+                case (int) StatementType.WHILE_LOOP: return StatementResolver_SecondPass_WhileLoop(resolver, s);
             }
 
-            throw new NotImplementedException();
+            FunctionWrapper.fail("Not implemented");
+            return null;
         }
 
-        private Statement FirstPass_Assignment(Statement assign)
+        private static Statement StatementResolver_FirstPass_Assignment(Resolver resolver, Statement assign)
         {
-            assign.assignTarget = this.expressionResolver.ResolveExpressionFirstPass(assign.assignTarget);
-            assign.assignValue = this.expressionResolver.ResolveExpressionFirstPass(assign.assignValue);
+            assign.assignTarget = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, assign.assignTarget);
+            assign.assignValue = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, assign.assignValue);
 
             if (assign.assignTarget.type == (int) ExpressionType.VARIABLE)
             {
                 // register that this variable was assigned to in this variable scope
-                ((FunctionEntity)this.resolver.activeEntity.specificData).variableScope[assign.assignTarget.strVal] = true;
+                ((FunctionEntity)resolver.activeEntity.specificData).variableScope[assign.assignTarget.strVal] = true;
             }
 
             return assign;
         }
 
-        private Statement FirstPass_Break(Statement br)
+        private static Statement StatementResolver_FirstPass_Break(Resolver resolver, Statement br)
         {
-            if (this.resolver.breakContext == null)
+            if (resolver.breakContext == null)
             {
                 FunctionWrapper.Errors_Throw(br.firstToken, "The 'break' keyword can only be used inside loops and switch statements.");
             }
-            else if (this.resolver.breakContext.type == (int) StatementType.TRY)
+            else if (resolver.breakContext.type == (int) StatementType.TRY)
             {
                 FunctionWrapper.Errors_Throw(br.firstToken, "The 'break' keyword cannot be used inside a try/catch/finally block");
             }
@@ -108,17 +100,17 @@ namespace CommonScript.Compiler
             return br;
         }
 
-        private Statement FirstPass_Continue(Statement cont)
+        private static Statement StatementResolver_FirstPass_Continue(Resolver resolver, Statement cont)
         {
-            if (this.resolver.breakContext == null)
+            if (resolver.breakContext == null)
             {
                 FunctionWrapper.Errors_Throw(cont.firstToken, "The 'continue' keyword can only be used inside loops.");
             }
-            else if (this.resolver.breakContext.type == (int) StatementType.SWITCH_STATEMENT)
+            else if (resolver.breakContext.type == (int) StatementType.SWITCH_STATEMENT)
             {
                 FunctionWrapper.Errors_Throw(cont.firstToken, "The 'continue' keyword cannot be used in switch statements, even if nested in a loop.");
             }
-            else if (this.resolver.breakContext.type == (int) StatementType.TRY)
+            else if (resolver.breakContext.type == (int) StatementType.TRY)
             {
                 FunctionWrapper.Errors_Throw(cont.firstToken, "The 'continue' keyword cannot be used inside a try/catch/finally block");
             }
@@ -126,51 +118,51 @@ namespace CommonScript.Compiler
             return cont;
         }
 
-        private Statement FirstPass_DoWhileLoop(Statement doWhileLoop)
+        private static Statement StatementResolver_FirstPass_DoWhileLoop(Resolver resolver, Statement doWhileLoop)
         {
-            Statement oldBreakContext = this.resolver.breakContext;
-            this.resolver.breakContext = doWhileLoop;
-            this.ResolveStatementArrayFirstPass(doWhileLoop.code);
-            this.resolver.breakContext = oldBreakContext;
-            doWhileLoop.condition = this.expressionResolver.ResolveExpressionFirstPass(doWhileLoop.condition);
+            Statement oldBreakContext = resolver.breakContext;
+            resolver.breakContext = doWhileLoop;
+            StatementResolver_ResolveStatementArrayFirstPass(resolver, doWhileLoop.code);
+            resolver.breakContext = oldBreakContext;
+            doWhileLoop.condition = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, doWhileLoop.condition);
             return doWhileLoop;
         }
 
-        private Statement FirstPass_ForEachLoop(Statement forEachLoop)
+        private static Statement StatementResolver_FirstPass_ForEachLoop(Resolver resolver, Statement forEachLoop)
         {
-            forEachLoop.autoId = this.entityResolver.GetNextAutoVarId();
-            forEachLoop.expression = this.expressionResolver.ResolveExpressionFirstPass(forEachLoop.expression);
-            ((FunctionEntity)this.resolver.activeEntity.specificData).variableScope[forEachLoop.varToken.Value] = true;
-            this.ResolveStatementArrayFirstPass(forEachLoop.code);
+            forEachLoop.autoId = EntityResolverUtil.EntityResolver_GetNextAutoVarId(resolver);
+            forEachLoop.expression = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, forEachLoop.expression);
+            ((FunctionEntity)resolver.activeEntity.specificData).variableScope[forEachLoop.varToken.Value] = true;
+            StatementResolver_ResolveStatementArrayFirstPass(resolver, forEachLoop.code);
             return forEachLoop;
         }
 
-        private Statement FirstPass_ForLoop(Statement forLoop)
+        private static Statement StatementResolver_FirstPass_ForLoop(Resolver resolver, Statement forLoop)
         {
-            this.ResolveStatementArrayFirstPass(forLoop.forInit);
-            forLoop.condition = this.expressionResolver.ResolveExpressionFirstPass(forLoop.condition);
-            this.ResolveStatementArrayFirstPass(forLoop.forStep);
+            StatementResolver_ResolveStatementArrayFirstPass(resolver, forLoop.forInit);
+            forLoop.condition = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, forLoop.condition);
+            StatementResolver_ResolveStatementArrayFirstPass(resolver, forLoop.forStep);
 
-            Statement oldBreakContext = this.resolver.breakContext;
-            this.resolver.breakContext = forLoop;
-            this.ResolveStatementArrayFirstPass(forLoop.code);
-            this.resolver.breakContext = oldBreakContext;
+            Statement oldBreakContext = resolver.breakContext;
+            resolver.breakContext = forLoop;
+            StatementResolver_ResolveStatementArrayFirstPass(resolver, forLoop.code);
+            resolver.breakContext = oldBreakContext;
             return forLoop;
         }
 
-        private Statement FirstPass_IfStatement(Statement ifStatement)
+        private static Statement StatementResolver_FirstPass_IfStatement(Resolver resolver, Statement ifStatement)
         {
-            ifStatement.condition = this.expressionResolver.ResolveExpressionFirstPass(ifStatement.condition);
-            this.ResolveStatementArrayFirstPass(ifStatement.code);
-            this.ResolveStatementArrayFirstPass(ifStatement.elseCode);
+            ifStatement.condition = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, ifStatement.condition);
+            StatementResolver_ResolveStatementArrayFirstPass(resolver, ifStatement.code);
+            StatementResolver_ResolveStatementArrayFirstPass(resolver, ifStatement.elseCode);
             return ifStatement;
         }
 
-        private Statement FirstPass_SwitchStatement(Statement switchStmnt)
+        private static Statement StatementResolver_FirstPass_SwitchStatement(Resolver resolver, Statement switchStmnt)
         {
-            Statement oldBreakContext = this.resolver.breakContext;
-            this.resolver.breakContext = switchStmnt;
-            switchStmnt.condition = this.expressionResolver.ResolveExpressionFirstPass(switchStmnt.condition);
+            Statement oldBreakContext = resolver.breakContext;
+            resolver.breakContext = switchStmnt;
+            switchStmnt.condition = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, switchStmnt.condition);
             foreach (SwitchChunk chunk in switchStmnt.switchChunks)
             {
                 for (int i = 0; i < chunk.Cases.Count; i++)
@@ -178,29 +170,29 @@ namespace CommonScript.Compiler
                     Expression expr = chunk.Cases[i];
                     if (expr != null)
                     {
-                        chunk.Cases[i] = this.expressionResolver.ResolveExpressionFirstPass(expr);
+                        chunk.Cases[i] = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, expr);
                     }
                 }
 
                 for (int i = 0; i < chunk.Code.Count; i++)
                 {
-                    chunk.Code[i] = this.ResolveStatementFirstPass(chunk.Code[i]);
+                    chunk.Code[i] = StatementResolver_ResolveStatementFirstPass(resolver, chunk.Code[i]);
                 }
             }
-            this.resolver.breakContext = oldBreakContext;
+            resolver.breakContext = oldBreakContext;
             return switchStmnt;
         }
 
-        private Statement FirstPass_Try(Statement tryStatement)
+        private static Statement StatementResolver_FirstPass_Try(Resolver resolver, Statement tryStatement)
         {
-            Statement oldBreakContext = this.resolver.breakContext;
-            this.resolver.breakContext = tryStatement;
-            this.ResolveStatementArrayFirstPass(tryStatement.code);
+            Statement oldBreakContext = resolver.breakContext;
+            resolver.breakContext = tryStatement;
+            StatementResolver_ResolveStatementArrayFirstPass(resolver, tryStatement.code);
             foreach (CatchChunk cc in tryStatement.catchChunks)
             {
                 if (cc.exceptionVarName != null)
                 {
-                    ((FunctionEntity)this.resolver.activeEntity.specificData).variableScope[cc.exceptionVarName.Value] = true;
+                    ((FunctionEntity)resolver.activeEntity.specificData).variableScope[cc.exceptionVarName.Value] = true;
                 }
 
                 if (cc.ExceptionNames.Length > 0)
@@ -215,32 +207,32 @@ namespace CommonScript.Compiler
                     cc.ClassDefinitions = [];
                 }
 
-                this.ResolveStatementArrayFirstPass(cc.Code);
+                StatementResolver_ResolveStatementArrayFirstPass(resolver, cc.Code);
             }
 
             // TODO: check order and redundancy of exceptions.
 
-            this.ResolveStatementArrayFirstPass(tryStatement.finallyCode);
+            StatementResolver_ResolveStatementArrayFirstPass(resolver, tryStatement.finallyCode);
 
-            this.resolver.breakContext = oldBreakContext;
+            resolver.breakContext = oldBreakContext;
 
             return tryStatement;
         }
 
-        private Statement FirstPass_WhileLoop(Statement whileLoop)
+        private static Statement StatementResolver_FirstPass_WhileLoop(Resolver resolver, Statement whileLoop)
         {
-            whileLoop.condition = this.expressionResolver.ResolveExpressionFirstPass(whileLoop.condition);
-            Statement oldBreakContext = this.resolver.breakContext;
-            this.resolver.breakContext = whileLoop;
-            this.ResolveStatementArrayFirstPass(whileLoop.code);
-            this.resolver.breakContext = oldBreakContext;
+            whileLoop.condition = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, whileLoop.condition);
+            Statement oldBreakContext = resolver.breakContext;
+            resolver.breakContext = whileLoop;
+            StatementResolver_ResolveStatementArrayFirstPass(resolver, whileLoop.code);
+            resolver.breakContext = oldBreakContext;
             return whileLoop;
         }
 
-        private Statement SecondPass_Assignment(Statement assignment)
+        private static Statement StatementResolver_SecondPass_Assignment(Resolver resolver, Statement assignment)
         {
-            assignment.assignTarget = this.expressionResolver.ResolveExpressionSecondPass(assignment.assignTarget);
-            assignment.assignValue = this.expressionResolver.ResolveExpressionSecondPass(assignment.assignValue);
+            assignment.assignTarget = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, assignment.assignTarget);
+            assignment.assignValue = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, assignment.assignValue);
 
             Expression target = assignment.assignTarget;
             switch (target.type)
@@ -258,29 +250,29 @@ namespace CommonScript.Compiler
             return assignment;
         }
 
-        private Statement SecondPass_Break(Statement br)
+        private static Statement StatementResolver_SecondPass_Break(Resolver resolver, Statement br)
         {
             return br;
         }
 
-        private Statement SecondPass_Continue(Statement cont)
+        private static Statement StatementResolver_SecondPass_Continue(Resolver resolver, Statement cont)
         {
             return cont;
         }
 
-        private Statement SecondPass_DoWhileLoop(Statement doWhileLoop)
+        private static Statement StatementResolver_SecondPass_DoWhileLoop(Resolver resolver, Statement doWhileLoop)
         {
-            Statement oldBreakContext = this.resolver.breakContext;
-            this.resolver.breakContext = doWhileLoop;
-            this.ResolveStatementArraySecondPass(doWhileLoop.code);
-            doWhileLoop.condition = this.expressionResolver.ResolveExpressionSecondPass(doWhileLoop.condition);
-            this.resolver.breakContext = oldBreakContext;
+            Statement oldBreakContext = resolver.breakContext;
+            resolver.breakContext = doWhileLoop;
+            StatementResolver_ResolveStatementArraySecondPass(resolver, doWhileLoop.code);
+            doWhileLoop.condition = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, doWhileLoop.condition);
+            resolver.breakContext = oldBreakContext;
             return doWhileLoop;
         }
 
-        private Statement SecondPass_ExpressionAsStatement(Statement exprAsStmnt)
+        private static Statement StatementResolver_SecondPass_ExpressionAsStatement(Resolver resolver, Statement exprAsStmnt)
         {
-            exprAsStmnt.expression = this.expressionResolver.ResolveExpressionSecondPass(exprAsStmnt.expression);
+            exprAsStmnt.expression = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, exprAsStmnt.expression);
             switch (exprAsStmnt.expression.type)
             {
                 case (int) ExpressionType.FUNCTION_INVOKE:
@@ -297,42 +289,42 @@ namespace CommonScript.Compiler
             return exprAsStmnt;
         }
 
-        private Statement SecondPass_ForLoop(Statement forLoop)
+        private static Statement StatementResolver_SecondPass_ForLoop(Resolver resolver, Statement forLoop)
         {
-            Statement oldBreakContext = this.resolver.breakContext;
-            this.resolver.breakContext = forLoop;
-            this.ResolveStatementArraySecondPass(forLoop.forInit);
-            forLoop.condition = this.expressionResolver.ResolveExpressionSecondPass(forLoop.condition);
-            this.ResolveStatementArraySecondPass(forLoop.forStep);
-            this.ResolveStatementArraySecondPass(forLoop.code);
-            this.resolver.breakContext = oldBreakContext;
+            Statement oldBreakContext = resolver.breakContext;
+            resolver.breakContext = forLoop;
+            StatementResolver_ResolveStatementArraySecondPass(resolver, forLoop.forInit);
+            forLoop.condition = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, forLoop.condition);
+            StatementResolver_ResolveStatementArraySecondPass(resolver, forLoop.forStep);
+            StatementResolver_ResolveStatementArraySecondPass(resolver, forLoop.code);
+            resolver.breakContext = oldBreakContext;
             return forLoop;
         }
 
-        private Statement SecondPass_ForEachLoop(Statement forEachLoop)
+        private static Statement StatementResolver_SecondPass_ForEachLoop(Resolver resolver, Statement forEachLoop)
         {
-            forEachLoop.expression = this.expressionResolver.ResolveExpressionSecondPass(forEachLoop.expression);
-            this.ResolveStatementArraySecondPass(forEachLoop.code);
+            forEachLoop.expression = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, forEachLoop.expression);
+            StatementResolver_ResolveStatementArraySecondPass(resolver, forEachLoop.code);
             return forEachLoop;
         }
 
-        private Statement SecondPass_IfStatement(Statement ifStatement)
+        private static Statement StatementResolver_SecondPass_IfStatement(Resolver resolver, Statement ifStatement)
         {
-            ifStatement.condition = this.expressionResolver.ResolveExpressionSecondPass(ifStatement.condition);
-            this.ResolveStatementArraySecondPass(ifStatement.code);
-            this.ResolveStatementArraySecondPass(ifStatement.elseCode);
+            ifStatement.condition = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, ifStatement.condition);
+            StatementResolver_ResolveStatementArraySecondPass(resolver, ifStatement.code);
+            StatementResolver_ResolveStatementArraySecondPass(resolver, ifStatement.elseCode);
             return ifStatement;
         }
 
-        private Statement SecondPass_Return(Statement ret)
+        private static Statement StatementResolver_SecondPass_Return(Resolver resolver, Statement ret)
         {
-            ret.expression = this.expressionResolver.ResolveExpressionSecondPass(ret.expression);
+            ret.expression = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, ret.expression);
             return ret;
         }
 
-        private Statement SecondPass_SwitchStatement(Statement switchStmnt)
+        private static Statement StatementResolver_SecondPass_SwitchStatement(Resolver resolver, Statement switchStmnt)
         {
-            switchStmnt.condition = this.expressionResolver.ResolveExpressionSecondPass(switchStmnt.condition);
+            switchStmnt.condition = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, switchStmnt.condition);
             int exprType = -1; // { -1: indeterminite | 1: ints | 2: strings }
             Dictionary<string, bool> strCollisions = new Dictionary<string, bool>();
             Dictionary<int, bool> intCollisions = new Dictionary<int, bool>();
@@ -344,9 +336,9 @@ namespace CommonScript.Compiler
                     Expression expr = chunk.Cases[i];
                     if (expr != null)
                     {
-                        expr = this.expressionResolver.ResolveExpressionSecondPass(expr);
+                        expr = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, expr);
                         chunk.Cases[i] = expr;
-                        if (!Resolver.IsExpressionConstant(expr))
+                        if (!ResolverUtil.IsExpressionConstant(expr))
                         {
                             FunctionWrapper.Errors_Throw(expr.firstToken, "Only constant expressions are allowed in switch statement cases.");
                         }
@@ -376,7 +368,7 @@ namespace CommonScript.Compiler
 
                 for (int i = 0; i < chunk.Code.Count; i++)
                 {
-                    chunk.Code[i] = this.ResolveStatementSecondPass(chunk.Code[i]);
+                    chunk.Code[i] = StatementResolver_ResolveStatementSecondPass(resolver, chunk.Code[i]);
                 }
 
                 switch (chunk.Code[chunk.Code.Count - 1].type)
@@ -396,39 +388,39 @@ namespace CommonScript.Compiler
             return switchStmnt;
         }
 
-        private Statement SecondPass_ThrowStatement(Statement throwStmnt)
+        private static Statement StatementResolver_SecondPass_ThrowStatement(Resolver resolver, Statement throwStmnt)
         {
-            throwStmnt.expression = this.expressionResolver.ResolveExpressionSecondPass(throwStmnt.expression);
-            if (Resolver.IsExpressionConstant(throwStmnt.expression))
+            throwStmnt.expression = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, throwStmnt.expression);
+            if (ResolverUtil.IsExpressionConstant(throwStmnt.expression))
             {
                 FunctionWrapper.Errors_Throw(throwStmnt.expression.firstToken, "Only instances of Exception are throwable.");
             }
             return throwStmnt;
         }
 
-        private Statement SecondPass_TryStatement(Statement tryStmnt)
+        private static Statement StatementResolver_SecondPass_TryStatement(Resolver resolver, Statement tryStmnt)
         {
-            Statement oldBreakContext = this.resolver.breakContext;
-            this.resolver.breakContext = tryStmnt;
-            this.ResolveStatementArraySecondPass(tryStmnt.code);
+            Statement oldBreakContext = resolver.breakContext;
+            resolver.breakContext = tryStmnt;
+            StatementResolver_ResolveStatementArraySecondPass(resolver, tryStmnt.code);
             foreach (CatchChunk cc in tryStmnt.catchChunks)
             {
-                this.ResolveStatementArraySecondPass(cc.Code);
+                StatementResolver_ResolveStatementArraySecondPass(resolver, cc.Code);
             }
-            this.ResolveStatementArraySecondPass(tryStmnt.finallyCode);
+            StatementResolver_ResolveStatementArraySecondPass(resolver, tryStmnt.finallyCode);
 
-            this.resolver.breakContext = oldBreakContext;
+            resolver.breakContext = oldBreakContext;
 
             return tryStmnt;
         }
 
-        private Statement SecondPass_WhileLoop(Statement whileLoop)
+        private static Statement StatementResolver_SecondPass_WhileLoop(Resolver resolver, Statement whileLoop)
         {
-            Statement oldBreakContext = this.resolver.breakContext;
-            this.resolver.breakContext = whileLoop;
-            whileLoop.condition = this.expressionResolver.ResolveExpressionSecondPass(whileLoop.condition);
-            this.ResolveStatementArraySecondPass(whileLoop.code);
-            this.resolver.breakContext = oldBreakContext;
+            Statement oldBreakContext = resolver.breakContext;
+            resolver.breakContext = whileLoop;
+            whileLoop.condition = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, whileLoop.condition);
+            StatementResolver_ResolveStatementArraySecondPass(resolver, whileLoop.code);
+            resolver.breakContext = oldBreakContext;
             return whileLoop;
         }
     }

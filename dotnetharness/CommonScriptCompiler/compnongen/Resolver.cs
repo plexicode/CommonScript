@@ -5,94 +5,14 @@ using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
-    internal class Resolver
+    internal static class ResolverUtil
     {
-        public StaticContext staticCtx;
-        
-        public Dictionary<string, AbstractEntity> nestedEntities;
-        public Dictionary<string, AbstractEntity> enumsByMemberFqName;
-        public Dictionary<string, AbstractEntity> flattenedEntities;
-        public Dictionary<string, AbstractEntity> flattenedEntitiesAndEnumValues;
-        public Dictionary<string, AbstractEntity> flattenedEntitiesNoEnumParents;
-        public List<FunctionEntity> lambdas = [];
-
-        public AbstractEntity activeEntity = null;
-        public AbstractEntity[] entityList = null;
-        public Statement breakContext = null;
-
-        private ExpressionResolver expressionResolver;
-        private StatementResolver statementResolver;
-        private EntityResolver entityResolver;
-
-        private StringSet extensionNames;
-
-        public Resolver(StaticContext staticCtx, Dictionary<string, AbstractEntity> rootEntities, List<string> extensionNames)
+        public static bool isValidRegisteredExtension(Resolver resolver, string extensionName)
         {
-            this.staticCtx = staticCtx;
-            this.extensionNames = FunctionWrapper.StringSet_fromList(extensionNames);
-
-            this.expressionResolver = new ExpressionResolver(this);
-            this.statementResolver = new StatementResolver(this);
-            this.entityResolver = new EntityResolver(this);
-            this.expressionResolver.statementResolver = this.statementResolver;
-            this.entityResolver.statementResolver = this.statementResolver;
-            this.expressionResolver.entityResolver = this.entityResolver;
-            this.statementResolver.entityResolver = this.entityResolver;
-            this.statementResolver.expressionResolver = this.expressionResolver;
-            this.entityResolver.expressionResolver = this.expressionResolver;
-
-            this.nestedEntities = rootEntities;
-            this.flattenedEntities = new Dictionary<string, AbstractEntity>();
-            this.enumsByMemberFqName = new Dictionary<string, AbstractEntity>();
-            this.flattenedEntitiesAndEnumValues = new Dictionary<string, AbstractEntity>();
-            this.flattenedEntitiesNoEnumParents = new Dictionary<string, AbstractEntity>();
-
-            this.entityList = Resolver.FlattenEntities(staticCtx, rootEntities);
-            foreach (AbstractEntity tle in this.entityList)
-            {
-                this.flattenedEntities[tle.fqName] = tle;
-                this.flattenedEntitiesAndEnumValues[tle.fqName] = tle;
-                if (tle.type != (int)EntityType.ENUM)
-                {
-                    this.flattenedEntitiesNoEnumParents[tle.fqName] = tle;
-                }
-            }
-
-            foreach (EnumEntity enumDef in this.entityList.Where(e => e.type == (int)EntityType.ENUM).Select(e => (EnumEntity)e.specificData))
-            {
-                for (int i = 0; i < enumDef.memberNameTokens.Length; i++)
-                {
-                    string fqName = enumDef.baseData.fqName + "." + enumDef.memberNameTokens[i].Value;
-                    this.enumsByMemberFqName[fqName] = enumDef.baseData;
-                    this.flattenedEntitiesAndEnumValues[fqName] = enumDef.baseData;
-                    this.flattenedEntitiesNoEnumParents[fqName] = enumDef.baseData;
-                }
-            }
+            return FunctionWrapper.StringSet_has(resolver.extensionNames, extensionName);
         }
 
-        public bool isValidRegisteredExtension(string extensionName)
-        {
-            return FunctionWrapper.StringSet_has(this.extensionNames, extensionName);
-        }
-
-        internal static AbstractEntity[] FlattenEntities(StaticContext staticCtx, Dictionary<string, AbstractEntity> rootEntities)
-        {
-            List<AbstractEntity> output = new List<AbstractEntity>();
-            List<AbstractEntity> queue = new List<AbstractEntity>(rootEntities.Values);
-            for (int i = 0; i < queue.Count; i++)
-            {
-                AbstractEntity entity = queue[i];
-                output.Add(entity);
-
-                foreach (AbstractEntity mem in FunctionWrapper.Entity_getMemberLookup(staticCtx, entity).Values)
-                {
-                    queue.Add(mem);
-                }
-            }
-            return output.ToArray();
-        }
-
-        public void Resolve()
+        public static void Resolve(Resolver resolver)
         {
             List<FunctionEntity> functions = new List<FunctionEntity>();
             List<ClassEntity> classes = new List<ClassEntity>();
@@ -101,7 +21,7 @@ namespace CommonScript.Compiler
             List<FunctionEntity> constructors = new List<FunctionEntity>();
             List<FieldEntity> fields = new List<FieldEntity>();
 
-            AbstractEntity[] entities = this.flattenedEntities.Values.ToArray();
+            AbstractEntity[] entities = resolver.flattenedEntities.Values.ToArray();
 
             for (int i = 0; i < entities.Length; i++)
             {
@@ -141,60 +61,62 @@ namespace CommonScript.Compiler
                 }
             }
 
-            this.AddImplicitIncrementingEnumValueDefinitions(enums);
+            ResolverUtil.AddImplicitIncrementingEnumValueDefinitions(enums);
 
-            string[] constAndEnumResolutionOrder = this.DetermineConstAndEnumResolutionOrder(constants, enums);
+            string[] constAndEnumResolutionOrder = DetermineConstAndEnumResolutionOrder(resolver, constants, enums);
 
-            this.PerformFullResolutionPassOnConstAndEnums(constAndEnumResolutionOrder);
+            PerformFullResolutionPassOnConstAndEnums(resolver, constAndEnumResolutionOrder);
 
-            ClassEntity[] orderedClasses = this.ResolveBaseClassesAndEstablishClassOrder(classes, this.flattenedEntities);
+            ClassEntity[] orderedClasses = ResolveBaseClassesAndEstablishClassOrder(resolver, classes, resolver.flattenedEntities);
 
             for (int i = 0; i < orderedClasses.Length; i++)
             {
-                EntityResolver.DetermineMemberOffsets(orderedClasses[i]);
+                EntityResolverUtil.EntityResolver_DetermineMemberOffsets(orderedClasses[i]);
             }
 
             for (int i = 0; i < functions.Count; i++)
             {
-                this.entityResolver.ResetAutoVarId();
-                this.entityResolver.ResolveFunctionFirstPass(functions[i]);
+                EntityResolverUtil.EntityResolver_ResetAutoVarId(resolver);
+                EntityResolverUtil.EntityResolver_ResolveFunctionFirstPass(resolver, functions[i]);
             }
 
             for (int i = 0; i < constructors.Count; i++)
             {
-                this.entityResolver.ResetAutoVarId();
-                this.entityResolver.ResolveFunctionFirstPass(constructors[i]);
+                EntityResolverUtil.EntityResolver_ResetAutoVarId(resolver);
+                EntityResolverUtil.EntityResolver_ResolveFunctionFirstPass(resolver, constructors[i]);
             }
 
-            // At this point, all lambdas have been repoerted.
-            for (int i = 0; i < lambdas.Count; i++) // DO NOT CHANGE TO FOR-EACH. This count can grow as a result of nested lambdas.
+            // At this point, all lambdas have been reported.
+            // DO NOT CHANGE TO FOR-EACH. This count can grow as a result of nested lambdas.
+            for (int i = 0; i < resolver.lambdas.Count; i++) 
             {
-                this.entityResolver.ResetAutoVarId();
-                this.entityResolver.ResolveFunctionFirstPass(lambdas[i]);
+                EntityResolverUtil.EntityResolver_ResetAutoVarId(resolver);
+                EntityResolverUtil.EntityResolver_ResolveFunctionFirstPass(resolver, resolver.lambdas[i]);
             }
 
             for (int i = 0; i < functions.Count; i++)
             {
-                this.entityResolver.ResolveFunctionSecondPass(functions[i]);
+                EntityResolverUtil.EntityResolver_ResolveFunctionSecondPass(resolver, functions[i]);
             }
 
             for (int i = 0; i < constructors.Count; i++)
             {
-                this.entityResolver.ResolveFunctionSecondPass(constructors[i]);
+                EntityResolverUtil.EntityResolver_ResolveFunctionSecondPass(resolver, constructors[i]);
             }
 
-            for (int i = 0; i < lambdas.Count; i++)
+            for (int i = 0; i < resolver.lambdas.Count; i++)
             {
-                this.entityResolver.ResolveFunctionSecondPass(lambdas[i]);
+                EntityResolverUtil.EntityResolver_ResolveFunctionSecondPass(resolver, resolver.lambdas[i]);
             }
         }
 
-        internal void ReportNewLambda(FunctionEntity lamb)
+        internal static void ReportNewLambda(Resolver resolver, FunctionEntity lamb)
         {
-            this.lambdas.Add(lamb);
+            resolver.lambdas.Add(lamb);
         }
 
-        private ClassEntity[] ResolveBaseClassesAndEstablishClassOrder(
+        private static ClassEntity[] ResolveBaseClassesAndEstablishClassOrder(
+            Resolver resolver, 
             List<ClassEntity> classes,
             Dictionary<string, AbstractEntity> flattenedEntities)
         {
@@ -216,9 +138,9 @@ namespace CommonScript.Compiler
             foreach (ClassEntity bc in baseClassRequired)
             {
                 string ns = string.Join('.', bc.baseData.fqName.Split('.').SkipLast(1));
-                this.activeEntity = bc.baseData;
+                resolver.activeEntity = bc.baseData;
                 Token baseClassToken = bc.baseClassTokens[0];
-                AbstractEntity bcEntity = this.DoLookup2(baseClassToken, baseClassToken.Value);
+                AbstractEntity bcEntity = DoLookup2(resolver, baseClassToken, baseClassToken.Value);
                 if (bcEntity != null)
                 {
                     for (int i = 2; i < bc.baseClassTokens.Length; i += 2)
@@ -226,7 +148,7 @@ namespace CommonScript.Compiler
                         string next = bc.baseClassTokens[i].Value;
                         if (bcEntity != null)
                         {
-                            Dictionary<string, AbstractEntity> lookup = FunctionWrapper.Entity_getMemberLookup(this.staticCtx, bcEntity);
+                            Dictionary<string, AbstractEntity> lookup = FunctionWrapper.Entity_getMemberLookup(resolver.staticCtx, bcEntity);
                             if (lookup.ContainsKey(next))
                             {
                                 bcEntity = lookup[next];
@@ -249,7 +171,7 @@ namespace CommonScript.Compiler
                 }
 
                 bc.baseClassEntity = (ClassEntity)bcEntity.specificData;
-                this.activeEntity = null;
+                resolver.activeEntity = null;
             }
 
             Dictionary<string, bool> includedInOrder = new Dictionary<string, bool>();
@@ -289,26 +211,26 @@ namespace CommonScript.Compiler
             return finalOrder.ToArray();
         }
 
-        private void PerformFullResolutionPassOnConstAndEnums(string[] resOrder)
+        private static void PerformFullResolutionPassOnConstAndEnums(Resolver resolver, string[] resOrder)
         {
             for (int passNum = 1; passNum <= 2; passNum++)
             {
                 for (int i = 0; i < resOrder.Length; i++)
                 {
-                    AbstractEntity entity = this.flattenedEntitiesAndEnumValues[resOrder[i]];
-                    this.activeEntity = entity;
+                    AbstractEntity entity = resolver.flattenedEntitiesAndEnumValues[resOrder[i]];
+                    resolver.activeEntity = entity;
                     if (entity.type == (int)EntityType.ENUM)
                     {
                         EnumEntity enumDef = (EnumEntity)entity.specificData;
-                        int memberIndex = this.GetEnumMemberIndex(resOrder[i], enumDef);
+                        int memberIndex = ResolverUtil.GetEnumMemberIndex(resolver, resOrder[i], enumDef);
                         Expression val = enumDef.memberValues[memberIndex];
                         if (passNum == 1)
                         {
-                            val = this.expressionResolver.ResolveExpressionFirstPass(val);
+                            val = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, val);
                         }
                         else
                         {
-                            val = this.expressionResolver.ResolveExpressionSecondPass(val);
+                            val = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, val);
                         }
 
                         if (passNum == 2 && val.type != (int) ExpressionType.INTEGER_CONST)
@@ -324,11 +246,11 @@ namespace CommonScript.Compiler
                         Expression val = constEnt.constValue;
                         if (passNum == 1)
                         {
-                            val = this.expressionResolver.ResolveExpressionFirstPass(val);
+                            val = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, val);
                         }
                         else
                         {
-                            val = this.expressionResolver.ResolveExpressionSecondPass(val);
+                            val = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, val);
                             if (!IsExpressionConstant(val))
                             {
                                 FunctionWrapper.Errors_Throw(val.firstToken, "A constant expression is required here.");
@@ -337,7 +259,7 @@ namespace CommonScript.Compiler
 
                         constEnt.constValue = val;
                     }
-                    this.activeEntity = null;
+                    resolver.activeEntity = null;
                 }
             }
         }
@@ -377,7 +299,7 @@ namespace CommonScript.Compiler
         // For all undefined values of an enum, make it equal to the previous value + 1 by
         // injecting EnumName.MemberName + 1
         // If the first value is undefined, inject 1
-        private void AddImplicitIncrementingEnumValueDefinitions(List<EnumEntity> enums)
+        private static void AddImplicitIncrementingEnumValueDefinitions(List<EnumEntity> enums)
         {
             for (int i = 0; i < enums.Count; i++)
             {
@@ -405,7 +327,8 @@ namespace CommonScript.Compiler
         }
 
         // Returns strings because we treat the individual enum values as separate entities.
-        private string[] DetermineConstAndEnumResolutionOrder(
+        private static string[] DetermineConstAndEnumResolutionOrder(
+            Resolver resolver,
             List<ConstEntity> constants,
             List<EnumEntity> enums)
         {
@@ -422,7 +345,7 @@ namespace CommonScript.Compiler
                 string ns = c.baseData.nestParent == null ? "" : c.baseData.nestParent.fqName;
 
                 List<string> refsOut = new List<string>();
-                c.constValue = this.GetListOfUnresolvedConstReferences(c.baseData.fileContext, ns, c.constValue, refsOut);
+                c.constValue = ResolverUtil.GetListOfUnresolvedConstReferences(resolver, c.baseData.fileContext, ns, c.constValue, refsOut);
                 referencesMadeByFqItem[c.baseData.fqName] = refsOut;
             }
 
@@ -436,7 +359,7 @@ namespace CommonScript.Compiler
                     string memFqName = e.baseData.fqName + "." + e.memberNameTokens[i].Value;
                     Expression val = e.memberValues[i];
                     List<string> refsOut = new List<string>();
-                    e.memberValues[i] = this.GetListOfUnresolvedConstReferences(e.baseData.fileContext, ns, val, refsOut);
+                    e.memberValues[i] = ResolverUtil.GetListOfUnresolvedConstReferences(resolver, e.baseData.fileContext, ns, val, refsOut);
                     referencesMadeByFqItem[memFqName] = refsOut;
                 }
             }
@@ -462,12 +385,12 @@ namespace CommonScript.Compiler
                 }
                 else
                 {
-                    AbstractEntity item = this.flattenedEntitiesAndEnumValues[itemFqName];
+                    AbstractEntity item = resolver.flattenedEntitiesAndEnumValues[itemFqName];
                     Token itemToken = item.firstToken;
                     if (item.fqName != itemFqName) // an enum member
                     {
                         EnumEntity parentEnum = (EnumEntity)item.specificData;
-                        int enumValIndex = this.GetEnumMemberIndex(itemFqName, parentEnum);
+                        int enumValIndex = ResolverUtil.GetEnumMemberIndex(resolver, itemFqName, parentEnum);
                         itemToken = parentEnum.memberNameTokens[enumValIndex];
                     }
 
@@ -500,7 +423,7 @@ namespace CommonScript.Compiler
             return resolutionOrder.ToArray();
         }
 
-        private int GetEnumMemberIndex(string memNameOrFqMemName, EnumEntity enumEntity)
+        private static int GetEnumMemberIndex(Resolver resolver, string memNameOrFqMemName, EnumEntity enumEntity)
         {
             int lastDot = memNameOrFqMemName.LastIndexOf('.');
             string memName = memNameOrFqMemName;
@@ -520,12 +443,12 @@ namespace CommonScript.Compiler
             return -1;
         }
 
-        private Expression GetListOfUnresolvedConstReferences(FileContext file, string fqNamespace, Expression expr, List<string> refsOut)
+        private static Expression GetListOfUnresolvedConstReferences(Resolver resolver, FileContext file, string fqNamespace, Expression expr, List<string> refsOut)
         {
-            return this.GetListOfUnresolvedConstReferencesImpl(file, fqNamespace, expr, refsOut);
+            return ResolverUtil.GetListOfUnresolvedConstReferencesImpl(resolver, file, fqNamespace, expr, refsOut);
         }
 
-        private Expression GetListOfUnresolvedConstReferencesImpl(FileContext file, string fqNamespace, Expression expr, List<string> refs)
+        private static Expression GetListOfUnresolvedConstReferencesImpl(Resolver resolver, FileContext file, string fqNamespace, Expression expr, List<string> refs)
         {
             switch (expr.type)
             {
@@ -538,12 +461,12 @@ namespace CommonScript.Compiler
                     return expr;
 
                 case (int) ExpressionType.BINARY_OP:
-                    expr.left = this.GetListOfUnresolvedConstReferencesImpl(file, fqNamespace, expr.left, refs);
-                    expr.right = this.GetListOfUnresolvedConstReferencesImpl(file, fqNamespace, expr.right, refs);
+                    expr.left = ResolverUtil.GetListOfUnresolvedConstReferencesImpl(resolver, file, fqNamespace, expr.left, refs);
+                    expr.right = ResolverUtil.GetListOfUnresolvedConstReferencesImpl(resolver, file, fqNamespace, expr.right, refs);
                     return expr;
 
                 case (int) ExpressionType.VARIABLE:
-                    AbstractEntity referenced = this.TryDoExactLookupForConstantEntity(file, fqNamespace, expr.strVal);
+                    AbstractEntity referenced = ResolverUtil.TryDoExactLookupForConstantEntity(resolver, file, fqNamespace, expr.strVal);
                     if (referenced == null)
                     {
                         FunctionWrapper.Errors_Throw(expr.firstToken, "No definition for '" + expr.strVal + "'");
@@ -554,15 +477,15 @@ namespace CommonScript.Compiler
                         {
                             if (referenced.type == (int)EntityType.CONST)
                             {
-                                throw new NotImplementedException();
+                                FunctionWrapper.fail("Not implemented");
                             }
                             else if (referenced.type == (int)EntityType.ENUM)
                             {
-                                throw new NotImplementedException();
+                                FunctionWrapper.fail("Not implemented");
                             }
                             else
                             {
-                                throw new NotImplementedException();
+                                FunctionWrapper.fail("Not implemented");
                             }
                         }
 
@@ -584,7 +507,7 @@ namespace CommonScript.Compiler
                 case (int) ExpressionType.DOT_FIELD:
                     string[] fullRefSegments = FunctionWrapper.DotField_getVariableRootedDottedChain(expr, "Cannot use this type of entity from a constant expression.");
                     string fullRefDotted = string.Join('.', fullRefSegments);
-                    AbstractEntity reffedEntity = this.TryDoExactLookupForConstantEntity(file, fqNamespace, fullRefDotted);
+                    AbstractEntity reffedEntity = ResolverUtil.TryDoExactLookupForConstantEntity(resolver, file, fqNamespace, fullRefDotted);
                     if (reffedEntity == null)
                     {
                         FunctionWrapper.Errors_Throw(expr.firstToken, "Invalid expression for constant.");
@@ -595,11 +518,11 @@ namespace CommonScript.Compiler
 
                         if (reffedEntity.type == (int)EntityType.ENUM)
                         {
-                            throw new NotImplementedException();
+                            FunctionWrapper.fail("Not implemented");
                         }
                         else
                         {
-                            throw new NotImplementedException();
+                            FunctionWrapper.fail("Not implemented");
                         }
                     }
 
@@ -629,12 +552,12 @@ namespace CommonScript.Compiler
 
         // Finds the constant entity value given the current namespace and name.
         // This will find constsants and enum values. Enum parents will be ignored.
-        private AbstractEntity TryDoExactLookupForConstantEntity(FileContext file, string fqNamespace, string dottedEntityName)
+        private static AbstractEntity TryDoExactLookupForConstantEntity(Resolver resolver, FileContext file, string fqNamespace, string dottedEntityName)
         {
             // If you are using a fully-qualified name, just go with that.
-            if (this.flattenedEntitiesNoEnumParents.ContainsKey(dottedEntityName))
+            if (resolver.flattenedEntitiesNoEnumParents.ContainsKey(dottedEntityName))
             {
-                return this.flattenedEntitiesNoEnumParents[dottedEntityName];
+                return resolver.flattenedEntitiesNoEnumParents[dottedEntityName];
             }
 
             // Check all possible nest levels of the current namespace with the full dotted name suffixed at the end.
@@ -646,9 +569,9 @@ namespace CommonScript.Compiler
             while (nsParts.Count > 0)
             {
                 string lookupName = string.Join('.', [.. nsParts, .. dottedEntityName]);
-                if (this.flattenedEntitiesNoEnumParents.ContainsKey(lookupName))
+                if (resolver.flattenedEntitiesNoEnumParents.ContainsKey(lookupName))
                 {
-                    return this.flattenedEntitiesNoEnumParents[lookupName];
+                    return resolver.flattenedEntitiesNoEnumParents[lookupName];
                 }
                 nsParts.RemoveAt(nsParts.Count - 1);
             }
@@ -693,23 +616,23 @@ namespace CommonScript.Compiler
             return null;
         }
 
-        internal AbstractEntity DoLookup2(Token throwToken, string name)
+        internal static AbstractEntity DoLookup2(Resolver resolver, Token throwToken, string name)
         {
             // root level entities and namespaces always have precedence.
-            if (this.flattenedEntities.ContainsKey(name))
+            if (resolver.flattenedEntities.ContainsKey(name))
             {
-                return this.flattenedEntities[name];
+                return resolver.flattenedEntities[name];
             }
 
-            if (this.activeEntity.fileContext.importsByVar.ContainsKey(name))
+            if (resolver.activeEntity.fileContext.importsByVar.ContainsKey(name))
             {
-                return FunctionWrapper.ModuleWrapperEntity_new(throwToken, this.activeEntity.fileContext.importsByVar[name]).baseData;
+                return FunctionWrapper.ModuleWrapperEntity_new(throwToken, resolver.activeEntity.fileContext.importsByVar[name]).baseData;
             }
 
-            AbstractEntity walker = this.activeEntity;
+            AbstractEntity walker = resolver.activeEntity;
             while (walker != null)
             {
-                Dictionary<string, AbstractEntity> lookup = FunctionWrapper.Entity_getMemberLookup(this.staticCtx, walker); 
+                Dictionary<string, AbstractEntity> lookup = FunctionWrapper.Entity_getMemberLookup(resolver.staticCtx, walker); 
                 if (lookup.ContainsKey(name))
                 {
                     return lookup[name];
@@ -717,7 +640,7 @@ namespace CommonScript.Compiler
                 walker = walker.nestParent;
             }
 
-            foreach (ImportStatement impStmnt in this.activeEntity.fileContext.imports)
+            foreach (ImportStatement impStmnt in resolver.activeEntity.fileContext.imports)
             {
                 if (impStmnt.isPollutionImport)
                 {

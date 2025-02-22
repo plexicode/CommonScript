@@ -1,0 +1,4 @@
+@import("resolver/Resolver.pst");
+@import("resolver/ExpressionResolver.pst");
+@import("resolver/StatementResolver.pst");
+@import("resolver/EntityResolver.pst");

@@ -792,6 +792,35 @@ namespace CommonScript.Compiler.Internal
             return output.ToArray();
         }
 
+        public static AbstractEntity[] FlattenEntities(StaticContext staticCtx, System.Collections.Generic.Dictionary<string, AbstractEntity> rootEntities)
+        {
+            System.Collections.Generic.List<AbstractEntity> output = new List<AbstractEntity>();
+            System.Collections.Generic.List<AbstractEntity> queue = new List<AbstractEntity>();
+            AbstractEntity[] arrTemp = rootEntities.Values.ToArray();
+            int j = 0;
+            while (j < arrTemp.Length)
+            {
+                queue.Add(arrTemp[j]);
+                j += 1;
+            }
+            int i = 0;
+            while (i < queue.Count)
+            {
+                AbstractEntity entity = queue[i];
+                output.Add(entity);
+                AbstractEntity[] lookupMembers = Entity_getMemberLookup(staticCtx, entity).Values.ToArray();
+                j = 0;
+                while (j < lookupMembers.Length)
+                {
+                    AbstractEntity mem = lookupMembers[j];
+                    queue.Add(mem);
+                    j += 1;
+                }
+                i += 1;
+            }
+            return output.ToArray();
+        }
+
         public static string FloatToStringWorkaround(double val)
         {
             string str = PST_FloatToString(val);
@@ -1049,6 +1078,38 @@ namespace CommonScript.Compiler.Internal
             ns.baseData.simpleName = nameToken.Value;
             ns.baseData.fqName = fqName;
             return ns;
+        }
+
+        public static Resolver Resolver_new(StaticContext staticCtx, System.Collections.Generic.Dictionary<string, AbstractEntity> rootEntities, System.Collections.Generic.List<string> extensionNames)
+        {
+            Resolver r = new Resolver(staticCtx, rootEntities, new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new List<FunctionEntity>(), null, null, null, 0, StringSet_fromList(extensionNames));
+            r.entityList = FlattenEntities(staticCtx, rootEntities);
+            int i = 0;
+            while (i < r.entityList.Length)
+            {
+                AbstractEntity tle = r.entityList[i];
+                r.flattenedEntities[tle.fqName] = tle;
+                r.flattenedEntitiesAndEnumValues[tle.fqName] = tle;
+                if (tle.type == 4)
+                {
+                    EnumEntity enumDef = (EnumEntity)tle.specificData;
+                    int j = 0;
+                    while (j < enumDef.memberNameTokens.Length)
+                    {
+                        string fqName = string.Join("", new string[] { enumDef.baseData.fqName, ".", enumDef.memberNameTokens[j].Value });
+                        r.enumsByMemberFqName[fqName] = enumDef.baseData;
+                        r.flattenedEntitiesAndEnumValues[fqName] = enumDef.baseData;
+                        r.flattenedEntitiesNoEnumParents[fqName] = enumDef.baseData;
+                        j++;
+                    }
+                }
+                else
+                {
+                    r.flattenedEntitiesNoEnumParents[tle.fqName] = tle;
+                }
+                i += 1;
+            }
+            return r;
         }
 
         public static ByteCodeBuffer serializeAssignField(StaticContext staticCtx, Statement assignField, string baseOp)
