@@ -99,7 +99,7 @@ namespace CommonScript.Compiler
                 // TODO: this is wrong. The fields should be processed in the order that they appear in the code itself.
                 // This will affect runtime order of complex expressions which could have observable consequences.
                 // TODO: simple constant initial values should be conveyed in the metadata and direct-copied from a template.
-                // Ctrl+F for initialVaues in the runtime.
+                // Ctrl+F for initialValues in the runtime.
 
                 FieldEntity[] fields = siblings.Keys
                     .OrderBy(k => k)
@@ -140,14 +140,15 @@ namespace CommonScript.Compiler
 
             StatementResolverUtil.StatementResolver_ResolveStatementArrayFirstPass(resolver, funcDef.code);
 
-            List<Statement> flattened = [
-                .. preBaseFieldInit,
-                .. baseCtorInvocation,
-                .. postBaseFieldInit,
-                .. funcDef.code,
-            ];
+            List<Statement> flattened = new List<Statement>();
+            for (int i = 0; i < preBaseFieldInit.Count; i++) flattened.Add(preBaseFieldInit[i]);
+            for (int i = 0; i < baseCtorInvocation.Count; i++) flattened.Add(baseCtorInvocation[i]);
+            for (int i = 0; i < postBaseFieldInit.Count; i++) flattened.Add(postBaseFieldInit[i]);
+            for (int i = 0; i < funcDef.code.Length; i++) flattened.Add(funcDef.code[i]);
 
-            Statement lastStatement = flattened.Count == 0 ? null : flattened[flattened.Count - 1];
+            Statement lastStatement = null;
+            if (flattened.Count > 0) lastStatement = flattened[flattened.Count - 1];
+            
             bool autoReturnNeeded = lastStatement == null ||
                 (lastStatement.type != (int) StatementType.RETURN && lastStatement.type != (int) StatementType.THROW);
             if (autoReturnNeeded)
@@ -163,9 +164,15 @@ namespace CommonScript.Compiler
         private static Statement EntityResolver_ConvertFieldDefaultValueIntoSetter(FieldEntity fld)
         {
             if (fld.opToken == null) throw new InvalidOperationException(); // only applicable to default-value-based fields.
-            Expression root = fld.baseData.isStatic
-                ? FunctionWrapper.Expression_createClassReference(null, fld.baseData.nestParent)
-                : FunctionWrapper.Expression_createThisReference(null);
+            Expression root = null;
+            if (fld.baseData.isStatic)
+            {
+                root = FunctionWrapper.Expression_createClassReference(null, fld.baseData.nestParent);
+            }
+            else
+            {
+                root = FunctionWrapper.Expression_createThisReference(null);
+            }
             Expression target = FunctionWrapper.Expression_createDotField(root, null, fld.baseData.simpleName);
             Token equal = fld.opToken;
             return StatementUtil.createAssignment(target, equal, fld.defaultValue);

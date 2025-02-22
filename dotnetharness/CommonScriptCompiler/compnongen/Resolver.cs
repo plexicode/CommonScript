@@ -280,11 +280,11 @@ namespace CommonScript.Compiler
         }
 
 
-        private static Token BuildFakeToken(Token template, string value, bool isPunc)
+        private static Token BuildFakeToken(Token template, string value, int tokenType)
         {
             return FunctionWrapper.Token_new(
                 value,
-                isPunc ? (int) TokenType.PUNCTUATION : (int) TokenType.NAME,
+                tokenType,
                 template.File,
                 template.Line,
                 template.Col);
@@ -317,7 +317,7 @@ namespace CommonScript.Compiler
                         {
                             enumEnt.memberValues[j] = FunctionWrapper.Expression_createBinaryOp(
                                 BuildFakeDotChain(enumEnt.baseData.simpleName, enumEnt.memberNameTokens[j - 1].Value),
-                                BuildFakeToken(token, "+", true),
+                                BuildFakeToken(token, "+", (int) TokenType.PUNCTUATION),
                                 FunctionWrapper.Expression_createIntegerConstant(null, 1)
                             );
                         }
@@ -342,7 +342,8 @@ namespace CommonScript.Compiler
 
             foreach (ConstEntity c in constants)
             {
-                string ns = c.baseData.nestParent == null ? "" : c.baseData.nestParent.fqName;
+                string ns = "";
+                if (c.baseData.nestParent != null) ns = c.baseData.nestParent.fqName;
 
                 List<string> refsOut = new List<string>();
                 c.constValue = ResolverUtil.GetListOfUnresolvedConstReferences(resolver, c.baseData.fileContext, ns, c.constValue, refsOut);
@@ -351,7 +352,9 @@ namespace CommonScript.Compiler
 
             foreach (EnumEntity e in enums)
             {
-                string ns = e.baseData.nestParent == null ? "" : e.baseData.nestParent.fqName;
+                string ns = ""; 
+                if (e.baseData.nestParent != null) ns = e.baseData.nestParent.fqName;
+                
                 int memCount = e.memberNameTokens.Length;
 
                 for (int i = 0; i < memCount; i++)

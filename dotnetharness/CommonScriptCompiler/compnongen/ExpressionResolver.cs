@@ -387,9 +387,9 @@ namespace CommonScript.Compiler
 
         private static double ExpressionResolver_GetNumericValueOfConstant(Expression exprConst)
         {
-            return exprConst.type == (int) ExpressionType.FLOAT_CONST ? exprConst.floatVal : exprConst.intVal;
+            if (exprConst.type == (int)ExpressionType.FLOAT_CONST) return exprConst.floatVal;
+            return exprConst.intVal + 0.0;
         }
-
 
         private static string SimpleExprToTypeName(int t)
         {
@@ -434,7 +434,8 @@ namespace CommonScript.Compiler
             {
                 bool isLeftNumeric = IsExpressionNumericConstant(expr.left);
                 bool isRightNumeric = IsExpressionNumericConstant(expr.right);
-                bool isRightZero = expr.right.type == (int) ExpressionType.FLOAT_CONST ? (expr.right.floatVal == 0) : (expr.right.intVal == 0);
+                bool isRightZero = expr.right.intVal == 0;
+                if (expr.right.type == (int)ExpressionType.FLOAT_CONST) isRightZero = expr.right.floatVal == 0;
 
                 if (isRightNumeric)
                 {
@@ -562,8 +563,14 @@ namespace CommonScript.Compiler
                     case (int)ExpressionType.INTEGER_CONST * (int)ExpressionType.MAX_VALUE + (int)ExpressionType.STRING_CONST:
                         if (op == "*")
                         {
-                            Expression strExpr = expr.left.type == (int) ExpressionType.STRING_CONST ? expr.left : expr.right;
-                            Expression intExpr = expr.left.type == (int) ExpressionType.INTEGER_CONST ? expr.left : expr.right;
+                            Expression strExpr = expr.left;
+                            Expression intExpr = expr.right;
+                            if (expr.left.type == (int)ExpressionType.INTEGER_CONST)
+                            {
+                                strExpr = expr.right;
+                                intExpr = expr.left;
+                            }
+                            
                             int size = intExpr.intVal;
                             string val = strExpr.strVal;
                             if (size == 0) return FunctionWrapper.Expression_createStringConstant(expr.firstToken, "");
@@ -595,11 +602,30 @@ namespace CommonScript.Compiler
 
         private static string GetStringFromConstantExpression(Expression expr)
         {
-            if (expr.type == (int) ExpressionType.STRING_CONST) return expr.strVal;
-            if (expr.type == (int) ExpressionType.INTEGER_CONST) return expr.intVal + "";
-            if (expr.type == (int) ExpressionType.BOOL_CONST) return expr.boolVal ? "true" : "false";
-            if (expr.type == (int) ExpressionType.NULL_CONST) return "null"; // TODO: hmm...
-            if (expr.type == (int) ExpressionType.ENUM_CONST) return expr.strVal;
+            if (expr.type == (int)ExpressionType.STRING_CONST)
+            {
+                return expr.strVal;
+            }
+            
+            if (expr.type == (int)ExpressionType.INTEGER_CONST)
+            {
+                return expr.intVal + "";
+            }
+            
+            if (expr.type == (int)ExpressionType.BOOL_CONST)
+            {
+                if (expr.boolVal) return "true";
+                return "false";
+            }
+            
+            if (expr.type == (int) ExpressionType.NULL_CONST) {
+                return "null"; // TODO: should this throw?
+            }
+
+            if (expr.type == (int)ExpressionType.ENUM_CONST)
+            {
+                return expr.strVal;
+            }
 
             if (expr.type == (int) ExpressionType.FLOAT_CONST)
             {
@@ -976,7 +1002,8 @@ namespace CommonScript.Compiler
                     FunctionWrapper.Errors_Throw(ternary.root.firstToken, "Only booleans can be used as ternary conditions.");
                 }
 
-                return ternary.root.boolVal ? ternary.left : ternary.right;
+                if (ternary.root.boolVal) return ternary.left;
+                return ternary.right;
             }
 
             return ternary;
