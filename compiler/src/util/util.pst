@@ -7,3 +7,39 @@ string FloatToStringWorkaround(double val) {
     }
     return str;
 }
+
+string PadIntegerToSize(int n, int size) {
+    string o = Core.IntToString(n);
+    while (o.Size() < size) o = "0" + o;
+    return o;
+}
+
+
+// Given a lookup table of strings to number of times they're used, sort them
+// by their frequency, descending. Use the string itself as a tie-breaker.
+Array<string> OrderStringsByDescendingFrequencyUsingLookup(
+    Dictionary<string, int> frequencyLookupByKey) {
+
+    int total = 0;
+    int i = 0;
+    Array<string> values = frequencyLookupByKey.Keys();
+    for (i = 0; i < values.Size(); i += 1) {
+        total += frequencyLookupByKey[values[i]];
+    }
+
+    int padSize = Core.IntToString(total).Size() + 1;
+    Dictionary<string, string> valueByLexicalSortKey = new Dictionary<string, string>();
+    for (i = 0; i < values.Size(); i += 1) {
+        string value = values[i];
+        string key = PadIntegerToSize(total - frequencyLookupByKey[value], padSize) + ":" + value;
+        valueByLexicalSortKey[key] = value;
+    }
+
+    Array<string> keys = Core.SortedCopyOfStringArray(valueByLexicalSortKey.Keys());
+    List<string> output = new List<string>();
+    for (i = 0; i < keys.Size(); i += 1) {
+        output.Add(valueByLexicalSortKey[keys[i]]);
+    }
+
+    return Core.ListToArray(output);
+}

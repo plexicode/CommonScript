@@ -1489,6 +1489,48 @@ namespace CommonScript.Compiler.Internal
             return ns;
         }
 
+        public static string[] OrderStringsByDescendingFrequencyUsingLookup(System.Collections.Generic.Dictionary<string, int> frequencyLookupByKey)
+        {
+            int total = 0;
+            int i = 0;
+            string[] values = frequencyLookupByKey.Keys.ToArray();
+            i = 0;
+            while (i < values.Length)
+            {
+                total += frequencyLookupByKey[values[i]];
+                i += 1;
+            }
+            int padSize = total.ToString().Length + 1;
+            System.Collections.Generic.Dictionary<string, string> valueByLexicalSortKey = new Dictionary<string, string>();
+            i = 0;
+            while (i < values.Length)
+            {
+                string value = values[i];
+                string key = string.Join("", new string[] { PadIntegerToSize(total - frequencyLookupByKey[value], padSize), ":", value });
+                valueByLexicalSortKey[key] = value;
+                i += 1;
+            }
+            string[] keys = valueByLexicalSortKey.Keys.ToArray().OrderBy<string, string>(_PST_GEN_arg => _PST_GEN_arg).ToArray();
+            System.Collections.Generic.List<string> output = new List<string>();
+            i = 0;
+            while (i < keys.Length)
+            {
+                output.Add(valueByLexicalSortKey[keys[i]]);
+                i += 1;
+            }
+            return output.ToArray();
+        }
+
+        public static string PadIntegerToSize(int n, int size)
+        {
+            string o = n.ToString();
+            while (o.Length < size)
+            {
+                o = "0" + o;
+            }
+            return o;
+        }
+
         public static void PUBLIC_EnsureDependenciesFulfilled(object compObj)
         {
             CompilerContext compiler = (CompilerContext)compObj;

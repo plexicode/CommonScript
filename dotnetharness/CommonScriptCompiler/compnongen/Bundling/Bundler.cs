@@ -232,10 +232,14 @@ namespace CommonScript.Compiler
                 }
             }
 
-            string[] stringByIndex = stringUsageCount.Keys.OrderBy(k => k).OrderBy(k => -stringUsageCount[k]).ToArray();
-            string[] fpByIndex = tokenCountByFingerprint.Keys.OrderBy(k => k).OrderBy(k => -tokenCountByFingerprint[k]).ToArray();
-            List<string> stringById = new List<string>() { null };
-            stringById.AddRange(stringByIndex);
+            string[] stringByIndex = FunctionWrapper.OrderStringsByDescendingFrequencyUsingLookup(stringUsageCount);
+            string[] fpByIndex = FunctionWrapper.OrderStringsByDescendingFrequencyUsingLookup(tokenCountByFingerprint);
+            List<string> stringById = new List<string>();
+            stringById.Add(null); // 0 is invalid.
+            for (int i = 0; i < stringByIndex.Length; i++)
+            {
+                stringById.Add(stringByIndex[i]);
+            }
             Dictionary<string, int> stringToId = new Dictionary<string, int>();
             Dictionary<string, int> tokenFingerprintToId = new Dictionary<string, int>();
             for (int i = 0; i < stringByIndex.Length; i++)
@@ -250,8 +254,9 @@ namespace CommonScript.Compiler
             }
 
             Token[] tokensById = new Token[fpByIndex.Length];
-            foreach (ByteCodeRow row in allByteCode)
+            for (int i = 0; i < allByteCode.Count; i++)
             {
+                ByteCodeRow row = allByteCode[i];
                 if (row.stringArg != null)
                 {
                     row.stringId = stringToId[row.stringArg];
