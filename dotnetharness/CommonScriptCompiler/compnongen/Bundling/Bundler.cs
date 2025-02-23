@@ -7,9 +7,26 @@ namespace CommonScript.Compiler
 {
     internal static class Bundler
     {
+        private static CompiledModule[] getDeterministOrderOfModules(CompiledModule[] modules)
+        {
+            Dictionary<string, CompiledModule> lookup = new Dictionary<string, CompiledModule>();
+            for (int i = 0; i < modules.Length; i++)
+            {
+                lookup[modules[i].id] = modules[i];
+            }
+
+            string[] keys = lookup.Keys.OrderBy(k => k).ToArray();
+            List<CompiledModule> output = new List<CompiledModule>();
+            for (int i = 0; i < keys.Length; i++)
+            {
+                output.Add(lookup[keys[i]]);
+            }
+            return output.ToArray();
+        }
+        
         public static CompilationBundle bundleCompilation(StaticContext staticCtx, string rootId, CompiledModule[] modules)
         {
-            CompiledModule[] deterministicOrder = modules.OrderBy(m => m.id).ToArray();
+            CompiledModule[] deterministicOrder = getDeterministOrderOfModules(modules);
             CompilationBundle bundle = FunctionWrapper.CompilationBundle_new();
 
             List<FunctionEntity> functions = new List<FunctionEntity>();
@@ -27,10 +44,15 @@ namespace CommonScript.Compiler
                 // If deferring main to an included module, that would go here.
                 bool checkForMain = m.id == rootId;
 
-                AbstractEntity[] orderedEntities = [
-                    .. deterministicKeyOrder.Select(k => m.flattenedEntities[k]),
-                    .. m.lambdaEntities,
-                ];
+                List<AbstractEntity> orderedEntities = new List<AbstractEntity>();
+                for (int i = 0; i < deterministicKeyOrder.Length; i++)
+                {
+                    orderedEntities.Add(m.flattenedEntities[deterministicKeyOrder[i]]);
+                }
+                for (int i = 0; i < m.lambdaEntities.Count; i++)
+                {
+                    orderedEntities.Add(m.lambdaEntities[i]);
+                }
 
                 foreach (AbstractEntity tle in orderedEntities)
                 {
@@ -150,7 +172,14 @@ namespace CommonScript.Compiler
             for (int i = 0; i < deterministicOrder.Length; i++)
             {
                 ClassEntity cls = deterministicOrder[i];
-                cls.classDepth = cls.baseClassEntity == null ? 1 : -1;
+                if (cls.baseClassEntity == null)
+                {
+                    cls.classDepth = 1;
+                }
+                else
+                {
+                    cls.classDepth = -1;
+                }
             }
 
             foreach (ClassEntity cls in deterministicOrder)
@@ -256,7 +285,8 @@ namespace CommonScript.Compiler
                     break;
 
                 case (int)EntityType.FIELD:
-                    throw new NotImplementedException();
+                    FunctionWrapper.fail("not implemented");
+                    break;
 
                 case (int)EntityType.FUNCTION:
                 case (int)EntityType.CONSTRUCTOR:
@@ -265,10 +295,12 @@ namespace CommonScript.Compiler
                     break;
 
                 case (int)EntityType.PROPERTY:
-                    throw new NotImplementedException();
+                    FunctionWrapper.fail("not implemented");
+                    break;
 
                 default:
-                    throw new InvalidOperationException();
+                    FunctionWrapper.fail(""); // invalid operation
+                    break;
             }
         }
 
@@ -280,12 +312,14 @@ namespace CommonScript.Compiler
                 baseClassId = classEntity.baseClassEntity.baseData.serializationIndex;
             }
             Dictionary<string, AbstractEntity> mems = classEntity.classMembers;
+            int staticCtorId = 0;
+            if (mems.ContainsKey("@cctor")) staticCtorId = mems["@cctor"].serializationIndex;
             BundleClassInfo bci = FunctionWrapper.BundleClassInfo_new(
                 classEntity.baseData.serializationIndex,
                 baseClassId,
                 classEntity.baseData.simpleName,
                 mems["@ctor"].serializationIndex,
-                mems.ContainsKey("@cctor") ? mems["@cctor"].serializationIndex : 0,
+                staticCtorId,
                 new Dictionary<string, int>(),
                 classEntity.newDirectMemberOffsets,
                 new List<string>(),
@@ -352,26 +386,33 @@ namespace CommonScript.Compiler
             {
                 buffer = FunctionWrapper.join2(buffer, FunctionWrapper.serializeStatement(staticCtx, stmnt));
             }
-            List<ByteCodeRow> flatByteCode = new List<ByteCodeRow>(FunctionWrapper.flatten(buffer));
-
-            for (int i = 0; i < flatByteCode.Count; i++)
+            ByteCodeRow[] flatByteCode = FunctionWrapper.flatten(buffer);
+            List<ByteCodeRow> byteCodeFinal = new List<ByteCodeRow>();
+            for (int i = 0; i < flatByteCode.Length; i++)
             {
-                ByteCodeRow row = flatByteCode[i];
+                byteCodeFinal.Add(flatByteCode[i]);
+            }
+
+            for (int i = 0; i < byteCodeFinal.Count; i++)
+            {
+                ByteCodeRow row = byteCodeFinal[i];
                 if (row.opCode <= 0) throw new InvalidOperationException(); // break or continue was not resolved.
                 if (row.tryCatchInfo != null)
                 {
                     int[] tryInfoArgs = row.tryCatchInfo;
-                    tryInfoArgs[0] = i - flatByteCode.Count;
+                    tryInfoArgs[0] = i - byteCodeFinal.Count;
                     ByteCodeRow tryInfoRow = FunctionWrapper.ByteCodeRow_new(OpCodes.OP_TRY_INFO, null, null, tryInfoArgs);
-                    flatByteCode.Add(tryInfoRow);
+                    byteCodeFinal.Add(tryInfoRow);
                 }
             }
 
+            string fnName = null;
+            if (!isLambda) fnName = entity.baseData.simpleName;
             BundleFunctionInfo fd = FunctionWrapper.BundleFunctionInfo_new(
-                flatByteCode, 
+                byteCodeFinal, 
                 argcMin, 
                 argc, 
-                isLambda ? null : entity.baseData.simpleName);
+                fnName);
             
             if (isLambda)
             {
