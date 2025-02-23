@@ -1,0 +1,108 @@
+
+Token TryPopAssignmentOp(TokenStream tokens) {
+    string op = Tokens_peekValue(tokens);
+    if (op == null) return null;
+    bool isOp = false;
+    switch (op[0])
+    {
+        case '=':
+            if (op == "=") isOp = true;
+            break;
+        case '+':
+            if (op == "+=") isOp = true;
+            break;
+        case '-':
+            if (op == "-=") isOp = true;
+            break;
+        case '*':
+            if (op == "*=") isOp = true;
+            if (op == "**=") isOp = true;
+            break;
+        case '/':
+            if (op == "/=") isOp = true;
+            break;
+        case '%':
+            if (op == "%=") isOp = true;
+            break;
+        case '<':
+            if (op == "<<=") isOp = true;
+            break;
+        case '>':
+            if (op == ">>=") isOp = true;
+            if (op == ">>>=") isOp = true;
+            break;
+        case '&':
+            if (op == "&=") isOp = true;
+            break;
+        case '|':
+            if (op == "|=") isOp = true;
+            break;
+        case '^':
+            if (op == "^=") isOp = true;
+            break;
+    }
+
+    if (isOp) return Tokens_pop(tokens);
+    return null;
+}
+
+
+enum StatementKeyword {
+    UNKNOWN = 0,
+    BREAK = 1,
+    CONTINUE = 2,
+    DO = 3,
+    FOR = 4,
+    IF = 5,
+    RETURN = 6,
+    SWITCH = 7,
+    THROW = 8,
+    TRY = 9,
+    WHILE = 10,
+    YIELD = 11,
+}
+
+int StatementParser_IdentifyKeywordType(string kw) {
+    switch (kw[0]) {
+        case 'b':
+            if (kw == "break") return StatementKeyword.BREAK;
+            break;
+        case 'c':
+            if (kw == "continue") return StatementKeyword.CONTINUE;
+            break;
+        case 'd':
+            if (kw == "do") return StatementKeyword.DO;
+            break;
+        case 'f':
+            if (kw == "for") return StatementKeyword.FOR;
+            break;
+        case 'i':
+            if (kw == "if") return StatementKeyword.IF;
+            break;
+        case 'r':
+            if (kw == "return") return StatementKeyword.RETURN;
+            break;
+        case 's':
+            if (kw == "switch") return StatementKeyword.SWITCH;
+            break;
+        case 't':
+            if (kw == "throw") return StatementKeyword.THROW;
+            if (kw == "try") return StatementKeyword.TRY;
+            break;
+        case 'w':
+            if (kw == "while") return StatementKeyword.WHILE;
+            break;
+        case 'y':
+            if (kw == "yield") return StatementKeyword.YIELD;
+            break;
+    }
+    return StatementKeyword.UNKNOWN;
+}
+
+Statement ParseBreakContinue(TokenStream tokens) {
+    string expectedNextToken = "break";
+    if (Tokens_isNext(tokens, "continue")) expectedNextToken = "continue";
+    Token token = Tokens_popKeyword(tokens, expectedNextToken);
+    Tokens_popExpected(tokens, ";");
+    return Statement_createBreakContinue(token);
+}

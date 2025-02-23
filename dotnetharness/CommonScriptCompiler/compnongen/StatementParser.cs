@@ -30,32 +30,55 @@ namespace CommonScript.Compiler
             return output;
         }
 
+        private enum StatementKeyword
+        {
+            UNKNOWN = 0,
+            BREAK = 1,
+            CONTINUE = 2,
+            DO = 3,
+            FOR = 4, 
+            IF = 5,
+            RETURN = 6, 
+            SWITCH = 7,
+            THROW = 8,
+            TRY = 9, 
+            WHILE = 10,
+            YIELD = 11, 
+        }
+        
         public static Statement ParseStatement(TokenStream tokens, bool isForLoop)
         {
-            if (!isForLoop)
+            Token nextToken = FunctionWrapper.Tokens_peek(tokens);
+            if (!isForLoop && 
+                nextToken != null && 
+                nextToken.Type == (int) TokenType.KEYWORD)
             {
-                switch (FunctionWrapper.Tokens_peekValueNonNull(tokens))
+                switch (FunctionWrapper.StatementParser_IdentifyKeywordType(nextToken.Value))
                 {
-                    case "break": return ParseBreakContinue(tokens);
-                    case "continue": return ParseBreakContinue(tokens);
-                    case "do": return ParseDoWhileLoop(tokens);
-                    case "for": return ParseAnyForLoop(tokens);
-                    case "if": return ParseIfStatement(tokens);
-                    case "return": return ParseReturn(tokens);
-                    case "switch": return ParseSwitch(tokens);
-                    case "throw": return ParseThrow(tokens);
-                    case "try": return ParseTry(tokens);
-                    case "while": return ParseWhileLoop(tokens);
-                    case "yield": 
+                    case (int) StatementKeyword.BREAK:
+                    case (int) StatementKeyword.CONTINUE: 
+                        return FunctionWrapper.ParseBreakContinue(tokens);
+                    
+                    case (int) StatementKeyword.DO: return ParseDoWhileLoop(tokens);
+                    case (int) StatementKeyword.FOR: return ParseAnyForLoop(tokens);
+                    case (int) StatementKeyword.IF: return ParseIfStatement(tokens);
+                    case (int) StatementKeyword.RETURN: return ParseReturn(tokens);
+                    case (int) StatementKeyword.SWITCH: return ParseSwitch(tokens);
+                    case (int) StatementKeyword.THROW: return ParseThrow(tokens);
+                    case (int) StatementKeyword.TRY: return ParseTry(tokens);
+                    case (int) StatementKeyword.WHILE: return ParseWhileLoop(tokens);
+                    case (int) StatementKeyword.YIELD:
                         FunctionWrapper.fail("Not implemented");
                         return null;
-
-                    default: break;
+                    
+                    default:
+                        FunctionWrapper.fail(""); // should not happen.
+                        break;
                 }
             }
 
             Expression expr = ExpressionParser.ParseExpression(tokens);
-            Token assignOp = TryPopAssignmentOp(tokens);
+            Token assignOp = FunctionWrapper.TryPopAssignmentOp(tokens);
             Statement s;
             if (assignOp != null)
             {
@@ -73,63 +96,6 @@ namespace CommonScript.Compiler
             }
 
             return s;
-        }
-
-        private static Token TryPopAssignmentOp(TokenStream tokens)
-        {
-            string op = FunctionWrapper.Tokens_peekValue(tokens);
-            if (op == null) return null;
-            bool isOp = false;
-            switch (op[0])
-            {
-                case '=':
-                    if (op == "=") isOp = true;
-                    break;
-                case '+':
-                    if (op == "+=") isOp = true;
-                    break;
-                case '-':
-                    if (op == "-=") isOp = true;
-                    break;
-                case '*':
-                    if (op == "*=") isOp = true;
-                    if (op == "**=") isOp = true;
-                    break;
-                case '/':
-                    if (op == "/=") isOp = true;
-                    break;
-                case '%':
-                    if (op == "%=") isOp = true;
-                    break;
-                case '<':
-                    if (op == "<<=") isOp = true;
-                    break;
-                case '>':
-                    if (op == ">>=") isOp = true;
-                    if (op == ">>>=") isOp = true;
-                    break;
-                case '&':
-                    if (op == "&=") isOp = true;
-                    break;
-                case '|':
-                    if (op == "|=") isOp = true;
-                    break;
-                case '^':
-                    if (op == "^=") isOp = true;
-                    break;
-            }
-
-            if (isOp) return FunctionWrapper.Tokens_pop(tokens);
-            return null;
-        }
-
-        private static Statement ParseBreakContinue(TokenStream tokens)
-        {
-            string expectedNextToken = "break";
-            if (FunctionWrapper.Tokens_isNext(tokens, "continue")) expectedNextToken = "continue";
-            Token token = FunctionWrapper.Tokens_popKeyword(tokens, expectedNextToken);
-            FunctionWrapper.Tokens_popExpected(tokens, ";");
-            return FunctionWrapper.Statement_createBreakContinue(token);
         }
 
         private static Statement ParseDoWhileLoop(TokenStream tokens)

@@ -425,7 +425,8 @@ namespace CommonScript.Compiler
                     if (next == "new")
                     {
                         Token newTok = FunctionWrapper.Tokens_pop(tokens);
-                        List<Token> nameChain = new List<Token>() { FunctionWrapper.Tokens_popName(tokens, "class name") };
+                        List<Token> nameChain = new List<Token>();
+                        nameChain.Add(FunctionWrapper.Tokens_popName(tokens, "class name"));
                         while (FunctionWrapper.Tokens_isNext(tokens, "."))
                         {
                             nameChain.Add(FunctionWrapper.Tokens_pop(tokens));

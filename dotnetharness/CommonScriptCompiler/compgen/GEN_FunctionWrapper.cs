@@ -2493,6 +2493,18 @@ namespace CommonScript.Compiler.Internal
             return o;
         }
 
+        public static Statement ParseBreakContinue(TokenStream tokens)
+        {
+            string expectedNextToken = "break";
+            if (Tokens_isNext(tokens, "continue"))
+            {
+                expectedNextToken = "continue";
+            }
+            Token token = Tokens_popKeyword(tokens, expectedNextToken);
+            Tokens_popExpected(tokens, ";");
+            return Statement_createBreakContinue(token);
+        }
+
         public static void PUBLIC_EnsureDependenciesFulfilled(object compObj)
         {
             CompilerContext compiler = (CompilerContext)compObj;
@@ -3865,6 +3877,78 @@ namespace CommonScript.Compiler.Internal
             return new Statement(firstToken, type, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0);
         }
 
+        public static int StatementParser_IdentifyKeywordType(string kw)
+        {
+            switch (kw[0])
+            {
+                case 'b':
+                    if (kw == "break")
+                    {
+                        return 1;
+                    }
+                    break;
+                case 'c':
+                    if (kw == "continue")
+                    {
+                        return 2;
+                    }
+                    break;
+                case 'd':
+                    if (kw == "do")
+                    {
+                        return 3;
+                    }
+                    break;
+                case 'f':
+                    if (kw == "for")
+                    {
+                        return 4;
+                    }
+                    break;
+                case 'i':
+                    if (kw == "if")
+                    {
+                        return 5;
+                    }
+                    break;
+                case 'r':
+                    if (kw == "return")
+                    {
+                        return 6;
+                    }
+                    break;
+                case 's':
+                    if (kw == "switch")
+                    {
+                        return 7;
+                    }
+                    break;
+                case 't':
+                    if (kw == "throw")
+                    {
+                        return 8;
+                    }
+                    if (kw == "try")
+                    {
+                        return 9;
+                    }
+                    break;
+                case 'w':
+                    if (kw == "while")
+                    {
+                        return 10;
+                    }
+                    break;
+                case 'y':
+                    if (kw == "yield")
+                    {
+                        return 11;
+                    }
+                    break;
+            }
+            return 0;
+        }
+
         public static StaticContext StaticContext_new()
         {
             return new StaticContext(TokenizerStaticContext_new(), new Dictionary<string, AbstractEntity>(), SpecialActionUtil_new(), StringSet_fromArray(PST_StringSplit("public static", " ")));
@@ -4608,6 +4692,98 @@ namespace CommonScript.Compiler.Internal
                 i += 1;
             }
             return string.Join("", output);
+        }
+
+        public static Token TryPopAssignmentOp(TokenStream tokens)
+        {
+            string op = Tokens_peekValue(tokens);
+            if (op == null)
+            {
+                return null;
+            }
+            bool isOp = false;
+            switch (op[0])
+            {
+                case '=':
+                    if (op == "=")
+                    {
+                        isOp = true;
+                    }
+                    break;
+                case '+':
+                    if (op == "+=")
+                    {
+                        isOp = true;
+                    }
+                    break;
+                case '-':
+                    if (op == "-=")
+                    {
+                        isOp = true;
+                    }
+                    break;
+                case '*':
+                    if (op == "*=")
+                    {
+                        isOp = true;
+                    }
+                    if (op == "**=")
+                    {
+                        isOp = true;
+                    }
+                    break;
+                case '/':
+                    if (op == "/=")
+                    {
+                        isOp = true;
+                    }
+                    break;
+                case '%':
+                    if (op == "%=")
+                    {
+                        isOp = true;
+                    }
+                    break;
+                case '<':
+                    if (op == "<<=")
+                    {
+                        isOp = true;
+                    }
+                    break;
+                case '>':
+                    if (op == ">>=")
+                    {
+                        isOp = true;
+                    }
+                    if (op == ">>>=")
+                    {
+                        isOp = true;
+                    }
+                    break;
+                case '&':
+                    if (op == "&=")
+                    {
+                        isOp = true;
+                    }
+                    break;
+                case '|':
+                    if (op == "|=")
+                    {
+                        isOp = true;
+                    }
+                    break;
+                case '^':
+                    if (op == "^=")
+                    {
+                        isOp = true;
+                    }
+                    break;
+            }
+            if (isOp)
+            {
+                return Tokens_pop(tokens);
+            }
+            return null;
         }
 
         public static string UnicodeArrayToString(int[] chars)
