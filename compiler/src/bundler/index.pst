@@ -1,8 +1,9 @@
 @import("bundler/ByteCodeBuffer.pst");
 @import("bundler/ByteCodeRow.pst");
 @import("bundler/ByteCodeUtil.pst");
-@import("bundler/ClassSorter.pst");
+@import("bundler/ClassAndModuleSorter.pst");
 @import("bundler/CompilationBundle.pst");
 @import("bundler/ExpressionSerializer.pst");
+@import("bundler/IdAllocator.pst");
 @import("bundler/SpecialActionSerializer.pst");
 @import("bundler/StatementSerializer.pst");

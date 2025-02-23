@@ -7,30 +7,15 @@ namespace CommonScript.Compiler
 {
     internal static class Bundler
     {
-        private static CompiledModule[] getDeterministOrderOfModules(CompiledModule[] modules)
-        {
-            Dictionary<string, CompiledModule> lookup = new Dictionary<string, CompiledModule>();
-            for (int i = 0; i < modules.Length; i++)
-            {
-                lookup[modules[i].id] = modules[i];
-            }
-
-            string[] keys = lookup.Keys.OrderBy(k => k).ToArray();
-            List<CompiledModule> output = new List<CompiledModule>();
-            for (int i = 0; i < keys.Length; i++)
-            {
-                output.Add(lookup[keys[i]]);
-            }
-            return output.ToArray();
-        }
-        
         public static CompilationBundle bundleCompilation(StaticContext staticCtx, string rootId, CompiledModule[] modules)
         {
-            CompiledModule[] deterministicOrder = getDeterministOrderOfModules(modules);
+            CompiledModule[] deterministicOrder = FunctionWrapper.getDeterministOrderOfModules(modules);
             CompilationBundle bundle = FunctionWrapper.CompilationBundle_new();
 
-            List<FunctionEntity> functions = new List<FunctionEntity>();
-            List<FunctionEntity> builtInFunctions = new List<FunctionEntity>(); // these get flattened into functions.
+            // Functions are distinguished to ensure builtInFunctions get sorted first in byte code 
+            List<FunctionEntity> userFunctions = new List<FunctionEntity>();
+            List<FunctionEntity> coreBuiltInFunctions = new List<FunctionEntity>();
+            
             List<EnumEntity> enums = new List<EnumEntity>();
             List<ClassEntity> classes = new List<ClassEntity>();
             List<FieldEntity> fields = new List<FieldEntity>();
@@ -64,11 +49,11 @@ namespace CommonScript.Compiler
                             FunctionEntity func = (FunctionEntity)tle.specificData;
                             if (tle.fileContext.isCoreBuiltin)
                             {
-                                builtInFunctions.Add(func);
+                                coreBuiltInFunctions.Add(func);
                             }
                             else
                             {
-                                functions.Add(func);
+                                userFunctions.Add(func);
                                 if (checkForMain && tle.simpleName == "main")
                                 {
                                     if (mainFunc != null) FunctionWrapper.Errors_Throw(tle.firstToken, "There are multiple functions named main in the root module.");
@@ -95,7 +80,7 @@ namespace CommonScript.Compiler
                             break;
 
                         case (int)EntityType.CONSTRUCTOR:
-                            functions.Add((FunctionEntity)tle.specificData);
+                            userFunctions.Add((FunctionEntity)tle.specificData);
                             break;
 
                         case (int)EntityType.NAMESPACE:
@@ -103,18 +88,28 @@ namespace CommonScript.Compiler
                             break;
 
                         default:
-                            throw new NotImplementedException();
+                            FunctionWrapper.fail("Not implemented");
+                            break;
                     }
                 }
             }
 
             List<AbstractEntity> finalOrder = new List<AbstractEntity>();
 
-            functions = new List<FunctionEntity>(builtInFunctions.Concat(functions));
-
-            for (int i = 0; i < functions.Count; i++)
+            List<FunctionEntity> allFunctions = new List<FunctionEntity>();
+            for (int i = 0; i < coreBuiltInFunctions.Count; i++)
             {
-                AbstractEntity fn = functions[i].baseData;
+                allFunctions.Add(coreBuiltInFunctions[i]);
+            }
+
+            for (int i = 0; i < userFunctions.Count; i++)
+            {
+                allFunctions.Add(userFunctions[i]);
+            }
+            
+            for (int i = 0; i < allFunctions.Count; i++)
+            {
+                AbstractEntity fn = allFunctions[i].baseData;
                 fn.serializationIndex = i + 1;
                 finalOrder.Add(fn);
             }
@@ -145,7 +140,7 @@ namespace CommonScript.Compiler
                 bundleEntity(staticCtx, entity, bundle);
             }
 
-            allocateStringAndTokenIds(bundle);
+            FunctionWrapper.allocateStringAndTokenIds(bundle);
 
             if (mainFunc == null)
             {
@@ -161,86 +156,11 @@ namespace CommonScript.Compiler
             }
 
             bundle.mainFunctionId = mainFunc.baseData.serializationIndex;
-            bundle.builtInCount = builtInFunctions.Count;
+            bundle.builtInCount = coreBuiltInFunctions.Count;
 
             return bundle;
         }
 
-        private static void allocateStringAndTokenIds(CompilationBundle bundle)
-        {
-            List<ByteCodeRow> allByteCode = new List<ByteCodeRow>();
-            for (int i = 1; i < bundle.functionById.Count; i++)
-            {
-                BundleFunctionInfo fn = bundle.functionById[i];
-                allByteCode.AddRange(fn.code);
-            }
-            for (int i = 1; i < bundle.lambdaById.Count; i++)
-            {
-                BundleFunctionInfo fn = bundle.lambdaById[i];
-                allByteCode.AddRange(fn.code);
-            }
-
-            Dictionary<string, int> stringUsageCount = new Dictionary<string, int>();
-            Dictionary<string, int> tokenCountByFingerprint = new Dictionary<string, int>();
-
-            foreach (ByteCodeRow row in allByteCode)
-            {
-                string str = row.stringArg;
-                Token tok = row.token;
-                if (str != null)
-                {
-                    if (!stringUsageCount.ContainsKey(str)) stringUsageCount[str] = 0;
-                    stringUsageCount[str] = stringUsageCount[str] + 1;
-                }
-
-                if (tok != null)
-                {
-                    string fp = FunctionWrapper.Token_getFingerprint(tok);
-                    if (!tokenCountByFingerprint.ContainsKey(fp)) tokenCountByFingerprint[fp] = 0;
-                    tokenCountByFingerprint[fp] = tokenCountByFingerprint[fp] + 1;
-                }
-            }
-
-            string[] stringByIndex = FunctionWrapper.OrderStringsByDescendingFrequencyUsingLookup(stringUsageCount);
-            string[] fpByIndex = FunctionWrapper.OrderStringsByDescendingFrequencyUsingLookup(tokenCountByFingerprint);
-            List<string> stringById = new List<string>();
-            stringById.Add(null); // 0 is invalid.
-            for (int i = 0; i < stringByIndex.Length; i++)
-            {
-                stringById.Add(stringByIndex[i]);
-            }
-            Dictionary<string, int> stringToId = new Dictionary<string, int>();
-            Dictionary<string, int> tokenFingerprintToId = new Dictionary<string, int>();
-            for (int i = 0; i < stringByIndex.Length; i++)
-            {
-                string s = stringByIndex[i];
-                stringToId[s] = i + 1;
-            }
-            for (int i = 0; i < fpByIndex.Length; i++)
-            {
-                string fp = fpByIndex[i];
-                tokenFingerprintToId[fp] = i;
-            }
-
-            Token[] tokensById = new Token[fpByIndex.Length];
-            for (int i = 0; i < allByteCode.Count; i++)
-            {
-                ByteCodeRow row = allByteCode[i];
-                if (row.stringArg != null)
-                {
-                    row.stringId = stringToId[row.stringArg];
-                }
-
-                if (row.token != null)
-                {
-                    row.tokenId = tokenFingerprintToId[row.token.Fingerprint];
-                    tokensById[row.tokenId] = row.token;
-                }
-            }
-
-            bundle.tokensById = tokensById;
-            bundle.stringById = stringById.ToArray();
-        }
 
         private static void bundleEntity(StaticContext staticCtx, AbstractEntity entity, CompilationBundle bundle)
         {
@@ -314,7 +234,8 @@ namespace CommonScript.Compiler
                     case (int)EntityType.CONSTRUCTOR:
                         break; // already handled.
                     default:
-                        throw new NotImplementedException();
+                        FunctionWrapper.fail("Not implemented");
+                        break;
                 }
             }
 
@@ -370,7 +291,7 @@ namespace CommonScript.Compiler
             for (int i = 0; i < byteCodeFinal.Count; i++)
             {
                 ByteCodeRow row = byteCodeFinal[i];
-                if (row.opCode <= 0) throw new InvalidOperationException(); // break or continue was not resolved.
+                if (row.opCode <= 0) FunctionWrapper.fail(""); // break or continue was not resolved.
                 if (row.tryCatchInfo != null)
                 {
                     int[] tryInfoArgs = row.tryCatchInfo;

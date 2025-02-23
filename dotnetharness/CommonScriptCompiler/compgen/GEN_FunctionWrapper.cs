@@ -79,6 +79,108 @@ namespace CommonScript.Compiler.Internal
             return new AbstractEntity(firstToken, type, specificData, null, null, null, null, false, null, null, -1);
         }
 
+        public static void allocateStringAndTokenIds(CompilationBundle bundle)
+        {
+            int i = 0;
+            int j = 0;
+            System.Collections.Generic.List<ByteCodeRow> allByteCode = new List<ByteCodeRow>();
+            i = 1;
+            while (i < bundle.functionById.Count)
+            {
+                BundleFunctionInfo fn = bundle.functionById[i];
+                j = 0;
+                while (j < fn.code.Length)
+                {
+                    allByteCode.Add(fn.code[j]);
+                    j += 1;
+                }
+                i += 1;
+            }
+            i = 1;
+            while (i < bundle.lambdaById.Count)
+            {
+                BundleFunctionInfo fn = bundle.lambdaById[i];
+                j = 0;
+                while (j < fn.code.Length)
+                {
+                    allByteCode.Add(fn.code[j]);
+                    j += 1;
+                }
+                i += 1;
+            }
+            System.Collections.Generic.Dictionary<string, int> stringUsageCount = new Dictionary<string, int>();
+            System.Collections.Generic.Dictionary<string, int> tokenCountByFingerprint = new Dictionary<string, int>();
+            i = 0;
+            while (i < allByteCode.Count)
+            {
+                ByteCodeRow row = allByteCode[i];
+                string str = row.stringArg;
+                Token tok = row.token;
+                if (str != null)
+                {
+                    if (!stringUsageCount.ContainsKey(str))
+                    {
+                        stringUsageCount[str] = 0;
+                    }
+                    stringUsageCount[str] = stringUsageCount[str] + 1;
+                }
+                if (tok != null)
+                {
+                    string fp = Token_getFingerprint(tok);
+                    if (!tokenCountByFingerprint.ContainsKey(fp))
+                    {
+                        tokenCountByFingerprint[fp] = 0;
+                    }
+                    tokenCountByFingerprint[fp] = tokenCountByFingerprint[fp] + 1;
+                }
+                i += 1;
+            }
+            string[] stringByIndex = OrderStringsByDescendingFrequencyUsingLookup(stringUsageCount);
+            string[] fpByIndex = OrderStringsByDescendingFrequencyUsingLookup(tokenCountByFingerprint);
+            System.Collections.Generic.List<string> stringById = new List<string>();
+            stringById.Add(null);
+            i = 0;
+            while (i < stringByIndex.Length)
+            {
+                stringById.Add(stringByIndex[i]);
+                i += 1;
+            }
+            System.Collections.Generic.Dictionary<string, int> stringToId = new Dictionary<string, int>();
+            System.Collections.Generic.Dictionary<string, int> tokenFingerprintToId = new Dictionary<string, int>();
+            i = 0;
+            while (i < stringByIndex.Length)
+            {
+                string s = stringByIndex[i];
+                stringToId[s] = i + 1;
+                i += 1;
+            }
+            i = 0;
+            while (i < fpByIndex.Length)
+            {
+                string fp = fpByIndex[i];
+                tokenFingerprintToId[fp] = i;
+                i += 1;
+            }
+            Token[] tokensById = new Token[fpByIndex.Length];
+            i = 0;
+            while (i < allByteCode.Count)
+            {
+                ByteCodeRow row = allByteCode[i];
+                if (row.stringArg != null)
+                {
+                    row.stringId = stringToId[row.stringArg];
+                }
+                if (row.token != null)
+                {
+                    row.tokenId = tokenFingerprintToId[row.token.Fingerprint];
+                    tokensById[row.tokenId] = row.token;
+                }
+                i += 1;
+            }
+            bundle.tokensById = tokensById;
+            bundle.stringById = stringById.ToArray();
+        }
+
         public static int[] bsbFlatten(ByteStringBuilder sbs)
         {
             System.Collections.Generic.List<ByteStringBuilder> q = new List<ByteStringBuilder>();
@@ -1379,6 +1481,27 @@ namespace CommonScript.Compiler.Internal
                 return GEN_BUILTINS_xml();
             }
             return null;
+        }
+
+        public static CompiledModule[] getDeterministOrderOfModules(CompiledModule[] modules)
+        {
+            int i = 0;
+            System.Collections.Generic.Dictionary<string, CompiledModule> lookup = new Dictionary<string, CompiledModule>();
+            i = 0;
+            while (i < modules.Length)
+            {
+                lookup[modules[i].id] = modules[i];
+                i += 1;
+            }
+            string[] keys = lookup.Keys.ToArray().OrderBy<string, string>(_PST_GEN_arg => _PST_GEN_arg).ToArray();
+            System.Collections.Generic.List<CompiledModule> output = new List<CompiledModule>();
+            i = 0;
+            while (i < keys.Length)
+            {
+                output.Add(lookup[keys[i]]);
+                i += 1;
+            }
+            return output.ToArray();
         }
 
         public static string GetSourceForBuiltinModule(string moduleName)

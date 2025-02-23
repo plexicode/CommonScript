@@ -1,0 +1,74 @@
+
+void allocateStringAndTokenIds(CompilationBundle bundle) {
+    int i = 0;
+    int j = 0;
+
+    List<ByteCodeRow> allByteCode = new List<ByteCodeRow>();
+    for (i = 1; i < bundle.functionById.Size(); i += 1) {
+        BundleFunctionInfo fn = bundle.functionById[i];
+        for (j = 0; j < fn.code.Size(); j += 1) {
+            allByteCode.Add(fn.code[j]);
+        }
+    }
+
+    for (i = 1; i < bundle.lambdaById.Size(); i += 1) {
+        BundleFunctionInfo fn = bundle.lambdaById[i];
+        for (j = 0; j < fn.code.Size(); j += 1) {
+            allByteCode.Add(fn.code[j]);
+        }
+    }
+
+    Dictionary<string, int> stringUsageCount = new Dictionary<string, int>();
+    Dictionary<string, int> tokenCountByFingerprint = new Dictionary<string, int>();
+
+    for (i = 0; i < allByteCode.Size(); i += 1) {
+        ByteCodeRow row = allByteCode[i];
+        string str = row.stringArg;
+        Token tok = row.token;
+        if (str != null) {
+            if (!stringUsageCount.Contains(str)) stringUsageCount[str] = 0;
+            stringUsageCount[str] = stringUsageCount[str] + 1;
+        }
+
+        if (tok != null) {
+            string fp = Token_getFingerprint(tok);
+            if (!tokenCountByFingerprint.Contains(fp)) tokenCountByFingerprint[fp] = 0;
+            tokenCountByFingerprint[fp] = tokenCountByFingerprint[fp] + 1;
+        }
+    }
+
+    Array<string> stringByIndex = OrderStringsByDescendingFrequencyUsingLookup(stringUsageCount);
+    Array<string> fpByIndex = OrderStringsByDescendingFrequencyUsingLookup(tokenCountByFingerprint);
+    List<string> stringById = new List<string>();
+    stringById.Add(null); // 0 is invalid.
+    for (i = 0; i < stringByIndex.Size(); i += 1) {
+        stringById.Add(stringByIndex[i]);
+    }
+    Dictionary<string, int> stringToId = new Dictionary<string, int>();
+    Dictionary<string, int> tokenFingerprintToId = new Dictionary<string, int>();
+    for (i = 0; i < stringByIndex.Size(); i += 1) {
+        string s = stringByIndex[i];
+        stringToId[s] = i + 1;
+    }
+
+    for (i = 0; i < fpByIndex.Size(); i += 1) {
+        string fp = fpByIndex[i];
+        tokenFingerprintToId[fp] = i;
+    }
+
+    Array<Token> tokensById = new Array<Token>(fpByIndex.Size());
+    for (i = 0; i < allByteCode.Size(); i += 1) {
+        ByteCodeRow row = allByteCode[i];
+        if (row.stringArg != null) {
+            row.stringId = stringToId[row.stringArg];
+        }
+
+        if (row.token != null) {
+            row.tokenId = tokenFingerprintToId[row.token.Fingerprint];
+            tokensById[row.tokenId] = row.token;
+        }
+    }
+
+    bundle.tokensById = tokensById;
+    bundle.stringById = Core.ListToArray(stringById);
+}
