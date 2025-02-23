@@ -1550,6 +1550,255 @@ namespace CommonScript.Compiler.Internal
             return new Expression(firstToken, type, null, null, null, null, false, null, 0, 0.0, null, null, null, null, null, null, null);
         }
 
+        public static AbstractEntity ExpressionResolver_FindLocallyReferencedEntity(StaticContext staticCtx, System.Collections.Generic.Dictionary<string, AbstractEntity> lookup, string name)
+        {
+            if (lookup.ContainsKey(name))
+            {
+                return lookup[name];
+            }
+            if (lookup.ContainsKey(".."))
+            {
+                System.Collections.Generic.Dictionary<string, AbstractEntity> prevLevelLookup = Entity_getMemberLookup(staticCtx, lookup[".."]);
+                return ExpressionResolver_FindLocallyReferencedEntity(staticCtx, prevLevelLookup, name);
+            }
+            return null;
+        }
+
+        public static Expression ExpressionResolver_FirstPass_BaseCtorReference(Resolver resolver, Expression baseCtor)
+        {
+            return baseCtor;
+        }
+
+        public static Expression ExpressionResolver_FirstPass_BoolConst(Resolver resolver, Expression bc)
+        {
+            return bc;
+        }
+
+        public static Expression ExpressionResolver_FirstPass_ConstructorInvocation(Resolver resolver, Expression ctorInvoke)
+        {
+            fail("not implemented");
+            return null;
+        }
+
+        public static Expression ExpressionResolver_FirstPass_FloatConstant(Resolver resolver, Expression floatConst)
+        {
+            return floatConst;
+        }
+
+        public static Expression ExpressionResolver_FirstPass_IntegerConstant(Resolver resolver, Expression intConst)
+        {
+            return intConst;
+        }
+
+        public static Expression ExpressionResolver_FirstPass_Lambda(Resolver resolver, Expression lamb)
+        {
+            int i = 0;
+            System.Collections.Generic.List<Token> argNames = new List<Token>();
+            i = 0;
+            while (i < lamb.argNames.Length)
+            {
+                argNames.Add(lamb.argNames[i]);
+                i += 1;
+            }
+            System.Collections.Generic.List<Expression> argValues = new List<Expression>();
+            i = 0;
+            while (i < lamb.values.Length)
+            {
+                argValues.Add(lamb.values[i]);
+                i += 1;
+            }
+            System.Collections.Generic.List<Statement> code = new List<Statement>();
+            i = 0;
+            while (i < lamb.nestedCode.Length)
+            {
+                code.Add(lamb.nestedCode[i]);
+                i += 1;
+            }
+            FunctionEntity lambdaEnt = FunctionEntity_BuildLambda(resolver.activeEntity.fileContext, lamb.firstToken, argNames, argValues, code);
+            Resolver_ReportNewLambda(resolver, lambdaEnt);
+            lamb.entityPtr = lambdaEnt.baseData;
+            return lamb;
+        }
+
+        public static Expression ExpressionResolver_FirstPass_NullConst(Resolver resolver, Expression nullConst)
+        {
+            return nullConst;
+        }
+
+        public static Expression ExpressionResolver_FirstPass_StringConstant(Resolver resolver, Expression strConst)
+        {
+            return strConst;
+        }
+
+        public static Expression ExpressionResolver_FirstPass_This(Resolver resolver, Expression thisExpr)
+        {
+            return thisExpr;
+        }
+
+        public static Expression ExpressionResolver_FirstPass_Variable(Resolver resolver, Expression varExpr)
+        {
+            string name = varExpr.strVal;
+            AbstractEntity localEntity = ExpressionResolver_FindLocallyReferencedEntity(resolver.staticCtx, resolver.nestedEntities, name);
+            if (localEntity != null)
+            {
+                return ExpressionResolver_WrapEntityIntoReferenceExpression(resolver, varExpr.firstToken, localEntity);
+            }
+            Expression importedRef = LookupUtil_DoFirstPassVariableLookupThroughImports(resolver, varExpr.firstToken, name);
+            if (importedRef != null)
+            {
+                return importedRef;
+            }
+            return varExpr;
+        }
+
+        public static Expression ExpressionResolver_IntegerRequired(Resolver resolver, Expression expr)
+        {
+            switch (expr.type)
+            {
+                case 12:
+                    EnumEntity enumParent = (EnumEntity)expr.entityPtr.specificData;
+                    string enumMem = expr.strVal;
+                    int i = 0;
+                    while (i < enumParent.memberValues.Length)
+                    {
+                        if (enumMem == enumParent.memberNameTokens[i].Value)
+                        {
+                            Expression val = enumParent.memberValues[i];
+                            if (val.type != 22)
+                            {
+                                fail("");
+                            }
+                            return val;
+                        }
+                        i += 1;
+                    }
+                    Errors_Throw(expr.firstToken, string.Join("", new string[] { "The enum '", enumParent.baseData.fqName, "' does not have a member named '", enumMem, "'." }));
+                    break;
+                case 5:
+                    Errors_Throw(expr.firstToken, "An integer is expected here.");
+                    break;
+                case 16:
+                    Errors_Throw(expr.firstToken, "An integer is expected here.");
+                    break;
+                case 28:
+                    Errors_Throw(expr.firstToken, "An integer is expected here.");
+                    break;
+                case 6:
+                    Errors_Throw(expr.firstToken, "An integer is expected here.");
+                    break;
+            }
+            return expr;
+        }
+
+        public static Expression ExpressionResolver_SecondPass_BaseCtorReference(Resolver resolver, Expression baseCtor)
+        {
+            baseCtor.entityPtr = ((ClassEntity)resolver.activeEntity.nestParent.specificData).baseClassEntity.baseData;
+            return baseCtor;
+        }
+
+        public static Expression ExpressionResolver_SecondPass_BoolConst(Resolver resolver, Expression bc)
+        {
+            return bc;
+        }
+
+        public static Expression ExpressionResolver_SecondPass_ClassReference(Resolver resolver, Expression classRef)
+        {
+            if (!classRef.boolVal)
+            {
+                Errors_Throw(classRef.firstToken, "A class reference must have a field or method referenced from it.");
+            }
+            return classRef;
+        }
+
+        public static Expression ExpressionResolver_SecondPass_EnumConstant(Resolver resolver, Expression enumConst)
+        {
+            return enumConst;
+        }
+
+        public static Expression ExpressionResolver_SecondPass_FloatConstant(Resolver resolver, Expression floatConst)
+        {
+            return floatConst;
+        }
+
+        public static Expression ExpressionResolver_SecondPass_FunctionReference(Resolver resolver, Expression funcRef)
+        {
+            return funcRef;
+        }
+
+        public static Expression ExpressionResolver_SecondPass_ImportReference(Resolver resolver, Expression importRef)
+        {
+            Errors_Throw(importRef.firstToken, "An import reference cannot be passed as a reference. You must reference the imported entity directly.");
+            return null;
+        }
+
+        public static Expression ExpressionResolver_SecondPass_IntegerConstant(Resolver resolver, Expression intConst)
+        {
+            return intConst;
+        }
+
+        public static Expression ExpressionResolver_SecondPass_Lambda(Resolver resolver, Expression lambda)
+        {
+            return lambda;
+        }
+
+        public static Expression ExpressionResolver_SecondPass_NamespaceReference(Resolver resolver, Expression nsRef)
+        {
+            Errors_Throw(nsRef.firstToken, "You cannot use a namespace reference like this.");
+            return null;
+        }
+
+        public static Expression ExpressionResolver_SecondPass_NullConstant(Resolver resolver, Expression nullConst)
+        {
+            return nullConst;
+        }
+
+        public static Expression ExpressionResolver_SecondPass_StringConstant(Resolver resolver, Expression strConst)
+        {
+            return strConst;
+        }
+
+        public static Expression ExpressionResolver_SecondPass_ThisConstant(Resolver resolver, Expression thisExpr)
+        {
+            if (resolver.activeEntity.nestParent == null)
+            {
+                fail("not implemented");
+            }
+            return thisExpr;
+        }
+
+        public static Expression ExpressionResolver_SecondPass_Variable(Resolver resolver, Expression varExpr)
+        {
+            if (varExpr.strVal == "print")
+            {
+                fail("");
+            }
+            if (((FunctionEntity)resolver.activeEntity.specificData).variableScope.ContainsKey(varExpr.strVal))
+            {
+                return varExpr;
+            }
+            Errors_Throw(varExpr.firstToken, string.Join("", new string[] { "There is no variable by the name of '", varExpr.strVal, "'." }));
+            return null;
+        }
+
+        public static Expression ExpressionResolver_WrapEntityIntoReferenceExpression(Resolver resolver, Token token, AbstractEntity entity)
+        {
+            switch (entity.type)
+            {
+                case 6:
+                    return Expression_createFunctionReference(token, entity.simpleName, entity);
+                case 1:
+                    return Expression_createClassReference(token, entity);
+                case 2:
+                    return Expression_cloneWithNewToken(token, ((ConstEntity)entity.specificData).constValue);
+                case 4:
+                    return Expression_createEnumReference(token, entity);
+                case 7:
+                    return Expression_createNamespaceReference(token, entity);
+            }
+            Errors_Throw(token, "Not implemented!");
+            return null;
+        }
+
         public static object fail(string msg)
         {
             object[] failArgs = new object[1];
@@ -1851,6 +2100,15 @@ namespace CommonScript.Compiler.Internal
             return output.ToArray();
         }
 
+        public static double GetNumericValueOfConstantExpression(Expression exprConst)
+        {
+            if (exprConst.type == 16)
+            {
+                return exprConst.floatVal;
+            }
+            return exprConst.intVal + 0.0;
+        }
+
         public static string GetSourceForBuiltinModule(string moduleName)
         {
             string code = GetBuiltinRawStoredString(moduleName);
@@ -1860,6 +2118,53 @@ namespace CommonScript.Compiler.Internal
                 return null;
             }
             return code.Replace("@1", "function ").Replace("@2", " { constructor(m=null):base(m){} }").Replace("@3", "@public class ").Replace("@4", "return ").Replace("@5", "@public function ").Replace("@6", "Exception : Exception");
+        }
+
+        public static string GetStringFromConstantExpression(Expression expr)
+        {
+            if (expr.type == 28)
+            {
+                return expr.strVal;
+            }
+            if (expr.type == 22)
+            {
+                return expr.intVal.ToString();
+            }
+            if (expr.type == 5)
+            {
+                if (expr.boolVal)
+                {
+                    return "true";
+                }
+                return "false";
+            }
+            if (expr.type == 26)
+            {
+                return "null";
+            }
+            if (expr.type == 12)
+            {
+                return expr.strVal;
+            }
+            if (expr.type == 16)
+            {
+                string val = FloatToStringWorkaround(expr.floatVal);
+                if (val.ToLower().Contains("e"))
+                {
+                    fail("Not implemented");
+                }
+                if (val.Contains(","))
+                {
+                    val = val.Replace(",", ".");
+                }
+                if (!val.Contains("."))
+                {
+                    val += ".0";
+                }
+                return val;
+            }
+            fail("Not implemented");
+            return null;
         }
 
         public static ImportStatement[] ImportParser_AdvanceThroughImports(TokenStream tokens, bool isCoreBuiltin)
@@ -2465,6 +2770,11 @@ namespace CommonScript.Compiler.Internal
                 i += 1;
             }
             return r;
+        }
+
+        public static void Resolver_ReportNewLambda(Resolver resolver, FunctionEntity lamb)
+        {
+            resolver.lambdas.Add(lamb);
         }
 
         public static ByteCodeBuffer serializeAssignField(StaticContext staticCtx, Statement assignField, string baseOp)
@@ -3291,6 +3601,27 @@ namespace CommonScript.Compiler.Internal
             return join4(condBuf, create1(28, null, null, loopBody.length + 1), finalizeBreakContinue(loopBody, 1, true, -loopBody.length - 1 - condBuf.length), create1(24, null, null, -(loopBody.length + condBuf.length + 1 + 1)));
         }
 
+        public static string SimpleExprToTypeName(int t)
+        {
+            switch (t)
+            {
+                case 5:
+                    return "boolean";
+                case 22:
+                    return "integer";
+                case 16:
+                    return "float";
+                case 26:
+                    return "null";
+                case 28:
+                    return "string";
+                case 12:
+                    return "enum";
+            }
+            fail("not implemented");
+            return null;
+        }
+
         public static ClassEntity[] SortClassesInDeterministicDependencyOrder(ClassEntity[] unorderedClasses)
         {
             int i = 0;
@@ -3622,6 +3953,11 @@ namespace CommonScript.Compiler.Internal
         public static SwitchChunk SwitchChunk_new()
         {
             return new SwitchChunk(new List<Token>(), new List<Expression>(), new List<Statement>());
+        }
+
+        public static void ThrowOpNotDefinedError(Token throwToken, string op, int left, int right)
+        {
+            Errors_Throw(throwToken, string.Join("", new string[] { "The operation '", SimpleExprToTypeName(left), " ", op, " ", SimpleExprToTypeName(right), "' is not defined." }));
         }
 
         public static string Token_getFingerprint(Token t)

@@ -1,0 +1,224 @@
+
+Expression ExpressionResolver_FirstPass_BaseCtorReference(Resolver resolver, Expression baseCtor) {
+    return baseCtor;
+}
+
+Expression ExpressionResolver_FirstPass_BoolConst(Resolver resolver, Expression bc) {
+    return bc;
+}
+
+Expression ExpressionResolver_FirstPass_ConstructorInvocation(Resolver resolver, Expression ctorInvoke) {
+    // You left off here realizing that it's actually better to just use CONSTRUCTOR_REF as a parse node, that way 
+    // the resolver for the path of the item can be resolve in a normal way e.g. "new myModuleAlias.SomeClass()" should
+    // resolve as an invocation of a class reference expression. 
+    fail("not implemented");
+    return null;
+}
+
+Expression ExpressionResolver_FirstPass_FloatConstant(Resolver resolver, Expression floatConst) {
+    return floatConst;
+}
+
+Expression ExpressionResolver_FirstPass_IntegerConstant(Resolver resolver, Expression intConst) {
+    return intConst;
+}
+
+Expression ExpressionResolver_FirstPass_Lambda(Resolver resolver, Expression lamb) {
+    int i = 0;
+
+    // TODO: pastel should support Core.ArrayToList()
+    List<Token> argNames = new List<Token>();
+    for (i = 0; i < lamb.argNames.Size(); i += 1) {
+        argNames.Add(lamb.argNames[i]);
+    }
+    List<Expression> argValues = new List<Expression>();
+    for (i = 0; i < lamb.values.Size(); i += 1) {
+        argValues.Add(lamb.values[i]);
+    }
+
+    List<Statement> code = new List<Statement>();
+    for (i = 0; i < lamb.nestedCode.Size(); i += 1) {
+        code.Add(lamb.nestedCode[i]);
+    }
+
+    FunctionEntity lambdaEnt = FunctionEntity_BuildLambda(
+        resolver.activeEntity.fileContext,
+        lamb.firstToken,
+        argNames,
+        argValues,
+        code);
+    
+    Resolver_ReportNewLambda(resolver, lambdaEnt);
+    lamb.entityPtr = lambdaEnt.baseData;
+    return lamb;
+}
+
+Expression ExpressionResolver_FirstPass_NullConst(Resolver resolver, Expression nullConst) {
+    return nullConst;
+}
+
+Expression ExpressionResolver_FirstPass_StringConstant(Resolver resolver, Expression strConst) {
+    return strConst;
+}
+
+Expression ExpressionResolver_FirstPass_This(Resolver resolver, Expression thisExpr) {
+    return thisExpr;
+}
+
+Expression ExpressionResolver_FirstPass_Variable(Resolver resolver, Expression varExpr) {
+    string name = varExpr.strVal;
+
+    AbstractEntity localEntity = ExpressionResolver_FindLocallyReferencedEntity(resolver.staticCtx, resolver.nestedEntities, name);
+    if (localEntity != null) {
+        return ExpressionResolver_WrapEntityIntoReferenceExpression(resolver, varExpr.firstToken, localEntity);
+    }
+
+    Expression importedRef = LookupUtil_DoFirstPassVariableLookupThroughImports(resolver, varExpr.firstToken, name);
+    if (importedRef != null) return importedRef;
+
+    return varExpr;
+}
+
+/////////// SECOND PASS 
+
+Expression ExpressionResolver_SecondPass_BaseCtorReference(Resolver resolver, Expression baseCtor) {
+    baseCtor.entityPtr = ((ClassEntity)resolver.activeEntity.nestParent.specificData).baseClassEntity.baseData;
+    return baseCtor;
+}
+
+Expression ExpressionResolver_SecondPass_BoolConst(Resolver resolver, Expression bc) {
+    return bc;
+}
+
+Expression ExpressionResolver_SecondPass_ClassReference(Resolver resolver, Expression classRef) {
+    if (!classRef.boolVal) {
+        Errors_Throw(classRef.firstToken, "A class reference must have a field or method referenced from it.");
+    }
+    return classRef;
+}
+
+Expression ExpressionResolver_SecondPass_EnumConstant(Resolver resolver, Expression enumConst) {
+    return enumConst;
+}
+
+Expression ExpressionResolver_SecondPass_FloatConstant(Resolver resolver, Expression floatConst) {
+    return floatConst;
+}
+
+Expression ExpressionResolver_SecondPass_FunctionReference(Resolver resolver, Expression funcRef) {
+    return funcRef;
+}
+
+Expression ExpressionResolver_SecondPass_ImportReference(Resolver resolver, Expression importRef) {
+    Errors_Throw(
+        importRef.firstToken, 
+        "An import reference cannot be passed as a reference. You must reference the imported entity directly.");
+    return null;
+}
+
+Expression ExpressionResolver_SecondPass_IntegerConstant(Resolver resolver, Expression intConst) {
+    return intConst;
+}
+
+Expression ExpressionResolver_SecondPass_Lambda(Resolver resolver, Expression lambda) {
+    return lambda;
+}
+
+Expression ExpressionResolver_SecondPass_NamespaceReference(Resolver resolver, Expression nsRef) {
+    Errors_Throw(nsRef.firstToken, "You cannot use a namespace reference like this.");
+    return null;
+}
+
+Expression ExpressionResolver_SecondPass_NullConstant(Resolver resolver, Expression nullConst) {
+    return nullConst;
+}
+
+Expression ExpressionResolver_SecondPass_StringConstant(Resolver resolver, Expression strConst) {
+    return strConst;
+}
+
+Expression ExpressionResolver_SecondPass_ThisConstant(Resolver resolver, Expression thisExpr) {
+    if (resolver.activeEntity.nestParent == null) {
+        fail("not implemented");
+    } 
+    return thisExpr;
+}
+
+Expression ExpressionResolver_SecondPass_Variable(Resolver resolver, Expression varExpr) {
+    if (varExpr.strVal == "print") fail(""); // should not happen.
+    if (((FunctionEntity)resolver.activeEntity.specificData).variableScope.Contains(varExpr.strVal)) return varExpr;
+
+    // TODO: come up with a list of suggestions.
+    Errors_Throw(varExpr.firstToken, "There is no variable by the name of '" + varExpr.strVal + "'.");
+    return null;
+}
+
+
+
+
+
+
+////////// HELPER METHODS
+
+Expression ExpressionResolver_IntegerRequired(Resolver resolver, Expression expr) {
+    switch (expr.type) {
+        case ExpressionType.ENUM_CONST:
+            EnumEntity enumParent = (EnumEntity)expr.entityPtr.specificData;
+            string enumMem = expr.strVal;
+            for (int i = 0; i < enumParent.memberValues.Size(); i += 1) {
+                if (enumMem == enumParent.memberNameTokens[i].Value) {
+                    Expression val = enumParent.memberValues[i];
+                    if (val.type != ExpressionType.INTEGER_CONST) {
+                        fail(""); // invalid operation
+                    }
+                    return val;
+                }
+            }
+            Errors_Throw(expr.firstToken, "The enum '" + enumParent.baseData.fqName + "' does not have a member named '" + enumMem + "'.");
+            break;
+
+        case ExpressionType.BOOL_CONST:
+        case ExpressionType.FLOAT_CONST:
+        case ExpressionType.STRING_CONST:
+        case ExpressionType.BOOLEAN_NOT:
+            Errors_Throw(expr.firstToken, "An integer is expected here.");
+            break;
+    }
+
+    return expr;
+}
+
+AbstractEntity ExpressionResolver_FindLocallyReferencedEntity(StaticContext staticCtx, Dictionary<string, AbstractEntity> lookup, string name) {
+    if (lookup.Contains(name)) {
+        return lookup[name];
+    }
+
+    if (lookup.Contains("..")) {
+        Dictionary<string, AbstractEntity> prevLevelLookup = Entity_getMemberLookup(staticCtx, lookup[".."]);
+        return ExpressionResolver_FindLocallyReferencedEntity(staticCtx, prevLevelLookup, name);
+    }
+
+    return null;
+}
+
+Expression ExpressionResolver_WrapEntityIntoReferenceExpression(Resolver resolver, Token token, AbstractEntity entity) {
+    switch (entity.type) {
+        case EntityType.FUNCTION:
+            return Expression_createFunctionReference(token, entity.simpleName, entity);
+
+        case EntityType.CLASS:
+            return Expression_createClassReference(token, entity);
+
+        case EntityType.CONST:
+            return Expression_cloneWithNewToken(token, ((ConstEntity)entity.specificData).constValue);
+
+        case EntityType.ENUM:
+            return Expression_createEnumReference(token, entity);
+
+        case EntityType.NAMESPACE:
+            return Expression_createNamespaceReference(token, entity);
+    }
+
+    Errors_Throw(token, "Not implemented!");
+    return null;
+}

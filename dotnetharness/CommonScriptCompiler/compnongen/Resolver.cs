@@ -110,11 +110,6 @@ namespace CommonScript.Compiler
             }
         }
 
-        internal static void ReportNewLambda(Resolver resolver, FunctionEntity lamb)
-        {
-            resolver.lambdas.Add(lamb);
-        }
-
         private static ClassEntity[] ResolveBaseClassesAndEstablishClassOrder(
             Resolver resolver, 
             List<ClassEntity> classes,

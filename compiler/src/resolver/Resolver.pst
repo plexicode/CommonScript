@@ -324,10 +324,13 @@ AbstractEntity CompiledModuleEntityLookup(CompiledModule mod, string fqName) {
     }
 
     string potentialEnumParentName = StringArraySlice(fqName.Split("."), 0, 1).Join(".");
-    if (mod.entitiesNoEnumParents.Contains(potentialEnumParentName))
-    {
+    if (mod.entitiesNoEnumParents.Contains(potentialEnumParentName)) {
         return mod.entitiesNoEnumParents[potentialEnumParentName];
     }
 
     return null;
+}
+
+void Resolver_ReportNewLambda(Resolver resolver, FunctionEntity lamb) {
+    resolver.lambdas.Add(lamb);
 }

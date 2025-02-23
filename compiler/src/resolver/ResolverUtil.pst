@@ -20,8 +20,67 @@ bool IsExpressionNumericConstant(Expression expr) {
         t == ExpressionType.ENUM_CONST;
 }
 
+double GetNumericValueOfConstantExpression(Expression exprConst) {
+    if (exprConst.type == ExpressionType.FLOAT_CONST) return exprConst.floatVal;
+    return exprConst.intVal + 0.0;
+}
+
+string GetStringFromConstantExpression(Expression expr) {
+    if (expr.type == ExpressionType.STRING_CONST) {
+        return expr.strVal;
+    }
+    
+    if (expr.type == ExpressionType.INTEGER_CONST) {
+        return Core.IntToString(expr.intVal);
+    }
+    
+    if (expr.type == ExpressionType.BOOL_CONST) {
+        if (expr.boolVal) return "true";
+        return "false";
+    }
+    
+    if (expr.type == ExpressionType.NULL_CONST) {
+        return "null"; // TODO: should this throw?
+    }
+
+    if (expr.type == ExpressionType.ENUM_CONST) {
+        return expr.strVal;
+    }
+
+    if (expr.type == ExpressionType.FLOAT_CONST) {
+        string val = FloatToStringWorkaround(expr.floatVal);
+        if (val.ToLower().Contains("e"))
+        {
+            fail("Not implemented");
+        }
+        if (val.Contains(",")) val = val.Replace(",", ".");
+        if (!val.Contains(".")) val += ".0";
+        return val;
+    }
+
+    fail("Not implemented");
+    return null;
+}
 
 Expression BuildFakeDotChain(string root, string field) {
     Expression varRoot = Expression_createVariable(null, root);
     return Expression_createDotField(varRoot, null, field);
+}
+
+void ThrowOpNotDefinedError(Token throwToken, string op, int left, int right) {
+    Errors_Throw(throwToken, "The operation '" + SimpleExprToTypeName(left) + " " + op + " " + SimpleExprToTypeName(right) + "' is not defined.");
+}
+
+string SimpleExprToTypeName(int t) {
+    switch (t) {
+        case ExpressionType.BOOL_CONST: return "boolean";
+        case ExpressionType.INTEGER_CONST: return "integer";
+        case ExpressionType.FLOAT_CONST: return "float";
+        case ExpressionType.NULL_CONST: return "null";
+        case ExpressionType.STRING_CONST: return "string";
+        case ExpressionType.ENUM_CONST: return "enum";
+    }
+
+    fail("not implemented"); // this should not happen
+    return null;
 }
