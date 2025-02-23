@@ -221,89 +221,79 @@ namespace CommonScript.Compiler
             while (checkForSuffixes && next != null)
             {
                 checkForSuffixes = false;
-                switch (next)
-                {
-                    case ".":
-                        Token dotToken = FunctionWrapper.Tokens_pop(tokens);
-                        Token nameToken = FunctionWrapper.Tokens_popName(tokens, "field name");
-                        root = FunctionWrapper.Expression_createDotField(root, dotToken, nameToken.Value);
-                        checkForSuffixes = true;
-                        break;
+                if (next == ".") {
+                    Token dotToken = FunctionWrapper.Tokens_pop(tokens);
+                    Token nameToken = FunctionWrapper.Tokens_popName(tokens, "field name");
+                    root = FunctionWrapper.Expression_createDotField(root, dotToken, nameToken.Value);
+                    checkForSuffixes = true;
+                } else if (next == "(") {
+                    Token openParen = FunctionWrapper.Tokens_pop(tokens);
+                    List<Expression> args = new List<Expression>();
+                    while (!FunctionWrapper.Tokens_popIfPresent(tokens, ")")) {
+                        if (args.Count > 0) FunctionWrapper.Tokens_popExpected(tokens, ",");
+                        args.Add(ParseExpression(tokens));
+                    }
+                    root = FunctionWrapper.Expression_createFunctionInvocation(root, openParen, args.ToArray());
+                    checkForSuffixes = true;
+                } else if (next == "[") {
 
-                    case "(":
-                        Token openParen = FunctionWrapper.Tokens_pop(tokens);
-                        List<Expression> args = new List<Expression>();
-                        while (!FunctionWrapper.Tokens_popIfPresent(tokens, ")"))
+                    Token openBracket = FunctionWrapper.Tokens_pop(tokens);
+                    FunctionWrapper.Tokens_ensureMore(tokens);
+                    Token throwTokenOnInvalidSlice = FunctionWrapper.Tokens_peek(tokens);
+                    List<Expression> sliceNums = new List<Expression>();
+                    bool nextExpected = true;
+
+                    while (nextExpected && FunctionWrapper.Tokens_hasMore(tokens))
+                    {
+                        if (FunctionWrapper.Tokens_popIfPresent(tokens, ":"))
                         {
-                            if (args.Count > 0) FunctionWrapper.Tokens_popExpected(tokens, ",");
-                            args.Add(ParseExpression(tokens));
+                            sliceNums.Add(null);
                         }
-                        root = FunctionWrapper.Expression_createFunctionInvocation(root, openParen, args.ToArray());
-                        checkForSuffixes = true;
-                        break;
-
-                    case "[":
-
-                        Token openBracket = FunctionWrapper.Tokens_pop(tokens);
-                        FunctionWrapper.Tokens_ensureMore(tokens);
-                        Token throwTokenOnInvalidSlice = FunctionWrapper.Tokens_peek(tokens);
-                        List<Expression> sliceNums = new List<Expression>();
-                        bool nextExpected = true;
-
-                        while (nextExpected && FunctionWrapper.Tokens_hasMore(tokens))
+                        else if (FunctionWrapper.Tokens_isNext(tokens, "]"))
                         {
-                            if (FunctionWrapper.Tokens_popIfPresent(tokens, ":"))
-                            {
-                                sliceNums.Add(null);
-                            }
-                            else if (FunctionWrapper.Tokens_isNext(tokens, "]"))
-                            {
-                                sliceNums.Add(null);
-                                nextExpected = false;
-                            }
-                            else
-                            {
-                                sliceNums.Add(ParseExpression(tokens));
-                                if (!FunctionWrapper.Tokens_popIfPresent(tokens, ":"))
-                                {
-                                    nextExpected = false;
-                                }
-                            }
-                        }
-
-                        FunctionWrapper.Tokens_popExpected(tokens, "]");
-
-                        if (sliceNums.Count < 0 || sliceNums.Count > 3)
-                        {
-                            FunctionWrapper.Errors_Throw(throwTokenOnInvalidSlice, "Invalid index or slice expression");
-                        }
-
-                        if (sliceNums.Count == 1)
-                        {
-                            if (sliceNums[0] == null)
-                            {
-                                FunctionWrapper.Errors_Throw(throwTokenOnInvalidSlice, "Expected index expression.");
-                            }
-
-                            root = FunctionWrapper.Expression_createBracketIndex(root, openBracket, sliceNums[0]);
+                            sliceNums.Add(null);
+                            nextExpected = false;
                         }
                         else
                         {
-                            root = FunctionWrapper.Expression_createSliceExpression(root, openBracket, sliceNums[0], sliceNums[1], sliceNums.Count == 3 ? sliceNums[2] : null);
+                            sliceNums.Add(ParseExpression(tokens));
+                            if (!FunctionWrapper.Tokens_popIfPresent(tokens, ":"))
+                            {
+                                nextExpected = false;
+                            }
+                        }
+                    }
+
+                    FunctionWrapper.Tokens_popExpected(tokens, "]");
+
+                    if (sliceNums.Count < 0 || sliceNums.Count > 3)
+                    {
+                        FunctionWrapper.Errors_Throw(throwTokenOnInvalidSlice, "Invalid index or slice expression");
+                    }
+
+                    if (sliceNums.Count == 1)
+                    {
+                        if (sliceNums[0] == null)
+                        {
+                            FunctionWrapper.Errors_Throw(throwTokenOnInvalidSlice, "Expected index expression.");
                         }
 
-                        checkForSuffixes = true;
-                        break;
+                        root = FunctionWrapper.Expression_createBracketIndex(root, openBracket, sliceNums[0]);
+                    }
+                    else
+                    {
+                        Expression thirdSliceNum = null;
+                        if (sliceNums.Count == 3) thirdSliceNum = sliceNums[2];
+                        root = FunctionWrapper.Expression_createSliceExpression(root, openBracket, sliceNums[0],
+                            sliceNums[1], thirdSliceNum);
+                    }
 
-                    case "++":
-                    case "--":
-                        Token ppToken = FunctionWrapper.Tokens_pop(tokens);
-                        root = FunctionWrapper.Expression_createInlineIncrement(root.firstToken, root, ppToken, false);
-                        break;
-
-                    default:
-                        break;
+                    checkForSuffixes = true;
+                } else if (next == "++" || next == "--") {
+                    Token ppToken = FunctionWrapper.Tokens_pop(tokens);
+                    root = FunctionWrapper.Expression_createInlineIncrement(root.firstToken, root, ppToken, false);
                 }
+
                 next = FunctionWrapper.Tokens_peekValue(tokens);
             }
             return root;
@@ -462,19 +452,19 @@ namespace CommonScript.Compiler
                     break;
 
                 case (int) TokenType.INTEGER:
-                    int intVal = ExpressionParser.TryParseInteger(nextToken, next, false);
+                    int intVal = FunctionWrapper.TryParseInteger(nextToken, next, false);
                     return FunctionWrapper.Expression_createIntegerConstant(FunctionWrapper.Tokens_pop(tokens), intVal);
 
                 case (int) TokenType.FLOAT:
-                    double floatVal = ExpressionParser.TryParseFloat(nextToken, next);
+                    double floatVal = FunctionWrapper.TryParseFloat(nextToken, next);
                     return FunctionWrapper.Expression_createFloatConstant(FunctionWrapper.Tokens_pop(tokens), floatVal);
 
                 case (int) TokenType.HEX_INTEGER:
-                    int intValHex = ExpressionParser.TryParseInteger(nextToken, next, true);
+                    int intValHex = FunctionWrapper.TryParseInteger(nextToken, next, true);
                     return FunctionWrapper.Expression_createIntegerConstant(FunctionWrapper.Tokens_pop(tokens), intValHex);
 
                 case (int) TokenType.STRING:
-                    string strVal = ExpressionParser.TryParseString(nextToken, next);
+                    string strVal = FunctionWrapper.TryParseString(nextToken, next);
                     return FunctionWrapper.Expression_createStringConstant(FunctionWrapper.Tokens_pop(tokens), strVal);
 
                 case (int) TokenType.NAME:
@@ -528,85 +518,6 @@ namespace CommonScript.Compiler
                 };
             }
             return FunctionWrapper.Expression_createLambda(firstToken, argTokens.ToArray(), argDefaultValues.ToArray(), arrow, code);
-        }
-
-        private static string TryParseString(Token throwToken, string rawValue)
-        {
-            List<string> output = new List<string>();
-
-            int length = rawValue.Length - 1;
-            string c = "";
-            for (int i = 1; i < length; i++)
-            {
-                c = rawValue.Substring(i, 1);
-                if (c == "\\")
-                {
-                    i++;
-
-                    // More of an assert. The tokenizer should outright prevent this from happening ever.
-                    if (i == length) FunctionWrapper.Errors_Throw(throwToken, "Invalid backslash in string constant.");
-
-                    c = rawValue.Substring(i, 1);
-                    if (c == "n") c = "\n";
-                    else if (c == "r") c = "\r";
-                    else if (c == "'" || c == "\"" || c == "\\") { }
-                    else if (c == "t") c = "\t";
-                    else
-                    {
-                        FunctionWrapper.Errors_Throw(throwToken, "Unrecognized string escape sequence: '\\" + c + "'");
-                    }
-                }
-                output.Add(c);
-            }
-
-            return string.Join("", output);
-        }
-
-        private static double TryParseFloat(Token throwToken, string rawValue)
-        {
-            double output;
-            if (!double.TryParse(rawValue, out output))
-            {
-                FunctionWrapper.Errors_Throw(throwToken, "Invalid float constant");
-                return 0;
-            }
-            return output;
-        }
-
-        private static int TryParseInteger(Token throwToken, string rawValue, bool isHex)
-        {
-            // TODO: this should actually be a long or big int to preserve accuracy end-to-end.
-            int output = 0;
-            int start = 0;
-            int baseMultiplier = 10;
-            if (isHex)
-            {
-                start = 2; // skip the "0x" prefix
-                baseMultiplier = 16;
-                rawValue = rawValue.ToLowerInvariant();
-            }
-            for (int i = start; i < rawValue.Length; i++)
-            {
-                char d = rawValue[i];
-                int digitVal = 0;
-                if (d >= '0' && d <= '9')
-                {
-                    digitVal = d - '0';
-                }
-                else if (isHex && d >= 'a' && d <= 'f')
-                {
-                    digitVal = d - 'a' + 10;
-                }
-                else
-                {
-                    if (isHex) FunctionWrapper.Errors_Throw(throwToken, "Invalid hexadecimal constant.");
-                    FunctionWrapper.Errors_Throw(throwToken, "Invalid integer constant");
-                }
-
-                output = output * baseMultiplier + digitVal;
-            }
-
-            return output;
         }
     }
 }

@@ -3,6 +3,7 @@
 @import("bundler/index.pst");
 @import("builtins/index.pst");
 @import("parsenodes/index.pst");
+@import("parsers/index.pst");
 @import("resolver/index.pst");
 @import("specialactions/index.pst");
 

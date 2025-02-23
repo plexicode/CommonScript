@@ -8,6 +8,10 @@ namespace CommonScript.Compiler
     {
         public static Statement[] ParseCodeBlock(TokenStream tokens, bool requireCurlyBrace)
         {
+            return ParseCodeBlockList(tokens, requireCurlyBrace).ToArray();
+        }
+        public static List<Statement> ParseCodeBlockList(TokenStream tokens, bool requireCurlyBrace)
+        {
             bool curlyBraceNext = requireCurlyBrace || FunctionWrapper.Tokens_isNext(tokens, "{");
 
             List<Statement> output = new List<Statement>();
@@ -23,7 +27,7 @@ namespace CommonScript.Compiler
             {
                 output.Add(ParseStatement(tokens, false));
             }
-            return output.ToArray();
+            return output;
         }
 
         public static Statement ParseStatement(TokenStream tokens, bool isForLoop)
@@ -121,7 +125,9 @@ namespace CommonScript.Compiler
 
         private static Statement ParseBreakContinue(TokenStream tokens)
         {
-            Token token = FunctionWrapper.Tokens_popKeyword(tokens, FunctionWrapper.Tokens_isNext(tokens, "continue") ? "continue" : "break");
+            string expectedNextToken = "break";
+            if (FunctionWrapper.Tokens_isNext(tokens, "continue")) expectedNextToken = "continue";
+            Token token = FunctionWrapper.Tokens_popKeyword(tokens, expectedNextToken);
             FunctionWrapper.Tokens_popExpected(tokens, ";");
             return StatementUtil.createBreakContinue(token);
         }

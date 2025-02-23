@@ -1,0 +1,66 @@
+int TryParseInteger(Token throwToken, string rawValue, bool isHex) {
+    // TODO: this should actually be a long or big int to preserve accuracy end-to-end.
+    int output = 0;
+    int start = 0;
+    int baseMultiplier = 10;
+    Array<int> chars = rawValue.ToLower().ToUtf8Bytes();
+
+    if (isHex) {
+        start = 2; // skip the "0x" prefix which has already been verified before calling this function.
+        baseMultiplier = 16;
+    }
+
+    for (int i = start; i < chars.Size(); i++) {
+        int d = chars[i];
+        int digitVal = 0;
+        if (d >= Core.Ord('0') && d <= Core.Ord('9')) {
+            digitVal = d - Core.Ord('0');
+        } else if (isHex && d >= Core.Ord('a') && d <= Core.Ord('f')) {
+            digitVal = d - Core.Ord('a') + 10;
+        } else {
+            if (isHex) Errors_Throw(throwToken, "Invalid hexadecimal constant.");
+            Errors_Throw(throwToken, "Invalid integer constant");
+        }
+
+        output = output * baseMultiplier + digitVal;
+    }
+
+    return output;
+}
+
+double TryParseFloat(Token throwToken, string rawValue) {
+    Array<double> o = new Array<double>(2);
+    Core.TryParseFloat(rawValue, o);
+    if (o[0] > 0) return o[1];
+    Errors_Throw(throwToken, "Invalid float constant");
+    return 0.0;
+}
+
+string TryParseString(Token throwToken, string rawValue) {
+    List<string> output = new List<string>();
+
+    int length = rawValue.Size() - 1;
+    string c = "";
+    for (int i = 1; i < length; i += 1) {
+        c = rawValue.SubString(i, 1);
+        if (c == "\\") {
+            i += 1;
+
+            // More of an assert. The tokenizer should outright prevent this from happening ever.
+            if (i == length) Errors_Throw(throwToken, "Invalid backslash in string constant.");
+
+            c = rawValue.SubString(i, 1);
+            if (c == "n") c = "\n";
+            else if (c == "r") c = "\r";
+            else if (c == "'" || c == "\"" || c == "\\") { }
+            else if (c == "t") c = "\t";
+            else
+            {
+                Errors_Throw(throwToken, "Unrecognized string escape sequence: '\\" + c + "'");
+            }
+        }
+        output.Add(c);
+    }
+
+    return output.Join("");
+}

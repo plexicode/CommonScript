@@ -41,6 +41,13 @@ namespace CommonScript.Compiler.Internal
             return value.Split(PST_SplitSep, System.StringSplitOptions.None);
         }
 
+        public static void PST_ParseFloat(string strValue, double[] output)
+        {
+            double num = 0.0;
+            output[0] = double.TryParse(strValue, out num) ? 1 : -1;
+            output[1] = num;
+        }
+
         public static void PST_RegisterExtensibleCallback(string name, System.Func<object[], object> func)
         {
             PST_ExtCallbacks[name] = func;
@@ -3082,6 +3089,99 @@ namespace CommonScript.Compiler.Internal
         public static TokenStream TokenStream_new(string file, Token[] tokens)
         {
             return new TokenStream(0, tokens.Length, tokens, file);
+        }
+
+        public static double TryParseFloat(Token throwToken, string rawValue)
+        {
+            double[] o = new double[2];
+            PST_ParseFloat(rawValue, o);
+            if (o[0] > 0)
+            {
+                return o[1];
+            }
+            Errors_Throw(throwToken, "Invalid float constant");
+            return 0.0;
+        }
+
+        public static int TryParseInteger(Token throwToken, string rawValue, bool isHex)
+        {
+            int output = 0;
+            int start = 0;
+            int baseMultiplier = 10;
+            int[] chars = PST_stringToUtf8Bytes(rawValue.ToLower());
+            if (isHex)
+            {
+                start = 2;
+                baseMultiplier = 16;
+            }
+            int i = start;
+            while (i < chars.Length)
+            {
+                int d = chars[i];
+                int digitVal = 0;
+                if (d >= 48 && d <= 57)
+                {
+                    digitVal = d - 48;
+                }
+                else if (isHex && d >= 97 && d <= 102)
+                {
+                    digitVal = d - 97 + 10;
+                }
+                else
+                {
+                    if (isHex)
+                    {
+                        Errors_Throw(throwToken, "Invalid hexadecimal constant.");
+                    }
+                    Errors_Throw(throwToken, "Invalid integer constant");
+                }
+                output = output * baseMultiplier + digitVal;
+                i++;
+            }
+            return output;
+        }
+
+        public static string TryParseString(Token throwToken, string rawValue)
+        {
+            System.Collections.Generic.List<string> output = new List<string>();
+            int length = rawValue.Length - 1;
+            string c = "";
+            int i = 1;
+            while (i < length)
+            {
+                c = rawValue.Substring(i, 1);
+                if (c == "\\")
+                {
+                    i += 1;
+                    if (i == length)
+                    {
+                        Errors_Throw(throwToken, "Invalid backslash in string constant.");
+                    }
+                    c = rawValue.Substring(i, 1);
+                    if (c == "n")
+                    {
+                        c = "\n";
+                    }
+                    else if (c == "r")
+                    {
+                        c = "\r";
+                    }
+                    else if (c == "'" || c == "\"" || c == "\\")
+                    {
+                    }
+                    else if (c == "t")
+                    {
+                        c = "\t";
+                    }
+                    else
+                    {
+                        Errors_Throw(throwToken, string.Join("", new string[] { "Unrecognized string escape sequence: '\\", c, "'" }));
+                    }
+                }
+                output.Add(c);
+                i += 1;
+            }
+            return string.Join("", output);
         }
 
         public static string UnicodeArrayToString(int[] chars)

@@ -50,10 +50,10 @@ namespace CommonScript.Compiler
             List<Expression> argValues = new List<Expression>();
             ParseArgDefinitionList(tokens, args, argValues);
 
-            Statement[] code = StatementParser.ParseCodeBlock(tokens, true);
+            List<Statement> code = StatementParser.ParseCodeBlockList(tokens, true);
 
             AbstractEntity entity = FunctionWrapper.FunctionEntity_BuildMethodOrStandalone(
-                functionKeyword, nameToken, args, argValues, [..code], isStatic, optionalParentClass).baseData;
+                functionKeyword, nameToken, args, argValues, code, isStatic, optionalParentClass).baseData;
             entity.annotations = annotations;
             return entity;
         }
@@ -65,28 +65,28 @@ namespace CommonScript.Compiler
             List<Expression> argValues = new List<Expression>();
             ParseArgDefinitionList(tokens, args, argValues);
 
-            Expression[] baseArgs = null;
+            List<Expression> baseArgs = null;
             if (FunctionWrapper.Tokens_popIfPresent(tokens, ":"))
             {
                 Token baseKeyword = FunctionWrapper.Tokens_popKeyword(tokens, "base");
-                List<Expression> bargs = new List<Expression>();
+                baseArgs = new List<Expression>();
                 FunctionWrapper.Tokens_popExpected(tokens, "(");
                 while (!FunctionWrapper.Tokens_popIfPresent(tokens, ")"))
                 {
-                    if (bargs.Count > 0) FunctionWrapper.Tokens_popExpected(tokens, ",");
-                    bargs.Add(ExpressionParser.ParseExpression(tokens));
+                    if (baseArgs.Count > 0) FunctionWrapper.Tokens_popExpected(tokens, ",");
+                    baseArgs.Add(ExpressionParser.ParseExpression(tokens));
                 }
-                baseArgs = bargs.ToArray();
+
             }
 
-            Statement[] code = StatementParser.ParseCodeBlock(tokens, true);
+            List<Statement> code = StatementParser.ParseCodeBlockList(tokens, true);
 
             AbstractEntity ctor = FunctionWrapper.FunctionEntity_BuildConstructor(
                 ctorKeyword,
                 args,
                 argValues,
-                baseArgs == null ? null : [..baseArgs],
-                [..code],
+                baseArgs,
+                code,
                 annotations.ContainsKey("static")).baseData;
 
             ctor.annotations = annotations;
