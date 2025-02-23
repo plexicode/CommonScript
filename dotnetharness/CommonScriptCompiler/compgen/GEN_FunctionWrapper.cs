@@ -208,6 +208,36 @@ namespace CommonScript.Compiler.Internal
             bundle.stringById = stringById.ToArray();
         }
 
+        public static void AttachEntityToParseTree(AbstractEntity child, AbstractEntity parent, FileContext file, string activeNsPrefix, System.Collections.Generic.Dictionary<string, AbstractEntity> activeEntityBucket, System.Collections.Generic.Dictionary<string, Token> annotationTokens)
+        {
+            child.fileContext = file;
+            child.annotations = annotationTokens;
+            string fqName = child.simpleName;
+            if (activeNsPrefix != "")
+            {
+                fqName = string.Join("", new string[] { activeNsPrefix, ".", fqName });
+            }
+            child.fqName = fqName;
+            child.nestParent = parent;
+            bool isStatic = annotationTokens.ContainsKey("static");
+            bool isAttachingToClass = parent != null && parent.type == 1;
+            bool isClass = child.type == 1;
+            bool isCtor = child.type == 3;
+            if (isCtor && !isAttachingToClass)
+            {
+                Errors_Throw(child.firstToken, "Cannot place a constructor here. Constructors can only be added to classes.");
+            }
+            if (isStatic && !isClass && !isAttachingToClass)
+            {
+                Errors_Throw(child.firstToken, "@static is not applicable to this type of entity.");
+            }
+            if (activeEntityBucket.ContainsKey(child.simpleName))
+            {
+                Errors_Throw(child.firstToken, string.Join("", new string[] { "There are multiple entities named ", child.fqName, "." }));
+            }
+            activeEntityBucket[child.simpleName] = child;
+        }
+
         public static int[] bsbFlatten(ByteStringBuilder sbs)
         {
             System.Collections.Generic.List<ByteStringBuilder> q = new List<ByteStringBuilder>();
@@ -2539,6 +2569,26 @@ namespace CommonScript.Compiler.Internal
                 root = FlattenBinaryOpChain(expressions, ops);
             }
             return root;
+        }
+
+        public static System.Collections.Generic.Dictionary<string, Token> ParseAnnotations(CompilerContext compCtx, TokenStream tokens)
+        {
+            System.Collections.Generic.Dictionary<string, Token> output = new Dictionary<string, Token>();
+            while (Tokens_peekType(tokens) == 8)
+            {
+                Token token = Tokens_pop(tokens);
+                string annotationName = token.Value.Substring(1, token.Value.Length - 1);
+                if (output.ContainsKey(annotationName))
+                {
+                    Errors_Throw(token, "Multiplie redundant annotations.");
+                }
+                if (!StringSet_has(compCtx.staticCtx.validAnnotationNames, annotationName))
+                {
+                    Errors_Throw(token, string.Join("", new string[] { "Unrecognized annotation: '@", annotationName, "'" }));
+                }
+                output[annotationName] = token;
+            }
+            return output;
         }
 
         public static Statement ParseAnyForLoop(TokenStream tokens)

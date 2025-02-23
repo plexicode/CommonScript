@@ -7,7 +7,6 @@ namespace CommonScript.Compiler
 {
     internal static class CompilerContextUtil
     {
-
         public static int[] PUBLIC_CompleteCompilation(object compObj)
         {
             CompilerContext compiler = (CompilerContext) compObj;
@@ -39,8 +38,9 @@ namespace CommonScript.Compiler
             {
                 FileContext file = files[i];
                 sourceCode[file.path] = file.content;
-                foreach (ImportStatement importStatement in file.imports)
+                for (int j = 0; j < file.imports.Length; j++)
                 {
+                    ImportStatement importStatement = file.imports[j];
                     importStatement.compiledModuleRef = compiler.compiledModulesById[importStatement.flatName];
                 }
                 ParseOutEntities(compiler, file, rootEntities, null, "");
@@ -68,26 +68,6 @@ namespace CommonScript.Compiler
             return m;
         }
 
-        private static Dictionary<string, Token> CompilerContext_ParseOutAnnotations(CompilerContext compCtx, TokenStream tokens)
-        {
-            Dictionary<string, Token> output = new Dictionary<string, Token>();
-            while (FunctionWrapper.Tokens_peekType(tokens) == (int) TokenType.ANNOTATION)
-            {
-                Token token = FunctionWrapper.Tokens_pop(tokens);
-                string annotationName = token.Value.Substring(1);
-                if (output.ContainsKey(annotationName))
-                {
-                    FunctionWrapper.Errors_Throw(token, "Multiplie redundant annotations.");
-                }
-                if (!FunctionWrapper.StringSet_has(compCtx.staticCtx.validAnnotationNames, annotationName))
-                {
-                    FunctionWrapper.Errors_Throw(token, "Unrecognized annotation: '@" + annotationName + "'");
-                }
-                output[annotationName] = token;
-            }
-            return output;
-        }
-
         private static void ParseOutEntities(
             CompilerContext compiler,
             FileContext file,
@@ -99,12 +79,13 @@ namespace CommonScript.Compiler
             bool keepChecking = FunctionWrapper.Tokens_hasMore(tokens);
 
             // note that casting can fail as a namespace
-            ClassEntity wrappingClass = nestParent == null ? null : (nestParent.specificData as ClassEntity);
+            ClassEntity wrappingClass = null;
+            if (nestParent != null) wrappingClass = nestParent.specificData as ClassEntity;
 
             while (keepChecking)
             {
                 Token firstToken = FunctionWrapper.Tokens_peek(tokens);
-                Dictionary<string, Token> annotationTokens = CompilerContext_ParseOutAnnotations(compiler, tokens);
+                Dictionary<string, Token> annotationTokens = FunctionWrapper.ParseAnnotations(compiler, tokens);
 
                 string nextToken = FunctionWrapper.Tokens_peekValueNonNull(tokens);
                 AbstractEntity entity = null;
@@ -160,7 +141,7 @@ namespace CommonScript.Compiler
                 if (entity != null)
                 {
                     entity.isStatic = entity.annotations != null && entity.annotations.ContainsKey("static");
-                    AttachEntityToParseTree(entity, nestParent, file, namespacePrefix, currentEntityBucket, annotationTokens);
+                    FunctionWrapper.AttachEntityToParseTree(entity, nestParent, file, namespacePrefix, currentEntityBucket, annotationTokens);
                 }
 
                 if (entity == null && annotationTokens.Count > 0)
@@ -175,47 +156,6 @@ namespace CommonScript.Compiler
             }
         }
 
-        internal static void AttachEntityToParseTree(
-            AbstractEntity child,
-            AbstractEntity parent,
-            FileContext file,
-            string activeNsPrefix,
-            Dictionary<string, AbstractEntity> activeEntityBucket,
-            Dictionary<string, Token> annotationTokens)
-        {
-            child.fileContext = file;
-            child.annotations = annotationTokens;
-
-            string fqName = child.simpleName;
-            if (activeNsPrefix != "")
-            {
-                fqName = activeNsPrefix + "." + fqName;
-            }
-            child.fqName = fqName;
-            child.nestParent = parent;
-
-            bool isStatic = annotationTokens.ContainsKey("static");
-            bool isAttachingToClass = parent != null && parent.type == (int)EntityType.CLASS;
-            bool isClass = child.type == (int)EntityType.CLASS;
-            bool isCtor = child.type == (int)EntityType.CONSTRUCTOR;
-            if (isCtor && !isAttachingToClass)
-            {
-                FunctionWrapper.Errors_Throw(child.firstToken, "Cannot place a constructor here. Constructors can only be added to classes.");
-            }
-
-            if (isStatic && !isClass && !isAttachingToClass)
-            {
-                FunctionWrapper.Errors_Throw(child.firstToken, "@static is not applicable to this type of entity.");
-            }
-
-            if (activeEntityBucket.ContainsKey(child.simpleName))
-            {
-                FunctionWrapper.Errors_Throw(child.firstToken, "There are multiple entities named " + child.fqName + ".");
-            }
-
-            activeEntityBucket[child.simpleName] = child;
-        }
-
         private static ClassEntity ParseClass(
             CompilerContext ctx,
             FileContext file,
@@ -228,7 +168,9 @@ namespace CommonScript.Compiler
             if (FunctionWrapper.Tokens_popIfPresent(tokens, ":"))
             {
                 string errMsg = "base class or interface name";
-                List<Token> parent = new List<Token>() { FunctionWrapper.Tokens_popName(tokens, errMsg) };
+                List<Token> parent = new List<Token>();
+                parent.Add(FunctionWrapper.Tokens_popName(tokens, errMsg));
+                
                 while (FunctionWrapper.Tokens_isNext(tokens, "."))
                 {
                     parent.Add(FunctionWrapper.Tokens_pop(tokens));
@@ -237,9 +179,11 @@ namespace CommonScript.Compiler
                 baseClassTokens = parent.ToArray();
             }
 
-            string classFqName = namespacePrefix == ""
-                ? classNameToken.Value
-                : (namespacePrefix + "." + classNameToken.Value);
+            string classFqName = classNameToken.Value;
+            if (namespacePrefix != "")
+            {
+                classFqName = namespacePrefix + "." + classNameToken.Value;
+            }
 
             ClassEntity classDef = FunctionWrapper.ClassEntity_new(classToken, classNameToken, classFqName);
             classDef.baseClassTokens = baseClassTokens;
@@ -250,21 +194,25 @@ namespace CommonScript.Compiler
             // inject a fake do-nothing constructor if one was not declared.
             if (!classDef.classMembers.ContainsKey("@ctor"))
             {
-                Expression[] baseArgs = null;
+                List<Expression> baseArgs = null;
                 if (classDef.baseClassTokens != null)
                 {
-                    baseArgs = [];
+                    baseArgs = new List<Expression>();
                 }
                 AbstractEntity ctor = FunctionWrapper.FunctionEntity_BuildConstructor(
                     classToken, 
-                    [], 
-                    [], 
-                    baseArgs == null ? null : [..baseArgs], 
-                    [], 
+                    new List<Token>(), 
+                    new List<Expression>(), 
+                    baseArgs, 
+                    new List<Statement>(), 
                     false).baseData;
-                AttachEntityToParseTree(ctor, classDef.baseData,
-                    classDef.baseData.fileContext, classDef.baseData.fqName,
-                    classDef.classMembers, new Dictionary<string, Token>());
+                FunctionWrapper.AttachEntityToParseTree(
+                    ctor, 
+                    classDef.baseData,
+                    classDef.baseData.fileContext, 
+                    classDef.baseData.fqName,
+                    classDef.classMembers, 
+                    new Dictionary<string, Token>());
             }
 
             return classDef;

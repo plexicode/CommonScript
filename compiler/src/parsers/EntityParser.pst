@@ -108,3 +108,63 @@ AbstractEntity ParseFunctionDefinition(
     entity.annotations = annotations;
     return entity;
 }
+
+void AttachEntityToParseTree(
+    AbstractEntity child,
+    AbstractEntity parent,
+    FileContext file,
+    string activeNsPrefix,
+    Dictionary<string, AbstractEntity> activeEntityBucket,
+    Dictionary<string, Token> annotationTokens) {
+
+    child.fileContext = file;
+    child.annotations = annotationTokens;
+
+    string fqName = child.simpleName;
+    if (activeNsPrefix != "") {
+        fqName = activeNsPrefix + "." + fqName;
+    }
+    child.fqName = fqName;
+    child.nestParent = parent;
+
+    bool isStatic = annotationTokens.Contains("static");
+    bool isAttachingToClass = parent != null && parent.type == EntityType.CLASS;
+    bool isClass = child.type == EntityType.CLASS;
+    bool isCtor = child.type == EntityType.CONSTRUCTOR;
+    if (isCtor && !isAttachingToClass) {
+        Errors_Throw(
+            child.firstToken,
+            "Cannot place a constructor here. Constructors can only be added to classes.");
+    }
+
+    if (isStatic && !isClass && !isAttachingToClass) {
+        Errors_Throw(child.firstToken, "@static is not applicable to this type of entity.");
+    }
+
+    if (activeEntityBucket.Contains(child.simpleName)) {
+        Errors_Throw(
+            child.firstToken,
+            "There are multiple entities named " + child.fqName + ".");
+    }
+
+    activeEntityBucket[child.simpleName] = child;
+}
+
+Dictionary<string, Token> ParseAnnotations(CompilerContext compCtx, TokenStream tokens) {
+    Dictionary<string, Token> output = new Dictionary<string, Token>();
+    while (Tokens_peekType(tokens) == TokenType.ANNOTATION) {
+        Token token = Tokens_pop(tokens);
+        string annotationName = token.Value.SubString(1, token.Value.Size() - 1);
+        if (output.Contains(annotationName)) {
+            Errors_Throw(token, "Multiplie redundant annotations.");
+        }
+
+        if (!StringSet_has(compCtx.staticCtx.validAnnotationNames, annotationName)) {
+            Errors_Throw(token, "Unrecognized annotation: '@" + annotationName + "'");
+        }
+
+        output[annotationName] = token;
+    }
+
+    return output;
+}
