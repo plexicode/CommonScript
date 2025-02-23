@@ -231,7 +231,7 @@ namespace CommonScript.Compiler
                     List<Expression> args = new List<Expression>();
                     while (!FunctionWrapper.Tokens_popIfPresent(tokens, ")")) {
                         if (args.Count > 0) FunctionWrapper.Tokens_popExpected(tokens, ",");
-                        args.Add(ParseExpression(tokens));
+                        args.Add(tokens.parseExpression(tokens));
                     }
                     root = FunctionWrapper.Expression_createFunctionInvocation(root, openParen, args.ToArray());
                     checkForSuffixes = true;
@@ -256,7 +256,7 @@ namespace CommonScript.Compiler
                         }
                         else
                         {
-                            sliceNums.Add(ParseExpression(tokens));
+                            sliceNums.Add(tokens.parseExpression(tokens));
                             if (!FunctionWrapper.Tokens_popIfPresent(tokens, ":"))
                             {
                                 nextExpected = false;
@@ -345,7 +345,7 @@ namespace CommonScript.Compiler
             bool nextAllowed = true;
             while (nextAllowed && !FunctionWrapper.Tokens_isNext(tokens, "]"))
             {
-                items.Add(ParseExpression(tokens));
+                items.Add(tokens.parseExpression(tokens));
                 nextAllowed = FunctionWrapper.Tokens_popIfPresent(tokens, ",");
             }
             FunctionWrapper.Tokens_popExpected(tokens, "]");
@@ -360,9 +360,9 @@ namespace CommonScript.Compiler
             bool nextAllowed = true;
             while (nextAllowed && !FunctionWrapper.Tokens_isNext(tokens, "}"))
             {
-                keys.Add(ParseExpression(tokens));
+                keys.Add(tokens.parseExpression(tokens));
                 FunctionWrapper.Tokens_popExpected(tokens, ":");
-                values.Add(ParseExpression(tokens));
+                values.Add(tokens.parseExpression(tokens));
                 nextAllowed = FunctionWrapper.Tokens_popIfPresent(tokens, ",");
             }
             FunctionWrapper.Tokens_popExpected(tokens, "}");
@@ -395,7 +395,7 @@ namespace CommonScript.Compiler
                         if (FunctionWrapper.Tokens_isSequenceNext4(tokens, "(", null, ")", "=>")) return ParseLambda(tokens);
 
                         FunctionWrapper.Tokens_pop(tokens);
-                        Expression expr = ParseExpression(tokens);
+                        Expression expr = tokens.parseExpression(tokens);
                         FunctionWrapper.Tokens_popExpected(tokens, ")");
                         return expr;
 
@@ -427,6 +427,7 @@ namespace CommonScript.Compiler
                         Token newTok = FunctionWrapper.Tokens_pop(tokens);
                         List<Token> nameChain = new List<Token>();
                         nameChain.Add(FunctionWrapper.Tokens_popName(tokens, "class name"));
+                        
                         while (FunctionWrapper.Tokens_isNext(tokens, "."))
                         {
                             nameChain.Add(FunctionWrapper.Tokens_pop(tokens));
@@ -493,7 +494,7 @@ namespace CommonScript.Compiler
                     Expression defaultVal = null;
                     if (FunctionWrapper.Tokens_popIfPresent(tokens, "="))
                     {
-                        defaultVal = ParseExpression(tokens);
+                        defaultVal = tokens.parseExpression(tokens);
                     }
                     argDefaultValues.Add(defaultVal);
                 }
@@ -509,11 +510,11 @@ namespace CommonScript.Compiler
             Statement[] code;
             if (FunctionWrapper.Tokens_isNext(tokens, "{"))
             {
-                code = StatementParser.ParseCodeBlock(tokens, true);
+                code = tokens.parseCodeBlock(tokens, true);
             }
             else
             {
-                Expression codeExpr = ParseExpression(tokens);
+                Expression codeExpr = tokens.parseExpression(tokens);
                 code = new Statement[] {
                     FunctionWrapper.Statement_createReturn(arrow, codeExpr)
                 };

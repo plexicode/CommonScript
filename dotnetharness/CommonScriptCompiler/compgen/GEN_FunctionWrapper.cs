@@ -4562,7 +4562,7 @@ namespace CommonScript.Compiler.Internal
 
         public static TokenStream TokenStream_new(string file, Token[] tokens)
         {
-            return new TokenStream(0, tokens.Length, tokens, file);
+            return new TokenStream(0, tokens.Length, tokens, file, null, null, null);
         }
 
         public static AbstractEntity TryDoExactLookupForConstantEntity(Resolver resolver, FileContext file, string fqNamespace, string dottedEntityName)

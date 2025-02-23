@@ -40,7 +40,6 @@ CompilerContext CompilerContext_new(string rootId, string flavorId, string exten
     return ctx;
 }
 
-
 void PUBLIC_SupplyFilesForModule(
     object compObj,
     string moduleId,
