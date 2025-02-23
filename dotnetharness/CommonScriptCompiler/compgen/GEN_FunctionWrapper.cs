@@ -330,12 +330,29 @@ namespace CommonScript.Compiler.Internal
 
         public static ClassEntity ClassEntity_new(Token classToken, Token nameToken, string fqName)
         {
-            ClassEntity cd = new ClassEntity(null, null, null, null, 0, null, new Dictionary<string, AbstractEntity>(), null);
+            ClassEntity cd = new ClassEntity(null, null, null, null, null, new Dictionary<string, AbstractEntity>(), null);
             cd.baseData = AbstractEntity_new(classToken, 1, cd);
             cd.baseData.nameToken = nameToken;
             cd.baseData.simpleName = nameToken.Value;
             cd.baseData.fqName = fqName;
             return cd;
+        }
+
+        public static int ClassSorter_calcDepth(ClassEntity cls, System.Collections.Generic.Dictionary<string, int> depthByName)
+        {
+            string fqName = cls.baseData.fqName;
+            if (depthByName.ContainsKey(fqName))
+            {
+                return depthByName[fqName];
+            }
+            if (cls.baseClassEntity == null)
+            {
+                depthByName[fqName] = 1;
+                return 1;
+            }
+            int depth = ClassSorter_calcDepth(cls.baseClassEntity, depthByName) + 1;
+            depthByName[fqName] = depth;
+            return depth;
         }
 
         public static CompilationBundle CompilationBundle_new()
@@ -2469,6 +2486,33 @@ namespace CommonScript.Compiler.Internal
             condBuf = ByteCodeUtil_ensureBooleanExpression(whileLoop.condition.firstToken, condBuf);
             ByteCodeBuffer loopBody = serializeCodeBlock(staticCtx, whileLoop.code);
             return join4(condBuf, create1(28, null, null, loopBody.length + 1), finalizeBreakContinue(loopBody, 1, true, -loopBody.length - 1 - condBuf.length), create1(24, null, null, -(loopBody.length + condBuf.length + 1 + 1)));
+        }
+
+        public static ClassEntity[] SortClassesInDeterministicDependencyOrder(ClassEntity[] unorderedClasses)
+        {
+            int i = 0;
+            System.Collections.Generic.Dictionary<string, int> classDepthByFqName = new Dictionary<string, int>();
+            System.Collections.Generic.Dictionary<string, ClassEntity> classByLexicalKey = new Dictionary<string, ClassEntity>();
+            ClassEntity cls = null;
+            int padSize = unorderedClasses.Length.ToString().Length + 1;
+            i = 0;
+            while (i < unorderedClasses.Length)
+            {
+                cls = unorderedClasses[i];
+                int depth = ClassSorter_calcDepth(cls, classDepthByFqName);
+                string key = string.Join("", new string[] { PadIntegerToSize(depth, padSize), ":", cls.baseData.fqName });
+                classByLexicalKey[key] = cls;
+                i += 1;
+            }
+            string[] keys = classByLexicalKey.Keys.ToArray().OrderBy<string, string>(_PST_GEN_arg => _PST_GEN_arg).ToArray();
+            ClassEntity[] output = new ClassEntity[keys.Length];
+            i = 0;
+            while (i < keys.Length)
+            {
+                output[i] = classByLexicalKey[keys[i]];
+                i += 1;
+            }
+            return output;
         }
 
         public static int SpecialActionUtil_GetSpecialActionArgc(SpecialActionUtil sau, string name)

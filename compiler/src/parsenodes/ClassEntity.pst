@@ -3,7 +3,6 @@ struct ClassEntity {
     ClassEntity baseClassEntity;
     Dictionary<string, int> directMemberToOffset;
     Dictionary<string, int> flattenedMemberOffsetLookup;
-    int classDepth; // for sorting parents first
     Array<string> newDirectMemberOffsets;
     Dictionary<string, AbstractEntity> classMembers;
     AbstractEntity baseData;
@@ -15,7 +14,6 @@ ClassEntity ClassEntity_new(Token classToken, Token nameToken, string fqName) {
         null,
         null,
         null,
-        0,
         null,
         new Dictionary<string, AbstractEntity>(),
         null

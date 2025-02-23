@@ -125,7 +125,7 @@ namespace CommonScript.Compiler
                 finalOrder.Add(enums[i].baseData);
             }
 
-            ClassEntity[] sortedClasses = SortClasses(classes);
+            ClassEntity[] sortedClasses = FunctionWrapper.SortClassesInDeterministicDependencyOrder(classes.ToArray());
 
             for (int i = 0; i < sortedClasses.Length; i++)
             {
@@ -164,37 +164,6 @@ namespace CommonScript.Compiler
             bundle.builtInCount = builtInFunctions.Count;
 
             return bundle;
-        }
-
-        private static ClassEntity[] SortClasses(List<ClassEntity> unorderedClasses)
-        {
-            ClassEntity[] deterministicOrder = unorderedClasses.OrderBy(c => c.baseData.fqName).ToArray();
-            for (int i = 0; i < deterministicOrder.Length; i++)
-            {
-                ClassEntity cls = deterministicOrder[i];
-                if (cls.baseClassEntity == null)
-                {
-                    cls.classDepth = 1;
-                }
-                else
-                {
-                    cls.classDepth = -1;
-                }
-            }
-
-            foreach (ClassEntity cls in deterministicOrder)
-            {
-                SortClassesHelperSetDepth(cls);
-            }
-
-            return deterministicOrder.OrderBy(c => c.classDepth).ToArray();
-        }
-
-        private static void SortClassesHelperSetDepth(ClassEntity cls)
-        {
-            if (cls.classDepth != -1) return;
-            SortClassesHelperSetDepth(cls.baseClassEntity);
-            cls.classDepth = cls.baseClassEntity.classDepth + 1;
         }
 
         private static void allocateStringAndTokenIds(CompilationBundle bundle)
