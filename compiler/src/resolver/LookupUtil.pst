@@ -1,0 +1,78 @@
+
+// Determines if a variable is actually a pointer into any of the imported modules.
+Expression LookupUtil_DoFirstPassVariableLookupThroughImports(Resolver ctx, Token refToken, string name) {
+    FileContext fileCtx = ctx.activeEntity.fileContext;
+
+    // If there's an import into a name, this is considered a locally defined name,
+    // and therefore will take precedence over pollution imports.
+    if (fileCtx.importsByVar.Contains(name)) {
+        return Expression_createImportReference(refToken, fileCtx.importsByVar[name]);
+    }
+
+    Array<ImportStatement> imports = fileCtx.imports;
+    for (int i = imports.Size() - 1; i >= 0; i -= 1) {
+        ImportStatement importStatement = imports[i];
+        if (importStatement.isPollutionImport) {
+            CompiledModule mod = importStatement.compiledModuleRef;
+            Expression referenceExpression = LookupUtil_tryCreateModuleMemberReference(mod, refToken, name);
+            if (referenceExpression != null) {
+                return referenceExpression;
+            }
+        }
+    }
+
+    return null;
+}
+
+Expression LookupUtil_tryCreateModuleMemberReference(CompiledModule mod, Token refToken, string name) {
+    if (mod.nestedEntities.Contains(name)) {
+        AbstractEntity tle = mod.nestedEntities[name];
+        switch (tle.type) {
+            case EntityType.FUNCTION:
+                return Expression_createFunctionReference(refToken, name, tle);
+            case EntityType.CONST:
+                return ((ConstEntity)tle.specificData).constValue;
+            case EntityType.CLASS:
+                return Expression_createClassReference(refToken, tle);
+            case EntityType.NAMESPACE:
+                return Expression_createNamespaceReference(refToken, tle);
+            default:
+                fail("Not implemented");
+                break;
+        }
+    }
+
+    return null;
+}
+
+AbstractEntity LookupUtil_DoLookupForName(Resolver resolver, Token throwToken, string name) {
+    // root level entities and namespaces always have precedence.
+    if (resolver.flattenedEntities.Contains(name)) {
+        return resolver.flattenedEntities[name];
+    }
+
+    if (resolver.activeEntity.fileContext.importsByVar.Contains(name)) {
+        return ModuleWrapperEntity_new(throwToken, resolver.activeEntity.fileContext.importsByVar[name]).baseData;
+    }
+
+    AbstractEntity walker = resolver.activeEntity;
+    while (walker != null) {
+        Dictionary<string, AbstractEntity> lookup = Entity_getMemberLookup(resolver.staticCtx, walker);
+        if (lookup.Contains(name)) {
+            return lookup[name];
+        }
+        walker = walker.nestParent;
+    }
+
+    Array<ImportStatement> importStatements = resolver.activeEntity.fileContext.imports;
+    for (int i = 0; i < importStatements.Size(); i += 1) {
+        ImportStatement impStmnt = importStatements[i];
+        if (impStmnt.isPollutionImport) {
+            if (impStmnt.compiledModuleRef.nestedEntities.Contains(name)) {
+                return impStmnt.compiledModuleRef.nestedEntities[name];
+            }
+        }
+    }
+
+    return null;
+}

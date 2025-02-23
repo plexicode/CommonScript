@@ -178,7 +178,7 @@ namespace CommonScript.Compiler
                 case (int) ExpressionType.IMPORT_REFERENCE:
                     ImportStatement importRef = dotField.root.importPtr;
                     CompiledModule moduleRef = importRef.compiledModuleRef;
-                    Expression output = LookupEngine.tryCreateModuleMemberReference(moduleRef, dotField.firstToken, fieldName);
+                    Expression output = FunctionWrapper.LookupUtil_tryCreateModuleMemberReference(moduleRef, dotField.firstToken, fieldName);
                     if (output == null)
                     {
                         FunctionWrapper.Errors_Throw(dotField.opToken, "The module does not have a member named '" + fieldName + "'");
@@ -370,7 +370,7 @@ namespace CommonScript.Compiler
                 return ExpressionResolver_WrapEntityIntoReferenceExpression(resolver, varExpr.firstToken, localEntity);
             }
 
-            Expression importedRef = LookupEngine.DoFirstPassVariableLookupThroughImports(resolver, varExpr.firstToken, name);
+            Expression importedRef = FunctionWrapper.LookupUtil_DoFirstPassVariableLookupThroughImports(resolver, varExpr.firstToken, name);
             if (importedRef != null) return importedRef;
 
             return varExpr;

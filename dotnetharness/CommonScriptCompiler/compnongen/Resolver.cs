@@ -140,7 +140,7 @@ namespace CommonScript.Compiler
                 string ns = string.Join('.', bc.baseData.fqName.Split('.').SkipLast(1));
                 resolver.activeEntity = bc.baseData;
                 Token baseClassToken = bc.baseClassTokens[0];
-                AbstractEntity bcEntity = DoLookup2(resolver, baseClassToken, baseClassToken.Value);
+                AbstractEntity bcEntity = FunctionWrapper.LookupUtil_DoLookupForName(resolver, baseClassToken, baseClassToken.Value);
                 if (bcEntity != null)
                 {
                     for (int i = 2; i < bc.baseClassTokens.Length; i += 2)
@@ -614,44 +614,6 @@ namespace CommonScript.Compiler
             if (mod.entitiesNoEnumParents.ContainsKey(potentialEnumParentName))
             {
                 return mod.entitiesNoEnumParents[potentialEnumParentName];
-            }
-
-            return null;
-        }
-
-        internal static AbstractEntity DoLookup2(Resolver resolver, Token throwToken, string name)
-        {
-            // root level entities and namespaces always have precedence.
-            if (resolver.flattenedEntities.ContainsKey(name))
-            {
-                return resolver.flattenedEntities[name];
-            }
-
-            if (resolver.activeEntity.fileContext.importsByVar.ContainsKey(name))
-            {
-                return FunctionWrapper.ModuleWrapperEntity_new(throwToken, resolver.activeEntity.fileContext.importsByVar[name]).baseData;
-            }
-
-            AbstractEntity walker = resolver.activeEntity;
-            while (walker != null)
-            {
-                Dictionary<string, AbstractEntity> lookup = FunctionWrapper.Entity_getMemberLookup(resolver.staticCtx, walker); 
-                if (lookup.ContainsKey(name))
-                {
-                    return lookup[name];
-                }
-                walker = walker.nestParent;
-            }
-
-            foreach (ImportStatement impStmnt in resolver.activeEntity.fileContext.imports)
-            {
-                if (impStmnt.isPollutionImport)
-                {
-                    if (impStmnt.compiledModuleRef.nestedEntities.ContainsKey(name))
-                    {
-                        return impStmnt.compiledModuleRef.nestedEntities[name];
-                    }
-                }
             }
 
             return null;

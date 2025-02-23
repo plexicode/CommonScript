@@ -35,8 +35,7 @@ void bundleEntity(StaticContext staticCtx, AbstractEntity entity, CompilationBun
 
 void bundleClass(ClassEntity classEntity, CompilationBundle bundle) {
     int baseClassId = 0;
-    if (classEntity.baseClassEntity != null)
-    {
+    if (classEntity.baseClassEntity != null) {
         baseClassId = classEntity.baseClassEntity.baseData.serializationIndex;
     }
 

@@ -1921,6 +1921,92 @@ namespace CommonScript.Compiler.Internal
             return join4(join2(a, b), join2(c, d), join2(e, f), g);
         }
 
+        public static Expression LookupUtil_DoFirstPassVariableLookupThroughImports(Resolver ctx, Token refToken, string name)
+        {
+            FileContext fileCtx = ctx.activeEntity.fileContext;
+            if (fileCtx.importsByVar.ContainsKey(name))
+            {
+                return Expression_createImportReference(refToken, fileCtx.importsByVar[name]);
+            }
+            ImportStatement[] imports = fileCtx.imports;
+            int i = imports.Length - 1;
+            while (i >= 0)
+            {
+                ImportStatement importStatement = imports[i];
+                if (importStatement.isPollutionImport)
+                {
+                    CompiledModule mod = importStatement.compiledModuleRef;
+                    Expression referenceExpression = LookupUtil_tryCreateModuleMemberReference(mod, refToken, name);
+                    if (referenceExpression != null)
+                    {
+                        return referenceExpression;
+                    }
+                }
+                i -= 1;
+            }
+            return null;
+        }
+
+        public static AbstractEntity LookupUtil_DoLookupForName(Resolver resolver, Token throwToken, string name)
+        {
+            if (resolver.flattenedEntities.ContainsKey(name))
+            {
+                return resolver.flattenedEntities[name];
+            }
+            if (resolver.activeEntity.fileContext.importsByVar.ContainsKey(name))
+            {
+                return ModuleWrapperEntity_new(throwToken, resolver.activeEntity.fileContext.importsByVar[name]).baseData;
+            }
+            AbstractEntity walker = resolver.activeEntity;
+            while (walker != null)
+            {
+                System.Collections.Generic.Dictionary<string, AbstractEntity> lookup = Entity_getMemberLookup(resolver.staticCtx, walker);
+                if (lookup.ContainsKey(name))
+                {
+                    return lookup[name];
+                }
+                walker = walker.nestParent;
+            }
+            ImportStatement[] importStatements = resolver.activeEntity.fileContext.imports;
+            int i = 0;
+            while (i < importStatements.Length)
+            {
+                ImportStatement impStmnt = importStatements[i];
+                if (impStmnt.isPollutionImport)
+                {
+                    if (impStmnt.compiledModuleRef.nestedEntities.ContainsKey(name))
+                    {
+                        return impStmnt.compiledModuleRef.nestedEntities[name];
+                    }
+                }
+                i += 1;
+            }
+            return null;
+        }
+
+        public static Expression LookupUtil_tryCreateModuleMemberReference(CompiledModule mod, Token refToken, string name)
+        {
+            if (mod.nestedEntities.ContainsKey(name))
+            {
+                AbstractEntity tle = mod.nestedEntities[name];
+                switch (tle.type)
+                {
+                    case 6:
+                        return Expression_createFunctionReference(refToken, name, tle);
+                    case 2:
+                        return ((ConstEntity)tle.specificData).constValue;
+                    case 1:
+                        return Expression_createClassReference(refToken, tle);
+                    case 7:
+                        return Expression_createNamespaceReference(refToken, tle);
+                    default:
+                        fail("Not implemented");
+                        break;
+                }
+            }
+            return null;
+        }
+
         public static ModuleWrapperEntity ModuleWrapperEntity_new(Token token, ImportStatement imp)
         {
             System.Collections.Generic.Dictionary<string, AbstractEntity> modEnts = imp.compiledModuleRef.nestedEntities;

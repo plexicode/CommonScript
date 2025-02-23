@@ -2,3 +2,4 @@
 @import("resolver/ExpressionResolver.pst");
 @import("resolver/StatementResolver.pst");
 @import("resolver/EntityResolver.pst");
+@import("resolver/LookupUtil.pst");

@@ -106,8 +106,7 @@ string PUBLIC_GetNextRequiredModuleId(object compObj) {
         Array<string> unfulfilledDependencies = Core.SortedCopyOfStringArray(compiler.unfulfilledDependencies.Keys());
         string nextKey = unfulfilledDependencies[0];
 
-        if (!IsBuiltInModule(nextKey))
-        {
+        if (!IsBuiltInModule(nextKey)) {
             return nextKey;
         }
 

@@ -90,18 +90,15 @@ CompilationBundle bundleCompilation(StaticContext staticCtx, string rootId, Arra
     List<AbstractEntity> finalOrder = new List<AbstractEntity>();
 
     List<FunctionEntity> allFunctions = new List<FunctionEntity>();
-    for (i = 0; i < coreBuiltInFunctions.Size(); i += 1)
-    {
+    for (i = 0; i < coreBuiltInFunctions.Size(); i += 1) {
         allFunctions.Add(coreBuiltInFunctions[i]);
     }
 
-    for (i = 0; i < userFunctions.Size(); i += 1)
-    {
+    for (i = 0; i < userFunctions.Size(); i += 1) {
         allFunctions.Add(userFunctions[i]);
     }
 
-    for (i = 0; i < allFunctions.Size(); i += 1)
-    {
+    for (i = 0; i < allFunctions.Size(); i += 1) {
         AbstractEntity fn = allFunctions[i].baseData;
         fn.serializationIndex = i + 1;
         finalOrder.Add(fn);
