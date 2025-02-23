@@ -2,13 +2,15 @@ struct StaticContext {
     TokenizerStaticContext tokenizerCtx;
     Dictionary<string, AbstractEntity> emptyLookup;
     SpecialActionUtil specialActionUtil;
+    StringSet validAnnotationNames;
 }
 
 StaticContext StaticContext_new() {
     return new StaticContext(
         TokenizerStaticContext_new(),
         new Dictionary<string, AbstractEntity>(),
-        SpecialActionUtil_new()
+        SpecialActionUtil_new(),
+        StringSet_fromArray("public static".Split(" "))
     );
 }
 

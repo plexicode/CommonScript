@@ -5,196 +5,20 @@ using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
-    internal class CompilerContext
+    internal static class CompilerContextUtil
     {
-        private static StringSet VALID_ANNOTATIONS = FunctionWrapper.StringSet_fromArray("public static".Split(' '));
 
-        public StaticContext staticCtx;
-        public string rootId;
-        public Dictionary<string, List<string>> depIdsByModuleId;
-        public Dictionary<string, List<FileContext>> filesByModuleId;
-        public List<string> finalCompilationOrder = null;
-        public Dictionary<string, bool> unfulfilledDependencies;
-        public Dictionary<string, CompiledModule> compiledModulesById = null;
-        public string extensionVersionId;
-        public string flavorId;
-        public List<string> extensionNames;
-
-        public CompilerContext(string rootId, string flavorId, string extensionVersionId, string[] extensionNames)
+        public static int[] PUBLIC_CompleteCompilation(object compObj)
         {
-            this.staticCtx = FunctionWrapper.StaticContext_new();
-            this.rootId = rootId;
-            this.flavorId = flavorId;
-            this.extensionVersionId = extensionVersionId;
-            this.extensionNames = new List<string>(extensionNames);
-            this.depIdsByModuleId = new Dictionary<string, List<string>>();
-            this.filesByModuleId = new Dictionary<string, List<FileContext>>();
-            this.unfulfilledDependencies = new Dictionary<string, bool>();
-            this.unfulfilledDependencies[rootId] = true;
+            CompilerContext compiler = (CompilerContext) compObj;
 
-            Dictionary<string, string> builtinFiles = new Dictionary<string, string>()
-            {
-                { "builtins.script", FunctionWrapper.GetSourceForBuiltinModule("builtins") },
-            };
-
-            SupplyFilesForModule(this, "{BUILTIN}", builtinFiles, true, true);
-        }
-
-        private static CompilerContext GetCompiler(object compObj)
-        {
-            return (CompilerContext)compObj;
-        }
-
-        public static void SupplyFilesForModule(
-            object compObj,
-            string moduleId,
-            Dictionary<string, string> fileLookup,
-            bool isCoreBuiltin,
-            bool isBuiltInLib)
-        {
-            CompilerContext compiler = GetCompiler(compObj);
-
-            compiler.depIdsByModuleId[moduleId] = new List<string>();
-
-            List<FileContext> files = new List<FileContext>();
-            Dictionary<string, ImportStatement> imports = new Dictionary<string, ImportStatement>();
-            foreach (string path in fileLookup.Keys.OrderBy(n => n))
-            {
-                FileContext fileCtx = FunctionWrapper.FileContext_new(compiler.staticCtx, path, fileLookup[path]);
-                fileCtx.isCoreBuiltin = isCoreBuiltin;
-                fileCtx.isBuiltInLib = isBuiltInLib;
-                files.Add(fileCtx);
-                fileCtx.imports = FunctionWrapper.ImportParser_AdvanceThroughImports(fileCtx.tokens, isCoreBuiltin);
-                FunctionWrapper.FileContext_initializeImportLookup(fileCtx);
-                foreach (ImportStatement impStmnt in fileCtx.imports)
-                {
-                    imports[impStmnt.flatName] = impStmnt;
-                }
-            }
-            compiler.filesByModuleId[moduleId] = files;
-
-            if (compiler.unfulfilledDependencies.ContainsKey(moduleId))
-            {
-                compiler.unfulfilledDependencies.Remove(moduleId);
-            }
-
-            List<string> allDeps = new List<string>(imports.Keys);
-            compiler.depIdsByModuleId[moduleId] = allDeps;
-            foreach (string depId in allDeps)
-            {
-                if (!compiler.filesByModuleId.ContainsKey(depId))
-                {
-
-                    compiler.unfulfilledDependencies[depId] = true;
-                }
-            }
-        }
-
-        public static string? GetNextRequiredModuleId(object compObj)
-        {
-            CompilerContext compiler = GetCompiler(compObj);
-            while (true)
-            {
-                string nextKey = compiler.unfulfilledDependencies.Keys.OrderBy(k => k).FirstOrDefault();
-                if (nextKey == null) return null;
-
-                if (!FunctionWrapper.IsBuiltInModule(nextKey))
-                {
-                    return nextKey;
-                }
-
-                SupplyFilesForModule(
-                    compiler,
-                    nextKey,
-                    new Dictionary<string, string>()
-                    {
-                        { nextKey + ".script", FunctionWrapper.GetSourceForBuiltinModule(nextKey) }
-                    },
-                    false,
-                    true);
-            }
-        }
-
-        public static void EnsureDependenciesFulfilled(object compObj)
-        {
-            CompilerContext compiler = GetCompiler(compObj);
-            if (compiler.unfulfilledDependencies.Count > 0)
-            {
-                throw new Exception("Not all dependencies were fulfilled");
-            }
-        }
-
-        private static string[] CalculateCompilationOrder(CompilerContext compiler)
-        {
-            Dictionary<string, int> recurseState = new Dictionary<string, int>();
-            List<string> order = new List<string>();
-            List<string> queue = new List<string>() { compiler.rootId };
-
-            while (queue.Count > 0)
-            {
-                int last = queue.Count - 1;
-                string currentId = queue[last];
-                queue.RemoveAt(last);
-                int currentRecurseState = 0;
-                if (recurseState.ContainsKey(currentId)) currentRecurseState = recurseState[currentId];
-
-                if (currentRecurseState == 2)
-                {
-                    // It's already handled. Move on 
-                }
-                else
-                {
-                    List<string> deps = compiler.depIdsByModuleId[currentId];
-                    List<string> newDeps = new List<string>();
-
-                    foreach (string depId in deps)
-                    {
-                        if (recurseState.ContainsKey(depId))
-                        {
-                            if (recurseState[depId] == 2)
-                            {
-                                // already added, just ignore it.
-                            }
-                            else if (recurseState[depId] == 1)
-                            {
-                                // in the process of adding. We have a dependency cycle!
-                                throw new Exception("There is a cyclical dependency involving " + depId + " and " + currentId);
-                            }
-                        }
-                        else
-                        {
-                            newDeps.Add(depId);
-                        }
-                    }
-
-                    if (newDeps.Count == 0)
-                    {
-                        recurseState[currentId] = 2;
-                        order.Add(currentId);
-                    }
-                    else
-                    {
-                        recurseState[currentId] = 1;
-                        queue.Add(currentId);
-                        queue.AddRange(newDeps);
-                    }
-                }
-            }
-
-            return order.ToArray();
-        }
-
-        public static int[] CompleteCompilation(object compObj)
-        {
-            CompilerContext compiler = GetCompiler(compObj);
-
-            string[] moduleCompilationOrder = CalculateCompilationOrder(compiler);
+            string[] moduleCompilationOrder = FunctionWrapper.CompilerContext_CalculateCompilationOrder(compiler);
 
             compiler.compiledModulesById = new Dictionary<string, CompiledModule>();
 
             foreach (string moduleId in moduleCompilationOrder)
             {
-                CompiledModule module = CompileModule(compiler, moduleId);
+                CompiledModule module = CompilerContext_CompileModule(compiler, moduleId);
                 compiler.compiledModulesById[moduleId] = module;
             }
 
@@ -204,7 +28,7 @@ namespace CommonScript.Compiler
             return FunctionWrapper.ExportUtil_exportBundle(compiler.flavorId, compiler.extensionVersionId, bundle);
         }
 
-        public static CompiledModule CompileModule(CompilerContext compiler, string moduleId)
+        public static CompiledModule CompilerContext_CompileModule(CompilerContext compiler, string moduleId)
         {
             List<FileContext> files = compiler.filesByModuleId[moduleId];
 
@@ -241,7 +65,7 @@ namespace CommonScript.Compiler
             return m;
         }
 
-        private static Dictionary<string, Token> ParseOutAnnotations(TokenStream tokens)
+        private static Dictionary<string, Token> CompilerContext_ParseOutAnnotations(CompilerContext compCtx, TokenStream tokens)
         {
             Dictionary<string, Token> output = new Dictionary<string, Token>();
             while (FunctionWrapper.Tokens_peekType(tokens) == (int) TokenType.ANNOTATION)
@@ -252,7 +76,7 @@ namespace CommonScript.Compiler
                 {
                     FunctionWrapper.Errors_Throw(token, "Multiplie redundant annotations.");
                 }
-                if (!FunctionWrapper.StringSet_has(VALID_ANNOTATIONS, annotationName))
+                if (!FunctionWrapper.StringSet_has(compCtx.staticCtx.validAnnotationNames, annotationName))
                 {
                     FunctionWrapper.Errors_Throw(token, "Unrecognized annotation: '@" + annotationName + "'");
                 }
@@ -277,7 +101,7 @@ namespace CommonScript.Compiler
             while (keepChecking)
             {
                 Token firstToken = FunctionWrapper.Tokens_peek(tokens);
-                Dictionary<string, Token> annotationTokens = ParseOutAnnotations(tokens);
+                Dictionary<string, Token> annotationTokens = CompilerContext_ParseOutAnnotations(compiler, tokens);
 
                 string nextToken = FunctionWrapper.Tokens_peekValueNonNull(tokens);
                 AbstractEntity entity = null;

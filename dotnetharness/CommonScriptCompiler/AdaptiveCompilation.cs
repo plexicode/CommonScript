@@ -25,8 +25,8 @@ namespace CommonScript.Compiler
         
         internal AdaptiveCompilation(string langId, string ver, string rootModuleId, ICollection<string> extensionNames)
         {
-            this.genCompiler = new CompilerContext(rootModuleId, langId, ver, extensionNames.ToArray());
-            this.nextModuleIdCache = CompilerContext.GetNextRequiredModuleId(this.genCompiler);
+            this.genCompiler = FunctionWrapper.CompilerContext_new(rootModuleId, langId, ver, extensionNames.ToArray());
+            this.nextModuleIdCache = FunctionWrapper.PUBLIC_GetNextRequiredModuleId(this.genCompiler);
             this.isDone = this.nextModuleIdCache == null;
         }
 
@@ -46,8 +46,8 @@ namespace CommonScript.Compiler
         private void ProvideFilesForModuleCompilationImpl(string moduleId, Dictionary<string, string> codeFiles, bool isBuiltin)
         {
             if (moduleId != this.NextRequiredModule) throw new InvalidOperationException();
-            CompilerContext.SupplyFilesForModule(this.genCompiler, moduleId, codeFiles, false, false);
-            this.nextModuleIdCache = CompilerContext.GetNextRequiredModuleId(this.genCompiler);
+            FunctionWrapper.PUBLIC_SupplyFilesForModule(this.genCompiler, moduleId, codeFiles, false, false);
+            this.nextModuleIdCache = FunctionWrapper.PUBLIC_GetNextRequiredModuleId(this.genCompiler);
             this.isDone = this.nextModuleIdCache == null;
         }
 
@@ -71,8 +71,8 @@ namespace CommonScript.Compiler
         private CompilationResult GetCompilationImpl()
         {
             if (!this.isDone) throw new InvalidOperationException();
-            CompilerContext.EnsureDependenciesFulfilled(this.genCompiler);
-            int[] output = CompilerContext.CompleteCompilation(this.genCompiler);
+            FunctionWrapper.PUBLIC_EnsureDependenciesFulfilled(this.genCompiler);
+            int[] output = CompilerContextUtil.PUBLIC_CompleteCompilation(this.genCompiler);
             byte[] outputBytes = output.Select<int, byte>(i => (byte)i).ToArray();
             return new CompilationResult(outputBytes, null);
         }

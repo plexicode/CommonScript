@@ -393,6 +393,86 @@ namespace CommonScript.Compiler.Internal
             return new CompiledModule(id, new Dictionary<string, string>(), null, null, null, null);
         }
 
+        public static string[] CompilerContext_CalculateCompilationOrder(CompilerContext compiler)
+        {
+            System.Collections.Generic.Dictionary<string, int> recurseState = new Dictionary<string, int>();
+            System.Collections.Generic.List<string> order = new List<string>();
+            System.Collections.Generic.List<string> queue = new List<string>();
+            queue.Add(compiler.rootId);
+            while (queue.Count > 0)
+            {
+                int last = queue.Count - 1;
+                string currentId = queue[last];
+                queue.RemoveAt(last);
+                int currentRecurseState = 0;
+                if (recurseState.ContainsKey(currentId))
+                {
+                    currentRecurseState = recurseState[currentId];
+                }
+                if (currentRecurseState == 2)
+                {
+                }
+                else
+                {
+                    System.Collections.Generic.List<string> deps = compiler.depIdsByModuleId[currentId];
+                    System.Collections.Generic.List<string> newDeps = new List<string>();
+                    int i = 0;
+                    while (i < deps.Count)
+                    {
+                        string depId = deps[i];
+                        if (recurseState.ContainsKey(depId))
+                        {
+                            if (recurseState[depId] == 2)
+                            {
+                            }
+                            else if (recurseState[depId] == 1)
+                            {
+                                fail(string.Join("", new string[] { "There is a cyclical dependency involving ", depId, " and ", currentId }));
+                            }
+                        }
+                        else
+                        {
+                            newDeps.Add(depId);
+                        }
+                        i += 1;
+                    }
+                    if (newDeps.Count == 0)
+                    {
+                        recurseState[currentId] = 2;
+                        order.Add(currentId);
+                    }
+                    else
+                    {
+                        recurseState[currentId] = 1;
+                        queue.Add(currentId);
+                        i = 0;
+                        while (i < newDeps.Count)
+                        {
+                            queue.Add(newDeps[i]);
+                            i += 1;
+                        }
+                    }
+                }
+            }
+            return order.ToArray();
+        }
+
+        public static CompilerContext CompilerContext_new(string rootId, string flavorId, string extensionVersionId, string[] extensionNames)
+        {
+            CompilerContext ctx = new CompilerContext(StaticContext_new(), rootId, new Dictionary<string, System.Collections.Generic.List<string>>(), new Dictionary<string, System.Collections.Generic.List<FileContext>>(), null, new Dictionary<string, bool>(), null, extensionVersionId, flavorId, new List<string>());
+            int i = 0;
+            while (i < extensionNames.Length)
+            {
+                ctx.extensionNames.Add(extensionNames[i]);
+                i += 1;
+            }
+            ctx.unfulfilledDependencies[rootId] = true;
+            System.Collections.Generic.Dictionary<string, string> builtinFiles = new Dictionary<string, string>();
+            builtinFiles["builtins.script"] = GetSourceForBuiltinModule("builtins");
+            PUBLIC_SupplyFilesForModule(ctx, "{BUILTIN}", builtinFiles, true, true);
+            return ctx;
+        }
+
         public static ConstEntity ConstEntity_new(Token constToken, Token nameToken, Expression constValue)
         {
             ConstEntity c = new ConstEntity(constValue, null);
@@ -1402,6 +1482,90 @@ namespace CommonScript.Compiler.Internal
             return ns;
         }
 
+        public static void PUBLIC_EnsureDependenciesFulfilled(object compObj)
+        {
+            CompilerContext compiler = (CompilerContext)compObj;
+            if (compiler.unfulfilledDependencies.Count > 0)
+            {
+                fail("Not all dependencies are fulfilled.");
+            }
+        }
+
+        public static string PUBLIC_GetNextRequiredModuleId(object compObj)
+        {
+            CompilerContext compiler = (CompilerContext)compObj;
+            while (true)
+            {
+                if (compiler.unfulfilledDependencies.Count == 0)
+                {
+                    return null;
+                }
+                string[] unfulfilledDependencies = compiler.unfulfilledDependencies.Keys.ToArray().OrderBy<string, string>(_PST_GEN_arg => _PST_GEN_arg).ToArray();
+                string nextKey = unfulfilledDependencies[0];
+                if (!IsBuiltInModule(nextKey))
+                {
+                    return nextKey;
+                }
+                System.Collections.Generic.Dictionary<string, string> builtinFiles = new Dictionary<string, string>();
+                builtinFiles[nextKey + ".script"] = GetSourceForBuiltinModule(nextKey);
+                PUBLIC_SupplyFilesForModule(compiler, nextKey, builtinFiles, false, true);
+            }
+        }
+
+        public static void PUBLIC_SupplyFilesForModule(object compObj, string moduleId, System.Collections.Generic.Dictionary<string, string> fileLookup, bool isCoreBuiltin, bool isBuiltInLib)
+        {
+            int i = 0;
+            int j = 0;
+            CompilerContext compiler = (CompilerContext)compObj;
+            compiler.depIdsByModuleId[moduleId] = new List<string>();
+            System.Collections.Generic.List<FileContext> files = new List<FileContext>();
+            System.Collections.Generic.Dictionary<string, ImportStatement> imports = new Dictionary<string, ImportStatement>();
+            string[] fileNamesOrdered = fileLookup.Keys.ToArray().OrderBy<string, string>(_PST_GEN_arg => _PST_GEN_arg).ToArray();
+            i = 0;
+            while (i < fileNamesOrdered.Length)
+            {
+                string path = fileNamesOrdered[i];
+                FileContext fileCtx = FileContext_new(compiler.staticCtx, path, fileLookup[path]);
+                fileCtx.isCoreBuiltin = isCoreBuiltin;
+                fileCtx.isBuiltInLib = isBuiltInLib;
+                files.Add(fileCtx);
+                fileCtx.imports = ImportParser_AdvanceThroughImports(fileCtx.tokens, isCoreBuiltin);
+                FileContext_initializeImportLookup(fileCtx);
+                j = 0;
+                while (j < fileCtx.imports.Length)
+                {
+                    ImportStatement impStmnt = fileCtx.imports[j];
+                    imports[impStmnt.flatName] = impStmnt;
+                    j += 1;
+                }
+                i += 1;
+            }
+            compiler.filesByModuleId[moduleId] = files;
+            if (compiler.unfulfilledDependencies.ContainsKey(moduleId))
+            {
+                compiler.unfulfilledDependencies.Remove(moduleId);
+            }
+            System.Collections.Generic.List<string> allDeps = new List<string>();
+            string[] importedIds = imports.Keys.ToArray();
+            i = 0;
+            while (i < importedIds.Length)
+            {
+                allDeps.Add(importedIds[i]);
+                i += 1;
+            }
+            compiler.depIdsByModuleId[moduleId] = allDeps;
+            i = 0;
+            while (i < allDeps.Count)
+            {
+                string depId = allDeps[i];
+                if (!compiler.filesByModuleId.ContainsKey(depId))
+                {
+                    compiler.unfulfilledDependencies[depId] = true;
+                }
+                i += 1;
+            }
+        }
+
         public static Resolver Resolver_new(StaticContext staticCtx, System.Collections.Generic.Dictionary<string, AbstractEntity> rootEntities, System.Collections.Generic.List<string> extensionNames)
         {
             Resolver r = new Resolver(staticCtx, rootEntities, new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new List<FunctionEntity>(), null, null, null, 0, StringSet_fromList(extensionNames));
@@ -2337,7 +2501,7 @@ namespace CommonScript.Compiler.Internal
 
         public static StaticContext StaticContext_new()
         {
-            return new StaticContext(TokenizerStaticContext_new(), new Dictionary<string, AbstractEntity>(), SpecialActionUtil_new());
+            return new StaticContext(TokenizerStaticContext_new(), new Dictionary<string, AbstractEntity>(), SpecialActionUtil_new(), StringSet_fromArray(PST_StringSplit("public static", " ")));
         }
 
         public static StringSet StringSet_add(StringSet s, string item)

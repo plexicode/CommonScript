@@ -13,6 +13,7 @@
 
 @import("ByteStringBuilder.pst");
 @import("CompiledModule.pst");
+@import("CompilerContext.pst");
 @import("ExportUtil.pst");
 @import("FileContext.pst");
 @import("ImportParser.pst");

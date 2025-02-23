@@ -1,0 +1,175 @@
+struct CompilerContext {
+    StaticContext staticCtx;
+    string rootId;
+    Dictionary<string, List<string>> depIdsByModuleId;
+    Dictionary<string, List<FileContext>> filesByModuleId;
+    List<string> finalCompilationOrder;
+    Dictionary<string, bool> unfulfilledDependencies;
+    Dictionary<string, CompiledModule> compiledModulesById;
+    string extensionVersionId;
+    string flavorId;
+    List<string> extensionNames;
+}
+
+CompilerContext CompilerContext_new(string rootId, string flavorId, string extensionVersionId, Array<string> extensionNames) {
+
+    CompilerContext ctx = new CompilerContext(
+        StaticContext_new(),
+        rootId,
+        new Dictionary<string, List<string>>(), // depIdsByModuleId
+        new Dictionary<string, List<FileContext>>(), // filesByModuleId
+        null, // finalCompilationOrder
+        new Dictionary<string, bool>(), // unfulfilledDependencies
+        null, // compiledModulesById 
+        extensionVersionId,
+        flavorId,
+        new List<string>() // extensionNames
+    );
+
+    for (int i = 0; i < extensionNames.Size(); i += 1) {
+        ctx.extensionNames.Add(extensionNames[i]);
+    }
+
+    ctx.unfulfilledDependencies[rootId] = true;
+
+    Dictionary<string, string> builtinFiles = new Dictionary<string, string>();
+    builtinFiles["builtins.script"] = GetSourceForBuiltinModule("builtins");
+
+    PUBLIC_SupplyFilesForModule(ctx, "{BUILTIN}", builtinFiles, true, true);
+
+    return ctx;
+}
+
+
+void PUBLIC_SupplyFilesForModule(
+    object compObj,
+    string moduleId,
+    Dictionary<string, string> fileLookup,
+    bool isCoreBuiltin,
+    bool isBuiltInLib)
+{
+    int i = 0;
+    int j = 0;
+
+    CompilerContext compiler = (CompilerContext) compObj;
+
+    compiler.depIdsByModuleId[moduleId] = new List<string>();
+
+    List<FileContext> files = new List<FileContext>();
+    Dictionary<string, ImportStatement> imports = new Dictionary<string, ImportStatement>();
+    Array<string> fileNamesOrdered = Core.SortedCopyOfStringArray(fileLookup.Keys());
+    for (i = 0; i < fileNamesOrdered.Size(); i += 1) {
+        string path = fileNamesOrdered[i];
+        FileContext fileCtx = FileContext_new(compiler.staticCtx, path, fileLookup[path]);
+        fileCtx.isCoreBuiltin = isCoreBuiltin;
+        fileCtx.isBuiltInLib = isBuiltInLib;
+        files.Add(fileCtx);
+        fileCtx.imports = ImportParser_AdvanceThroughImports(fileCtx.tokens, isCoreBuiltin);
+        FileContext_initializeImportLookup(fileCtx);
+        for (j = 0; j < fileCtx.imports.Size(); j += 1) {
+            ImportStatement impStmnt = fileCtx.imports[j];
+            imports[impStmnt.flatName] = impStmnt;
+        }
+    }
+    compiler.filesByModuleId[moduleId] = files;
+
+    if (compiler.unfulfilledDependencies.Contains(moduleId)) {
+        compiler.unfulfilledDependencies.Remove(moduleId);
+    }
+
+    List<string> allDeps = new List<string>();
+    Array<string> importedIds = imports.Keys();
+    for (i = 0; i < importedIds.Size(); i += 1) allDeps.Add(importedIds[i]);
+
+    compiler.depIdsByModuleId[moduleId] = allDeps;
+    for (i = 0; i < allDeps.Size(); i += 1) {
+        string depId = allDeps[i];
+        if (!compiler.filesByModuleId.Contains(depId)) {
+            compiler.unfulfilledDependencies[depId] = true;
+        }
+    }
+}
+
+void PUBLIC_EnsureDependenciesFulfilled(object compObj) {
+    CompilerContext compiler = (CompilerContext) compObj;
+    if (compiler.unfulfilledDependencies.Size() > 0) {
+        // TODO: Is this user-facing?
+        fail("Not all dependencies are fulfilled."); 
+    }
+}
+
+string PUBLIC_GetNextRequiredModuleId(object compObj) {
+    CompilerContext compiler = (CompilerContext)compObj;
+    while (true) {
+        if (compiler.unfulfilledDependencies.Size() == 0) return null;
+
+        Array<string> unfulfilledDependencies = Core.SortedCopyOfStringArray(compiler.unfulfilledDependencies.Keys());
+        string nextKey = unfulfilledDependencies[0];
+
+        if (!IsBuiltInModule(nextKey))
+        {
+            return nextKey;
+        }
+
+        Dictionary<string, string> builtinFiles = new Dictionary<string, string>();
+        builtinFiles[nextKey + ".script"] = GetSourceForBuiltinModule(nextKey);
+
+        PUBLIC_SupplyFilesForModule(
+            compiler,
+            nextKey,
+            builtinFiles,
+            false,
+            true);
+    }
+}
+
+Array<string> CompilerContext_CalculateCompilationOrder(CompilerContext compiler) {
+    Dictionary<string, int> recurseState = new Dictionary<string, int>();
+    List<string> order = new List<string>();
+    List<string> queue = new List<string>();
+    queue.Add(compiler.rootId);
+
+    while (queue.Size() > 0) {
+        int last = queue.Size() - 1;
+        string currentId = queue[last];
+        queue.RemoveAt(last);
+        int currentRecurseState = 0;
+        if (recurseState.Contains(currentId)) currentRecurseState = recurseState[currentId];
+
+        if (currentRecurseState == 2) {
+            // It's already handled. Move on 
+        } else {
+            List<string> deps = compiler.depIdsByModuleId[currentId];
+            List<string> newDeps = new List<string>();
+
+
+            for (int i = 0; i < deps.Size(); i += 1) {
+                string depId = deps[i];
+                if (recurseState.Contains(depId)) {
+                    if (recurseState[depId] == 2) {
+                        // already added, just ignore it.
+                    } else if (recurseState[depId] == 1) {
+                        // in the process of adding. We have a dependency cycle!
+                        // TODO: this is user-facing
+                        fail("There is a cyclical dependency involving " + depId + " and " + currentId);
+                    }
+                } else {
+                    newDeps.Add(depId);
+                }
+            }
+
+            if (newDeps.Size() == 0) {
+                recurseState[currentId] = 2;
+                order.Add(currentId);
+            } else {
+                recurseState[currentId] = 1;
+                queue.Add(currentId);
+                for (i = 0; i < newDeps.Size(); i += 1) {
+                    queue.Add(newDeps[i]);
+                }
+            }
+        }
+    }
+
+    return Core.ListToArray(order);
+}
