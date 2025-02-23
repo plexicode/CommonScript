@@ -133,7 +133,7 @@ namespace CommonScript.Compiler
                 Token baseCtorParen = funcDef.baseData.firstToken; // TODO: this is even more wrong 
                 Expression baseCtorRef = FunctionWrapper.Expression_createBaseCtorReference(baseCtor);
                 Expression baseCtorInvoke = FunctionWrapper.Expression_createFunctionInvocation(baseCtorRef, baseCtorParen, ctorEnt.baseCtorArgValues);
-                Statement baseCtorStmnt = StatementUtil.createExpressionAsStatement(baseCtorInvoke);
+                Statement baseCtorStmnt = FunctionWrapper.Statement_createExpressionAsStatement(baseCtorInvoke);
                 baseCtorStmnt = StatementResolverUtil.StatementResolver_ResolveStatementFirstPass(resolver, baseCtorStmnt);
                 baseCtorInvocation.Add(baseCtorStmnt);
             }
@@ -153,7 +153,7 @@ namespace CommonScript.Compiler
                 (lastStatement.type != (int) StatementType.RETURN && lastStatement.type != (int) StatementType.THROW);
             if (autoReturnNeeded)
             {
-                flattened.Add(StatementUtil.createReturn(null, FunctionWrapper.Expression_createNullConstant(null)));
+                flattened.Add(FunctionWrapper.Statement_createReturn(null, FunctionWrapper.Expression_createNullConstant(null)));
             }
             funcDef.code = [.. flattened];
 
@@ -175,7 +175,7 @@ namespace CommonScript.Compiler
             }
             Expression target = FunctionWrapper.Expression_createDotField(root, null, fld.baseData.simpleName);
             Token equal = fld.opToken;
-            return StatementUtil.createAssignment(target, equal, fld.defaultValue);
+            return FunctionWrapper.Statement_createAssignment(target, equal, fld.defaultValue);
         }
 
         public static void EntityResolver_ResolveFunctionSecondPass(Resolver resolver, FunctionEntity funcDef)
@@ -197,7 +197,7 @@ namespace CommonScript.Compiler
             if (funcDef.code.Length == 0 || funcDef.code[funcDef.code.Length - 1].type != (int) StatementType.RETURN)
             {
                 List<Statement> newCode = new List<Statement>(funcDef.code);
-                newCode.Add(StatementUtil.createReturn(null, FunctionWrapper.Expression_createNullConstant(null)));
+                newCode.Add(FunctionWrapper.Statement_createReturn(null, FunctionWrapper.Expression_createNullConstant(null)));
                 funcDef.code = newCode.ToArray();
             }
             resolver.activeEntity = null;

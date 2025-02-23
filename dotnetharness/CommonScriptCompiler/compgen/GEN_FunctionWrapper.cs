@@ -2501,6 +2501,109 @@ namespace CommonScript.Compiler.Internal
             return new SpecialActionUtil(idByName, argcByName);
         }
 
+        public static Statement Statement_createAssignment(Expression targetExpr, Token assignOp, Expression valueExpr)
+        {
+            Statement assign = Statement_new(targetExpr.firstToken, 1);
+            assign.assignTarget = targetExpr;
+            assign.assignValue = valueExpr;
+            assign.assignOp = assignOp;
+            return assign;
+        }
+
+        public static Statement Statement_createBreakContinue(Token breakContinueToken)
+        {
+            int type = 3;
+            if (breakContinueToken.Value == "break")
+            {
+                type = 2;
+            }
+            return Statement_new(breakContinueToken, type);
+        }
+
+        public static Statement Statement_createDoWhile(Token doToken, Statement[] code, Token whileToken, Expression condition)
+        {
+            Statement doWhile = Statement_new(doToken, 4);
+            doWhile.condition = condition;
+            doWhile.code = code;
+            doWhile.assignOp = whileToken;
+            return doWhile;
+        }
+
+        public static Statement Statement_createExpressionAsStatement(Expression expr)
+        {
+            Statement wrapper = Statement_new(expr.firstToken, 5);
+            wrapper.expression = expr;
+            return wrapper;
+        }
+
+        public static Statement Statement_createForEachLoop(Token forToken, Token varName, Expression listExpr, Statement[] code)
+        {
+            Statement forEachLoop = Statement_new(forToken, 7);
+            forEachLoop.varToken = varName;
+            forEachLoop.expression = listExpr;
+            forEachLoop.code = code;
+            return forEachLoop;
+        }
+
+        public static Statement Statement_createForLoop(Token forToken, Statement[] init, Expression condition, Statement[] step, Statement[] code)
+        {
+            Statement forLoop = Statement_new(forToken, 6);
+            forLoop.condition = condition;
+            forLoop.forInit = init;
+            forLoop.forStep = step;
+            forLoop.code = code;
+            return forLoop;
+        }
+
+        public static Statement Statement_createIfStatement(Token ifToken, Expression condition, Statement[] ifCode, Statement[] elseCode)
+        {
+            Statement ifStatement = Statement_new(ifToken, 8);
+            ifStatement.condition = condition;
+            ifStatement.code = ifCode;
+            ifStatement.elseCode = elseCode;
+            return ifStatement;
+        }
+
+        public static Statement Statement_createReturn(Token returnToken, Expression expr)
+        {
+            Statement ret = Statement_new(returnToken, 9);
+            ret.expression = expr;
+            return ret;
+        }
+
+        public static Statement Statement_createSwitchStatement(Token switchToken, Expression condition, SwitchChunk[] chunks)
+        {
+            Statement swtStmnt = Statement_new(switchToken, 10);
+            swtStmnt.condition = condition;
+            swtStmnt.switchChunks = chunks;
+            return swtStmnt;
+        }
+
+        public static Statement Statement_createThrow(Token throwToken, Expression value)
+        {
+            Statement throwStmnt = Statement_new(throwToken, 11);
+            throwStmnt.expression = value;
+            return throwStmnt;
+        }
+
+        public static Statement Statement_createTry(Token tryToken, Statement[] tryCode, CatchChunk[] catches, Token finallyToken, Statement[] finallyCode)
+        {
+            Statement tryStmnt = Statement_new(tryToken, 12);
+            tryStmnt.code = tryCode;
+            tryStmnt.catchChunks = catches;
+            tryStmnt.finallyCode = finallyCode;
+            tryStmnt.finallyToken = finallyToken;
+            return tryStmnt;
+        }
+
+        public static Statement Statement_createWhileLoop(Token whileToken, Expression condition, Statement[] code)
+        {
+            Statement whileLoop = Statement_new(whileToken, 13);
+            whileLoop.condition = condition;
+            whileLoop.code = code;
+            return whileLoop;
+        }
+
         public static Statement Statement_new(Token firstToken, int type)
         {
             return new Statement(firstToken, type, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0);

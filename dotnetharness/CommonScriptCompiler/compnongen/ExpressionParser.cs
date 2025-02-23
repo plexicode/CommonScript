@@ -514,7 +514,7 @@ namespace CommonScript.Compiler
             {
                 Expression codeExpr = ParseExpression(tokens);
                 code = new Statement[] {
-                    StatementUtil.createReturn(arrow, codeExpr)
+                    FunctionWrapper.Statement_createReturn(arrow, codeExpr)
                 };
             }
             return FunctionWrapper.Expression_createLambda(firstToken, argTokens.ToArray(), argDefaultValues.ToArray(), arrow, code);

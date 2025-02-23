@@ -1,4 +1,3 @@
-
 enum StatementType {
     ASSIGNMENT = 1,
     BREAK = 2,
@@ -14,7 +13,6 @@ enum StatementType {
     TRY = 12,
     WHILE_LOOP = 13
 }
-
 
 struct Statement {
     Token firstToken;
@@ -45,16 +43,105 @@ struct Statement {
 
 Statement Statement_new(Token firstToken, int type) {
     return new Statement(
-        firstToken, 
+        firstToken,
         type,
 
-        null, null, 
+        null, null,
         null, null, null,
-        null, null, 
-        null, null, 
-        null, null, null, 
-        null, null, 
+        null, null,
+        null, null,
+        null, null, null,
+        null, null,
 
         0
-    ); 
+    );
+}
+
+Statement Statement_createAssignment(Expression targetExpr, Token assignOp, Expression valueExpr) {
+    Statement assign = Statement_new(targetExpr.firstToken, StatementType.ASSIGNMENT);
+    assign.assignTarget = targetExpr;
+    assign.assignValue = valueExpr;
+    assign.assignOp = assignOp;
+
+    return assign;
+}
+
+Statement Statement_createBreakContinue(Token breakContinueToken) {
+    int type = StatementType.CONTINUE;
+    if (breakContinueToken.Value == "break") type = StatementType.BREAK;
+    return Statement_new(breakContinueToken, type);
+}
+
+Statement Statement_createDoWhile(Token doToken, Array<Statement> code, Token whileToken, Expression condition) {
+    Statement doWhile = Statement_new(doToken, StatementType.DO_WHILE_LOOP);
+    doWhile.condition = condition;
+    doWhile.code = code;
+    doWhile.assignOp = whileToken; // probably not necessary.
+    return doWhile;
+}
+
+Statement Statement_createExpressionAsStatement(Expression expr) {
+    Statement wrapper = Statement_new(expr.firstToken, StatementType.EXPRESSION_AS_STATEMENT);
+    wrapper.expression = expr;
+    return wrapper;
+}
+
+Statement Statement_createForLoop(Token forToken, Array<Statement> init, Expression condition, Array<Statement> step, Array<Statement> code) {
+    Statement forLoop = Statement_new(forToken, StatementType.FOR_LOOP);
+    forLoop.condition = condition;
+    forLoop.forInit = init;
+    forLoop.forStep = step;
+    forLoop.code = code;
+    return forLoop;
+}
+
+Statement Statement_createIfStatement(Token ifToken, Expression condition, Array<Statement> ifCode, Array<Statement> elseCode) {
+    Statement ifStatement = Statement_new(ifToken, StatementType.IF_STATEMENT);
+    ifStatement.condition = condition;
+    ifStatement.code = ifCode;
+    ifStatement.elseCode = elseCode;
+    return ifStatement;
+}
+
+Statement Statement_createForEachLoop(Token forToken, Token varName, Expression listExpr, Array<Statement> code) {
+    Statement forEachLoop = Statement_new(forToken, StatementType.FOR_EACH_LOOP);
+    forEachLoop.varToken = varName;
+    forEachLoop.expression = listExpr;
+    forEachLoop.code = code;
+    return forEachLoop;
+}
+
+Statement Statement_createReturn(Token returnToken, Expression expr) {
+    Statement ret = Statement_new(returnToken, StatementType.RETURN);
+    ret.expression = expr;
+    return ret;
+}
+
+Statement Statement_createSwitchStatement(Token switchToken, Expression condition, Array<SwitchChunk> chunks) {
+    Statement swtStmnt = Statement_new(switchToken, StatementType.SWITCH_STATEMENT);
+    swtStmnt.condition = condition;
+    swtStmnt.switchChunks = chunks;
+    return swtStmnt;
+}
+
+Statement Statement_createThrow(Token throwToken, Expression value) {
+    Statement throwStmnt = Statement_new(throwToken, StatementType.THROW);
+    throwStmnt.expression = value;
+    return throwStmnt;
+}
+
+Statement Statement_createTry(Token tryToken, Array<Statement> tryCode, Array<CatchChunk> catches, Token finallyToken, Array<Statement> finallyCode) {
+    Statement tryStmnt = Statement_new(tryToken, StatementType.TRY);
+    tryStmnt.code = tryCode;
+    tryStmnt.catchChunks = catches;
+    tryStmnt.finallyCode = finallyCode;
+    tryStmnt.finallyToken = finallyToken;
+    return tryStmnt;
+}
+
+Statement Statement_createWhileLoop(Token whileToken, Expression condition, Array<Statement> code) {
+    Statement whileLoop = Statement_new(whileToken, StatementType.WHILE_LOOP);
+    whileLoop.condition = condition;
+    whileLoop.code = code;
+    return whileLoop;
 }

@@ -60,11 +60,11 @@ namespace CommonScript.Compiler
             if (assignOp != null)
             {
                 Expression assignValue = ExpressionParser.ParseExpression(tokens);
-                s = StatementUtil.createAssignment(expr, assignOp, assignValue);
+                s = FunctionWrapper.Statement_createAssignment(expr, assignOp, assignValue);
             }
             else
             {
-                s = StatementUtil.createExpressionAsStatement(expr);
+                s = FunctionWrapper.Statement_createExpressionAsStatement(expr);
             }
 
             if (!isForLoop)
@@ -129,7 +129,7 @@ namespace CommonScript.Compiler
             if (FunctionWrapper.Tokens_isNext(tokens, "continue")) expectedNextToken = "continue";
             Token token = FunctionWrapper.Tokens_popKeyword(tokens, expectedNextToken);
             FunctionWrapper.Tokens_popExpected(tokens, ";");
-            return StatementUtil.createBreakContinue(token);
+            return FunctionWrapper.Statement_createBreakContinue(token);
         }
 
         private static Statement ParseDoWhileLoop(TokenStream tokens)
@@ -142,7 +142,7 @@ namespace CommonScript.Compiler
             FunctionWrapper.Tokens_popExpected(tokens, ")");
             FunctionWrapper.Tokens_popExpected(tokens, ";");
 
-            return StatementUtil.createDoWhile(doToken, code, whileToken, condition);
+            return FunctionWrapper.Statement_createDoWhile(doToken, code, whileToken, condition);
         }
 
         private static Statement ParseAnyForLoop(TokenStream tokens)
@@ -174,7 +174,7 @@ namespace CommonScript.Compiler
             Expression listExpr = ExpressionParser.ParseExpression(tokens);
             FunctionWrapper.Tokens_popExpected(tokens, ")");
             Statement[] code = ParseCodeBlock(tokens, false);
-            return StatementUtil.createForEachLoop(forToken, varToken, listExpr, code);
+            return FunctionWrapper.Statement_createForEachLoop(forToken, varToken, listExpr, code);
         }
 
         private static Statement ParseTraditionalForLoop(TokenStream tokens)
@@ -212,7 +212,7 @@ namespace CommonScript.Compiler
 
             Statement[] code = ParseCodeBlock(tokens, false);
 
-            return StatementUtil.createForLoop(forToken, init.ToArray(), condition, step.ToArray(), code);
+            return FunctionWrapper.Statement_createForLoop(forToken, init.ToArray(), condition, step.ToArray(), code);
         }
 
         private static Statement ParseIfStatement(TokenStream tokens)
@@ -228,7 +228,7 @@ namespace CommonScript.Compiler
                 elseCode = ParseCodeBlock(tokens, false);
             }
 
-            return StatementUtil.createIfStatement(ifToken, condition, ifCode, elseCode);
+            return FunctionWrapper.Statement_createIfStatement(ifToken, condition, ifCode, elseCode);
         }
 
         private static Statement ParseReturn(TokenStream tokens)
@@ -244,7 +244,7 @@ namespace CommonScript.Compiler
                 expr = FunctionWrapper.Expression_createNullConstant(null);
             }
             FunctionWrapper.Tokens_popExpected(tokens, ";");
-            return StatementUtil.createReturn(retToken, expr);
+            return FunctionWrapper.Statement_createReturn(retToken, expr);
         }
 
         private static Statement ParseSwitch(TokenStream tokens)
@@ -294,7 +294,7 @@ namespace CommonScript.Compiler
                 }
             }
 
-            return StatementUtil.createSwitchStatement(switchToken, condition, chunks.ToArray());
+            return FunctionWrapper.Statement_createSwitchStatement(switchToken, condition, chunks.ToArray());
         }
 
         private static Statement ParseThrow(TokenStream tokens)
@@ -302,7 +302,7 @@ namespace CommonScript.Compiler
             Token throwToken = FunctionWrapper.Tokens_popKeyword(tokens, "throw");
             Expression value = ExpressionParser.ParseExpression(tokens);
             FunctionWrapper.Tokens_popExpected(tokens, ";");
-            return StatementUtil.createThrow(throwToken, value);
+            return FunctionWrapper.Statement_createThrow(throwToken, value);
         }
 
         private static Statement ParseTry(TokenStream tokens)
@@ -367,7 +367,7 @@ namespace CommonScript.Compiler
                 finallyCode = new Statement[0];
             }
 
-            return StatementUtil.createTry(tryToken, tryCode, catches.ToArray(), finallyToken, finallyCode);
+            return FunctionWrapper.Statement_createTry(tryToken, tryCode, catches.ToArray(), finallyToken, finallyCode);
         }
 
         private static Statement ParseWhileLoop(TokenStream tokens)
@@ -377,7 +377,7 @@ namespace CommonScript.Compiler
             Expression condition = ExpressionParser.ParseExpression(tokens);
             FunctionWrapper.Tokens_popExpected(tokens, ")");
             Statement[] code = ParseCodeBlock(tokens, false);
-            return StatementUtil.createWhileLoop(whileToken, condition, code);
+            return FunctionWrapper.Statement_createWhileLoop(whileToken, condition, code);
         }
     }
 }
