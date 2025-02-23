@@ -1,4 +1,6 @@
-Array<ClassEntity> SortClassesInDeterministicDependencyOrder(Array<ClassEntity> unorderedClasses) {
+// When set to true, considerBaseClasses will ensure the order of the output list 
+// will have parent classes before their child implementing classes.
+Array<ClassEntity> ClassSorter_SortClassesInDeterministicDependencyOrder(Array<ClassEntity> unorderedClasses, bool considerBaseClasses) {
     int i = 0;
 
     Dictionary<string, int> classDepthByFqName = new Dictionary<string, int>();
@@ -9,7 +11,8 @@ Array<ClassEntity> SortClassesInDeterministicDependencyOrder(Array<ClassEntity> 
 
     for (i = 0; i < unorderedClasses.Size(); i += 1) {
         cls = unorderedClasses[i];
-        int depth = ClassSorter_calcDepth(cls, classDepthByFqName);
+        int depth = 1;
+        if (considerBaseClasses) depth = ClassSorter_calcDepth(cls, classDepthByFqName);
         string key = PadIntegerToSize(depth, padSize) + ":" + cls.baseData.fqName;
         classByLexicalKey[key] = cls;
     }

@@ -83,12 +83,12 @@ Array<string> Resolver_DetermineConstAndEnumResolutionOrder(
     List<EnumEntity> enums) {
 
     int i = 0;
-    
+
     Dictionary<string, List<string>> referencesMadeByFqItem = new Dictionary<string, List<string>>();
 
     // You left off thinking about how to register references found in the expression resolver
     // out here and then using that to build up the references lookup.
-    // Then you were thinking about how this only pertains to the first pass, that really this 
+    // Then you were thinking about how this only pertains to the first pass, that really this
     // function should do both passes and be renamed to ResolveConstantsAndEnums()
 
     for (i = 0; i < constants.Size(); i += 1) {
@@ -102,10 +102,10 @@ Array<string> Resolver_DetermineConstAndEnumResolutionOrder(
     }
 
     for (i = 0; i < enums.Size(); i += 1) {
-        EnumEntity e = enums[i];   
-        string ns = ""; 
+        EnumEntity e = enums[i];
+        string ns = "";
         if (e.baseData.nestParent != null) ns = e.baseData.nestParent.fqName;
-        
+
         int memCount = e.memberNameTokens.Size();
 
         for (int j = 0; j < memCount; j++) {
@@ -283,19 +283,19 @@ AbstractEntity TryDoExactLookupForConstantEntity(Resolver resolver, FileContext 
     // e.g. namespace = Foo.Bar, reference = Baz
     // -> check Foo.Bar.Baz
     // -> check Foo.Baz
-    // no need to check just "Baz" as that was done by the previous check hence the > 0 instead of >= 0 loop condition. 
+    // no need to check just "Baz" as that was done by the previous check hence the > 0 instead of >= 0 loop condition.
     List<string> nsParts = StringArrayToList(fqNamespace.Split("."));
     while (nsParts.Size() > 0) {
         // this was originally string.Join(".", [..nsParts, .. dottedEntityName]) which seems wrong, so if it doesn't work, check this.
         // TODO: if it doesn't cause an error in the test suite, then make sure it's being covered.
-        string lookupName = nsParts.Join(".") + "." + dottedEntityName; 
+        string lookupName = nsParts.Join(".") + "." + dottedEntityName;
         if (resolver.flattenedEntitiesNoEnumParents.Contains(lookupName)) {
             return resolver.flattenedEntitiesNoEnumParents[lookupName];
         }
         nsParts.RemoveAt(nsParts.Size() - 1);
     }
 
-    // If we didn't find it, it means it doesn't exist in this module. So let's check the imported modules that 
+    // If we didn't find it, it means it doesn't exist in this module. So let's check the imported modules that
     // are scoped to a variable. This means the first segment in the reference is the import variable name.
     Array<string> entityNameSegments = dottedEntityName.Split(".");
     if (file.importsByVar.Contains(entityNameSegments[0])) {
@@ -333,4 +333,31 @@ AbstractEntity CompiledModuleEntityLookup(CompiledModule mod, string fqName) {
 
 void Resolver_ReportNewLambda(Resolver resolver, FunctionEntity lamb) {
     resolver.lambdas.Add(lamb);
+}
+
+bool Resolver_isValidRegisteredExtension(Resolver resolver, string extensionName) {
+    return StringSet_has(resolver.extensionNames, extensionName);
+}
+
+// For all undefined values of an enum, make it equal to the previous value + 1 by
+// injecting EnumName.MemberName + 1
+// If the first value is undefined, inject 1
+void AddImplicitIncrementingEnumValueDefinitions(List<EnumEntity> enums) {
+    for (int i = 0; i < enums.Size(); i++) {
+        EnumEntity enumEnt = enums[i];
+        for (int j = 0; j < enumEnt.memberNameTokens.Size(); j++) {
+            Token token = enumEnt.memberNameTokens[j];
+            if (enumEnt.memberValues[j] == null) {
+                if (j == 0) {
+                    enumEnt.memberValues[j] = Expression_createIntegerConstant(token, 1);
+                } else {
+                    enumEnt.memberValues[j] = Expression_createBinaryOp(
+                        BuildFakeDotChain(enumEnt.baseData.simpleName, enumEnt.memberNameTokens[j - 1].Value),
+                        createFakeTokenFromTemplate(token, "+", TokenType.PUNCTUATION),
+                        Expression_createIntegerConstant(null, 1)
+                    );
+                }
+            }
+        }
+    }
 }

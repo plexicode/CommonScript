@@ -79,6 +79,33 @@ namespace CommonScript.Compiler.Internal
             return new AbstractEntity(firstToken, type, specificData, null, null, null, null, false, null, null, -1);
         }
 
+        public static void AddImplicitIncrementingEnumValueDefinitions(System.Collections.Generic.List<EnumEntity> enums)
+        {
+            int i = 0;
+            while (i < enums.Count)
+            {
+                EnumEntity enumEnt = enums[i];
+                int j = 0;
+                while (j < enumEnt.memberNameTokens.Length)
+                {
+                    Token token = enumEnt.memberNameTokens[j];
+                    if (enumEnt.memberValues[j] == null)
+                    {
+                        if (j == 0)
+                        {
+                            enumEnt.memberValues[j] = Expression_createIntegerConstant(token, 1);
+                        }
+                        else
+                        {
+                            enumEnt.memberValues[j] = Expression_createBinaryOp(BuildFakeDotChain(enumEnt.baseData.simpleName, enumEnt.memberNameTokens[j - 1].Value), createFakeTokenFromTemplate(token, "+", 3), Expression_createIntegerConstant(null, 1));
+                        }
+                    }
+                    j++;
+                }
+                i++;
+            }
+        }
+
         public static void allocateStringAndTokenIds(CompilationBundle bundle)
         {
             int i = 0;
@@ -505,7 +532,7 @@ namespace CommonScript.Compiler.Internal
                 finalOrder.Add(enums[i].baseData);
                 i += 1;
             }
-            ClassEntity[] sortedClasses = SortClassesInDeterministicDependencyOrder(classes.ToArray());
+            ClassEntity[] sortedClasses = ClassSorter_SortClassesInDeterministicDependencyOrder(classes.ToArray(), true);
             i = 0;
             while (i < sortedClasses.Length)
             {
@@ -771,6 +798,37 @@ namespace CommonScript.Compiler.Internal
             int depth = ClassSorter_calcDepth(cls.baseClassEntity, depthByName) + 1;
             depthByName[fqName] = depth;
             return depth;
+        }
+
+        public static ClassEntity[] ClassSorter_SortClassesInDeterministicDependencyOrder(ClassEntity[] unorderedClasses, bool considerBaseClasses)
+        {
+            int i = 0;
+            System.Collections.Generic.Dictionary<string, int> classDepthByFqName = new Dictionary<string, int>();
+            System.Collections.Generic.Dictionary<string, ClassEntity> classByLexicalKey = new Dictionary<string, ClassEntity>();
+            ClassEntity cls = null;
+            int padSize = unorderedClasses.Length.ToString().Length + 1;
+            i = 0;
+            while (i < unorderedClasses.Length)
+            {
+                cls = unorderedClasses[i];
+                int depth = 1;
+                if (considerBaseClasses)
+                {
+                    depth = ClassSorter_calcDepth(cls, classDepthByFqName);
+                }
+                string key = string.Join("", new string[] { PadIntegerToSize(depth, padSize), ":", cls.baseData.fqName });
+                classByLexicalKey[key] = cls;
+                i += 1;
+            }
+            string[] keys = classByLexicalKey.Keys.ToArray().OrderBy<string, string>(_PST_GEN_arg => _PST_GEN_arg).ToArray();
+            ClassEntity[] output = new ClassEntity[keys.Length];
+            i = 0;
+            while (i < keys.Length)
+            {
+                output[i] = classByLexicalKey[keys[i]];
+                i += 1;
+            }
+            return output;
         }
 
         public static CompilationBundle CompilationBundle_new()
@@ -2740,6 +2798,11 @@ namespace CommonScript.Compiler.Internal
             return null;
         }
 
+        public static bool Resolver_isValidRegisteredExtension(Resolver resolver, string extensionName)
+        {
+            return StringSet_has(resolver.extensionNames, extensionName);
+        }
+
         public static Resolver Resolver_new(StaticContext staticCtx, System.Collections.Generic.Dictionary<string, AbstractEntity> rootEntities, System.Collections.Generic.List<string> extensionNames)
         {
             Resolver r = new Resolver(staticCtx, rootEntities, new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new List<FunctionEntity>(), null, null, null, 0, StringSet_fromList(extensionNames));
@@ -3620,33 +3683,6 @@ namespace CommonScript.Compiler.Internal
             }
             fail("not implemented");
             return null;
-        }
-
-        public static ClassEntity[] SortClassesInDeterministicDependencyOrder(ClassEntity[] unorderedClasses)
-        {
-            int i = 0;
-            System.Collections.Generic.Dictionary<string, int> classDepthByFqName = new Dictionary<string, int>();
-            System.Collections.Generic.Dictionary<string, ClassEntity> classByLexicalKey = new Dictionary<string, ClassEntity>();
-            ClassEntity cls = null;
-            int padSize = unorderedClasses.Length.ToString().Length + 1;
-            i = 0;
-            while (i < unorderedClasses.Length)
-            {
-                cls = unorderedClasses[i];
-                int depth = ClassSorter_calcDepth(cls, classDepthByFqName);
-                string key = string.Join("", new string[] { PadIntegerToSize(depth, padSize), ":", cls.baseData.fqName });
-                classByLexicalKey[key] = cls;
-                i += 1;
-            }
-            string[] keys = classByLexicalKey.Keys.ToArray().OrderBy<string, string>(_PST_GEN_arg => _PST_GEN_arg).ToArray();
-            ClassEntity[] output = new ClassEntity[keys.Length];
-            i = 0;
-            while (i < keys.Length)
-            {
-                output[i] = classByLexicalKey[keys[i]];
-                i += 1;
-            }
-            return output;
         }
 
         public static int SpecialActionUtil_GetSpecialActionArgc(SpecialActionUtil sau, string name)

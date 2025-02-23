@@ -7,11 +7,6 @@ namespace CommonScript.Compiler
 {
     internal static class ResolverUtil
     {
-        public static bool isValidRegisteredExtension(Resolver resolver, string extensionName)
-        {
-            return FunctionWrapper.StringSet_has(resolver.extensionNames, extensionName);
-        }
-
         public static void Resolve(Resolver resolver)
         {
             List<FunctionEntity> functions = new List<FunctionEntity>();
@@ -61,7 +56,7 @@ namespace CommonScript.Compiler
                 }
             }
 
-            ResolverUtil.AddImplicitIncrementingEnumValueDefinitions(enums);
+            FunctionWrapper.AddImplicitIncrementingEnumValueDefinitions(enums);
 
             string[] constAndEnumResolutionOrder = FunctionWrapper.Resolver_DetermineConstAndEnumResolutionOrder(resolver, constants, enums);
 
@@ -116,7 +111,10 @@ namespace CommonScript.Compiler
             Dictionary<string, AbstractEntity> flattenedEntities)
         {
             // TODO: add external module resolving as a separate feature.
-            ClassEntity[] deterministicOrder = classes.OrderBy(c => c.baseData.fqName).ToArray();
+
+            ClassEntity[] deterministicOrder = FunctionWrapper.ClassSorter_SortClassesInDeterministicDependencyOrder(
+                classes.ToArray(), false);
+            
             List<ClassEntity> finalOrder = new List<ClassEntity>();
             List<ClassEntity> baseClassRequired = new List<ClassEntity>();
             for (int i = 0; i < deterministicOrder.Length; i++)
@@ -205,7 +203,10 @@ namespace CommonScript.Compiler
                 }
 
                 order.Reverse();
-                finalOrder.AddRange(order);
+                for (int j = 0; j < order.Count; j++)
+                {
+                    finalOrder.Add(order[j]);
+                }
             }
 
             return finalOrder.ToArray();
@@ -260,36 +261,6 @@ namespace CommonScript.Compiler
                         constEnt.constValue = val;
                     }
                     resolver.activeEntity = null;
-                }
-            }
-        }
-
-        // For all undefined values of an enum, make it equal to the previous value + 1 by
-        // injecting EnumName.MemberName + 1
-        // If the first value is undefined, inject 1
-        private static void AddImplicitIncrementingEnumValueDefinitions(List<EnumEntity> enums)
-        {
-            for (int i = 0; i < enums.Count; i++)
-            {
-                EnumEntity enumEnt = enums[i];
-                for (int j = 0; j < enumEnt.memberNameTokens.Length; j++)
-                {
-                    Token token = enumEnt.memberNameTokens[j];
-                    if (enumEnt.memberValues[j] == null)
-                    {
-                        if (j == 0)
-                        {
-                            enumEnt.memberValues[j] = FunctionWrapper.Expression_createIntegerConstant(token, 1);
-                        }
-                        else
-                        {
-                            enumEnt.memberValues[j] = FunctionWrapper.Expression_createBinaryOp(
-                                FunctionWrapper.BuildFakeDotChain(enumEnt.baseData.simpleName, enumEnt.memberNameTokens[j - 1].Value),
-                                FunctionWrapper.createFakeTokenFromTemplate(token, "+", (int) TokenType.PUNCTUATION),
-                                FunctionWrapper.Expression_createIntegerConstant(null, 1)
-                            );
-                        }
-                    }
                 }
             }
         }

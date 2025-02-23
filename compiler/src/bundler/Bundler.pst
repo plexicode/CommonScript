@@ -109,7 +109,8 @@ CompilationBundle bundleCompilation(StaticContext staticCtx, string rootId, Arra
         finalOrder.Add(enums[i].baseData);
     }
 
-    Array<ClassEntity> sortedClasses = SortClassesInDeterministicDependencyOrder(Core.ListToArray(classes));
+    Array<ClassEntity> sortedClasses = ClassSorter_SortClassesInDeterministicDependencyOrder(
+        Core.ListToArray(classes), true);
 
     for (i = 0; i < sortedClasses.Size(); i += 1) {
         ClassEntity cls = sortedClasses[i];

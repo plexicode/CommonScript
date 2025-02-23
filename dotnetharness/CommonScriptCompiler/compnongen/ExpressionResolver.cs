@@ -608,7 +608,7 @@ namespace CommonScript.Compiler
                 if (name == "delay_invoke") argc = 2;
                 else if (name == "io_stdout") argc = 1;
                 else if (name == "sleep") argc = 1;
-                else if (ResolverUtil.isValidRegisteredExtension(resolver, expr.strVal)) {
+                else if (FunctionWrapper.Resolver_isValidRegisteredExtension(resolver, expr.strVal)) {
                     return expr;
                 } else {
                     FunctionWrapper.Errors_Throw(expr.firstToken, "Extension is not registered: " + expr.strVal);
