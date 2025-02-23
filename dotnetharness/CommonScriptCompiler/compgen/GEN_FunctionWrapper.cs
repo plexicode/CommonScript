@@ -2734,6 +2734,30 @@ namespace CommonScript.Compiler.Internal
             return Statement_createBreakContinue(token);
         }
 
+        public static Statement[] ParseCodeBlock(TokenStream tokens, bool requireCurlyBrace)
+        {
+            return ParseCodeBlockList(tokens, requireCurlyBrace).ToArray();
+        }
+
+        public static System.Collections.Generic.List<Statement> ParseCodeBlockList(TokenStream tokens, bool requireCurlyBrace)
+        {
+            bool curlyBraceNext = requireCurlyBrace || Tokens_isNext(tokens, "{");
+            System.Collections.Generic.List<Statement> output = new List<Statement>();
+            if (curlyBraceNext)
+            {
+                Tokens_popExpected(tokens, "{");
+                while (!Tokens_popIfPresent(tokens, "}"))
+                {
+                    output.Add(ParseStatement(tokens, false));
+                }
+            }
+            else
+            {
+                output.Add(ParseStatement(tokens, false));
+            }
+            return output;
+        }
+
         public static Expression ParseDictionaryDefinition(TokenStream tokens)
         {
             Token openDictionaryToken = Tokens_popExpected(tokens, "{");
@@ -2754,7 +2778,7 @@ namespace CommonScript.Compiler.Internal
         public static Statement ParseDoWhileLoop(TokenStream tokens)
         {
             Token doToken = Tokens_popKeyword(tokens, "do");
-            Statement[] code = tokens.parseCodeBlock(tokens, false);
+            Statement[] code = ParseCodeBlock(tokens, false);
             Token whileToken = Tokens_popKeyword(tokens, "while");
             Tokens_popExpected(tokens, "(");
             Expression condition = ParseExpression(tokens);
@@ -2806,7 +2830,7 @@ namespace CommonScript.Compiler.Internal
             Tokens_popExpected(tokens, ":");
             Expression listExpr = ParseExpression(tokens);
             Tokens_popExpected(tokens, ")");
-            Statement[] code = tokens.parseCodeBlock(tokens, false);
+            Statement[] code = ParseCodeBlock(tokens, false);
             return Statement_createForEachLoop(forToken, varToken, listExpr, code);
         }
 
@@ -2816,11 +2840,11 @@ namespace CommonScript.Compiler.Internal
             Tokens_popExpected(tokens, "(");
             Expression condition = ParseExpression(tokens);
             Tokens_popExpected(tokens, ")");
-            Statement[] ifCode = tokens.parseCodeBlock(tokens, false);
+            Statement[] ifCode = ParseCodeBlock(tokens, false);
             Statement[] elseCode = null;
             if (Tokens_popIfPresent(tokens, "else"))
             {
-                elseCode = tokens.parseCodeBlock(tokens, false);
+                elseCode = ParseCodeBlock(tokens, false);
             }
             else
             {
@@ -2883,7 +2907,7 @@ namespace CommonScript.Compiler.Internal
             Statement[] code = null;
             if (Tokens_isNext(tokens, "{"))
             {
-                code = tokens.parseCodeBlock(tokens, true);
+                code = ParseCodeBlock(tokens, true);
             }
             else
             {
@@ -2965,6 +2989,60 @@ namespace CommonScript.Compiler.Internal
             return Statement_createReturn(retToken, expr);
         }
 
+        public static Statement ParseStatement(TokenStream tokens, bool isForLoop)
+        {
+            Token nextToken = Tokens_peek(tokens);
+            if (!isForLoop && nextToken != null && nextToken.Type == 1)
+            {
+                switch (StatementParser_IdentifyKeywordType(nextToken.Value))
+                {
+                    case 1:
+                        return ParseBreakContinue(tokens);
+                    case 2:
+                        return ParseBreakContinue(tokens);
+                    case 3:
+                        return ParseDoWhileLoop(tokens);
+                    case 4:
+                        return ParseAnyForLoop(tokens);
+                    case 5:
+                        return ParseIfStatement(tokens);
+                    case 6:
+                        return ParseReturn(tokens);
+                    case 7:
+                        return ParseSwitch(tokens);
+                    case 8:
+                        return ParseThrow(tokens);
+                    case 9:
+                        return ParseTry(tokens);
+                    case 10:
+                        return ParseWhileLoop(tokens);
+                    case 11:
+                        fail("Not implemented");
+                        return null;
+                    default:
+                        fail("");
+                        break;
+                }
+            }
+            Expression expr = ParseExpression(tokens);
+            Token assignOp = TryPopAssignmentOp(tokens);
+            Statement s = null;
+            if (assignOp != null)
+            {
+                Expression assignValue = ParseExpression(tokens);
+                s = Statement_createAssignment(expr, assignOp, assignValue);
+            }
+            else
+            {
+                s = Statement_createExpressionAsStatement(expr);
+            }
+            if (!isForLoop)
+            {
+                Tokens_popExpected(tokens, ";");
+            }
+            return s;
+        }
+
         public static Statement ParseSwitch(TokenStream tokens)
         {
             Token switchToken = Tokens_popKeyword(tokens, "switch");
@@ -3003,7 +3081,7 @@ namespace CommonScript.Compiler.Internal
                 }
                 while (!Tokens_isNext(tokens, "case") && !Tokens_isNext(tokens, "default") && !Tokens_isNext(tokens, "}") && Tokens_hasMore(tokens))
                 {
-                    activeChunk.Code.Add(tokens.parseStatement(tokens, false));
+                    activeChunk.Code.Add(ParseStatement(tokens, false));
                 }
             }
             return Statement_createSwitchStatement(switchToken, condition, chunks.ToArray());
@@ -3040,10 +3118,10 @@ namespace CommonScript.Compiler.Internal
             System.Collections.Generic.List<Statement> step = new List<Statement>();
             if (!Tokens_isNext(tokens, ";"))
             {
-                init.Add(tokens.parseStatement(tokens, true));
+                init.Add(ParseStatement(tokens, true));
                 while (Tokens_popIfPresent(tokens, ","))
                 {
-                    init.Add(tokens.parseStatement(tokens, true));
+                    init.Add(ParseStatement(tokens, true));
                 }
             }
             Tokens_popExpected(tokens, ";");
@@ -3054,21 +3132,21 @@ namespace CommonScript.Compiler.Internal
             Tokens_popExpected(tokens, ";");
             if (!Tokens_isNext(tokens, ")"))
             {
-                step.Add(tokens.parseStatement(tokens, true));
+                step.Add(ParseStatement(tokens, true));
                 while (Tokens_popIfPresent(tokens, ","))
                 {
-                    step.Add(tokens.parseStatement(tokens, true));
+                    step.Add(ParseStatement(tokens, true));
                 }
             }
             Tokens_popExpected(tokens, ")");
-            Statement[] code = tokens.parseCodeBlock(tokens, false);
+            Statement[] code = ParseCodeBlock(tokens, false);
             return Statement_createForLoop(forToken, init.ToArray(), condition, step.ToArray(), code);
         }
 
         public static Statement ParseTry(TokenStream tokens)
         {
             Token tryToken = Tokens_popKeyword(tokens, "try");
-            Statement[] tryCode = tokens.parseCodeBlock(tokens, true);
+            Statement[] tryCode = ParseCodeBlock(tokens, true);
             System.Collections.Generic.List<CatchChunk> catches = new List<CatchChunk>();
             Token finallyToken = null;
             Statement[] finallyCode = null;
@@ -3109,13 +3187,13 @@ namespace CommonScript.Compiler.Internal
                     }
                     Tokens_popExpected(tokens, ")");
                 }
-                Statement[] catchCode = tokens.parseCodeBlock(tokens, true);
+                Statement[] catchCode = ParseCodeBlock(tokens, true);
                 catches.Add(CatchChunk_new(catchCode, classNamesRaw, exceptionVarToken));
             }
             if (Tokens_isNext(tokens, "finally"))
             {
                 finallyToken = Tokens_popKeyword(tokens, "finally");
-                finallyCode = tokens.parseCodeBlock(tokens, true);
+                finallyCode = ParseCodeBlock(tokens, true);
             }
             else
             {
@@ -3275,7 +3353,7 @@ namespace CommonScript.Compiler.Internal
             Tokens_popExpected(tokens, "(");
             Expression condition = ParseExpression(tokens);
             Tokens_popExpected(tokens, ")");
-            Statement[] code = tokens.parseCodeBlock(tokens, false);
+            Statement[] code = ParseCodeBlock(tokens, false);
             return Statement_createWhileLoop(whileToken, condition, code);
         }
 
@@ -5336,7 +5414,7 @@ namespace CommonScript.Compiler.Internal
 
         public static TokenStream TokenStream_new(string file, Token[] tokens)
         {
-            return new TokenStream(0, tokens.Length, tokens, file, null, null);
+            return new TokenStream(0, tokens.Length, tokens, file);
         }
 
         public static AbstractEntity TryDoExactLookupForConstantEntity(Resolver resolver, FileContext file, string fqNamespace, string dottedEntityName)

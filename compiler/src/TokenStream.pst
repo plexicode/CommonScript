@@ -3,18 +3,10 @@ struct TokenStream {
     int length;
     Array<Token> tokens;
     string file;
-
-    // HACK: temporarily adding these methods to TokenStream.
-    // This is the only object for which a reference is passed around.
-    // By doing this, the dependency cycle for migrating the parser is broken and
-    // migration can be done incrementally. Once completed, remove these hacks.
-
-    Func<Statement, TokenStream, bool> parseStatement;
-    Func<Array<Statement>, TokenStream, bool> parseCodeBlock;
 }
 
 TokenStream TokenStream_new(string file, Array<Token> tokens) {
-    return new TokenStream(0, tokens.Size(), tokens, file, null, null);
+    return new TokenStream(0, tokens.Size(), tokens, file);
 }
 
 Token Tokens_peekAhead(TokenStream tokens, int distance) {

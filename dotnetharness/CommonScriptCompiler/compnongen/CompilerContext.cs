@@ -96,8 +96,6 @@ namespace CommonScript.Compiler
             string namespacePrefix)
         {
             TokenStream tokens = file.tokens;
-            tokens.parseStatement = StatementParser.ParseStatement;
-            tokens.parseCodeBlock = StatementParser.ParseCodeBlock;
             bool keepChecking = FunctionWrapper.Tokens_hasMore(tokens);
 
             // note that casting can fail as a namespace

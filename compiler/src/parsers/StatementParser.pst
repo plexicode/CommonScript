@@ -1,4 +1,69 @@
 
+Statement ParseStatement(TokenStream tokens, bool isForLoop) {
+    Token nextToken = Tokens_peek(tokens);
+    if (!isForLoop && 
+        nextToken != null && 
+        nextToken.Type == TokenType.KEYWORD) {
+        switch (StatementParser_IdentifyKeywordType(nextToken.Value)) {
+            case StatementKeyword.BREAK:
+            case StatementKeyword.CONTINUE: 
+                return ParseBreakContinue(tokens);
+            
+            case StatementKeyword.DO: return ParseDoWhileLoop(tokens);
+            case StatementKeyword.FOR: return ParseAnyForLoop(tokens);
+            case StatementKeyword.IF: return ParseIfStatement(tokens);
+            case StatementKeyword.RETURN: return ParseReturn(tokens);
+            case StatementKeyword.SWITCH: return ParseSwitch(tokens);
+            case StatementKeyword.THROW: return ParseThrow(tokens);
+            case StatementKeyword.TRY: return ParseTry(tokens);
+            case StatementKeyword.WHILE: return ParseWhileLoop(tokens);
+            case StatementKeyword.YIELD:
+                fail("Not implemented");
+                return null;
+            
+            default:
+                fail(""); // should not happen.
+                break;
+        }
+    }
+
+    Expression expr = ParseExpression(tokens);
+    Token assignOp = TryPopAssignmentOp(tokens);
+    Statement s = null;
+    if (assignOp != null) {
+        Expression assignValue = ParseExpression(tokens);
+        s = Statement_createAssignment(expr, assignOp, assignValue);
+    } else {
+        s = Statement_createExpressionAsStatement(expr);
+    }
+
+    if (!isForLoop) {
+        Tokens_popExpected(tokens, ";");
+    }
+
+    return s;
+}
+
+Array<Statement> ParseCodeBlock(TokenStream tokens, bool requireCurlyBrace) {
+    return Core.ListToArray(ParseCodeBlockList(tokens, requireCurlyBrace));
+}
+
+List<Statement> ParseCodeBlockList(TokenStream tokens, bool requireCurlyBrace) {
+    bool curlyBraceNext = requireCurlyBrace || Tokens_isNext(tokens, OPEN_CURLY_BRACE);
+
+    List<Statement> output = new List<Statement>();
+    if (curlyBraceNext) {
+        Tokens_popExpected(tokens, OPEN_CURLY_BRACE); // will throw when required but not present.
+        while (!Tokens_popIfPresent(tokens, CLOSE_CURLY_BRACE)) {
+            output.Add(ParseStatement(tokens, false));
+        }
+    } else {
+        output.Add(ParseStatement(tokens, false));
+    }
+
+    return output;
+}
+
 Token TryPopAssignmentOp(TokenStream tokens) {
     string op = Tokens_peekValue(tokens);
     if (op == null) return null;
@@ -127,7 +192,7 @@ Statement ParseBreakContinue(TokenStream tokens) {
 
 Statement ParseDoWhileLoop(TokenStream tokens) {
     Token doToken = Tokens_popKeyword(tokens, "do");
-    Array<Statement> code = tokens.parseCodeBlock(tokens, false);
+    Array<Statement> code = ParseCodeBlock(tokens, false);
     Token whileToken = Tokens_popKeyword(tokens, "while");
     Tokens_popExpected(tokens, OPEN_PAREN);
     Expression condition = ParseExpression(tokens);
@@ -144,7 +209,7 @@ Statement ParseForEachLoop(TokenStream tokens) {
     Tokens_popExpected(tokens, ":");
     Expression listExpr = ParseExpression(tokens);
     Tokens_popExpected(tokens, CLOSE_PAREN);
-    Array<Statement> code = tokens.parseCodeBlock(tokens, false);
+    Array<Statement> code = ParseCodeBlock(tokens, false);
     return Statement_createForEachLoop(forToken, varToken, listExpr, code);
 }
 
@@ -153,10 +218,10 @@ Statement ParseIfStatement(TokenStream tokens) {
     Tokens_popExpected(tokens, OPEN_PAREN);
     Expression condition = ParseExpression(tokens);
     Tokens_popExpected(tokens, CLOSE_PAREN);
-    Array<Statement> ifCode = tokens.parseCodeBlock(tokens, false);
+    Array<Statement> ifCode = ParseCodeBlock(tokens, false);
     Array<Statement> elseCode = null;
     if (Tokens_popIfPresent(tokens, "else")) {
-        elseCode = tokens.parseCodeBlock(tokens, false);
+        elseCode = ParseCodeBlock(tokens, false);
     } else {
         elseCode = new Array<Statement>(0);
     }
@@ -213,7 +278,7 @@ Statement ParseSwitch(TokenStream tokens) {
             !Tokens_isNext(tokens, CLOSE_CURLY_BRACE) &&
             Tokens_hasMore(tokens))
         {
-            activeChunk.Code.Add(tokens.parseStatement(tokens, false));
+            activeChunk.Code.Add(ParseStatement(tokens, false));
         }
     }
 
@@ -234,9 +299,9 @@ Statement ParseTraditionalForLoop(TokenStream tokens) {
     Expression condition = null;
     List<Statement> step = new List<Statement>();
     if (!Tokens_isNext(tokens, ";")) {
-        init.Add(tokens.parseStatement(tokens, true));
+        init.Add(ParseStatement(tokens, true));
         while (Tokens_popIfPresent(tokens, ",")) {
-            init.Add(tokens.parseStatement(tokens, true));
+            init.Add(ParseStatement(tokens, true));
         }
     }
 
@@ -247,21 +312,21 @@ Statement ParseTraditionalForLoop(TokenStream tokens) {
     Tokens_popExpected(tokens, ";");
 
     if (!Tokens_isNext(tokens, CLOSE_PAREN)) {
-        step.Add(tokens.parseStatement(tokens, true));
+        step.Add(ParseStatement(tokens, true));
         while (Tokens_popIfPresent(tokens, ",")) {
-            step.Add(tokens.parseStatement(tokens, true));
+            step.Add(ParseStatement(tokens, true));
         }
     }
     Tokens_popExpected(tokens, CLOSE_PAREN);
 
-    Array<Statement> code = tokens.parseCodeBlock(tokens, false);
+    Array<Statement> code = ParseCodeBlock(tokens, false);
 
     return Statement_createForLoop(forToken, Core.ListToArray(init), condition, Core.ListToArray(step), code);
 }
 
 Statement ParseTry(TokenStream tokens) {
     Token tryToken = Tokens_popKeyword(tokens, "try");
-    Array<Statement> tryCode = tokens.parseCodeBlock(tokens, true);
+    Array<Statement> tryCode = ParseCodeBlock(tokens, true);
     List<CatchChunk> catches = new List<CatchChunk>();
     Token finallyToken = null;
     Array<Statement> finallyCode = null;
@@ -297,7 +362,7 @@ Statement ParseTry(TokenStream tokens) {
             Tokens_popExpected(tokens, CLOSE_PAREN);
         }
 
-        Array<Statement> catchCode = tokens.parseCodeBlock(tokens, true);
+        Array<Statement> catchCode = ParseCodeBlock(tokens, true);
         catches.Add(CatchChunk_new(
             catchCode,
             classNamesRaw,
@@ -306,7 +371,7 @@ Statement ParseTry(TokenStream tokens) {
 
     if (Tokens_isNext(tokens, "finally")) {
         finallyToken = Tokens_popKeyword(tokens, "finally");
-        finallyCode = tokens.parseCodeBlock(tokens, true);
+        finallyCode = ParseCodeBlock(tokens, true);
     } else {
         finallyCode = new Array<Statement>(0);
     }
@@ -319,6 +384,6 @@ Statement ParseWhileLoop(TokenStream tokens) {
     Tokens_popExpected(tokens, OPEN_PAREN);
     Expression condition = ParseExpression(tokens);
     Tokens_popExpected(tokens, CLOSE_PAREN);
-    Array<Statement> code = tokens.parseCodeBlock(tokens, false);
+    Array<Statement> code = ParseCodeBlock(tokens, false);
     return Statement_createWhileLoop(whileToken, condition, code);
 }

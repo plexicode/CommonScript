@@ -50,7 +50,7 @@ namespace CommonScript.Compiler
             List<Expression> argValues = new List<Expression>();
             ParseArgDefinitionList(tokens, args, argValues);
 
-            List<Statement> code = StatementParser.ParseCodeBlockList(tokens, true);
+            List<Statement> code = FunctionWrapper.ParseCodeBlockList(tokens, true);
 
             AbstractEntity entity = FunctionWrapper.FunctionEntity_BuildMethodOrStandalone(
                 functionKeyword, nameToken, args, argValues, code, isStatic, optionalParentClass).baseData;
@@ -79,7 +79,7 @@ namespace CommonScript.Compiler
 
             }
 
-            List<Statement> code = StatementParser.ParseCodeBlockList(tokens, true);
+            List<Statement> code = FunctionWrapper.ParseCodeBlockList(tokens, true);
 
             AbstractEntity ctor = FunctionWrapper.FunctionEntity_BuildConstructor(
                 ctorKeyword,

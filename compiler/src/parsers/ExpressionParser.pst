@@ -85,8 +85,7 @@ Expression ParseAtomicExpression(TokenStream tokens) {
                 List<Token> nameChain = new List<Token>();
                 nameChain.Add(Tokens_popName(tokens, "class name"));
 
-                while (Tokens_isNext(tokens, "."))
-                {
+                while (Tokens_isNext(tokens, ".")) {
                     nameChain.Add(Tokens_pop(tokens));
                     nameChain.Add(Tokens_popName(tokens, "class name"));
                 }
@@ -174,8 +173,7 @@ Expression ParseBitshift(TokenStream tokens) {
 
 Expression ParseBitwise(TokenStream tokens) {
     Expression root = ParseEquality(tokens);
-    if (Tokens_doesNextInclulde3(tokens, "&", "|", "^"))
-    {
+    if (Tokens_doesNextInclulde3(tokens, "&", "|", "^")) {
         List<Expression> expressions = new List<Expression>();
         expressions.Add(root);
         List<Token> ops = new List<Token>();
@@ -209,8 +207,7 @@ Expression ParseDictionaryDefinition(TokenStream tokens) {
     List<Expression> keys = new List<Expression>();
     List<Expression> values = new List<Expression>();
     bool nextAllowed = true;
-    while (nextAllowed && !Tokens_isNext(tokens, CLOSE_CURLY_BRACE))
-    {
+    while (nextAllowed && !Tokens_isNext(tokens, CLOSE_CURLY_BRACE)) {
         keys.Add(ParseExpression(tokens));
         Tokens_popExpected(tokens, ":");
         values.Add(ParseExpression(tokens));
@@ -232,8 +229,7 @@ Expression ParseEquality(TokenStream tokens) {
 
 Expression ParseExponent(TokenStream tokens) {
     Expression root = ParseUnaryPrefix(tokens);
-    if (Tokens_isNext(tokens, "**"))
-    {
+    if (Tokens_isNext(tokens, "**")) {
         List<Expression> expressions = new List<Expression>();
         expressions.Add(root);
         List<Token> ops = new List<Token>();
@@ -270,8 +266,7 @@ Expression ParseListDefinition(TokenStream tokens) {
     Token openListToken = Tokens_popExpected(tokens, OPEN_SQUARE_BRACKET);
     List<Expression> items = new List<Expression>();
     bool nextAllowed = true;
-    while (nextAllowed && !Tokens_isNext(tokens, CLOSE_SQUARE_BRACKET))
-    {
+    while (nextAllowed && !Tokens_isNext(tokens, CLOSE_SQUARE_BRACKET)) {
         items.Add(ParseExpression(tokens));
         nextAllowed = Tokens_popIfPresent(tokens, ",");
     }
@@ -302,7 +297,7 @@ Expression ParseLambda(TokenStream tokens) {
 
     Array<Statement> code = null;
     if (Tokens_isNext(tokens, OPEN_CURLY_BRACE)) {
-        code = tokens.parseCodeBlock(tokens, true);
+        code = ParseCodeBlock(tokens, true);
     } else {
         Expression codeExpr = ParseExpression(tokens);
         code = new Array<Statement>(1);
@@ -348,8 +343,7 @@ Expression ParseNullCoalesce(TokenStream tokens) {
 
 Expression ParseTernary(TokenStream tokens) {
     Expression root = ParseNullCoalesce(tokens);
-    if (Tokens_isNext(tokens, "?"))
-    {
+    if (Tokens_isNext(tokens, "?")) {
         Token qmark = Tokens_pop(tokens);
         Expression trueValue = ParseTernary(tokens);
         Tokens_popExpected(tokens, ":");
