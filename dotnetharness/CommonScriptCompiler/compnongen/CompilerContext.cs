@@ -23,7 +23,7 @@ namespace CommonScript.Compiler
             }
 
             CompiledModule[] modules = compiler.compiledModulesById.Values.ToArray();
-            CompilationBundle bundle = Bundler.bundleCompilation(compiler.staticCtx, compiler.rootId, modules);
+            CompilationBundle bundle = FunctionWrapper.bundleCompilation(compiler.staticCtx, compiler.rootId, modules);
 
             return FunctionWrapper.ExportUtil_exportBundle(compiler.flavorId, compiler.extensionVersionId, bundle);
         }

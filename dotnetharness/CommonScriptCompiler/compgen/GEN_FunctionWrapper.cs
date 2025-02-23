@@ -386,6 +386,156 @@ namespace CommonScript.Compiler.Internal
             return new BundleClassInfo(classId, parentId, name, ctorId, staticCtorId, methodsToId, newDirectMembersByNextOffsets, staticMethods, staticFields);
         }
 
+        public static CompilationBundle bundleCompilation(StaticContext staticCtx, string rootId, CompiledModule[] modules)
+        {
+            int i = 0;
+            int j = 0;
+            CompiledModule[] deterministicOrder = getDeterministOrderOfModules(modules);
+            CompilationBundle bundle = CompilationBundle_new();
+            System.Collections.Generic.List<FunctionEntity> userFunctions = new List<FunctionEntity>();
+            System.Collections.Generic.List<FunctionEntity> coreBuiltInFunctions = new List<FunctionEntity>();
+            System.Collections.Generic.List<EnumEntity> enums = new List<EnumEntity>();
+            System.Collections.Generic.List<ClassEntity> classes = new List<ClassEntity>();
+            System.Collections.Generic.List<FieldEntity> fields = new List<FieldEntity>();
+            System.Collections.Generic.List<FunctionEntity> lambdas = new List<FunctionEntity>();
+            FunctionEntity mainFunc = null;
+            i = 0;
+            while (i < deterministicOrder.Length)
+            {
+                CompiledModule m = deterministicOrder[i];
+                string[] deterministicKeyOrder = m.flattenedEntities.Keys.ToArray().OrderBy<string, string>(_PST_GEN_arg => _PST_GEN_arg).ToArray();
+                bool checkForMain = m.id == rootId;
+                System.Collections.Generic.List<AbstractEntity> orderedEntities = new List<AbstractEntity>();
+                j = 0;
+                while (j < deterministicKeyOrder.Length)
+                {
+                    orderedEntities.Add(m.flattenedEntities[deterministicKeyOrder[j]]);
+                    j += 1;
+                }
+                j = 0;
+                while (j < m.lambdaEntities.Count)
+                {
+                    orderedEntities.Add(m.lambdaEntities[j]);
+                    j += 1;
+                }
+                j = 0;
+                while (j < orderedEntities.Count)
+                {
+                    AbstractEntity tle = orderedEntities[j];
+                    switch (tle.type)
+                    {
+                        case 2:
+                            break;
+                        case 6:
+                            FunctionEntity func = (FunctionEntity)tle.specificData;
+                            if (tle.fileContext.isCoreBuiltin)
+                            {
+                                coreBuiltInFunctions.Add(func);
+                            }
+                            else
+                            {
+                                userFunctions.Add(func);
+                                if (checkForMain && tle.simpleName == "main")
+                                {
+                                    if (mainFunc != null)
+                                    {
+                                        Errors_Throw(tle.firstToken, "There are multiple functions named main in the root module.");
+                                    }
+                                    mainFunc = func;
+                                }
+                            }
+                            break;
+                        case 10:
+                            lambdas.Add((FunctionEntity)tle.specificData);
+                            break;
+                        case 5:
+                            fields.Add((FieldEntity)tle.specificData);
+                            break;
+                        case 4:
+                            enums.Add((EnumEntity)tle.specificData);
+                            break;
+                        case 1:
+                            classes.Add((ClassEntity)tle.specificData);
+                            break;
+                        case 3:
+                            userFunctions.Add((FunctionEntity)tle.specificData);
+                            break;
+                        case 7:
+                            break;
+                        default:
+                            fail("Not implemented");
+                            break;
+                    }
+                    j += 1;
+                }
+                i += 1;
+            }
+            System.Collections.Generic.List<AbstractEntity> finalOrder = new List<AbstractEntity>();
+            System.Collections.Generic.List<FunctionEntity> allFunctions = new List<FunctionEntity>();
+            i = 0;
+            while (i < coreBuiltInFunctions.Count)
+            {
+                allFunctions.Add(coreBuiltInFunctions[i]);
+                i += 1;
+            }
+            i = 0;
+            while (i < userFunctions.Count)
+            {
+                allFunctions.Add(userFunctions[i]);
+                i += 1;
+            }
+            i = 0;
+            while (i < allFunctions.Count)
+            {
+                AbstractEntity fn = allFunctions[i].baseData;
+                fn.serializationIndex = i + 1;
+                finalOrder.Add(fn);
+                i += 1;
+            }
+            i = 0;
+            while (i < enums.Count)
+            {
+                enums[i].baseData.serializationIndex = i + 1;
+                finalOrder.Add(enums[i].baseData);
+                i += 1;
+            }
+            ClassEntity[] sortedClasses = SortClassesInDeterministicDependencyOrder(classes.ToArray());
+            i = 0;
+            while (i < sortedClasses.Length)
+            {
+                ClassEntity cls = sortedClasses[i];
+                cls.baseData.serializationIndex = i + 1;
+                finalOrder.Add(cls.baseData);
+                i += 1;
+            }
+            i = 0;
+            while (i < lambdas.Count)
+            {
+                lambdas[i].baseData.serializationIndex = i + 1;
+                finalOrder.Add(lambdas[i].baseData);
+                i += 1;
+            }
+            i = 0;
+            while (i < finalOrder.Count)
+            {
+                AbstractEntity entity = finalOrder[i];
+                bundleEntity(staticCtx, entity, bundle);
+                i += 1;
+            }
+            allocateStringAndTokenIds(bundle);
+            if (mainFunc == null)
+            {
+                Errors_ThrowGeneralError("There is no main() function defined.");
+            }
+            if (mainFunc.argTokens.Length >= 2)
+            {
+                Errors_Throw(mainFunc.baseData.nameToken, "The main function can only take in at most one argument. Note that multiple CLI arguments are passed in to main(args) as a single list of strings.");
+            }
+            bundle.mainFunctionId = mainFunc.baseData.serializationIndex;
+            bundle.builtInCount = coreBuiltInFunctions.Count;
+            return bundle;
+        }
+
         public static void bundleEntity(StaticContext staticCtx, AbstractEntity entity, CompilationBundle bundle)
         {
             switch (entity.type)
