@@ -5,7 +5,7 @@ using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
-    internal class Bundler
+    internal static class Bundler
     {
         public static CompilationBundle bundleCompilation(StaticContext staticCtx, string rootId, CompiledModule[] modules)
         {

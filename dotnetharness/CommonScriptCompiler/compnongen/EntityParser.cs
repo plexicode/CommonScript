@@ -3,62 +3,54 @@ using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
-    internal class EntityParser
+    internal static class EntityParser
     {
-        private TokenStream tokens;
-        public ExpressionParser expressionParser;
-        public StatementParser statementParser;
-
-        public EntityParser(TokenStream tokens)
+        private static void ParseArgDefinitionList(TokenStream tokens, List<Token> tokensOut, List<Expression> defaultValuesOut)
         {
-            this.tokens = tokens;
-        }
-
-        private void ParseArgDefinitionList(List<Token> tokensOut, List<Expression> defaultValuesOut)
-        {
-            FunctionWrapper.Tokens_popExpected(this.tokens, "(");
-            while (!FunctionWrapper.Tokens_popIfPresent(this.tokens, ")"))
+            FunctionWrapper.Tokens_popExpected(tokens, "(");
+            while (!FunctionWrapper.Tokens_popIfPresent(tokens, ")"))
             {
-                if (tokensOut.Count > 0) FunctionWrapper.Tokens_popExpected(this.tokens, ",");
-                tokensOut.Add(FunctionWrapper.Tokens_popName(this.tokens, "argument name"));
+                if (tokensOut.Count > 0) FunctionWrapper.Tokens_popExpected(tokens, ",");
+                tokensOut.Add(FunctionWrapper.Tokens_popName(tokens, "argument name"));
                 Expression argValue = null;
-                if (FunctionWrapper.Tokens_popIfPresent(this.tokens, "="))
+                if (FunctionWrapper.Tokens_popIfPresent(tokens, "="))
                 {
-                    argValue = this.expressionParser.ParseExpression();
+                    argValue = ExpressionParser.ParseExpression(tokens);
                 }
                 defaultValuesOut.Add(argValue);
             }
         }
 
-        public AbstractEntity ParseField(Dictionary<string, Token> annotations)
+        public static AbstractEntity ParseField(TokenStream tokens, Dictionary<string, Token> annotations)
         {
-            Token fieldKeyword = FunctionWrapper.Tokens_popKeyword(this.tokens, "field");
-            Token nameToken = FunctionWrapper.Tokens_popName(this.tokens, "field name");
+            Token fieldKeyword = FunctionWrapper.Tokens_popKeyword(tokens, "field");
+            Token nameToken = FunctionWrapper.Tokens_popName(tokens, "field name");
             Expression defaultValue = null;
             Token equalToken = null;
-            if (FunctionWrapper.Tokens_isNext(this.tokens, "="))
+            if (FunctionWrapper.Tokens_isNext(tokens, "="))
             {
-                equalToken = FunctionWrapper.Tokens_pop(this.tokens);
-                defaultValue = this.expressionParser.ParseExpression();
+                equalToken = FunctionWrapper.Tokens_pop(tokens);
+                defaultValue = ExpressionParser.ParseExpression(tokens);
             }
-            FunctionWrapper.Tokens_popExpected(this.tokens, ";");
+            FunctionWrapper.Tokens_popExpected(tokens, ";");
             AbstractEntity entity = FunctionWrapper.FieldEntity_new(fieldKeyword, nameToken, equalToken, defaultValue).baseData;
             entity.annotations = annotations;
             return entity;
         }
 
-        public AbstractEntity ParseFunctionDefinition(
+        public static AbstractEntity ParseFunctionDefinition(
+            TokenStream tokens,
             Dictionary<string, Token> annotations,
             ClassEntity optionalParentClass)
         {
-            Token functionKeyword = FunctionWrapper.Tokens_popKeyword(this.tokens, "function");
-            Token nameToken = FunctionWrapper.Tokens_popName(this.tokens, "function name");
+            Token functionKeyword = FunctionWrapper.Tokens_popKeyword(tokens, "function");
+            Token nameToken = FunctionWrapper.Tokens_popName(tokens, "function name");
             bool isStatic = annotations.ContainsKey("@static");
             List<Token> args = new List<Token>();
             List<Expression> argValues = new List<Expression>();
-            this.ParseArgDefinitionList(args, argValues);
+            ParseArgDefinitionList(tokens, args, argValues);
 
-            Statement[] code = this.statementParser.ParseCodeBlock(true);
+            Statement[] code = StatementParser.ParseCodeBlock(tokens, true);
 
             AbstractEntity entity = FunctionWrapper.FunctionEntity_BuildMethodOrStandalone(
                 functionKeyword, nameToken, args, argValues, [..code], isStatic, optionalParentClass).baseData;
@@ -66,28 +58,28 @@ namespace CommonScript.Compiler
             return entity;
         }
 
-        public AbstractEntity ParseConstructor(Dictionary<string, Token> annotations)
+        public static AbstractEntity ParseConstructor(TokenStream tokens, Dictionary<string, Token> annotations)
         {
-            Token ctorKeyword = FunctionWrapper.Tokens_popKeyword(this.tokens, "constructor");
+            Token ctorKeyword = FunctionWrapper.Tokens_popKeyword(tokens, "constructor");
             List<Token> args = new List<Token>();
             List<Expression> argValues = new List<Expression>();
-            this.ParseArgDefinitionList(args, argValues);
+            ParseArgDefinitionList(tokens, args, argValues);
 
             Expression[] baseArgs = null;
-            if (FunctionWrapper.Tokens_popIfPresent(this.tokens, ":"))
+            if (FunctionWrapper.Tokens_popIfPresent(tokens, ":"))
             {
-                Token baseKeyword = FunctionWrapper.Tokens_popKeyword(this.tokens, "base");
+                Token baseKeyword = FunctionWrapper.Tokens_popKeyword(tokens, "base");
                 List<Expression> bargs = new List<Expression>();
-                FunctionWrapper.Tokens_popExpected(this.tokens, "(");
-                while (!FunctionWrapper.Tokens_popIfPresent(this.tokens, ")"))
+                FunctionWrapper.Tokens_popExpected(tokens, "(");
+                while (!FunctionWrapper.Tokens_popIfPresent(tokens, ")"))
                 {
-                    if (bargs.Count > 0) FunctionWrapper.Tokens_popExpected(this.tokens, ",");
-                    bargs.Add(this.expressionParser.ParseExpression());
+                    if (bargs.Count > 0) FunctionWrapper.Tokens_popExpected(tokens, ",");
+                    bargs.Add(ExpressionParser.ParseExpression(tokens));
                 }
                 baseArgs = bargs.ToArray();
             }
 
-            Statement[] code = this.statementParser.ParseCodeBlock(true);
+            Statement[] code = StatementParser.ParseCodeBlock(tokens, true);
 
             AbstractEntity ctor = FunctionWrapper.FunctionEntity_BuildConstructor(
                 ctorKeyword,
@@ -101,38 +93,38 @@ namespace CommonScript.Compiler
             return ctor;
         }
 
-        public AbstractEntity ParseConst()
+        public static AbstractEntity ParseConst(TokenStream tokens)
         {
-            Token constKeyword = FunctionWrapper.Tokens_popKeyword(this.tokens, "const");
-            Token nameToken = FunctionWrapper.Tokens_popName(this.tokens, "constant name");
-            FunctionWrapper.Tokens_popExpected(this.tokens, "=");
-            Expression constValue = this.expressionParser.ParseExpression();
-            FunctionWrapper.Tokens_popExpected(this.tokens, ";");
+            Token constKeyword = FunctionWrapper.Tokens_popKeyword(tokens, "const");
+            Token nameToken = FunctionWrapper.Tokens_popName(tokens, "constant name");
+            FunctionWrapper.Tokens_popExpected(tokens, "=");
+            Expression constValue = ExpressionParser.ParseExpression(tokens);
+            FunctionWrapper.Tokens_popExpected(tokens, ";");
 
             return FunctionWrapper.ConstEntity_new(constKeyword, nameToken, constValue).baseData;
         }
 
-        public AbstractEntity ParseEnum()
+        public static AbstractEntity ParseEnum(TokenStream tokens)
         {
-            Token enumKeyword = FunctionWrapper.Tokens_popKeyword(this.tokens, "enum");
-            Token nameToken = FunctionWrapper.Tokens_popName(this.tokens, "enum name");
-            FunctionWrapper.Tokens_popExpected(this.tokens, "{");
+            Token enumKeyword = FunctionWrapper.Tokens_popKeyword(tokens, "enum");
+            Token nameToken = FunctionWrapper.Tokens_popName(tokens, "enum name");
+            FunctionWrapper.Tokens_popExpected(tokens, "{");
             bool nextAllowed = true;
             List<Token> names = new List<Token>();
             List<Expression> values = new List<Expression>();
-            while (nextAllowed && !FunctionWrapper.Tokens_isNext(this.tokens, "}"))
+            while (nextAllowed && !FunctionWrapper.Tokens_isNext(tokens, "}"))
             {
-                names.Add(FunctionWrapper.Tokens_popName(this.tokens, "enum member name"));
+                names.Add(FunctionWrapper.Tokens_popName(tokens, "enum member name"));
                 Expression value = null;
-                if (FunctionWrapper.Tokens_popIfPresent(this.tokens, "="))
+                if (FunctionWrapper.Tokens_popIfPresent(tokens, "="))
                 {
-                    value = this.expressionParser.ParseExpression();
+                    value = ExpressionParser.ParseExpression(tokens);
                 }
                 values.Add(value);
-                nextAllowed = FunctionWrapper.Tokens_popIfPresent(this.tokens, ",");
+                nextAllowed = FunctionWrapper.Tokens_popIfPresent(tokens, ",");
             }
 
-            FunctionWrapper.Tokens_popExpected(this.tokens, "}");
+            FunctionWrapper.Tokens_popExpected(tokens, "}");
 
             return FunctionWrapper.EnumEntity_new(enumKeyword, nameToken, names.ToArray(), values.ToArray()).baseData;
         }

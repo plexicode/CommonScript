@@ -2,7 +2,7 @@
 
 namespace CommonScript.Compiler
 {
-    internal class StatementUtil
+    internal static class StatementUtil
     {
         public static Statement createAssignment(Expression targetExpr, Token assignOp, Expression valueExpr)
         {

@@ -4,7 +4,7 @@ using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
-    internal class ExpressionResolverUtil
+    internal static class ExpressionResolverUtil
     {
         public static Expression ExpressionResolver_ResolveExpressionFirstPass(Resolver resolver, Expression expr)
         {

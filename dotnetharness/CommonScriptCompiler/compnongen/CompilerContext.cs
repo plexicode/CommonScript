@@ -7,6 +7,8 @@ namespace CommonScript.Compiler
 {
     internal class CompilerContext
     {
+        private static StringSet VALID_ANNOTATIONS = FunctionWrapper.StringSet_fromArray("public static".Split(' '));
+
         public StaticContext staticCtx;
         public string rootId;
         public Dictionary<string, List<string>> depIdsByModuleId;
@@ -239,8 +241,6 @@ namespace CommonScript.Compiler
             return m;
         }
 
-        private static StringSet VALID_ANNOTATIONS = FunctionWrapper.StringSet_fromArray("public static".Split(' '));
-
         private static Dictionary<string, Token> ParseOutAnnotations(TokenStream tokens)
         {
             Dictionary<string, Token> output = new Dictionary<string, Token>();
@@ -271,16 +271,6 @@ namespace CommonScript.Compiler
             TokenStream tokens = file.tokens;
             bool keepChecking = FunctionWrapper.Tokens_hasMore(tokens);
 
-            EntityParser entityParser = new EntityParser(tokens);
-            StatementParser statementParser = new StatementParser(tokens);
-            ExpressionParser expressionParser = new ExpressionParser(tokens);
-            entityParser.expressionParser = expressionParser;
-            entityParser.statementParser = statementParser;
-            statementParser.expressionParser = expressionParser;
-            statementParser.entityParser = entityParser;
-            expressionParser.statementParser = statementParser;
-            expressionParser.entityParser = entityParser;
-
             // note that casting can fail as a namespace
             ClassEntity wrappingClass = nestParent == null ? null : (nestParent.specificData as ClassEntity);
 
@@ -294,7 +284,7 @@ namespace CommonScript.Compiler
                 switch (nextToken)
                 {
                     case "function":
-                        entity = entityParser.ParseFunctionDefinition(annotationTokens, wrappingClass);
+                        entity = EntityParser.ParseFunctionDefinition(tokens, annotationTokens, wrappingClass);
                         break;
 
                     case "namespace":
@@ -302,11 +292,11 @@ namespace CommonScript.Compiler
                         break;
 
                     case "const":
-                        entity = entityParser.ParseConst();
+                        entity = EntityParser.ParseConst(tokens);
                         break;
 
                     case "enum":
-                        entity = entityParser.ParseEnum();
+                        entity = EntityParser.ParseEnum(tokens);
                         break;
 
                     case "class":
@@ -314,11 +304,11 @@ namespace CommonScript.Compiler
                         break;
 
                     case "constructor":
-                        entity = entityParser.ParseConstructor(annotationTokens);
+                        entity = EntityParser.ParseConstructor(tokens, annotationTokens);
                         break;
 
                     case "field":
-                        entity = entityParser.ParseField(annotationTokens);
+                        entity = EntityParser.ParseField(tokens, annotationTokens);
                         break;
 
                     case "property":
