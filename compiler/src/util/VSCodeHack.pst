@@ -1,0 +1,7 @@
+// VSCode gets weird when open/close punctuation is used in syntax-highlighter-free languages.
+const string OPEN_PAREN = "("; // )
+const string CLOSE_PAREN = /* ( */ ")";
+const string OPEN_CURLY_BRACE = "{"; // }
+const string CLOSE_CURLY_BRACE = /* { */ "}";
+const string OPEN_SQUARE_BRACKET = "["; // ]
+const string CLOSE_SQUARE_BRACKET = /* [ */ "]";

@@ -1,3 +1,87 @@
+
+Expression FlattenBinaryOpChain(List<Expression> expressions, List<Token> ops) {
+    int i = 0;
+    string opType = ops[0].Value;
+    bool isShortCircuit = opType == "??" || opType == "&&" || opType == "||";
+    Expression acc = null;
+    int length = expressions.Size();
+    if (isShortCircuit) {
+        acc = Expression_createBinaryOp(expressions[length - 2], ops[length - 2], expressions[length - 1]);
+        for (i = length - 3; i >= 0; i -= 1) {
+            acc = Expression_createBinaryOp(expressions[i], ops[i], acc);
+        }
+    } else {
+        acc = Expression_createBinaryOp(expressions[0], ops[0], expressions[1]);
+
+        for (i = 2; i < length; i += 1) {
+            acc = Expression_createBinaryOp(acc, ops[i - 1], expressions[i]);
+        }
+    }
+
+    return acc;
+}
+
+Expression ParseDictionaryDefinition(TokenStream tokens) {
+    Token openDictionaryToken = Tokens_popExpected(tokens, OPEN_CURLY_BRACE);
+    List<Expression> keys = new List<Expression>();
+    List<Expression> values = new List<Expression>();
+    bool nextAllowed = true;
+    while (nextAllowed && !Tokens_isNext(tokens, CLOSE_CURLY_BRACE))
+    {
+        keys.Add(tokens.parseExpression(tokens));
+        Tokens_popExpected(tokens, ":");
+        values.Add(tokens.parseExpression(tokens));
+        nextAllowed = Tokens_popIfPresent(tokens, ",");
+    }
+    Tokens_popExpected(tokens, CLOSE_CURLY_BRACE);
+    return Expression_createDictionaryDefinition(openDictionaryToken, Core.ListToArray(keys), Core.ListToArray(values));
+}
+
+Expression ParseListDefinition(TokenStream tokens) {
+    Token openListToken = Tokens_popExpected(tokens, OPEN_SQUARE_BRACKET);
+    List<Expression> items = new List<Expression>();
+    bool nextAllowed = true;
+    while (nextAllowed && !Tokens_isNext(tokens, CLOSE_SQUARE_BRACKET))
+    {
+        items.Add(tokens.parseExpression(tokens));
+        nextAllowed = Tokens_popIfPresent(tokens, ",");
+    }
+    Tokens_popExpected(tokens, CLOSE_SQUARE_BRACKET);
+    return Expression_createListDefinition(openListToken, Core.ListToArray(items));
+}
+
+Expression ParseLambda(TokenStream tokens) {
+    Token firstToken = Tokens_peek(tokens);
+    List<Token> argTokens = new List<Token>();
+    List<Expression> argDefaultValues = new List<Expression>();
+    if (Tokens_popIfPresent(tokens, OPEN_PAREN)) {
+        while (!Tokens_popIfPresent(tokens, CLOSE_PAREN)) {
+            if (argTokens.Size() > 0) Tokens_popExpected(tokens, ",");
+            argTokens.Add(Tokens_popName(tokens, "argument name"));
+            Expression defaultVal = null;
+            if (Tokens_popIfPresent(tokens, "=")) {
+                defaultVal = tokens.parseExpression(tokens);
+            }
+            argDefaultValues.Add(defaultVal);
+        }
+    } else {
+        argTokens.Add(Tokens_popName(tokens, "argument name"));
+        argDefaultValues.Add(null);
+    }
+
+    Token arrow = Tokens_popExpected(tokens, "=>");
+
+    Array<Statement> code = null;
+    if (Tokens_isNext(tokens, OPEN_CURLY_BRACE)) {
+        code = tokens.parseCodeBlock(tokens, true);
+    } else {
+        Expression codeExpr = tokens.parseExpression(tokens);
+        code = new Array<Statement>(1);
+        code[0] = Statement_createReturn(arrow, codeExpr);
+    }
+    return Expression_createLambda(firstToken, Core.ListToArray(argTokens), Core.ListToArray(argDefaultValues), arrow, code);
+}
+
 int TryParseInteger(Token throwToken, string rawValue, bool isHex) {
     // TODO: this should actually be a long or big int to preserve accuracy end-to-end.
     int output = 0;

@@ -53,7 +53,7 @@ namespace CommonScript.Compiler
                     ops.Add(FunctionWrapper.Tokens_pop(tokens));
                     expressions.Add(ParseBitwise(tokens));
                 }
-                return FlattenBinaryOpChain(expressions, ops);
+                return FunctionWrapper.FlattenBinaryOpChain(expressions, ops);
             }
             return root;
         }
@@ -71,7 +71,7 @@ namespace CommonScript.Compiler
                     ops.Add(FunctionWrapper.Tokens_pop(tokens));
                     expressions.Add(ParseEquality(tokens));
                 }
-                return FlattenBinaryOpChain(expressions, ops);
+                return FunctionWrapper.FlattenBinaryOpChain(expressions, ops);
             }
             return root;
         }
@@ -112,7 +112,7 @@ namespace CommonScript.Compiler
                     ops.Add(FunctionWrapper.Tokens_pop(tokens));
                     expressions.Add(ParseAddition(tokens));
                 }
-                root = FlattenBinaryOpChain(expressions, ops);
+                root = FunctionWrapper.FlattenBinaryOpChain(expressions, ops);
             }
             return root;
         }
@@ -129,7 +129,7 @@ namespace CommonScript.Compiler
                     ops.Add(FunctionWrapper.Tokens_pop(tokens));
                     expressions.Add(ParseMultiplication(tokens));
                 }
-                root = FlattenBinaryOpChain(expressions, ops);
+                root = FunctionWrapper.FlattenBinaryOpChain(expressions, ops);
             }
             return root;
         }
@@ -146,7 +146,7 @@ namespace CommonScript.Compiler
                     ops.Add(FunctionWrapper.Tokens_pop(tokens));
                     expressions.Add(ParseExponent(tokens));
                 }
-                root = FlattenBinaryOpChain(expressions, ops);
+                root = FunctionWrapper.FlattenBinaryOpChain(expressions, ops);
             }
             return root;
         }
@@ -163,7 +163,7 @@ namespace CommonScript.Compiler
                     ops.Add(FunctionWrapper.Tokens_pop(tokens));
                     expressions.Add(ParseUnaryPrefix(tokens));
                 }
-                root = FlattenBinaryOpChain(expressions, ops);
+                root = FunctionWrapper.FlattenBinaryOpChain(expressions, ops);
             }
             return root;
         }
@@ -311,64 +311,6 @@ namespace CommonScript.Compiler
             return FunctionWrapper.Expression_createInlineIncrement(op, root, op, true);
         }
 
-        private static Expression FlattenBinaryOpChain(List<Expression> expressions, List<Token> ops)
-        {
-            string opType = ops[0].Value;
-            bool isShortCircuit = opType == "??" || opType == "&&" || opType == "||";
-            Expression acc;
-            int length = expressions.Count;
-            if (isShortCircuit)
-            {
-                acc = FunctionWrapper.Expression_createBinaryOp(expressions[length - 2], ops[length - 2], expressions[length - 1]);
-                for (int i = length - 3; i >= 0; i--)
-                {
-                    acc = FunctionWrapper.Expression_createBinaryOp(expressions[i], ops[i], acc);
-                }
-            }
-            else
-            {
-                acc = FunctionWrapper.Expression_createBinaryOp(expressions[0], ops[0], expressions[1]);
-
-                for (int i = 2; i < length; i++)
-                {
-                    acc = FunctionWrapper.Expression_createBinaryOp(acc, ops[i - 1], expressions[i]);
-                }
-            }
-
-            return acc;
-        }
-
-        private static Expression ParseListDefinition(TokenStream tokens)
-        {
-            Token openListToken = FunctionWrapper.Tokens_popExpected(tokens, "[");
-            List<Expression> items = new List<Expression>();
-            bool nextAllowed = true;
-            while (nextAllowed && !FunctionWrapper.Tokens_isNext(tokens, "]"))
-            {
-                items.Add(tokens.parseExpression(tokens));
-                nextAllowed = FunctionWrapper.Tokens_popIfPresent(tokens, ",");
-            }
-            FunctionWrapper.Tokens_popExpected(tokens, "]");
-            return FunctionWrapper.Expression_createListDefinition(openListToken, items.ToArray());
-        }
-
-        private static Expression ParseDictionaryDefinition(TokenStream tokens)
-        {
-            Token openDictionaryToken = FunctionWrapper.Tokens_popExpected(tokens, "{");
-            List<Expression> keys = new List<Expression>();
-            List<Expression> values = new List<Expression>();
-            bool nextAllowed = true;
-            while (nextAllowed && !FunctionWrapper.Tokens_isNext(tokens, "}"))
-            {
-                keys.Add(tokens.parseExpression(tokens));
-                FunctionWrapper.Tokens_popExpected(tokens, ":");
-                values.Add(tokens.parseExpression(tokens));
-                nextAllowed = FunctionWrapper.Tokens_popIfPresent(tokens, ",");
-            }
-            FunctionWrapper.Tokens_popExpected(tokens, "}");
-            return FunctionWrapper.Expression_createDictionaryDefinition(openDictionaryToken, keys.ToArray(), values.ToArray());
-        }
-
         private static Expression ParseAtomicExpression(TokenStream tokens)
         {
             Token nextToken = FunctionWrapper.Tokens_peek(tokens);
@@ -381,18 +323,18 @@ namespace CommonScript.Compiler
                     if (next == "(")
                     {
                         // () =>
-                        if (FunctionWrapper.Tokens_isSequenceNext3(tokens, "(", ")", "=>")) return ParseLambda(tokens);
+                        if (FunctionWrapper.Tokens_isSequenceNext3(tokens, "(", ")", "=>")) return FunctionWrapper.ParseLambda(tokens);
 
                         // (a, ...
                         if (FunctionWrapper.Tokens_isSequenceNext3(tokens, "(", null, ",") &&
-                            FunctionWrapper.Tokens_peekAhead(tokens, 1).Type == (int)TokenType.NAME) return ParseLambda(tokens);
+                            FunctionWrapper.Tokens_peekAhead(tokens, 1).Type == (int)TokenType.NAME) return FunctionWrapper.ParseLambda(tokens);
 
                         // (a = ...
                         if (FunctionWrapper.Tokens_isSequenceNext3(tokens, "(", null, "=") &&
-                            FunctionWrapper.Tokens_peekAhead(tokens, 1).Type == (int)TokenType.NAME) return ParseLambda(tokens);
+                            FunctionWrapper.Tokens_peekAhead(tokens, 1).Type == (int)TokenType.NAME) return FunctionWrapper.ParseLambda(tokens);
 
                         // (a) => 
-                        if (FunctionWrapper.Tokens_isSequenceNext4(tokens, "(", null, ")", "=>")) return ParseLambda(tokens);
+                        if (FunctionWrapper.Tokens_isSequenceNext4(tokens, "(", null, ")", "=>")) return FunctionWrapper.ParseLambda(tokens);
 
                         FunctionWrapper.Tokens_pop(tokens);
                         Expression expr = tokens.parseExpression(tokens);
@@ -400,8 +342,8 @@ namespace CommonScript.Compiler
                         return expr;
 
                     }
-                    if (next == "[") return ParseListDefinition(tokens);
-                    if (next == "{") return ParseDictionaryDefinition(tokens);
+                    if (next == "[") return FunctionWrapper.ParseListDefinition(tokens);
+                    if (next == "{") return FunctionWrapper.ParseDictionaryDefinition(tokens);
                     if (next == "$")
                     {
                         Token builtinPrefix = FunctionWrapper.Tokens_pop(tokens);
@@ -470,7 +412,7 @@ namespace CommonScript.Compiler
                     return FunctionWrapper.Expression_createStringConstant(FunctionWrapper.Tokens_pop(tokens), strVal);
 
                 case (int) TokenType.NAME:
-                    if (FunctionWrapper.Tokens_isSequenceNext2(tokens, null, "=>")) return ParseLambda(tokens);
+                    if (FunctionWrapper.Tokens_isSequenceNext2(tokens, null, "=>")) return FunctionWrapper.ParseLambda(tokens);
 
                     Token varName = FunctionWrapper.Tokens_popName(tokens, "variable name");
                     return FunctionWrapper.Expression_createVariable(varName, varName.Value);
@@ -478,48 +420,6 @@ namespace CommonScript.Compiler
 
             FunctionWrapper.Errors_Throw(nextToken, "Expected an expression but found '" + next + "' instead.");
             return null;
-        }
-
-        private static Expression ParseLambda(TokenStream tokens)
-        {
-            Token firstToken = FunctionWrapper.Tokens_peek(tokens);
-            List<Token> argTokens = new List<Token>();
-            List<Expression> argDefaultValues = new List<Expression>();
-            if (FunctionWrapper.Tokens_popIfPresent(tokens, "("))
-            {
-                while (!FunctionWrapper.Tokens_popIfPresent(tokens, ")"))
-                {
-                    if (argTokens.Count > 0) FunctionWrapper.Tokens_popExpected(tokens, ",");
-                    argTokens.Add(FunctionWrapper.Tokens_popName(tokens, "argument name"));
-                    Expression defaultVal = null;
-                    if (FunctionWrapper.Tokens_popIfPresent(tokens, "="))
-                    {
-                        defaultVal = tokens.parseExpression(tokens);
-                    }
-                    argDefaultValues.Add(defaultVal);
-                }
-            }
-            else
-            {
-                argTokens.Add(FunctionWrapper.Tokens_popName(tokens, "argument name"));
-                argDefaultValues.Add(null);
-            }
-
-            Token arrow = FunctionWrapper.Tokens_popExpected(tokens, "=>");
-
-            Statement[] code;
-            if (FunctionWrapper.Tokens_isNext(tokens, "{"))
-            {
-                code = tokens.parseCodeBlock(tokens, true);
-            }
-            else
-            {
-                Expression codeExpr = tokens.parseExpression(tokens);
-                code = new Statement[] {
-                    FunctionWrapper.Statement_createReturn(arrow, codeExpr)
-                };
-            }
-            return FunctionWrapper.Expression_createLambda(firstToken, argTokens.ToArray(), argDefaultValues.ToArray(), arrow, code);
         }
     }
 }

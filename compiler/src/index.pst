@@ -11,6 +11,7 @@
 @import("util/errors.pst");
 @import("util/unicode.pst");
 @import("util/util.pst");
+@import("util/VSCodeHack.pst");
 
 @import("ByteStringBuilder.pst");
 @import("CompiledModule.pst");

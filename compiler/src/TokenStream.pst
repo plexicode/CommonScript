@@ -1,17 +1,17 @@
 struct TokenStream {
-        int index;
-        int length;
-        Array<Token> tokens;
-        string file;
+    int index;
+    int length;
+    Array<Token> tokens;
+    string file;
 
-        // HACK: temporarily adding these methods to TokenStream. 
-        // This is the only object for which a reference is passed around. 
-        // By doing this, the dependency cycle for migrating the parser is broken and 
-        // migration can be done incrementally. Once completed, remove these hacks.
-        
-        Func<Expression, TokenStream> parseExpression;
-        Func<Statement, TokenStream, bool> parseStatement; 
-        Func<Array<Statement>, TokenStream, bool> parseCodeBlock;
+    // HACK: temporarily adding these methods to TokenStream.
+    // This is the only object for which a reference is passed around.
+    // By doing this, the dependency cycle for migrating the parser is broken and
+    // migration can be done incrementally. Once completed, remove these hacks.
+
+    Func<Expression, TokenStream> parseExpression;
+    Func<Statement, TokenStream, bool> parseStatement;
+    Func<Array<Statement>, TokenStream, bool> parseCodeBlock;
 }
 
 TokenStream TokenStream_new(string file, Array<Token> tokens) {

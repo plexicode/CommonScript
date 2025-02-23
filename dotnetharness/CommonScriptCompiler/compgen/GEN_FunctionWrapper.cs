@@ -1969,6 +1969,36 @@ namespace CommonScript.Compiler.Internal
             return output.ToArray();
         }
 
+        public static Expression FlattenBinaryOpChain(System.Collections.Generic.List<Expression> expressions, System.Collections.Generic.List<Token> ops)
+        {
+            int i = 0;
+            string opType = ops[0].Value;
+            bool isShortCircuit = opType == "??" || opType == "&&" || opType == "||";
+            Expression acc = null;
+            int length = expressions.Count;
+            if (isShortCircuit)
+            {
+                acc = Expression_createBinaryOp(expressions[length - 2], ops[length - 2], expressions[length - 1]);
+                i = length - 3;
+                while (i >= 0)
+                {
+                    acc = Expression_createBinaryOp(expressions[i], ops[i], acc);
+                    i -= 1;
+                }
+            }
+            else
+            {
+                acc = Expression_createBinaryOp(expressions[0], ops[0], expressions[1]);
+                i = 2;
+                while (i < length)
+                {
+                    acc = Expression_createBinaryOp(acc, ops[i - 1], expressions[i]);
+                    i += 1;
+                }
+            }
+            return acc;
+        }
+
         public static AbstractEntity[] FlattenEntities(StaticContext staticCtx, System.Collections.Generic.Dictionary<string, AbstractEntity> rootEntities)
         {
             System.Collections.Generic.List<AbstractEntity> output = new List<AbstractEntity>();
@@ -2503,6 +2533,79 @@ namespace CommonScript.Compiler.Internal
             Token token = Tokens_popKeyword(tokens, expectedNextToken);
             Tokens_popExpected(tokens, ";");
             return Statement_createBreakContinue(token);
+        }
+
+        public static Expression ParseDictionaryDefinition(TokenStream tokens)
+        {
+            Token openDictionaryToken = Tokens_popExpected(tokens, "{");
+            System.Collections.Generic.List<Expression> keys = new List<Expression>();
+            System.Collections.Generic.List<Expression> values = new List<Expression>();
+            bool nextAllowed = true;
+            while (nextAllowed && !Tokens_isNext(tokens, "}"))
+            {
+                keys.Add(tokens.parseExpression(tokens));
+                Tokens_popExpected(tokens, ":");
+                values.Add(tokens.parseExpression(tokens));
+                nextAllowed = Tokens_popIfPresent(tokens, ",");
+            }
+            Tokens_popExpected(tokens, "}");
+            return Expression_createDictionaryDefinition(openDictionaryToken, keys.ToArray(), values.ToArray());
+        }
+
+        public static Expression ParseLambda(TokenStream tokens)
+        {
+            Token firstToken = Tokens_peek(tokens);
+            System.Collections.Generic.List<Token> argTokens = new List<Token>();
+            System.Collections.Generic.List<Expression> argDefaultValues = new List<Expression>();
+            if (Tokens_popIfPresent(tokens, "("))
+            {
+                while (!Tokens_popIfPresent(tokens, ")"))
+                {
+                    if (argTokens.Count > 0)
+                    {
+                        Tokens_popExpected(tokens, ",");
+                    }
+                    argTokens.Add(Tokens_popName(tokens, "argument name"));
+                    Expression defaultVal = null;
+                    if (Tokens_popIfPresent(tokens, "="))
+                    {
+                        defaultVal = tokens.parseExpression(tokens);
+                    }
+                    argDefaultValues.Add(defaultVal);
+                }
+            }
+            else
+            {
+                argTokens.Add(Tokens_popName(tokens, "argument name"));
+                argDefaultValues.Add(null);
+            }
+            Token arrow = Tokens_popExpected(tokens, "=>");
+            Statement[] code = null;
+            if (Tokens_isNext(tokens, "{"))
+            {
+                code = tokens.parseCodeBlock(tokens, true);
+            }
+            else
+            {
+                Expression codeExpr = tokens.parseExpression(tokens);
+                code = new Statement[1];
+                code[0] = Statement_createReturn(arrow, codeExpr);
+            }
+            return Expression_createLambda(firstToken, argTokens.ToArray(), argDefaultValues.ToArray(), arrow, code);
+        }
+
+        public static Expression ParseListDefinition(TokenStream tokens)
+        {
+            Token openListToken = Tokens_popExpected(tokens, "[");
+            System.Collections.Generic.List<Expression> items = new List<Expression>();
+            bool nextAllowed = true;
+            while (nextAllowed && !Tokens_isNext(tokens, "]"))
+            {
+                items.Add(tokens.parseExpression(tokens));
+                nextAllowed = Tokens_popIfPresent(tokens, ",");
+            }
+            Tokens_popExpected(tokens, "]");
+            return Expression_createListDefinition(openListToken, items.ToArray());
         }
 
         public static void PUBLIC_EnsureDependenciesFulfilled(object compObj)
