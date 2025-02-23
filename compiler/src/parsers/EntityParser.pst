@@ -1,0 +1,110 @@
+
+void ParseArgDefinitionList(TokenStream tokens, List<Token> tokensOut, List<Expression> defaultValuesOut) {
+    Tokens_popExpected(tokens, OPEN_PAREN);
+    while (!Tokens_popIfPresent(tokens, CLOSE_PAREN)) {
+        if (tokensOut.Size() > 0) Tokens_popExpected(tokens, ",");
+        tokensOut.Add(Tokens_popName(tokens, "argument name"));
+        Expression argValue = null;
+        if (Tokens_popIfPresent(tokens, "=")) {
+            argValue = ParseExpression(tokens);
+        }
+        defaultValuesOut.Add(argValue);
+    }
+}
+
+AbstractEntity ParseConst(TokenStream tokens) {
+    Token constKeyword = Tokens_popKeyword(tokens, "const");
+    Token nameToken = Tokens_popName(tokens, "constant name");
+    Tokens_popExpected(tokens, "=");
+    Expression constValue = ParseExpression(tokens);
+    Tokens_popExpected(tokens, ";");
+
+    return ConstEntity_new(constKeyword, nameToken, constValue).baseData;
+}
+
+AbstractEntity ParseConstructor(TokenStream tokens, Dictionary<string, Token> annotations) {
+    Token ctorKeyword = Tokens_popKeyword(tokens, "constructor");
+    List<Token> args = new List<Token>();
+    List<Expression> argValues = new List<Expression>();
+    ParseArgDefinitionList(tokens, args, argValues);
+
+    List<Expression> baseArgs = null;
+    if (Tokens_popIfPresent(tokens, ":")) {
+        Token baseKeyword = Tokens_popKeyword(tokens, "base");
+        baseArgs = new List<Expression>();
+        Tokens_popExpected(tokens, "(");
+        while (!Tokens_popIfPresent(tokens, ")")) {
+            if (baseArgs.Size() > 0) Tokens_popExpected(tokens, ",");
+            baseArgs.Add(ParseExpression(tokens));
+        }
+    }
+
+    List<Statement> code = ParseCodeBlockList(tokens, true);
+
+    AbstractEntity ctor = FunctionEntity_BuildConstructor(
+        ctorKeyword,
+        args,
+        argValues,
+        baseArgs,
+        code,
+        annotations.Contains("static")).baseData;
+
+    ctor.annotations = annotations;
+    return ctor;
+}
+
+AbstractEntity ParseEnum(TokenStream tokens) {
+    Token enumKeyword = Tokens_popKeyword(tokens, "enum");
+    Token nameToken = Tokens_popName(tokens, "enum name");
+    Tokens_popExpected(tokens, OPEN_CURLY_BRACE);
+    bool nextAllowed = true;
+    List<Token> names = new List<Token>();
+    List<Expression> values = new List<Expression>();
+    while (nextAllowed && !Tokens_isNext(tokens, CLOSE_CURLY_BRACE)) {
+        names.Add(Tokens_popName(tokens, "enum member name"));
+        Expression value = null;
+        if (Tokens_popIfPresent(tokens, "=")) {
+            value = ParseExpression(tokens);
+        }
+        values.Add(value);
+        nextAllowed = Tokens_popIfPresent(tokens, ",");
+    }
+
+    Tokens_popExpected(tokens, CLOSE_CURLY_BRACE);
+
+    return EnumEntity_new(enumKeyword, nameToken, Core.ListToArray(names), Core.ListToArray(values)).baseData;
+}
+
+AbstractEntity ParseField(TokenStream tokens, Dictionary<string, Token> annotations) {
+    Token fieldKeyword = Tokens_popKeyword(tokens, "field");
+    Token nameToken = Tokens_popName(tokens, "field name");
+    Expression defaultValue = null;
+    Token equalToken = null;
+    if (Tokens_isNext(tokens, "=")) {
+        equalToken = Tokens_pop(tokens);
+        defaultValue = ParseExpression(tokens);
+    }
+    Tokens_popExpected(tokens, ";");
+    AbstractEntity entity = FieldEntity_new(fieldKeyword, nameToken, equalToken, defaultValue).baseData;
+    entity.annotations = annotations;
+    return entity;
+}
+
+AbstractEntity ParseFunctionDefinition(
+    TokenStream tokens,
+    Dictionary<string, Token> annotations,
+    ClassEntity optionalParentClass) {
+
+    Token functionKeyword = Tokens_popKeyword(tokens, "function");
+    Token nameToken = Tokens_popName(tokens, "function name");
+    bool isStatic = annotations.Contains("@static");
+    List<Token> args = new List<Token>();
+    List<Expression> argValues = new List<Expression>();
+    ParseArgDefinitionList(tokens, args, argValues);
+
+    List<Statement> code = ParseCodeBlockList(tokens, true);
+
+    AbstractEntity entity = FunctionEntity_BuildMethodOrStandalone(functionKeyword, nameToken, args, argValues, code, isStatic, optionalParentClass).baseData;
+    entity.annotations = annotations;
+    return entity;
+}

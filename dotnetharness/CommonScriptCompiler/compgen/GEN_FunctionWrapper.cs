@@ -2557,6 +2557,25 @@ namespace CommonScript.Compiler.Internal
             return ParseTraditionalForLoop(tokens);
         }
 
+        public static void ParseArgDefinitionList(TokenStream tokens, System.Collections.Generic.List<Token> tokensOut, System.Collections.Generic.List<Expression> defaultValuesOut)
+        {
+            Tokens_popExpected(tokens, "(");
+            while (!Tokens_popIfPresent(tokens, ")"))
+            {
+                if (tokensOut.Count > 0)
+                {
+                    Tokens_popExpected(tokens, ",");
+                }
+                tokensOut.Add(Tokens_popName(tokens, "argument name"));
+                Expression argValue = null;
+                if (Tokens_popIfPresent(tokens, "="))
+                {
+                    argValue = ParseExpression(tokens);
+                }
+                defaultValuesOut.Add(argValue);
+            }
+        }
+
         public static Expression ParseAtomicExpression(TokenStream tokens)
         {
             Token nextToken = Tokens_peek(tokens);
@@ -2758,6 +2777,43 @@ namespace CommonScript.Compiler.Internal
             return output;
         }
 
+        public static AbstractEntity ParseConst(TokenStream tokens)
+        {
+            Token constKeyword = Tokens_popKeyword(tokens, "const");
+            Token nameToken = Tokens_popName(tokens, "constant name");
+            Tokens_popExpected(tokens, "=");
+            Expression constValue = ParseExpression(tokens);
+            Tokens_popExpected(tokens, ";");
+            return ConstEntity_new(constKeyword, nameToken, constValue).baseData;
+        }
+
+        public static AbstractEntity ParseConstructor(TokenStream tokens, System.Collections.Generic.Dictionary<string, Token> annotations)
+        {
+            Token ctorKeyword = Tokens_popKeyword(tokens, "constructor");
+            System.Collections.Generic.List<Token> args = new List<Token>();
+            System.Collections.Generic.List<Expression> argValues = new List<Expression>();
+            ParseArgDefinitionList(tokens, args, argValues);
+            System.Collections.Generic.List<Expression> baseArgs = null;
+            if (Tokens_popIfPresent(tokens, ":"))
+            {
+                Token baseKeyword = Tokens_popKeyword(tokens, "base");
+                baseArgs = new List<Expression>();
+                Tokens_popExpected(tokens, "(");
+                while (!Tokens_popIfPresent(tokens, ")"))
+                {
+                    if (baseArgs.Count > 0)
+                    {
+                        Tokens_popExpected(tokens, ",");
+                    }
+                    baseArgs.Add(ParseExpression(tokens));
+                }
+            }
+            System.Collections.Generic.List<Statement> code = ParseCodeBlockList(tokens, true);
+            AbstractEntity ctor = FunctionEntity_BuildConstructor(ctorKeyword, args, argValues, baseArgs, code, annotations.ContainsKey("static")).baseData;
+            ctor.annotations = annotations;
+            return ctor;
+        }
+
         public static Expression ParseDictionaryDefinition(TokenStream tokens)
         {
             Token openDictionaryToken = Tokens_popExpected(tokens, "{");
@@ -2785,6 +2841,29 @@ namespace CommonScript.Compiler.Internal
             Tokens_popExpected(tokens, ")");
             Tokens_popExpected(tokens, ";");
             return Statement_createDoWhile(doToken, code, whileToken, condition);
+        }
+
+        public static AbstractEntity ParseEnum(TokenStream tokens)
+        {
+            Token enumKeyword = Tokens_popKeyword(tokens, "enum");
+            Token nameToken = Tokens_popName(tokens, "enum name");
+            Tokens_popExpected(tokens, "{");
+            bool nextAllowed = true;
+            System.Collections.Generic.List<Token> names = new List<Token>();
+            System.Collections.Generic.List<Expression> values = new List<Expression>();
+            while (nextAllowed && !Tokens_isNext(tokens, "}"))
+            {
+                names.Add(Tokens_popName(tokens, "enum member name"));
+                Expression value = null;
+                if (Tokens_popIfPresent(tokens, "="))
+                {
+                    value = ParseExpression(tokens);
+                }
+                values.Add(value);
+                nextAllowed = Tokens_popIfPresent(tokens, ",");
+            }
+            Tokens_popExpected(tokens, "}");
+            return EnumEntity_new(enumKeyword, nameToken, names.ToArray(), values.ToArray()).baseData;
         }
 
         public static Expression ParseEquality(TokenStream tokens)
@@ -2822,6 +2901,23 @@ namespace CommonScript.Compiler.Internal
             return ParseTernary(tokens);
         }
 
+        public static AbstractEntity ParseField(TokenStream tokens, System.Collections.Generic.Dictionary<string, Token> annotations)
+        {
+            Token fieldKeyword = Tokens_popKeyword(tokens, "field");
+            Token nameToken = Tokens_popName(tokens, "field name");
+            Expression defaultValue = null;
+            Token equalToken = null;
+            if (Tokens_isNext(tokens, "="))
+            {
+                equalToken = Tokens_pop(tokens);
+                defaultValue = ParseExpression(tokens);
+            }
+            Tokens_popExpected(tokens, ";");
+            AbstractEntity entity = FieldEntity_new(fieldKeyword, nameToken, equalToken, defaultValue).baseData;
+            entity.annotations = annotations;
+            return entity;
+        }
+
         public static Statement ParseForEachLoop(TokenStream tokens)
         {
             Token forToken = Tokens_popKeyword(tokens, "for");
@@ -2832,6 +2928,20 @@ namespace CommonScript.Compiler.Internal
             Tokens_popExpected(tokens, ")");
             Statement[] code = ParseCodeBlock(tokens, false);
             return Statement_createForEachLoop(forToken, varToken, listExpr, code);
+        }
+
+        public static AbstractEntity ParseFunctionDefinition(TokenStream tokens, System.Collections.Generic.Dictionary<string, Token> annotations, ClassEntity optionalParentClass)
+        {
+            Token functionKeyword = Tokens_popKeyword(tokens, "function");
+            Token nameToken = Tokens_popName(tokens, "function name");
+            bool isStatic = annotations.ContainsKey("@static");
+            System.Collections.Generic.List<Token> args = new List<Token>();
+            System.Collections.Generic.List<Expression> argValues = new List<Expression>();
+            ParseArgDefinitionList(tokens, args, argValues);
+            System.Collections.Generic.List<Statement> code = ParseCodeBlockList(tokens, true);
+            AbstractEntity entity = FunctionEntity_BuildMethodOrStandalone(functionKeyword, nameToken, args, argValues, code, isStatic, optionalParentClass).baseData;
+            entity.annotations = annotations;
+            return entity;
         }
 
         public static Statement ParseIfStatement(TokenStream tokens)

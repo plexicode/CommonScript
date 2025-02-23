@@ -111,7 +111,7 @@ namespace CommonScript.Compiler
                 switch (nextToken)
                 {
                     case "function":
-                        entity = EntityParser.ParseFunctionDefinition(tokens, annotationTokens, wrappingClass);
+                        entity = FunctionWrapper.ParseFunctionDefinition(tokens, annotationTokens, wrappingClass);
                         break;
 
                     case "namespace":
@@ -119,11 +119,11 @@ namespace CommonScript.Compiler
                         break;
 
                     case "const":
-                        entity = EntityParser.ParseConst(tokens);
+                        entity = FunctionWrapper.ParseConst(tokens);
                         break;
 
                     case "enum":
-                        entity = EntityParser.ParseEnum(tokens);
+                        entity = FunctionWrapper.ParseEnum(tokens);
                         break;
 
                     case "class":
@@ -131,11 +131,11 @@ namespace CommonScript.Compiler
                         break;
 
                     case "constructor":
-                        entity = EntityParser.ParseConstructor(tokens, annotationTokens);
+                        entity = FunctionWrapper.ParseConstructor(tokens, annotationTokens);
                         break;
 
                     case "field":
-                        entity = EntityParser.ParseField(tokens, annotationTokens);
+                        entity = FunctionWrapper.ParseField(tokens, annotationTokens);
                         break;
 
                     case "property":
