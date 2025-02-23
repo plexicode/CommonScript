@@ -179,7 +179,7 @@ namespace CommonScript.Compiler
             return order.ToArray();
         }
 
-        public static byte[] CompleteCompilation(object compObj)
+        public static int[] CompleteCompilation(object compObj)
         {
             CompilerContext compiler = GetCompiler(compObj);
 
@@ -196,7 +196,7 @@ namespace CommonScript.Compiler
             CompiledModule[] modules = compiler.compiledModulesById.Values.ToArray();
             CompilationBundle bundle = Bundler.bundleCompilation(compiler.staticCtx, compiler.rootId, modules);
 
-            return Exporter.exportBundle(compiler.flavorId, compiler.extensionVersionId, bundle);
+            return FunctionWrapper.ExportUtil_exportBundle(compiler.flavorId, compiler.extensionVersionId, bundle);
         }
 
         public static CompiledModule CompileModule(CompilerContext compiler, string moduleId)

@@ -72,6 +72,46 @@ namespace CommonScript.Compiler.Internal
             return new AbstractEntity(firstToken, type, specificData, null, null, null, null, false, null, null, -1);
         }
 
+        public static int[] bsbFlatten(ByteStringBuilder sbs)
+        {
+            System.Collections.Generic.List<ByteStringBuilder> q = new List<ByteStringBuilder>();
+            q.Add(sbs);
+            System.Collections.Generic.List<int> output = new List<int>();
+            while (q.Count > 0)
+            {
+                int lastIndex = q.Count - 1;
+                ByteStringBuilder current = q[lastIndex];
+                q.RemoveAt(lastIndex);
+                if (current.isLeaf)
+                {
+                    int[] currentBytes = current.bytes;
+                    int length = currentBytes.Length;
+                    int i = 0;
+                    while (i < length)
+                    {
+                        output.Add(currentBytes[i]);
+                        i += 1;
+                    }
+                }
+                else
+                {
+                    q.Add(current.right);
+                    q.Add(current.left);
+                }
+            }
+            return output.ToArray();
+        }
+
+        public static ByteStringBuilder bsbFrom4Bytes(int a, int b, int c, int d)
+        {
+            int[] arr = new int[4];
+            arr[0] = a;
+            arr[1] = b;
+            arr[2] = c;
+            arr[3] = d;
+            return bsbFromBytes(arr);
+        }
+
         public static ByteStringBuilder bsbFromBytes(int[] bytes)
         {
             return new ByteStringBuilder(true, bytes.Length, bytes, null, null);
@@ -511,6 +551,169 @@ namespace CommonScript.Compiler.Internal
                 optionalMsg = "";
             }
             Errors_Throw(token, ("***NOT IMPLEMENTED*** " + optionalMsg).Trim());
+        }
+
+        public static int[] ExportUtil_exportBundle(string flavorId, string extVersionId, CompilationBundle bundle)
+        {
+            int i = 0;
+            int j = 0;
+            ByteStringBuilder flavor = bsbFromLenString(flavorId);
+            ByteStringBuilder version = bsbFromLenString(extVersionId);
+            int commonScriptMajor = 0;
+            int commonScriptMinor = 1;
+            int commonScriptPatch = 0;
+            ByteStringBuilder header = bsbJoin4(bsbFromUtf8String("PXCS"), bsbFrom4Bytes(0, commonScriptMajor, commonScriptMinor, commonScriptPatch), flavor, version);
+            ByteStringBuilder metadata = bsbJoin3(bsbFromUtf8String("MTD"), bsbFromInt(bundle.mainFunctionId), bsbFromInt(bundle.builtInCount));
+            ByteStringBuilder tokenData = bsbJoin2(bsbFromUtf8String("TOK"), bsbFromInt(bundle.tokensById.Length - 1));
+            System.Collections.Generic.Dictionary<string, int> fileNameToOffset = new Dictionary<string, int>();
+            ByteStringBuilder tokenFileNames = null;
+            i = 1;
+            while (i < bundle.tokensById.Length)
+            {
+                Token tok = bundle.tokensById[i];
+                string filename = tok.File;
+                if (!fileNameToOffset.ContainsKey(filename))
+                {
+                    fileNameToOffset[filename] = fileNameToOffset.Count;
+                    tokenFileNames = bsbJoin2(tokenFileNames, bsbFromLenString(filename));
+                }
+                i += 1;
+            }
+            tokenData = bsbJoin3(tokenData, bsbFromInt(fileNameToOffset.Count), tokenFileNames);
+            i = 1;
+            while (i < bundle.tokensById.Length)
+            {
+                Token tok = bundle.tokensById[i];
+                string filename = tok.File;
+                int fileOffset = fileNameToOffset[filename];
+                tokenData = bsbJoin4(tokenData, bsbFromInt(fileOffset), bsbFromInt(tok.Line), bsbFromInt(tok.Col));
+                i += 1;
+            }
+            ByteStringBuilder stringData = bsbJoin2(bsbFromUtf8String("STR"), bsbFromInt(bundle.stringById.Length - 1));
+            i = 1;
+            while (i < bundle.stringById.Length)
+            {
+                string val = bundle.stringById[i];
+                stringData = bsbJoin2(stringData, bsbFromLenString(val));
+                i += 1;
+            }
+            ByteStringBuilder entityAcc = null;
+            i = 1;
+            while (i < bundle.functionById.Count)
+            {
+                BundleFunctionInfo fn = bundle.functionById[i];
+                entityAcc = bsbJoin2(entityAcc, bsbJoin5(bsbFromInt(fn.argcMin), bsbFromInt(fn.argcMax), bsbFromLenString(fn.name), bsbFromInt(fn.code.Length), ExportUtil_exportCode(fn.code)));
+                i += 1;
+            }
+            i = 1;
+            while (i < bundle.lambdaById.Count)
+            {
+                BundleFunctionInfo fn = bundle.lambdaById[i];
+                entityAcc = bsbJoin2(entityAcc, bsbJoin4(bsbFromInt(fn.argcMin), bsbFromInt(fn.argcMax), bsbFromInt(fn.code.Length), ExportUtil_exportCode(fn.code)));
+                i += 1;
+            }
+            i = 1;
+            while (i < bundle.enumById.Count)
+            {
+                BundleEnumInfo bei = bundle.enumById[i];
+                int memberCount = bei.names.Length;
+                entityAcc = bsbJoin2(entityAcc, bsbFromInt(memberCount));
+                j = 0;
+                while (j < memberCount)
+                {
+                    entityAcc = bsbJoin3(entityAcc, bsbFromLenString(bei.names[j]), bsbFromInt(bei.values[j]));
+                    j++;
+                }
+                i += 1;
+            }
+            i = 1;
+            while (i < bundle.classById.Count)
+            {
+                BundleClassInfo bci = bundle.classById[i];
+                ByteStringBuilder classInfo = bsbJoin8(bsbFromLenString(bci.name), bsbFromInt(bci.parentId), bsbFromInt(bci.ctorId), bsbFromInt(bci.staticCtorId), bsbFromInt(bci.newDirectMembersByNextOffsets.Length), bsbFromInt(bci.methodsToId.Count), bsbFromInt(bci.staticFields.Count), bsbFromInt(bci.staticMethods.Count));
+                j = 0;
+                while (j < bci.newDirectMembersByNextOffsets.Length)
+                {
+                    string memberName = bci.newDirectMembersByNextOffsets[j];
+                    bool isMethod = bci.methodsToId.ContainsKey(memberName);
+                    int info = 0;
+                    if (isMethod)
+                    {
+                        info = 1;
+                    }
+                    classInfo = bsbJoin3(classInfo, bsbFromLenString(memberName), bsbFromInt(info));
+                    j += 1;
+                }
+                ByteStringBuilder methodInfo = null;
+                string[] methodNames = bci.methodsToId.Keys.ToArray().OrderBy<string, string>(_PST_GEN_arg => _PST_GEN_arg).ToArray();
+                j = 0;
+                while (j < methodNames.Length)
+                {
+                    string methodName = methodNames[j];
+                    methodInfo = bsbJoin3(methodInfo, bsbFromLenString(methodName), bsbFromInt(bci.methodsToId[methodName]));
+                    j += 1;
+                }
+                ByteStringBuilder staticFields = null;
+                string[] fieldNames = bci.staticFields.ToArray().OrderBy<string, string>(_PST_GEN_arg => _PST_GEN_arg).ToArray();
+                j = 0;
+                while (j < fieldNames.Length)
+                {
+                    string staticField = fieldNames[j];
+                    staticFields = bsbJoin2(staticFields, bsbFromLenString(staticField));
+                    j += 1;
+                }
+                ByteStringBuilder staticMethods = null;
+                string[] staticMethodNames = bci.staticMethods.ToArray().OrderBy<string, string>(_PST_GEN_arg => _PST_GEN_arg).ToArray();
+                j = 0;
+                while (j < staticMethodNames.Length)
+                {
+                    string staticMethod = staticMethodNames[j];
+                    int funcId = bci.methodsToId[staticMethod];
+                    staticMethods = bsbJoin3(staticMethods, bsbFromLenString(staticMethod), bsbFromInt(funcId));
+                    j += 1;
+                }
+                entityAcc = bsbJoin5(entityAcc, classInfo, methodInfo, staticFields, staticMethods);
+                i += 1;
+            }
+            ByteStringBuilder entityHeader = bsbJoin5(bsbFromUtf8String("ENT"), bsbFromInt(bundle.functionById.Count - 1), bsbFromInt(bundle.enumById.Count - 1), bsbFromInt(bundle.classById.Count - 1), bsbFromInt(bundle.lambdaById.Count - 1));
+            ByteStringBuilder entityData = bsbJoin2(entityHeader, entityAcc);
+            ByteStringBuilder full = bsbJoin5(header, metadata, stringData, tokenData, entityData);
+            return bsbFlatten(full);
+        }
+
+        public static ByteStringBuilder ExportUtil_exportCode(ByteCodeRow[] rows)
+        {
+            ByteStringBuilder bsb = null;
+            int i = 0;
+            while (i < rows.Length)
+            {
+                ByteCodeRow row = rows[i];
+                int[] args = row.args;
+                int argsLen = args.Length;
+                int flags = argsLen * 4;
+                ByteStringBuilder bsbStringArg = null;
+                ByteStringBuilder bsbToken = null;
+                if (row.stringArg != null)
+                {
+                    flags += 1;
+                    bsbStringArg = bsbFromInt(row.stringId);
+                }
+                if (row.token != null)
+                {
+                    flags += 2;
+                    bsbToken = bsbFromInt(row.tokenId);
+                }
+                ByteStringBuilder bsbRow = bsbJoin4(bsbFromInt(row.opCode), bsbFromInt(flags), bsbStringArg, bsbToken);
+                int j = 0;
+                while (j < argsLen)
+                {
+                    bsbRow = bsbJoin2(bsbRow, bsbFromInt(args[j]));
+                    j += 1;
+                }
+                bsb = bsbJoin2(bsb, bsbRow);
+                i += 1;
+            }
+            return bsb;
         }
 
         public static Expression Expression_cloneWithNewToken(Token token, Expression expr)

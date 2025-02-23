@@ -18,6 +18,15 @@ ByteStringBuilder bsbFromUtf8String(string value) {
     return new ByteStringBuilder(true, bytes.Size(), bytes, null, null);
 }
 
+ByteStringBuilder bsbFrom4Bytes(int a, int b, int c, int d) {
+    Array<int> arr = new Array<int>(4);
+    arr[0] = a;
+    arr[1] = b;
+    arr[2] = c;
+    arr[3] = d;
+    return bsbFromBytes(arr);
+}
+
 ByteStringBuilder bsbFromBytes(Array<int> bytes) {
     return new ByteStringBuilder(true, bytes.Size(), bytes, null, null);
 }
@@ -137,4 +146,26 @@ ByteStringBuilder bsbFromInt(int value) {
     }
 
     return new ByteStringBuilder(true, buf.Size(), buf, null, null);
+}
+
+Array<int> bsbFlatten(ByteStringBuilder sbs) {
+    List<ByteStringBuilder> q = new List<ByteStringBuilder>();
+    q.Add(sbs);
+    List<int> output = new List<int>();
+    while (q.Size() > 0) {
+        int lastIndex = q.Size() - 1;
+        ByteStringBuilder current = q[lastIndex];
+        q.RemoveAt(lastIndex);
+        if (current.isLeaf) {
+            Array<int> currentBytes = current.bytes;
+            int length = currentBytes.Size();
+            for (int i = 0; i < length; i += 1) {
+                output.Add(currentBytes[i]);
+            }
+        } else {
+            q.Add(current.right);
+            q.Add(current.left);
+        }
+    }
+    return Core.ListToArray(output);
 }

@@ -1,0 +1,214 @@
+
+Array<int> ExportUtil_exportBundle(string flavorId, string extVersionId, CompilationBundle bundle) {
+
+    int i = 0;
+    int j = 0;
+
+    ByteStringBuilder flavor = bsbFromLenString(flavorId);
+    ByteStringBuilder version = bsbFromLenString(extVersionId);
+    int commonScriptMajor = 0;
+    int commonScriptMinor = 1;
+    int commonScriptPatch = 0;
+
+    ByteStringBuilder header = bsbJoin4(
+        bsbFromUtf8String("PXCS"),
+        bsbFrom4Bytes(
+            0,
+            commonScriptMajor,
+            commonScriptMinor,
+            commonScriptPatch),
+        flavor,
+        version);
+
+    // TODO: xor-down a sha256 into a short checksum of the remaining chunks
+
+    ByteStringBuilder metadata = bsbJoin3(
+        bsbFromUtf8String("MTD"),
+        bsbFromInt(bundle.mainFunctionId),
+        bsbFromInt(bundle.builtInCount)
+    );
+
+    ByteStringBuilder tokenData = bsbJoin2(
+        bsbFromUtf8String("TOK"),
+        bsbFromInt(bundle.tokensById.Size() - 1));
+    Dictionary<string, int> fileNameToOffset = new Dictionary<string, int>();
+    ByteStringBuilder tokenFileNames = null;
+    for (i = 1; i < bundle.tokensById.Size(); i += 1) {
+        Token tok = bundle.tokensById[i];
+        string filename = tok.File;
+        if (!fileNameToOffset.Contains(filename)) {
+            fileNameToOffset[filename] = fileNameToOffset.Size();
+            tokenFileNames = bsbJoin2(tokenFileNames, bsbFromLenString(filename));
+        }
+    }
+    tokenData = bsbJoin3(tokenData, bsbFromInt(fileNameToOffset.Size()), tokenFileNames);
+    for (i = 1; i < bundle.tokensById.Size(); i += 1) {
+        Token tok = bundle.tokensById[i];
+        string filename = tok.File;
+        int fileOffset = fileNameToOffset[filename];
+        tokenData = bsbJoin4(tokenData, bsbFromInt(fileOffset), bsbFromInt(tok.Line), bsbFromInt(tok.Col));
+    }
+
+    ByteStringBuilder stringData = bsbJoin2(
+        bsbFromUtf8String("STR"),
+        bsbFromInt(bundle.stringById.Size() - 1));
+    for (i = 1; i < bundle.stringById.Size(); i += 1) {
+        string val = bundle.stringById[i];
+        stringData = bsbJoin2(stringData, bsbFromLenString(val));
+    }
+
+    ByteStringBuilder entityAcc = null;
+
+    for (i = 1; i < bundle.functionById.Size(); i += 1) {
+        BundleFunctionInfo fn = bundle.functionById[i];
+        entityAcc = bsbJoin2(entityAcc, bsbJoin5(
+            bsbFromInt(fn.argcMin),
+            bsbFromInt(fn.argcMax),
+            bsbFromLenString(fn.name),
+            bsbFromInt(fn.code.Size()),
+            ExportUtil_exportCode(fn.code))
+        );
+    }
+
+    for (i = 1; i < bundle.lambdaById.Size(); i += 1) {
+        BundleFunctionInfo fn = bundle.lambdaById[i];
+        entityAcc = bsbJoin2(entityAcc, bsbJoin4(
+            bsbFromInt(fn.argcMin),
+            bsbFromInt(fn.argcMax),
+            bsbFromInt(fn.code.Size()),
+            ExportUtil_exportCode(fn.code))
+        );
+    }
+
+    for (i = 1; i < bundle.enumById.Size(); i += 1) {
+        BundleEnumInfo bei = bundle.enumById[i];
+        int memberCount = bei.names.Size();
+        entityAcc = bsbJoin2(entityAcc, bsbFromInt(memberCount));
+        for (j = 0; j < memberCount; j++) {
+            entityAcc = bsbJoin3(
+                entityAcc,
+                bsbFromLenString(bei.names[j]),
+                bsbFromInt(bei.values[j]));
+        }
+    }
+
+    for (i = 1; i < bundle.classById.Size(); i += 1) {
+        BundleClassInfo bci = bundle.classById[i];
+        ByteStringBuilder classInfo = bsbJoin8(
+            bsbFromLenString(bci.name),
+            bsbFromInt(bci.parentId),
+            bsbFromInt(bci.ctorId),
+            bsbFromInt(bci.staticCtorId),
+            bsbFromInt(bci.newDirectMembersByNextOffsets.Size()),
+            bsbFromInt(bci.methodsToId.Size()),
+            bsbFromInt(bci.staticFields.Size()),
+            bsbFromInt(bci.staticMethods.Size()));
+
+        for (j = 0; j < bci.newDirectMembersByNextOffsets.Size(); j += 1) {
+            // TODO: encode function ID here instead of below
+            // This also means that you'll have to indicate that a string does not contribute to the new direct member count
+
+            string memberName = bci.newDirectMembersByNextOffsets[j];
+            bool isMethod = bci.methodsToId.Contains(memberName);
+            int info = 0;
+            if (isMethod) {
+                info = 1;
+                // TODO: put the function ID here once you have a way to indicate overridden methods
+            } else {
+                // TODO: put the field initial value here. For now, just set all this in the constructor.
+            }
+            classInfo = bsbJoin3(
+                classInfo,
+                bsbFromLenString(memberName),
+                bsbFromInt(info));
+        }
+
+        ByteStringBuilder methodInfo = null;
+        Array<string> methodNames = Core.SortedCopyOfStringArray(bci.methodsToId.Keys());
+        for (j = 0; j < methodNames.Size(); j += 1) {
+            string methodName = methodNames[j];
+            methodInfo = bsbJoin3(
+                methodInfo,
+                bsbFromLenString(methodName),
+                bsbFromInt(bci.methodsToId[methodName]));
+        }
+
+        ByteStringBuilder staticFields = null;
+        Array<string> fieldNames = Core.SortedCopyOfStringArray(Core.ListToArray(bci.staticFields));
+        for (j = 0; j < fieldNames.Size(); j += 1) {
+            string staticField = fieldNames[j];
+            staticFields = bsbJoin2(
+                staticFields,
+                bsbFromLenString(staticField));
+        }
+
+        ByteStringBuilder staticMethods = null;
+        Array<string> staticMethodNames = Core.SortedCopyOfStringArray(Core.ListToArray(bci.staticMethods));
+        for (j = 0; j < staticMethodNames.Size(); j += 1) {
+            string staticMethod = staticMethodNames[j];
+            int funcId = bci.methodsToId[staticMethod];
+            staticMethods = bsbJoin3(
+                staticMethods,
+                bsbFromLenString(staticMethod),
+                bsbFromInt(funcId));
+        }
+
+        entityAcc = bsbJoin5(
+            entityAcc,
+            classInfo,
+            methodInfo,
+            staticFields,
+            staticMethods);
+    }
+
+    ByteStringBuilder entityHeader = bsbJoin5(
+        bsbFromUtf8String("ENT"),
+        bsbFromInt(bundle.functionById.Size() - 1),
+        bsbFromInt(bundle.enumById.Size() - 1),
+        bsbFromInt(bundle.classById.Size() - 1),
+        bsbFromInt(bundle.lambdaById.Size() - 1));
+
+    ByteStringBuilder entityData = bsbJoin2(entityHeader, entityAcc);
+
+    ByteStringBuilder full = bsbJoin5(
+        header, metadata, stringData, tokenData, entityData);
+
+    return bsbFlatten(full);
+}
+
+ByteStringBuilder ExportUtil_exportCode(Array<ByteCodeRow> rows) {
+    ByteStringBuilder bsb = null;
+    for (int i = 0; i < rows.Size(); i += 1) {
+        ByteCodeRow row = rows[i];
+        Array<int> args = row.args;
+        int argsLen = args.Size();
+
+        int flags = argsLen * 4;
+
+        ByteStringBuilder bsbStringArg = null;
+        ByteStringBuilder bsbToken = null;
+
+        if (row.stringArg != null) {
+            flags += 1;
+            bsbStringArg = bsbFromInt(row.stringId);
+        }
+
+        if (row.token != null) {
+            flags += 2;
+            bsbToken = bsbFromInt(row.tokenId);
+        }
+
+        ByteStringBuilder bsbRow = bsbJoin4(
+            bsbFromInt(row.opCode),
+            bsbFromInt(flags),
+            bsbStringArg,
+            bsbToken);
+
+        for (int j = 0; j < argsLen; j += 1) {
+            bsbRow = bsbJoin2(bsbRow, bsbFromInt(args[j]));
+        }
+        bsb = bsbJoin2(bsb, bsbRow);
+    }
+
+    return bsb;
+}
