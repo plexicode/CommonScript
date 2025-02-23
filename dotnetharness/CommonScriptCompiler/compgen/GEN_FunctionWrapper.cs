@@ -335,9 +335,94 @@ namespace CommonScript.Compiler.Internal
             return bsbJoin2(bsbJoin4(a, b, c, d), bsbJoin4(e, f, g, h));
         }
 
+        public static void bundleClass(ClassEntity classEntity, CompilationBundle bundle)
+        {
+            int baseClassId = 0;
+            if (classEntity.baseClassEntity != null)
+            {
+                baseClassId = classEntity.baseClassEntity.baseData.serializationIndex;
+            }
+            System.Collections.Generic.Dictionary<string, AbstractEntity> mems = classEntity.classMembers;
+            int staticCtorId = 0;
+            if (mems.ContainsKey("@cctor"))
+            {
+                staticCtorId = mems["@cctor"].serializationIndex;
+            }
+            BundleClassInfo bci = BundleClassInfo_new(classEntity.baseData.serializationIndex, baseClassId, classEntity.baseData.simpleName, mems["@ctor"].serializationIndex, staticCtorId, new Dictionary<string, int>(), classEntity.newDirectMemberOffsets, new List<string>(), new List<string>());
+            string[] classMemberNames = classEntity.classMembers.Keys.ToArray();
+            int i = 0;
+            while (i < classMemberNames.Length)
+            {
+                string memberName = classMemberNames[i];
+                AbstractEntity member = classEntity.classMembers[memberName];
+                switch (member.type)
+                {
+                    case 6:
+                        bci.methodsToId[memberName] = member.serializationIndex;
+                        if (member.isStatic)
+                        {
+                            bci.staticMethods.Add(memberName);
+                        }
+                        break;
+                    case 5:
+                        if (member.isStatic)
+                        {
+                            bci.staticFields.Add(memberName);
+                        }
+                        break;
+                    case 3:
+                        break;
+                    default:
+                        fail("Not implemented");
+                        break;
+                }
+                i += 1;
+            }
+            bundle.classById.Add(bci);
+        }
+
         public static BundleClassInfo BundleClassInfo_new(int classId, int parentId, string name, int ctorId, int staticCtorId, System.Collections.Generic.Dictionary<string, int> methodsToId, string[] newDirectMembersByNextOffsets, System.Collections.Generic.List<string> staticMethods, System.Collections.Generic.List<string> staticFields)
         {
             return new BundleClassInfo(classId, parentId, name, ctorId, staticCtorId, methodsToId, newDirectMembersByNextOffsets, staticMethods, staticFields);
+        }
+
+        public static void bundleEntity(StaticContext staticCtx, AbstractEntity entity, CompilationBundle bundle)
+        {
+            switch (entity.type)
+            {
+                case 2:
+                    break;
+                case 1:
+                    bundleClass((ClassEntity)entity.specificData, bundle);
+                    break;
+                case 4:
+                    bundleEnum((EnumEntity)entity.specificData, bundle);
+                    break;
+                case 5:
+                    fail("not implemented");
+                    break;
+                case 6:
+                    bundleFunction(staticCtx, (FunctionEntity)entity.specificData, bundle);
+                    break;
+                case 3:
+                    bundleFunction(staticCtx, (FunctionEntity)entity.specificData, bundle);
+                    break;
+                case 10:
+                    bundleFunction(staticCtx, (FunctionEntity)entity.specificData, bundle);
+                    break;
+                case 8:
+                    fail("not implemented");
+                    break;
+                default:
+                    fail("");
+                    break;
+            }
+        }
+
+        public static void bundleEnum(EnumEntity enumEntity, CompilationBundle bundle)
+        {
+            BundleEnumInfo bei = BundleEnumInfo_createFromEntity(enumEntity);
+            bundle.enumById.Add(bei);
         }
 
         public static BundleEnumInfo BundleEnumInfo_createFromEntity(EnumEntity e)
@@ -353,6 +438,81 @@ namespace CommonScript.Compiler.Internal
                 i += 1;
             }
             return new BundleEnumInfo(e.baseData.serializationIndex, names, values);
+        }
+
+        public static void bundleFunction(StaticContext staticCtx, FunctionEntity entity, CompilationBundle bundle)
+        {
+            int i = 0;
+            bool isLambda = entity.baseData.type == 10;
+            ByteCodeBuffer buffer = null;
+            int argc = entity.argTokens.Length;
+            int argcMin = 0;
+            i = 0;
+            while (i < argc)
+            {
+                Token argToken = entity.argTokens[i];
+                Expression argValue = entity.argDefaultValues[i];
+                ByteCodeBuffer argBuffer = null;
+                if (argValue == null)
+                {
+                    argcMin += 1;
+                    argBuffer = create1(33, argToken, null, i);
+                }
+                else
+                {
+                    ByteCodeBuffer defaultValBuffer = serializeExpression(staticCtx, argValue);
+                    argBuffer = create2(34, argToken, null, i, defaultValBuffer.length);
+                    argBuffer = join2(argBuffer, defaultValBuffer);
+                }
+                buffer = join3(buffer, argBuffer, create0(3, argToken, argToken.Value));
+                i += 1;
+            }
+            i = 0;
+            while (i < entity.code.Length)
+            {
+                Statement stmnt = entity.code[i];
+                buffer = join2(buffer, serializeStatement(staticCtx, stmnt));
+                i += 1;
+            }
+            ByteCodeRow[] flatByteCode = flatten(buffer);
+            System.Collections.Generic.List<ByteCodeRow> byteCodeFinal = new List<ByteCodeRow>();
+            i = 0;
+            while (i < flatByteCode.Length)
+            {
+                byteCodeFinal.Add(flatByteCode[i]);
+                i += 1;
+            }
+            i = 0;
+            while (i < byteCodeFinal.Count)
+            {
+                ByteCodeRow row = byteCodeFinal[i];
+                if (row.opCode <= 0)
+                {
+                    fail("");
+                }
+                if (row.tryCatchInfo != null)
+                {
+                    int[] tryInfoArgs = row.tryCatchInfo;
+                    tryInfoArgs[0] = i - byteCodeFinal.Count;
+                    ByteCodeRow tryInfoRow = ByteCodeRow_new(62, null, null, tryInfoArgs);
+                    byteCodeFinal.Add(tryInfoRow);
+                }
+                i += 1;
+            }
+            string fnName = null;
+            if (!isLambda)
+            {
+                fnName = entity.baseData.simpleName;
+            }
+            BundleFunctionInfo fd = BundleFunctionInfo_new(byteCodeFinal, argcMin, argc, fnName);
+            if (isLambda)
+            {
+                bundle.lambdaById.Add(fd);
+            }
+            else
+            {
+                bundle.functionById.Add(fd);
+            }
         }
 
         public static BundleFunctionInfo BundleFunctionInfo_new(System.Collections.Generic.List<ByteCodeRow> code, int argcMin, int argcMax, string name)

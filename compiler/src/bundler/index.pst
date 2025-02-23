@@ -3,6 +3,7 @@
 @import("bundler/ByteCodeUtil.pst");
 @import("bundler/ClassAndModuleSorter.pst");
 @import("bundler/CompilationBundle.pst");
+@import("bundler/EntityBundler.pst");
 @import("bundler/ExpressionSerializer.pst");
 @import("bundler/IdAllocator.pst");
 @import("bundler/SpecialActionSerializer.pst");
