@@ -15,7 +15,7 @@ namespace CommonScript.Compiler
                 Expression argValue = null;
                 if (FunctionWrapper.Tokens_popIfPresent(tokens, "="))
                 {
-                    argValue = ExpressionParser.ParseExpression(tokens);
+                    argValue = FunctionWrapper.ParseExpression(tokens);
                 }
                 defaultValuesOut.Add(argValue);
             }
@@ -30,7 +30,7 @@ namespace CommonScript.Compiler
             if (FunctionWrapper.Tokens_isNext(tokens, "="))
             {
                 equalToken = FunctionWrapper.Tokens_pop(tokens);
-                defaultValue = ExpressionParser.ParseExpression(tokens);
+                defaultValue = FunctionWrapper.ParseExpression(tokens);
             }
             FunctionWrapper.Tokens_popExpected(tokens, ";");
             AbstractEntity entity = FunctionWrapper.FieldEntity_new(fieldKeyword, nameToken, equalToken, defaultValue).baseData;
@@ -74,7 +74,7 @@ namespace CommonScript.Compiler
                 while (!FunctionWrapper.Tokens_popIfPresent(tokens, ")"))
                 {
                     if (baseArgs.Count > 0) FunctionWrapper.Tokens_popExpected(tokens, ",");
-                    baseArgs.Add(ExpressionParser.ParseExpression(tokens));
+                    baseArgs.Add(FunctionWrapper.ParseExpression(tokens));
                 }
 
             }
@@ -98,7 +98,7 @@ namespace CommonScript.Compiler
             Token constKeyword = FunctionWrapper.Tokens_popKeyword(tokens, "const");
             Token nameToken = FunctionWrapper.Tokens_popName(tokens, "constant name");
             FunctionWrapper.Tokens_popExpected(tokens, "=");
-            Expression constValue = ExpressionParser.ParseExpression(tokens);
+            Expression constValue = FunctionWrapper.ParseExpression(tokens);
             FunctionWrapper.Tokens_popExpected(tokens, ";");
 
             return FunctionWrapper.ConstEntity_new(constKeyword, nameToken, constValue).baseData;
@@ -118,7 +118,7 @@ namespace CommonScript.Compiler
                 Expression value = null;
                 if (FunctionWrapper.Tokens_popIfPresent(tokens, "="))
                 {
-                    value = ExpressionParser.ParseExpression(tokens);
+                    value = FunctionWrapper.ParseExpression(tokens);
                 }
                 values.Add(value);
                 nextAllowed = FunctionWrapper.Tokens_popIfPresent(tokens, ",");

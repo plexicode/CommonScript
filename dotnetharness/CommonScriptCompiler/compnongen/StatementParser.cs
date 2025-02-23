@@ -77,12 +77,12 @@ namespace CommonScript.Compiler
                 }
             }
 
-            Expression expr = tokens.parseExpression(tokens);
+            Expression expr = FunctionWrapper.ParseExpression(tokens);
             Token assignOp = FunctionWrapper.TryPopAssignmentOp(tokens);
             Statement s;
             if (assignOp != null)
             {
-                Expression assignValue = tokens.parseExpression(tokens);
+                Expression assignValue = FunctionWrapper.ParseExpression(tokens);
                 s = FunctionWrapper.Statement_createAssignment(expr, assignOp, assignValue);
             }
             else
@@ -104,7 +104,7 @@ namespace CommonScript.Compiler
             Statement[] code = ParseCodeBlock(tokens, false);
             Token whileToken = FunctionWrapper.Tokens_popKeyword(tokens, "while");
             FunctionWrapper.Tokens_popExpected(tokens, "(");
-            Expression condition = tokens.parseExpression(tokens);
+            Expression condition = FunctionWrapper.ParseExpression(tokens);
             FunctionWrapper.Tokens_popExpected(tokens, ")");
             FunctionWrapper.Tokens_popExpected(tokens, ";");
 
@@ -137,7 +137,7 @@ namespace CommonScript.Compiler
             FunctionWrapper.Tokens_popExpected(tokens, "(");
             Token varToken = FunctionWrapper.Tokens_popName(tokens, "for loop iteration variable name");
             FunctionWrapper.Tokens_popExpected(tokens, ":");
-            Expression listExpr = tokens.parseExpression(tokens);
+            Expression listExpr = FunctionWrapper.ParseExpression(tokens);
             FunctionWrapper.Tokens_popExpected(tokens, ")");
             Statement[] code = ParseCodeBlock(tokens, false);
             return FunctionWrapper.Statement_createForEachLoop(forToken, varToken, listExpr, code);
@@ -162,7 +162,7 @@ namespace CommonScript.Compiler
             FunctionWrapper.Tokens_popExpected(tokens, ";");
             if (!FunctionWrapper.Tokens_isNext(tokens, ";"))
             {
-                condition = tokens.parseExpression(tokens);
+                condition = FunctionWrapper.ParseExpression(tokens);
             }
             FunctionWrapper.Tokens_popExpected(tokens, ";");
 
@@ -185,7 +185,7 @@ namespace CommonScript.Compiler
         {
             Token ifToken = FunctionWrapper.Tokens_popKeyword(tokens, "if");
             FunctionWrapper.Tokens_popExpected(tokens, "(");
-            Expression condition = tokens.parseExpression(tokens);
+            Expression condition = FunctionWrapper.ParseExpression(tokens);
             FunctionWrapper.Tokens_popExpected(tokens, ")");
             Statement[] ifCode = ParseCodeBlock(tokens, false);
             Statement[] elseCode = [];
@@ -203,7 +203,7 @@ namespace CommonScript.Compiler
             Expression expr = null;
             if (!FunctionWrapper.Tokens_isNext(tokens, ";"))
             {
-                expr = tokens.parseExpression(tokens);
+                expr = FunctionWrapper.ParseExpression(tokens);
             }
             else
             {
@@ -217,7 +217,7 @@ namespace CommonScript.Compiler
         {
             Token switchToken = FunctionWrapper.Tokens_popKeyword(tokens, "switch");
             FunctionWrapper.Tokens_popExpected(tokens, "(");
-            Expression condition = tokens.parseExpression(tokens);
+            Expression condition = FunctionWrapper.ParseExpression(tokens);
             FunctionWrapper.Tokens_popExpected(tokens, ")");
             List<SwitchChunk> chunks = new List<SwitchChunk>();
             FunctionWrapper.Tokens_popExpected(tokens, "{");
@@ -237,7 +237,7 @@ namespace CommonScript.Compiler
                     if (FunctionWrapper.Tokens_isNext(tokens, "case"))
                     {
                         Token caseToken = FunctionWrapper.Tokens_popKeyword(tokens, "case");
-                        Expression caseValue = tokens.parseExpression(tokens);
+                        Expression caseValue = FunctionWrapper.ParseExpression(tokens);
                         activeChunk.CaseTokens.Add(caseToken);
                         activeChunk.Cases.Add(caseValue);
                     }
@@ -266,7 +266,7 @@ namespace CommonScript.Compiler
         private static Statement ParseThrow(TokenStream tokens)
         {
             Token throwToken = FunctionWrapper.Tokens_popKeyword(tokens, "throw");
-            Expression value = tokens.parseExpression(tokens);
+            Expression value = FunctionWrapper.ParseExpression(tokens);
             FunctionWrapper.Tokens_popExpected(tokens, ";");
             return FunctionWrapper.Statement_createThrow(throwToken, value);
         }
@@ -340,7 +340,7 @@ namespace CommonScript.Compiler
         {
             Token whileToken = FunctionWrapper.Tokens_popKeyword(tokens, "while");
             FunctionWrapper.Tokens_popExpected(tokens, "(");
-            Expression condition = tokens.parseExpression(tokens);
+            Expression condition = FunctionWrapper.ParseExpression(tokens);
             FunctionWrapper.Tokens_popExpected(tokens, ")");
             Statement[] code = ParseCodeBlock(tokens, false);
             return FunctionWrapper.Statement_createWhileLoop(whileToken, condition, code);

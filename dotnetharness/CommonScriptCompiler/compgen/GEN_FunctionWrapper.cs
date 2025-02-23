@@ -2523,6 +2523,189 @@ namespace CommonScript.Compiler.Internal
             return o;
         }
 
+        public static Expression ParseAddition(TokenStream tokens)
+        {
+            Expression root = ParseMultiplication(tokens);
+            if (Tokens_doesNextInclulde2(tokens, "+", "-"))
+            {
+                System.Collections.Generic.List<Expression> expressions = new List<Expression>();
+                expressions.Add(root);
+                System.Collections.Generic.List<Token> ops = new List<Token>();
+                while (Tokens_doesNextInclulde2(tokens, "+", "-"))
+                {
+                    ops.Add(Tokens_pop(tokens));
+                    expressions.Add(ParseMultiplication(tokens));
+                }
+                root = FlattenBinaryOpChain(expressions, ops);
+            }
+            return root;
+        }
+
+        public static Expression ParseAtomicExpression(TokenStream tokens)
+        {
+            Token nextToken = Tokens_peek(tokens);
+            if (nextToken == null)
+            {
+                Tokens_ensureMore(tokens);
+            }
+            string next = nextToken.Value;
+            switch (nextToken.Type)
+            {
+                case 3:
+                    if (next == "(")
+                    {
+                        if (Tokens_isSequenceNext3(tokens, "(", ")", "=>"))
+                        {
+                            return ParseLambda(tokens);
+                        }
+                        if (Tokens_isSequenceNext3(tokens, "(", null, ",") && Tokens_peekAhead(tokens, 1).Type == 2)
+                        {
+                            return ParseLambda(tokens);
+                        }
+                        if (Tokens_isSequenceNext3(tokens, "(", null, "=") && Tokens_peekAhead(tokens, 1).Type == 2)
+                        {
+                            return ParseLambda(tokens);
+                        }
+                        if (Tokens_isSequenceNext4(tokens, "(", null, ")", "=>"))
+                        {
+                            return ParseLambda(tokens);
+                        }
+                        Tokens_pop(tokens);
+                        Expression expr = ParseExpression(tokens);
+                        Tokens_popExpected(tokens, ")");
+                        return expr;
+                    }
+                    if (next == "[")
+                    {
+                        return ParseListDefinition(tokens);
+                    }
+                    if (next == "{")
+                    {
+                        return ParseDictionaryDefinition(tokens);
+                    }
+                    if (next == "$")
+                    {
+                        Token builtinPrefix = Tokens_pop(tokens);
+                        Token builtinName = Tokens_popName(tokens, "built-in function name");
+                        return Expression_createExtensionReference(builtinPrefix, builtinName.Value);
+                    }
+                    break;
+                case 1:
+                    if (next == "true" || next == "false")
+                    {
+                        Token boolTok = Tokens_pop(tokens);
+                        return Expression_createBoolConstant(boolTok, next == "true");
+                    }
+                    if (next == "null")
+                    {
+                        return Expression_createNullConstant(Tokens_pop(tokens));
+                    }
+                    if (next == "new")
+                    {
+                        Token newTok = Tokens_pop(tokens);
+                        System.Collections.Generic.List<Token> nameChain = new List<Token>();
+                        nameChain.Add(Tokens_popName(tokens, "class name"));
+                        while (Tokens_isNext(tokens, "."))
+                        {
+                            nameChain.Add(Tokens_pop(tokens));
+                            nameChain.Add(Tokens_popName(tokens, "class name"));
+                        }
+                        Expression ctorChain = Expression_createVariable(nameChain[0], nameChain[0].Value);
+                        int i = 1;
+                        while (i < nameChain.Count)
+                        {
+                            ctorChain = Expression_createDotField(ctorChain, nameChain[i], nameChain[i + 1].Value);
+                            i += 2;
+                        }
+                        return Expression_createConstructorReference(newTok, ctorChain);
+                    }
+                    if (next == "this")
+                    {
+                        return Expression_createThisReference(Tokens_pop(tokens));
+                    }
+                    if (next == "base")
+                    {
+                        return Expression_createBaseReference(Tokens_pop(tokens));
+                    }
+                    break;
+                case 5:
+                    int intVal = TryParseInteger(nextToken, next, false);
+                    return Expression_createIntegerConstant(Tokens_pop(tokens), intVal);
+                case 7:
+                    double floatVal = TryParseFloat(nextToken, next);
+                    return Expression_createFloatConstant(Tokens_pop(tokens), floatVal);
+                case 6:
+                    int intValHex = TryParseInteger(nextToken, next, true);
+                    return Expression_createIntegerConstant(Tokens_pop(tokens), intValHex);
+                case 4:
+                    string strVal = TryParseString(nextToken, next);
+                    return Expression_createStringConstant(Tokens_pop(tokens), strVal);
+                case 2:
+                    if (Tokens_isSequenceNext2(tokens, null, "=>"))
+                    {
+                        return ParseLambda(tokens);
+                    }
+                    Token varName = Tokens_popName(tokens, "variable name");
+                    return Expression_createVariable(varName, varName.Value);
+            }
+            Errors_Throw(nextToken, string.Join("", new string[] { "Expected an expression but found '", next, "' instead." }));
+            return null;
+        }
+
+        public static Expression ParseBitshift(TokenStream tokens)
+        {
+            Expression root = ParseAddition(tokens);
+            if (Tokens_doesNextInclulde3(tokens, "<<", ">>", ">>>"))
+            {
+                System.Collections.Generic.List<Expression> expressions = new List<Expression>();
+                expressions.Add(root);
+                System.Collections.Generic.List<Token> ops = new List<Token>();
+                while (Tokens_doesNextInclulde3(tokens, "<<", ">>", ">>>"))
+                {
+                    ops.Add(Tokens_pop(tokens));
+                    expressions.Add(ParseAddition(tokens));
+                }
+                root = FlattenBinaryOpChain(expressions, ops);
+            }
+            return root;
+        }
+
+        public static Expression ParseBitwise(TokenStream tokens)
+        {
+            Expression root = ParseEquality(tokens);
+            if (Tokens_doesNextInclulde3(tokens, "&", "|", "^"))
+            {
+                System.Collections.Generic.List<Expression> expressions = new List<Expression>();
+                expressions.Add(root);
+                System.Collections.Generic.List<Token> ops = new List<Token>();
+                while (Tokens_doesNextInclulde3(tokens, "&", "|", "^"))
+                {
+                    ops.Add(Tokens_pop(tokens));
+                    expressions.Add(ParseEquality(tokens));
+                }
+                return FlattenBinaryOpChain(expressions, ops);
+            }
+            return root;
+        }
+
+        public static Expression ParseBooleanCombination(TokenStream tokens)
+        {
+            Expression root = ParseBitwise(tokens);
+            if (Tokens_doesNextInclulde2(tokens, "||", "&&"))
+            {
+                System.Collections.Generic.List<Expression> expressions = new List<Expression>();
+                expressions.Add(root);
+                System.Collections.Generic.List<Token> ops = new List<Token>();
+                while (Tokens_doesNextInclulde2(tokens, "||", "&&"))
+                {
+                    ops.Add(Tokens_pop(tokens));
+                    expressions.Add(ParseBitwise(tokens));
+                }
+                return FlattenBinaryOpChain(expressions, ops);
+            }
+            return root;
+        }
+
         public static Statement ParseBreakContinue(TokenStream tokens)
         {
             string expectedNextToken = "break";
@@ -2543,13 +2726,71 @@ namespace CommonScript.Compiler.Internal
             bool nextAllowed = true;
             while (nextAllowed && !Tokens_isNext(tokens, "}"))
             {
-                keys.Add(tokens.parseExpression(tokens));
+                keys.Add(ParseExpression(tokens));
                 Tokens_popExpected(tokens, ":");
-                values.Add(tokens.parseExpression(tokens));
+                values.Add(ParseExpression(tokens));
                 nextAllowed = Tokens_popIfPresent(tokens, ",");
             }
             Tokens_popExpected(tokens, "}");
             return Expression_createDictionaryDefinition(openDictionaryToken, keys.ToArray(), values.ToArray());
+        }
+
+        public static Expression ParseEquality(TokenStream tokens)
+        {
+            Expression root = ParseInequality(tokens);
+            if (Tokens_doesNextInclulde2(tokens, "==", "!="))
+            {
+                Token op = Tokens_pop(tokens);
+                Expression right = ParseInequality(tokens);
+                return Expression_createBinaryOp(root, op, right);
+            }
+            return root;
+        }
+
+        public static Expression ParseExponent(TokenStream tokens)
+        {
+            Expression root = ParseUnaryPrefix(tokens);
+            if (Tokens_isNext(tokens, "**"))
+            {
+                System.Collections.Generic.List<Expression> expressions = new List<Expression>();
+                expressions.Add(root);
+                System.Collections.Generic.List<Token> ops = new List<Token>();
+                while (Tokens_isNext(tokens, "**"))
+                {
+                    ops.Add(Tokens_pop(tokens));
+                    expressions.Add(ParseUnaryPrefix(tokens));
+                }
+                root = FlattenBinaryOpChain(expressions, ops);
+            }
+            return root;
+        }
+
+        public static Expression ParseExpression(TokenStream tokens)
+        {
+            return ParseTernary(tokens);
+        }
+
+        public static Expression ParseInequality(TokenStream tokens)
+        {
+            Expression root = ParseBitshift(tokens);
+            if (Tokens_doesNextInclude5(tokens, "<", ">", "<=", ">=", "is"))
+            {
+                Token op = Tokens_pop(tokens);
+                Expression right = ParseBitshift(tokens);
+                root = Expression_createBinaryOp(root, op, right);
+            }
+            return root;
+        }
+
+        public static Expression ParseInlineIncrementPrefix(TokenStream tokens)
+        {
+            if (!Tokens_doesNextInclulde2(tokens, "++", "--"))
+            {
+                Tokens_popExpected(tokens, "++");
+            }
+            Token op = Tokens_pop(tokens);
+            Expression root = ParseUnarySuffix(tokens);
+            return Expression_createInlineIncrement(op, root, op, true);
         }
 
         public static Expression ParseLambda(TokenStream tokens)
@@ -2569,7 +2810,7 @@ namespace CommonScript.Compiler.Internal
                     Expression defaultVal = null;
                     if (Tokens_popIfPresent(tokens, "="))
                     {
-                        defaultVal = tokens.parseExpression(tokens);
+                        defaultVal = ParseExpression(tokens);
                     }
                     argDefaultValues.Add(defaultVal);
                 }
@@ -2587,7 +2828,7 @@ namespace CommonScript.Compiler.Internal
             }
             else
             {
-                Expression codeExpr = tokens.parseExpression(tokens);
+                Expression codeExpr = ParseExpression(tokens);
                 code = new Statement[1];
                 code[0] = Statement_createReturn(arrow, codeExpr);
             }
@@ -2601,11 +2842,211 @@ namespace CommonScript.Compiler.Internal
             bool nextAllowed = true;
             while (nextAllowed && !Tokens_isNext(tokens, "]"))
             {
-                items.Add(tokens.parseExpression(tokens));
+                items.Add(ParseExpression(tokens));
                 nextAllowed = Tokens_popIfPresent(tokens, ",");
             }
             Tokens_popExpected(tokens, "]");
             return Expression_createListDefinition(openListToken, items.ToArray());
+        }
+
+        public static Expression ParseMultiplication(TokenStream tokens)
+        {
+            Expression root = ParseExponent(tokens);
+            if (Tokens_doesNextInclulde3(tokens, "*", "/", "%"))
+            {
+                System.Collections.Generic.List<Expression> expressions = new List<Expression>();
+                expressions.Add(root);
+                System.Collections.Generic.List<Token> ops = new List<Token>();
+                while (Tokens_doesNextInclulde3(tokens, "*", "/", "%"))
+                {
+                    ops.Add(Tokens_pop(tokens));
+                    expressions.Add(ParseExponent(tokens));
+                }
+                root = FlattenBinaryOpChain(expressions, ops);
+            }
+            return root;
+        }
+
+        public static Expression ParseNegatePrefix(TokenStream tokens)
+        {
+            if (!Tokens_doesNextInclulde3(tokens, "-", "!", "~"))
+            {
+                Tokens_popExpected(tokens, "-");
+            }
+            Token op = Tokens_pop(tokens);
+            Expression root = ParseUnaryPrefix(tokens);
+            return Expression_createNegatePrefix(op, root);
+        }
+
+        public static Expression ParseNullCoalesce(TokenStream tokens)
+        {
+            Expression root = ParseBooleanCombination(tokens);
+            if (Tokens_isNext(tokens, "??"))
+            {
+                Token op = Tokens_pop(tokens);
+                Expression next = ParseNullCoalesce(tokens);
+                root = Expression_createBinaryOp(root, op, next);
+            }
+            return root;
+        }
+
+        public static Expression ParseTernary(TokenStream tokens)
+        {
+            Expression root = ParseNullCoalesce(tokens);
+            if (Tokens_isNext(tokens, "?"))
+            {
+                Token qmark = Tokens_pop(tokens);
+                Expression trueValue = ParseTernary(tokens);
+                Tokens_popExpected(tokens, ":");
+                Expression falseValue = ParseTernary(tokens);
+                root = Expression_createTernary(root, qmark, trueValue, falseValue);
+            }
+            return root;
+        }
+
+        public static Expression ParseTypeofPrefix(TokenStream tokens)
+        {
+            Token typeofToken = Tokens_popKeyword(tokens, "typeof");
+            Expression root = ParseUnaryPrefix(tokens);
+            return Expression_createTypeof(typeofToken, root);
+        }
+
+        public static Expression ParseUnaryPrefix(TokenStream tokens)
+        {
+            string next = Tokens_peekValue(tokens);
+            if (next == null)
+            {
+                Tokens_ensureMore(tokens);
+            }
+            switch (next[0])
+            {
+                case '-':
+                    if (next == "--")
+                    {
+                        return ParseInlineIncrementPrefix(tokens);
+                    }
+                    if (next == "-")
+                    {
+                        return ParseNegatePrefix(tokens);
+                    }
+                    break;
+                case '+':
+                    if (next == "++")
+                    {
+                        return ParseInlineIncrementPrefix(tokens);
+                    }
+                    break;
+                case '!':
+                    if (next == "!")
+                    {
+                        return ParseNegatePrefix(tokens);
+                    }
+                    break;
+                case '~':
+                    if (next == "~")
+                    {
+                        return ParseNegatePrefix(tokens);
+                    }
+                    break;
+                case 't':
+                    if (next == "typeof")
+                    {
+                        return ParseTypeofPrefix(tokens);
+                    }
+                    break;
+            }
+            return ParseUnarySuffix(tokens);
+        }
+
+        public static Expression ParseUnarySuffix(TokenStream tokens)
+        {
+            Expression root = ParseAtomicExpression(tokens);
+            string next = Tokens_peekValue(tokens);
+            bool checkForSuffixes = true;
+            while (checkForSuffixes && next != null)
+            {
+                checkForSuffixes = false;
+                if (next == ".")
+                {
+                    Token dotToken = Tokens_pop(tokens);
+                    Token nameToken = Tokens_popName(tokens, "field name");
+                    root = Expression_createDotField(root, dotToken, nameToken.Value);
+                    checkForSuffixes = true;
+                }
+                else if (next == "(")
+                {
+                    Token openParen = Tokens_pop(tokens);
+                    System.Collections.Generic.List<Expression> args = new List<Expression>();
+                    while (!Tokens_popIfPresent(tokens, ")"))
+                    {
+                        if (args.Count > 0)
+                        {
+                            Tokens_popExpected(tokens, ",");
+                        }
+                        args.Add(ParseExpression(tokens));
+                    }
+                    root = Expression_createFunctionInvocation(root, openParen, args.ToArray());
+                    checkForSuffixes = true;
+                }
+                else if (next == "[")
+                {
+                    Token openBracket = Tokens_pop(tokens);
+                    Tokens_ensureMore(tokens);
+                    Token throwTokenOnInvalidSlice = Tokens_peek(tokens);
+                    System.Collections.Generic.List<Expression> sliceNums = new List<Expression>();
+                    bool nextExpected = true;
+                    while (nextExpected && Tokens_hasMore(tokens))
+                    {
+                        if (Tokens_popIfPresent(tokens, ":"))
+                        {
+                            sliceNums.Add(null);
+                        }
+                        else if (Tokens_isNext(tokens, "]"))
+                        {
+                            sliceNums.Add(null);
+                            nextExpected = false;
+                        }
+                        else
+                        {
+                            sliceNums.Add(ParseExpression(tokens));
+                            if (!Tokens_popIfPresent(tokens, ":"))
+                            {
+                                nextExpected = false;
+                            }
+                        }
+                    }
+                    Tokens_popExpected(tokens, "]");
+                    if (sliceNums.Count < 0 || sliceNums.Count > 3)
+                    {
+                        Errors_Throw(throwTokenOnInvalidSlice, "Invalid index or slice expression");
+                    }
+                    if (sliceNums.Count == 1)
+                    {
+                        if (sliceNums[0] == null)
+                        {
+                            Errors_Throw(throwTokenOnInvalidSlice, "Expected index expression.");
+                        }
+                        root = Expression_createBracketIndex(root, openBracket, sliceNums[0]);
+                    }
+                    else
+                    {
+                        Expression thirdSliceNum = null;
+                        if (sliceNums.Count == 3)
+                        {
+                            thirdSliceNum = sliceNums[2];
+                        }
+                        root = Expression_createSliceExpression(root, openBracket, sliceNums[0], sliceNums[1], thirdSliceNum);
+                    }
+                    checkForSuffixes = true;
+                }
+                else if (next == "++" || next == "--")
+                {
+                    Token ppToken = Tokens_pop(tokens);
+                    root = Expression_createInlineIncrement(root.firstToken, root, ppToken, false);
+                }
+                next = Tokens_peekValue(tokens);
+            }
+            return root;
         }
 
         public static void PUBLIC_EnsureDependenciesFulfilled(object compObj)
@@ -4665,7 +5106,7 @@ namespace CommonScript.Compiler.Internal
 
         public static TokenStream TokenStream_new(string file, Token[] tokens)
         {
-            return new TokenStream(0, tokens.Length, tokens, file, null, null, null);
+            return new TokenStream(0, tokens.Length, tokens, file, null, null);
         }
 
         public static AbstractEntity TryDoExactLookupForConstantEntity(Resolver resolver, FileContext file, string fqNamespace, string dottedEntityName)
