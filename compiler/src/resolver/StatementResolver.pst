@@ -1,0 +1,12 @@
+
+void StatementResolver_ResolveStatementArrayFirstPass(Resolver resolver, Array<Statement> arr) {
+    for (int i = 0; i < arr.Size(); i += 1) {
+        arr[i] = resolver.ResolveStatementFirstPass(resolver, arr[i]);
+    }
+}
+
+void StatementResolver_ResolveStatementArraySecondPass(Resolver resolver, Array<Statement> arr) {
+    for (int i = 0; i < arr.Size(); i += 1) {
+        arr[i] = resolver.ResolveStatementSecondPass(resolver, arr[i]);
+    }
+}

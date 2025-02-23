@@ -53,6 +53,11 @@ namespace CommonScript.Compiler
 
             Resolver resolverCtx = FunctionWrapper.Resolver_new(compiler.staticCtx, rootEntities, compiler.extensionNames);
 
+            resolverCtx.ResolveExpressionFirstPass = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass;
+            resolverCtx.ResolveExpressionSecondPass = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass;
+            resolverCtx.ResolveStatementFirstPass = StatementResolverUtil.StatementResolver_ResolveStatementFirstPass;
+            resolverCtx.ResolveStatementSecondPass = StatementResolverUtil.StatementResolver_ResolveStatementSecondPass;
+            
             ResolverUtil.Resolve(resolverCtx);
 
             CompiledModule m = FunctionWrapper.CompiledModule_new(moduleId);

@@ -15,9 +15,13 @@ namespace CommonScript.Compiler.Internal
         public AbstractEntity[] entityList;
         public Statement breakContext;
         public int autoVarId;
+        public System.Func<Resolver, Expression, Expression> ResolveExpressionFirstPass;
+        public System.Func<Resolver, Expression, Expression> ResolveExpressionSecondPass;
+        public System.Func<Resolver, Statement, Statement> ResolveStatementFirstPass;
+        public System.Func<Resolver, Statement, Statement> ResolveStatementSecondPass;
         public StringSet extensionNames;
 
-        public Resolver(StaticContext staticCtx, System.Collections.Generic.Dictionary<string, AbstractEntity> nestedEntities, System.Collections.Generic.Dictionary<string, AbstractEntity> enumsByMemberFqName, System.Collections.Generic.Dictionary<string, AbstractEntity> flattenedEntities, System.Collections.Generic.Dictionary<string, AbstractEntity> flattenedEntitiesAndEnumValues, System.Collections.Generic.Dictionary<string, AbstractEntity> flattenedEntitiesNoEnumParents, System.Collections.Generic.List<FunctionEntity> lambdas, AbstractEntity activeEntity, AbstractEntity[] entityList, Statement breakContext, int autoVarId, StringSet extensionNames)
+        public Resolver(StaticContext staticCtx, System.Collections.Generic.Dictionary<string, AbstractEntity> nestedEntities, System.Collections.Generic.Dictionary<string, AbstractEntity> enumsByMemberFqName, System.Collections.Generic.Dictionary<string, AbstractEntity> flattenedEntities, System.Collections.Generic.Dictionary<string, AbstractEntity> flattenedEntitiesAndEnumValues, System.Collections.Generic.Dictionary<string, AbstractEntity> flattenedEntitiesNoEnumParents, System.Collections.Generic.List<FunctionEntity> lambdas, AbstractEntity activeEntity, AbstractEntity[] entityList, Statement breakContext, int autoVarId, System.Func<Resolver, Expression, Expression> ResolveExpressionFirstPass, System.Func<Resolver, Expression, Expression> ResolveExpressionSecondPass, System.Func<Resolver, Statement, Statement> ResolveStatementFirstPass, System.Func<Resolver, Statement, Statement> ResolveStatementSecondPass, StringSet extensionNames)
         {
             this.staticCtx = staticCtx;
             this.nestedEntities = nestedEntities;
@@ -30,6 +34,10 @@ namespace CommonScript.Compiler.Internal
             this.entityList = entityList;
             this.breakContext = breakContext;
             this.autoVarId = autoVarId;
+            this.ResolveExpressionFirstPass = ResolveExpressionFirstPass;
+            this.ResolveExpressionSecondPass = ResolveExpressionSecondPass;
+            this.ResolveStatementFirstPass = ResolveStatementFirstPass;
+            this.ResolveStatementSecondPass = ResolveStatementSecondPass;
             this.extensionNames = extensionNames;
         }
     }

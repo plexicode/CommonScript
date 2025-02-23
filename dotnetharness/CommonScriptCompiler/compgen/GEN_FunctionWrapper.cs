@@ -1840,6 +1840,26 @@ namespace CommonScript.Compiler.Internal
             return expr;
         }
 
+        public static void ExpressionResolver_ResolveExpressionArrayFirstPass(Resolver resolver, Expression[] arr)
+        {
+            int i = 0;
+            while (i < arr.Length)
+            {
+                arr[i] = resolver.ResolveExpressionFirstPass(resolver, arr[i]);
+                i += 1;
+            }
+        }
+
+        public static void ExpressionResolver_ResolveExpressionArraySecondPass(Resolver resolver, Expression[] arr)
+        {
+            int i = 0;
+            while (i < arr.Length)
+            {
+                arr[i] = resolver.ResolveExpressionSecondPass(resolver, arr[i]);
+                i += 1;
+            }
+        }
+
         public static Expression ExpressionResolver_SecondPass_BaseCtorReference(Resolver resolver, Expression baseCtor)
         {
             baseCtor.entityPtr = ((ClassEntity)resolver.activeEntity.nestParent.specificData).baseClassEntity.baseData;
@@ -4024,7 +4044,7 @@ namespace CommonScript.Compiler.Internal
 
         public static Resolver Resolver_new(StaticContext staticCtx, System.Collections.Generic.Dictionary<string, AbstractEntity> rootEntities, System.Collections.Generic.List<string> extensionNames)
         {
-            Resolver r = new Resolver(staticCtx, rootEntities, new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new List<FunctionEntity>(), null, null, null, 0, StringSet_fromList(extensionNames));
+            Resolver r = new Resolver(staticCtx, rootEntities, new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new List<FunctionEntity>(), null, null, null, 0, null, null, null, null, StringSet_fromList(extensionNames));
             r.entityList = FlattenEntities(staticCtx, rootEntities);
             int i = 0;
             while (i < r.entityList.Length)
@@ -5154,6 +5174,26 @@ namespace CommonScript.Compiler.Internal
                     break;
             }
             return 0;
+        }
+
+        public static void StatementResolver_ResolveStatementArrayFirstPass(Resolver resolver, Statement[] arr)
+        {
+            int i = 0;
+            while (i < arr.Length)
+            {
+                arr[i] = resolver.ResolveStatementFirstPass(resolver, arr[i]);
+                i += 1;
+            }
+        }
+
+        public static void StatementResolver_ResolveStatementArraySecondPass(Resolver resolver, Statement[] arr)
+        {
+            int i = 0;
+            while (i < arr.Length)
+            {
+                arr[i] = resolver.ResolveStatementSecondPass(resolver, arr[i]);
+                i += 1;
+            }
         }
 
         public static StaticContext StaticContext_new()

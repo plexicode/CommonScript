@@ -1,4 +1,16 @@
 
+void ExpressionResolver_ResolveExpressionArrayFirstPass(Resolver resolver, Array<Expression> arr) {
+    for (int i = 0; i < arr.Size(); i += 1) {
+        arr[i] = resolver.ResolveExpressionFirstPass(resolver, arr[i]);
+    }
+}
+
+void ExpressionResolver_ResolveExpressionArraySecondPass(Resolver resolver, Array<Expression> arr) {
+    for (int i = 0; i < arr.Size(); i += 1) {
+        arr[i] = resolver.ResolveExpressionSecondPass(resolver, arr[i]);
+    }
+}
+
 Expression ExpressionResolver_FirstPass_BaseCtorReference(Resolver resolver, Expression baseCtor) {
     return baseCtor;
 }
@@ -8,9 +20,9 @@ Expression ExpressionResolver_FirstPass_BoolConst(Resolver resolver, Expression 
 }
 
 Expression ExpressionResolver_FirstPass_ConstructorInvocation(Resolver resolver, Expression ctorInvoke) {
-    // You left off here realizing that it's actually better to just use CONSTRUCTOR_REF as a parse node, that way 
+    // You left off here realizing that it's actually better to just use CONSTRUCTOR_REF as a parse node, that way
     // the resolver for the path of the item can be resolve in a normal way e.g. "new myModuleAlias.SomeClass()" should
-    // resolve as an invocation of a class reference expression. 
+    // resolve as an invocation of a class reference expression.
     fail("not implemented");
     return null;
 }
@@ -47,7 +59,7 @@ Expression ExpressionResolver_FirstPass_Lambda(Resolver resolver, Expression lam
         argNames,
         argValues,
         code);
-    
+
     Resolver_ReportNewLambda(resolver, lambdaEnt);
     lamb.entityPtr = lambdaEnt.baseData;
     return lamb;
@@ -79,7 +91,7 @@ Expression ExpressionResolver_FirstPass_Variable(Resolver resolver, Expression v
     return varExpr;
 }
 
-/////////// SECOND PASS 
+/////////// SECOND PASS
 
 Expression ExpressionResolver_SecondPass_BaseCtorReference(Resolver resolver, Expression baseCtor) {
     baseCtor.entityPtr = ((ClassEntity)resolver.activeEntity.nestParent.specificData).baseClassEntity.baseData;
@@ -111,7 +123,7 @@ Expression ExpressionResolver_SecondPass_FunctionReference(Resolver resolver, Ex
 
 Expression ExpressionResolver_SecondPass_ImportReference(Resolver resolver, Expression importRef) {
     Errors_Throw(
-        importRef.firstToken, 
+        importRef.firstToken,
         "An import reference cannot be passed as a reference. You must reference the imported entity directly.");
     return null;
 }
@@ -140,7 +152,7 @@ Expression ExpressionResolver_SecondPass_StringConstant(Resolver resolver, Expre
 Expression ExpressionResolver_SecondPass_ThisConstant(Resolver resolver, Expression thisExpr) {
     if (resolver.activeEntity.nestParent == null) {
         fail("not implemented");
-    } 
+    }
     return thisExpr;
 }
 

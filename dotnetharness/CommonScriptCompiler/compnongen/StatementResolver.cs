@@ -6,22 +6,6 @@ namespace CommonScript.Compiler
 {
     internal static class StatementResolverUtil
     {
-        public static void StatementResolver_ResolveStatementArrayFirstPass(Resolver resolver, Statement[] arr)
-        {
-            for (int i = 0; i < arr.Length; i++)
-            {
-                arr[i] = StatementResolver_ResolveStatementFirstPass(resolver, arr[i]);
-            }
-        }
-
-        public static void StatementResolver_ResolveStatementArraySecondPass(Resolver resolver, Statement[] arr)
-        {
-            for (int i = 0; i < arr.Length; i++)
-            {
-                arr[i] = StatementResolver_ResolveStatementSecondPass(resolver, arr[i]);
-            }
-        }
-
         public static Statement StatementResolver_ResolveStatementFirstPass(Resolver resolver, Statement s)
         {
             switch (s.type)
@@ -123,7 +107,7 @@ namespace CommonScript.Compiler
         {
             Statement oldBreakContext = resolver.breakContext;
             resolver.breakContext = doWhileLoop;
-            StatementResolver_ResolveStatementArrayFirstPass(resolver, doWhileLoop.code);
+            FunctionWrapper.StatementResolver_ResolveStatementArrayFirstPass(resolver, doWhileLoop.code);
             resolver.breakContext = oldBreakContext;
             doWhileLoop.condition = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, doWhileLoop.condition);
             return doWhileLoop;
@@ -134,19 +118,19 @@ namespace CommonScript.Compiler
             forEachLoop.autoId = FunctionWrapper.EntityResolver_GetNextAutoVarId(resolver);
             forEachLoop.expression = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, forEachLoop.expression);
             ((FunctionEntity)resolver.activeEntity.specificData).variableScope[forEachLoop.varToken.Value] = true;
-            StatementResolver_ResolveStatementArrayFirstPass(resolver, forEachLoop.code);
+            FunctionWrapper.StatementResolver_ResolveStatementArrayFirstPass(resolver, forEachLoop.code);
             return forEachLoop;
         }
 
         private static Statement StatementResolver_FirstPass_ForLoop(Resolver resolver, Statement forLoop)
         {
-            StatementResolver_ResolveStatementArrayFirstPass(resolver, forLoop.forInit);
+            FunctionWrapper.StatementResolver_ResolveStatementArrayFirstPass(resolver, forLoop.forInit);
             forLoop.condition = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, forLoop.condition);
-            StatementResolver_ResolveStatementArrayFirstPass(resolver, forLoop.forStep);
+            FunctionWrapper.StatementResolver_ResolveStatementArrayFirstPass(resolver, forLoop.forStep);
 
             Statement oldBreakContext = resolver.breakContext;
             resolver.breakContext = forLoop;
-            StatementResolver_ResolveStatementArrayFirstPass(resolver, forLoop.code);
+            FunctionWrapper.StatementResolver_ResolveStatementArrayFirstPass(resolver, forLoop.code);
             resolver.breakContext = oldBreakContext;
             return forLoop;
         }
@@ -154,8 +138,8 @@ namespace CommonScript.Compiler
         private static Statement StatementResolver_FirstPass_IfStatement(Resolver resolver, Statement ifStatement)
         {
             ifStatement.condition = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, ifStatement.condition);
-            StatementResolver_ResolveStatementArrayFirstPass(resolver, ifStatement.code);
-            StatementResolver_ResolveStatementArrayFirstPass(resolver, ifStatement.elseCode);
+            FunctionWrapper.StatementResolver_ResolveStatementArrayFirstPass(resolver, ifStatement.code);
+            FunctionWrapper.StatementResolver_ResolveStatementArrayFirstPass(resolver, ifStatement.elseCode);
             return ifStatement;
         }
 
@@ -188,7 +172,7 @@ namespace CommonScript.Compiler
         {
             Statement oldBreakContext = resolver.breakContext;
             resolver.breakContext = tryStatement;
-            StatementResolver_ResolveStatementArrayFirstPass(resolver, tryStatement.code);
+            FunctionWrapper.StatementResolver_ResolveStatementArrayFirstPass(resolver, tryStatement.code);
             foreach (CatchChunk cc in tryStatement.catchChunks)
             {
                 if (cc.exceptionVarName != null)
@@ -208,12 +192,12 @@ namespace CommonScript.Compiler
                     cc.ClassDefinitions = [];
                 }
 
-                StatementResolver_ResolveStatementArrayFirstPass(resolver, cc.Code);
+                FunctionWrapper.StatementResolver_ResolveStatementArrayFirstPass(resolver, cc.Code);
             }
 
             // TODO: check order and redundancy of exceptions.
 
-            StatementResolver_ResolveStatementArrayFirstPass(resolver, tryStatement.finallyCode);
+            FunctionWrapper.StatementResolver_ResolveStatementArrayFirstPass(resolver, tryStatement.finallyCode);
 
             resolver.breakContext = oldBreakContext;
 
@@ -225,7 +209,7 @@ namespace CommonScript.Compiler
             whileLoop.condition = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, whileLoop.condition);
             Statement oldBreakContext = resolver.breakContext;
             resolver.breakContext = whileLoop;
-            StatementResolver_ResolveStatementArrayFirstPass(resolver, whileLoop.code);
+            FunctionWrapper.StatementResolver_ResolveStatementArrayFirstPass(resolver, whileLoop.code);
             resolver.breakContext = oldBreakContext;
             return whileLoop;
         }
@@ -265,7 +249,7 @@ namespace CommonScript.Compiler
         {
             Statement oldBreakContext = resolver.breakContext;
             resolver.breakContext = doWhileLoop;
-            StatementResolver_ResolveStatementArraySecondPass(resolver, doWhileLoop.code);
+            FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, doWhileLoop.code);
             doWhileLoop.condition = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, doWhileLoop.condition);
             resolver.breakContext = oldBreakContext;
             return doWhileLoop;
@@ -294,10 +278,10 @@ namespace CommonScript.Compiler
         {
             Statement oldBreakContext = resolver.breakContext;
             resolver.breakContext = forLoop;
-            StatementResolver_ResolveStatementArraySecondPass(resolver, forLoop.forInit);
+            FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, forLoop.forInit);
             forLoop.condition = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, forLoop.condition);
-            StatementResolver_ResolveStatementArraySecondPass(resolver, forLoop.forStep);
-            StatementResolver_ResolveStatementArraySecondPass(resolver, forLoop.code);
+            FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, forLoop.forStep);
+            FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, forLoop.code);
             resolver.breakContext = oldBreakContext;
             return forLoop;
         }
@@ -305,15 +289,15 @@ namespace CommonScript.Compiler
         private static Statement StatementResolver_SecondPass_ForEachLoop(Resolver resolver, Statement forEachLoop)
         {
             forEachLoop.expression = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, forEachLoop.expression);
-            StatementResolver_ResolveStatementArraySecondPass(resolver, forEachLoop.code);
+            FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, forEachLoop.code);
             return forEachLoop;
         }
 
         private static Statement StatementResolver_SecondPass_IfStatement(Resolver resolver, Statement ifStatement)
         {
             ifStatement.condition = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, ifStatement.condition);
-            StatementResolver_ResolveStatementArraySecondPass(resolver, ifStatement.code);
-            StatementResolver_ResolveStatementArraySecondPass(resolver, ifStatement.elseCode);
+            FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, ifStatement.code);
+            FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, ifStatement.elseCode);
             return ifStatement;
         }
 
@@ -403,12 +387,13 @@ namespace CommonScript.Compiler
         {
             Statement oldBreakContext = resolver.breakContext;
             resolver.breakContext = tryStmnt;
-            StatementResolver_ResolveStatementArraySecondPass(resolver, tryStmnt.code);
-            foreach (CatchChunk cc in tryStmnt.catchChunks)
+            FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, tryStmnt.code);
+            for (int i = 0; i < tryStmnt.catchChunks.Length; i++)
             {
-                StatementResolver_ResolveStatementArraySecondPass(resolver, cc.Code);
+                CatchChunk cc = tryStmnt.catchChunks[i];
+                FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, cc.Code);
             }
-            StatementResolver_ResolveStatementArraySecondPass(resolver, tryStmnt.finallyCode);
+            FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, tryStmnt.finallyCode);
 
             resolver.breakContext = oldBreakContext;
 
@@ -420,7 +405,7 @@ namespace CommonScript.Compiler
             Statement oldBreakContext = resolver.breakContext;
             resolver.breakContext = whileLoop;
             whileLoop.condition = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, whileLoop.condition);
-            StatementResolver_ResolveStatementArraySecondPass(resolver, whileLoop.code);
+            FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, whileLoop.code);
             resolver.breakContext = oldBreakContext;
             return whileLoop;
         }

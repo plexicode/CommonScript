@@ -86,22 +86,6 @@ namespace CommonScript.Compiler
             return expr;
         }
 
-        public static void ExpressionResolver_ResolveExpressionArrayFirstPass(Resolver resolver, Expression[] arr)
-        {
-            for (int i = 0; i < arr.Length; i++)
-            {
-                arr[i] = ExpressionResolver_ResolveExpressionFirstPass(resolver, arr[i]);
-            }
-        }
-
-        public static void ExpressionResolver_ResolveExpressionArraySecondPass(Resolver resolver, Expression[] arr)
-        {
-            for (int i = 0; i < arr.Length; i++)
-            {
-                arr[i] = ExpressionResolver_ResolveExpressionSecondPass(resolver, arr[i]);
-            }
-        }
-
         private static Expression ExpressionResolver_FirstPass_BinaryOp(Resolver resolver, Expression binOp)
         {
             binOp.left = ExpressionResolver_ResolveExpressionFirstPass(resolver, binOp.left);
@@ -199,13 +183,13 @@ namespace CommonScript.Compiler
         {
             if (funcInvoke.root.type == (int) ExpressionType.EXTENSION_REFERENCE)
             {
-                ExpressionResolver_ResolveExpressionArrayFirstPass(resolver, funcInvoke.args);
+                FunctionWrapper.ExpressionResolver_ResolveExpressionArrayFirstPass(resolver, funcInvoke.args);
                 return FunctionWrapper.Expression_createExtensionInvocation(funcInvoke.firstToken, funcInvoke.root.strVal, funcInvoke.args);
             }
             else
             {
                 funcInvoke.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, funcInvoke.root);
-                ExpressionResolver_ResolveExpressionArrayFirstPass(resolver, funcInvoke.args);
+                FunctionWrapper.ExpressionResolver_ResolveExpressionArrayFirstPass(resolver, funcInvoke.args);
             }
 
             return funcInvoke;
@@ -596,7 +580,7 @@ namespace CommonScript.Compiler
 
         private static Expression ExpressionResolver_SecondPass_ExtensionInvocation(Resolver resolver, Expression expr)
         {
-            ExpressionResolver_ResolveExpressionArraySecondPass(resolver, expr.args);
+            FunctionWrapper.ExpressionResolver_ResolveExpressionArraySecondPass(resolver, expr.args);
             int argc = -1;
             if (FunctionWrapper.SpecialActionUtil_IsSpecialActionAndNotExtension(resolver.staticCtx.specialActionUtil, expr.strVal))
             {
@@ -629,7 +613,7 @@ namespace CommonScript.Compiler
                 Expression ctorRef = ExpressionResolver_SecondPass_ConstructorReference(resolver, funcInvoke.root, true);
                 if (ctorRef.type != (int) ExpressionType.CONSTRUCTOR_REFERENCE) FunctionWrapper.fail(""); // this shouldn't happen. 
 
-                ExpressionResolver_ResolveExpressionArraySecondPass(resolver, funcInvoke.args);
+                FunctionWrapper.ExpressionResolver_ResolveExpressionArraySecondPass(resolver, funcInvoke.args);
 
                 return FunctionWrapper.Expression_createConstructorInvocation(funcInvoke.firstToken, (AbstractEntity)ctorRef.entityPtr, funcInvoke.opToken, funcInvoke.args);
             }
@@ -651,7 +635,7 @@ namespace CommonScript.Compiler
                     break;
             }
 
-            ExpressionResolver_ResolveExpressionArraySecondPass(resolver, funcInvoke.args);
+            FunctionWrapper.ExpressionResolver_ResolveExpressionArraySecondPass(resolver, funcInvoke.args);
 
             return funcInvoke;
         }

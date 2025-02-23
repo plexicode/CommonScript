@@ -128,7 +128,7 @@ namespace CommonScript.Compiler
                 baseCtorInvocation.Add(baseCtorStmnt);
             }
 
-            StatementResolverUtil.StatementResolver_ResolveStatementArrayFirstPass(resolver, funcDef.code);
+            FunctionWrapper.StatementResolver_ResolveStatementArrayFirstPass(resolver, funcDef.code);
 
             List<Statement> flattened = new List<Statement>();
             for (int i = 0; i < preBaseFieldInit.Count; i++) flattened.Add(preBaseFieldInit[i]);
@@ -182,7 +182,7 @@ namespace CommonScript.Compiler
                 }
             }
 
-            StatementResolverUtil.StatementResolver_ResolveStatementArraySecondPass(resolver, funcDef.code);
+            FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, funcDef.code);
 
             if (funcDef.code.Length == 0 || funcDef.code[funcDef.code.Length - 1].type != (int) StatementType.RETURN)
             {
