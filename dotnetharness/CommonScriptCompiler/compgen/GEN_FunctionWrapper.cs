@@ -11,14 +11,6 @@ namespace CommonScript.Compiler.Internal
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         private static Dictionary<string, System.Func<object[], object>> PST_ExtCallbacks = new Dictionary<string, System.Func<object[], object>>();
 
-        private static string PST_FloatToString(double value)
-        {
-            string output = value.ToString();
-            if (output[0] == '.') output = "0" + output;
-            if (!output.Contains('.')) output += ".0";
-            return output;
-        }
-
         private static int[] PST_stringToUtf8Bytes(string str)
         {
             byte[] bytes = System.Text.Encoding.UTF8.GetBytes(str);
@@ -28,6 +20,14 @@ namespace CommonScript.Compiler.Internal
             {
                 output[i] = ((int)bytes[i]) & 255;
             }
+            return output;
+        }
+
+        private static string PST_FloatToString(double value)
+        {
+            string output = value.ToString();
+            if (output[0] == '.') output = "0" + output;
+            if (!output.Contains('.')) output += ".0";
             return output;
         }
 
@@ -70,6 +70,120 @@ namespace CommonScript.Compiler.Internal
         public static AbstractEntity AbstractEntity_new(Token firstToken, int type, object specificData)
         {
             return new AbstractEntity(firstToken, type, specificData, null, null, null, null, false, null, null, -1);
+        }
+
+        public static ByteStringBuilder bsbFromBytes(int[] bytes)
+        {
+            return new ByteStringBuilder(true, bytes.Length, bytes, null, null);
+        }
+
+        public static ByteStringBuilder bsbFromInt(int value)
+        {
+            int[] buf = null;
+            if (value >= 0 && value < 128)
+            {
+                buf = new int[1];
+                buf[0] = (int)value;
+            }
+            else if (value == -2147483648)
+            {
+                buf = new int[1];
+                buf[0] = 192;
+            }
+            else
+            {
+                int firstByte = 128;
+                bool isNegative = value < 0;
+                if (isNegative)
+                {
+                    value *= -1;
+                    firstByte |= 16;
+                }
+                if (value < 256)
+                {
+                    firstByte |= 1;
+                    buf = new int[2];
+                    buf[0] = firstByte;
+                    buf[1] = (int)(value & 255);
+                }
+                else if (value <= 65535)
+                {
+                    firstByte |= 2;
+                    buf = new int[3];
+                    buf[0] = firstByte;
+                    buf[1] = (int)(value >> 8 & 255);
+                    buf[2] = (int)(value & 255);
+                }
+                else if (value <= 16777215)
+                {
+                    firstByte |= 3;
+                    buf = new int[4];
+                    buf[0] = firstByte;
+                    buf[1] = (int)(value >> 16 & 255);
+                    buf[2] = (int)(value >> 8 & 255);
+                    buf[3] = (int)(value & 255);
+                }
+                else if (value <= 2147483647)
+                {
+                    firstByte |= 4;
+                    buf = new int[5];
+                    buf[0] = firstByte;
+                    buf[1] = (int)(value >> 24 & 255);
+                    buf[2] = (int)(value >> 16 & 255);
+                    buf[3] = (int)(value >> 8 & 255);
+                    buf[4] = (int)(value & 255);
+                }
+                else
+                {
+                    fail("Not implemented");
+                }
+            }
+            return new ByteStringBuilder(true, buf.Length, buf, null, null);
+        }
+
+        public static ByteStringBuilder bsbFromLenString(string value)
+        {
+            ByteStringBuilder payload = bsbFromUtf8String(value);
+            return bsbJoin2(bsbFromInt(payload.length), payload);
+        }
+
+        public static ByteStringBuilder bsbFromUtf8String(string value)
+        {
+            int[] bytes = PST_stringToUtf8Bytes(value);
+            return new ByteStringBuilder(true, bytes.Length, bytes, null, null);
+        }
+
+        public static ByteStringBuilder bsbJoin2(ByteStringBuilder a, ByteStringBuilder b)
+        {
+            if (a == null)
+            {
+                return b;
+            }
+            if (b == null)
+            {
+                return a;
+            }
+            return new ByteStringBuilder(false, a.length + b.length, null, a, b);
+        }
+
+        public static ByteStringBuilder bsbJoin3(ByteStringBuilder a, ByteStringBuilder b, ByteStringBuilder c)
+        {
+            return bsbJoin2(bsbJoin2(a, b), c);
+        }
+
+        public static ByteStringBuilder bsbJoin4(ByteStringBuilder a, ByteStringBuilder b, ByteStringBuilder c, ByteStringBuilder d)
+        {
+            return bsbJoin2(bsbJoin2(a, b), bsbJoin2(c, d));
+        }
+
+        public static ByteStringBuilder bsbJoin5(ByteStringBuilder a, ByteStringBuilder b, ByteStringBuilder c, ByteStringBuilder d, ByteStringBuilder e)
+        {
+            return bsbJoin3(bsbJoin2(a, b), bsbJoin2(c, d), e);
+        }
+
+        public static ByteStringBuilder bsbJoin8(ByteStringBuilder a, ByteStringBuilder b, ByteStringBuilder c, ByteStringBuilder d, ByteStringBuilder e, ByteStringBuilder f, ByteStringBuilder g, ByteStringBuilder h)
+        {
+            return bsbJoin2(bsbJoin4(a, b, c, d), bsbJoin4(e, f, g, h));
         }
 
         public static BundleClassInfo BundleClassInfo_new(int classId, int parentId, string name, int ctorId, int staticCtorId, System.Collections.Generic.Dictionary<string, int> methodsToId, string[] newDirectMembersByNextOffsets, System.Collections.Generic.List<string> staticMethods, System.Collections.Generic.List<string> staticFields)

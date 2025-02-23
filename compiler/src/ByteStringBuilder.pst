@@ -1,0 +1,140 @@
+struct ByteStringBuilder {
+        bool isLeaf;
+        int length;
+        Array<int> bytes;
+        ByteStringBuilder left;
+        ByteStringBuilder right;
+}
+
+ByteStringBuilder bsbFromLenString(string value) {
+
+    ByteStringBuilder payload = bsbFromUtf8String(value);
+    return bsbJoin2(bsbFromInt(payload.length), payload);
+}
+
+
+ByteStringBuilder bsbFromUtf8String(string value) {
+    Array<int> bytes = value.ToUtf8Bytes();
+    return new ByteStringBuilder(true, bytes.Size(), bytes, null, null);
+}
+
+ByteStringBuilder bsbFromBytes(Array<int> bytes) {
+    return new ByteStringBuilder(true, bytes.Size(), bytes, null, null);
+}
+
+ByteStringBuilder bsbJoin2(ByteStringBuilder a, ByteStringBuilder b) {
+    if (a == null) return b;
+    if (b == null) return a;
+    return new ByteStringBuilder(false, a.length + b.length, null, a, b);
+}
+
+ByteStringBuilder bsbJoin3(
+    ByteStringBuilder a,
+    ByteStringBuilder b,
+    ByteStringBuilder c) {
+
+    return bsbJoin2(bsbJoin2(a, b), c);
+}
+
+ByteStringBuilder bsbJoin4(
+    ByteStringBuilder a,
+    ByteStringBuilder b,
+    ByteStringBuilder c,
+    ByteStringBuilder d) {
+
+    return bsbJoin2(bsbJoin2(a, b), bsbJoin2(c, d));
+}
+
+ByteStringBuilder bsbJoin5(
+    ByteStringBuilder a,
+    ByteStringBuilder b,
+    ByteStringBuilder c,
+    ByteStringBuilder d,
+    ByteStringBuilder e) {
+
+    return bsbJoin3(bsbJoin2(a, b), bsbJoin2(c, d), e);
+}
+
+ByteStringBuilder bsbJoin8(
+    ByteStringBuilder a,
+    ByteStringBuilder b,
+    ByteStringBuilder c,
+    ByteStringBuilder d,
+    ByteStringBuilder e,
+    ByteStringBuilder f,
+    ByteStringBuilder g,
+    ByteStringBuilder h) {
+
+    return bsbJoin2(bsbJoin4(a, b, c, d), bsbJoin4(e, f, g, h));
+}
+
+
+/*
+    0xxxxxxx --> 7 bit positive integer
+    11000000 --> -2^31
+    11100000 --> -2^63
+    100syyyy --> y-byte positive integer followed by y-bytes to be converted into an integer. Then if s is 1, flip the sign.
+*/
+// TODO: in the original C#, this was designed to consume a long, not an int.
+// Make this cross-platform friendly for large integer support. For now, just fall
+// back to 32-bit signed integers.
+ByteStringBuilder bsbFromInt(int value) {
+    Array<int> buf = null;
+    if (value >= 0 && value < 128) {
+        buf = new Array<int>(1);
+        buf[0] = (int)value;
+    } else if (value == -0x80000000) {
+        buf = new Array<int>(1);
+        buf[0] = 0xC0;
+/*
+    } else if (value == ((long) -1) << 62) {
+        buf = new byte[1];
+        buf[0] = 0xE0;
+    */
+    } else{
+        int firstByte = 0x80;
+
+        bool isNegative = value < 0;
+        if (isNegative) {
+            value *= -1;
+            firstByte |= 0x10;
+        }
+
+        if (value < 256) {
+            firstByte |= 0x01;
+            buf = new Array<int>(2);
+            buf[0] = firstByte;
+            buf[1] = (int)(value & 0xFF);
+        } else if (value <= 0xFFFF) {
+            firstByte |= 0x02;
+            buf = new Array<int>(3);
+            buf[0] = firstByte;
+            buf[1] = (int)((value >> 8) & 0xFF);
+            buf[2] = (int)(value & 0xFF);
+        } else if (value <= 0xFFFFFF) {
+            firstByte |= 0x03;
+            buf = new Array<int>(4);
+            buf[0] = firstByte;
+            buf[1] = (int)((value >> 16) & 0xFF);
+            buf[2] = (int)((value >> 8) & 0xFF);
+            buf[3] = (int)(value & 0xFF);
+        } else if (value <= 0x7FFFFFFF) {
+            firstByte |= 0x04;
+            buf = new Array<int>(5);
+            buf[0] = firstByte;
+            buf[1] = (int)((value >> 24) & 0xFF);
+            buf[2] = (int)((value >> 16) & 0xFF);
+            buf[3] = (int)((value >> 8) & 0xFF);
+            buf[4] = (int)(value & 0xFF);
+        /*
+        } else if (value <= 0xFFFFFFFFFF) {
+            // TODO: etc.
+            fail("Not implemented");
+        */
+        } else {
+            fail("Not implemented");
+        }
+    }
+
+    return new ByteStringBuilder(true, buf.Size(), buf, null, null);
+}

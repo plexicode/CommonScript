@@ -5,28 +5,19 @@ using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
-    internal class ByteStringBuilder
-    {
-        public bool isLeaf;
-        public int length;
-        public byte[] bytes;
-        public ByteStringBuilder left;
-        public ByteStringBuilder right;
-    }
-
     internal static class Exporter
     {
         public static byte[] exportBundle(string flavorId, string extVersionId, CompilationBundle bundle)
         {
-            ByteStringBuilder flavor = bsbFromLenString(flavorId);
-            ByteStringBuilder version = bsbFromLenString(extVersionId);
+            ByteStringBuilder flavor = FunctionWrapper.bsbFromLenString(flavorId);
+            ByteStringBuilder version = FunctionWrapper.bsbFromLenString(extVersionId);
             byte commonScriptMajor = 0;
             byte commonScriptMinor = 1;
             byte commonScriptPatch = 0;
 
-            ByteStringBuilder header = bsbJoin4(
-                bsbFromUtf8String("PXCS"),
-                bsbFromBytes(new byte[] {
+            ByteStringBuilder header = FunctionWrapper.bsbJoin4(
+                FunctionWrapper.bsbFromUtf8String("PXCS"),
+                FunctionWrapper.bsbFromBytes(new int[] {
                     0,
                     commonScriptMajor,
                     commonScriptMinor,
@@ -37,15 +28,15 @@ namespace CommonScript.Compiler
 
             // TODO: xor-down a sha256 into a short checksum of the remaining chunks
 
-            ByteStringBuilder metadata = bsbJoin3(
-                bsbFromUtf8String("MTD"),
-                bsbFromInt(bundle.mainFunctionId),
-                bsbFromInt(bundle.builtInCount)
+            ByteStringBuilder metadata = FunctionWrapper.bsbJoin3(
+                FunctionWrapper.bsbFromUtf8String("MTD"),
+                FunctionWrapper.bsbFromInt(bundle.mainFunctionId),
+                FunctionWrapper.bsbFromInt(bundle.builtInCount)
             );
 
-            ByteStringBuilder tokenData = bsbJoin2(
-                bsbFromUtf8String("TOK"),
-                bsbFromInt(bundle.tokensById.Length - 1));
+            ByteStringBuilder tokenData = FunctionWrapper.bsbJoin2(
+                FunctionWrapper.bsbFromUtf8String("TOK"),
+                FunctionWrapper.bsbFromInt(bundle.tokensById.Length - 1));
             Dictionary<string, int> fileNameToOffset = new Dictionary<string, int>();
             ByteStringBuilder tokenFileNames = null;
             for (int i = 1; i < bundle.tokensById.Length; i++)
@@ -55,25 +46,25 @@ namespace CommonScript.Compiler
                 if (!fileNameToOffset.ContainsKey(filename))
                 {
                     fileNameToOffset[filename] = fileNameToOffset.Count;
-                    tokenFileNames = bsbJoin2(tokenFileNames, bsbFromLenString(filename));
+                    tokenFileNames = FunctionWrapper.bsbJoin2(tokenFileNames, FunctionWrapper.bsbFromLenString(filename));
                 }
             }
-            tokenData = bsbJoin3(tokenData, bsbFromInt(fileNameToOffset.Count), tokenFileNames);
+            tokenData = FunctionWrapper.bsbJoin3(tokenData, FunctionWrapper.bsbFromInt(fileNameToOffset.Count), tokenFileNames);
             for (int i = 1; i < bundle.tokensById.Length; i++)
             {
                 Token tok = bundle.tokensById[i];
                 string filename = tok.File;
                 int fileOffset = fileNameToOffset[filename];
-                tokenData = bsbJoin4(tokenData, bsbFromInt(fileOffset), bsbFromInt(tok.Line), bsbFromInt(tok.Col));
+                tokenData = FunctionWrapper.bsbJoin4(tokenData, FunctionWrapper.bsbFromInt(fileOffset), FunctionWrapper.bsbFromInt(tok.Line), FunctionWrapper.bsbFromInt(tok.Col));
             }
 
-            ByteStringBuilder stringData = bsbJoin2(
-                bsbFromUtf8String("STR"),
-                bsbFromInt(bundle.stringById.Length - 1));
+            ByteStringBuilder stringData = FunctionWrapper.bsbJoin2(
+                FunctionWrapper.bsbFromUtf8String("STR"),
+                FunctionWrapper.bsbFromInt(bundle.stringById.Length - 1));
             for (int i = 1; i < bundle.stringById.Length; i++)
             {
                 string val = bundle.stringById[i];
-                stringData = bsbJoin2(stringData, bsbFromLenString(val));
+                stringData = FunctionWrapper.bsbJoin2(stringData, FunctionWrapper.bsbFromLenString(val));
             }
 
             /*
@@ -91,11 +82,11 @@ namespace CommonScript.Compiler
             for (int i = 1; i < bundle.functionById.Count; i++)
             {
                 BundleFunctionInfo fn = bundle.functionById[i];
-                entityAcc = bsbJoin2(entityAcc, bsbJoin5(
-                    bsbFromInt(fn.argcMin),
-                    bsbFromInt(fn.argcMax),
-                    bsbFromLenString(fn.name),
-                    bsbFromInt(fn.code.Length),
+                entityAcc = FunctionWrapper.bsbJoin2(entityAcc, FunctionWrapper.bsbJoin5(
+                    FunctionWrapper.bsbFromInt(fn.argcMin),
+                    FunctionWrapper.bsbFromInt(fn.argcMax),
+                    FunctionWrapper.bsbFromLenString(fn.name),
+                    FunctionWrapper.bsbFromInt(fn.code.Length),
                     exportCode(fn.code))
                 );
             }
@@ -103,10 +94,10 @@ namespace CommonScript.Compiler
             for (int i = 1; i < bundle.lambdaById.Count; i++)
             {
                 BundleFunctionInfo fn = bundle.lambdaById[i];
-                entityAcc = bsbJoin2(entityAcc, bsbJoin4(
-                    bsbFromInt(fn.argcMin),
-                    bsbFromInt(fn.argcMax),
-                    bsbFromInt(fn.code.Length),
+                entityAcc = FunctionWrapper.bsbJoin2(entityAcc, FunctionWrapper.bsbJoin4(
+                    FunctionWrapper.bsbFromInt(fn.argcMin),
+                    FunctionWrapper.bsbFromInt(fn.argcMax),
+                    FunctionWrapper.bsbFromInt(fn.code.Length),
                     exportCode(fn.code))
                 );
             }
@@ -115,28 +106,28 @@ namespace CommonScript.Compiler
             {
                 BundleEnumInfo bei = bundle.enumById[i];
                 int memberCount = bei.names.Length;
-                entityAcc = bsbJoin2(entityAcc, bsbFromInt(memberCount));
+                entityAcc = FunctionWrapper.bsbJoin2(entityAcc, FunctionWrapper.bsbFromInt(memberCount));
                 for (int j = 0; j < memberCount; j++)
                 {
-                    entityAcc = bsbJoin3(
+                    entityAcc = FunctionWrapper.bsbJoin3(
                         entityAcc,
-                        bsbFromLenString(bei.names[j]),
-                        bsbFromInt(bei.values[j]));
+                        FunctionWrapper.bsbFromLenString(bei.names[j]),
+                        FunctionWrapper.bsbFromInt(bei.values[j]));
                 }
             }
 
             for (int i = 1; i < bundle.classById.Count; i++)
             {
                 BundleClassInfo bci = bundle.classById[i];
-                ByteStringBuilder classInfo = bsbJoin8(
-                    bsbFromLenString(bci.name),
-                    bsbFromInt(bci.parentId),
-                    bsbFromInt(bci.ctorId),
-                    bsbFromInt(bci.staticCtorId),
-                    bsbFromInt(bci.newDirectMembersByNextOffsets.Length),
-                    bsbFromInt(bci.methodsToId.Count),
-                    bsbFromInt(bci.staticFields.Count),
-                    bsbFromInt(bci.staticMethods.Count));
+                ByteStringBuilder classInfo = FunctionWrapper.bsbJoin8(
+                    FunctionWrapper.bsbFromLenString(bci.name),
+                    FunctionWrapper.bsbFromInt(bci.parentId),
+                    FunctionWrapper.bsbFromInt(bci.ctorId),
+                    FunctionWrapper.bsbFromInt(bci.staticCtorId),
+                    FunctionWrapper.bsbFromInt(bci.newDirectMembersByNextOffsets.Length),
+                    FunctionWrapper.bsbFromInt(bci.methodsToId.Count),
+                    FunctionWrapper.bsbFromInt(bci.staticFields.Count),
+                    FunctionWrapper.bsbFromInt(bci.staticMethods.Count));
 
                 for (int j = 0; j < bci.newDirectMembersByNextOffsets.Length; j++)
                 {
@@ -154,41 +145,41 @@ namespace CommonScript.Compiler
                     {
                         // TODO: put the field initial value here. For now, just set all this in the constructor.
                     }
-                    classInfo = bsbJoin3(
+                    classInfo = FunctionWrapper.bsbJoin3(
                         classInfo,
-                        bsbFromLenString(memberName),
-                        bsbFromInt(info));
+                        FunctionWrapper.bsbFromLenString(memberName),
+                        FunctionWrapper.bsbFromInt(info));
                 }
 
                 ByteStringBuilder methodInfo = null;
                 string[] methodNames = bci.methodsToId.Keys.OrderBy(k => k).ToArray();
                 foreach (string methodName in methodNames)
                 {
-                    methodInfo = bsbJoin3(
+                    methodInfo = FunctionWrapper.bsbJoin3(
                         methodInfo,
-                        bsbFromLenString(methodName),
-                        bsbFromInt(bci.methodsToId[methodName]));
+                        FunctionWrapper.bsbFromLenString(methodName),
+                        FunctionWrapper.bsbFromInt(bci.methodsToId[methodName]));
                 }
 
                 ByteStringBuilder staticFields = null;
                 foreach (string staticField in bci.staticFields.OrderBy(k => k))
                 {
-                    staticFields = bsbJoin2(
+                    staticFields = FunctionWrapper.bsbJoin2(
                         staticFields,
-                        bsbFromLenString(staticField));
+                        FunctionWrapper.bsbFromLenString(staticField));
                 }
 
                 ByteStringBuilder staticMethods = null;
                 foreach (string staticMethod in bci.staticMethods.OrderBy(k => k))
                 {
                     int funcId = bci.methodsToId[staticMethod];
-                    staticMethods = bsbJoin3(
+                    staticMethods = FunctionWrapper.bsbJoin3(
                         staticMethods,
-                        bsbFromLenString(staticMethod),
-                        bsbFromInt(funcId));
+                        FunctionWrapper.bsbFromLenString(staticMethod),
+                        FunctionWrapper.bsbFromInt(funcId));
                 }
 
-                entityAcc = bsbJoin5(
+                entityAcc = FunctionWrapper.bsbJoin5(
                     entityAcc,
                     classInfo,
                     methodInfo,
@@ -196,16 +187,16 @@ namespace CommonScript.Compiler
                     staticMethods);
             }
 
-            ByteStringBuilder entityHeader = bsbJoin5(
-                bsbFromUtf8String("ENT"),
-                bsbFromInt(bundle.functionById.Count - 1),
-                bsbFromInt(bundle.enumById.Count - 1),
-                bsbFromInt(bundle.classById.Count - 1),
-                bsbFromInt(bundle.lambdaById.Count - 1));
+            ByteStringBuilder entityHeader = FunctionWrapper.bsbJoin5(
+                FunctionWrapper.bsbFromUtf8String("ENT"),
+                FunctionWrapper.bsbFromInt(bundle.functionById.Count - 1),
+                FunctionWrapper.bsbFromInt(bundle.enumById.Count - 1),
+                FunctionWrapper.bsbFromInt(bundle.classById.Count - 1),
+                FunctionWrapper.bsbFromInt(bundle.lambdaById.Count - 1));
 
-            ByteStringBuilder entityData = bsbJoin2(entityHeader, entityAcc);
+            ByteStringBuilder entityData = FunctionWrapper.bsbJoin2(entityHeader, entityAcc);
 
-            ByteStringBuilder full = bsbJoin5(
+            ByteStringBuilder full = FunctionWrapper.bsbJoin5(
                 header, metadata, stringData, tokenData, entityData);
 
             return bsbFlatten(full);
@@ -216,222 +207,20 @@ namespace CommonScript.Compiler
             ByteStringBuilder bsb = null;
             foreach (ByteCodeRow row in rows)
             {
-                ByteStringBuilder bsbRow = bsbJoin4(
-                    bsbFromInt(row.opCode),
-                    bsbFromInt(row.args.Length * 4 + (row.stringArg != null ? 1 : 0) + (row.token != null ? 2 : 0)),
-                    row.stringArg != null ? bsbFromInt(row.stringId) : null,
-                    row.token != null ? bsbFromInt(row.tokenId) : null
+                ByteStringBuilder bsbRow = FunctionWrapper.bsbJoin4(
+                    FunctionWrapper.bsbFromInt(row.opCode),
+                    FunctionWrapper.bsbFromInt(row.args.Length * 4 + (row.stringArg != null ? 1 : 0) + (row.token != null ? 2 : 0)),
+                    row.stringArg != null ? FunctionWrapper.bsbFromInt(row.stringId) : null,
+                    row.token != null ? FunctionWrapper.bsbFromInt(row.tokenId) : null
                 );
                 for (int i = 0; i < row.args.Length; i++)
                 {
-                    bsbRow = bsbJoin2(bsbRow, bsbFromInt(row.args[i]));
+                    bsbRow = FunctionWrapper.bsbJoin2(bsbRow, FunctionWrapper.bsbFromInt(row.args[i]));
                 }
-                bsb = bsbJoin2(bsb, bsbRow);
+                bsb = FunctionWrapper.bsbJoin2(bsb, bsbRow);
             }
             return bsb;
         }
-
-        public static ByteStringBuilder bsbFromLenString(string value)
-        {
-            ByteStringBuilder payload = bsbFromUtf8String(value);
-            return bsbJoin2(bsbFromInt(payload.length), payload);
-        }
-
-        public static ByteStringBuilder bsbFromUtf8String(string value)
-        {
-            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(value);
-            return new ByteStringBuilder()
-            {
-                isLeaf = true,
-                bytes = bytes,
-                length = bytes.Length,
-                left = null,
-                right = null,
-            };
-        }
-
-        public static ByteStringBuilder bsbFromBytes(byte[] bytes)
-        {
-            return new ByteStringBuilder()
-            {
-                isLeaf = true,
-                bytes = bytes,
-                length = bytes.Length,
-                left = null,
-                right = null,
-            };
-        }
-
-        public static ByteStringBuilder bsbFromByte(int value)
-        {
-            byte[] buf = new byte[1];
-            buf[0] = (byte)(value & 0xFF);
-            return new ByteStringBuilder()
-            {
-                isLeaf = true,
-                bytes = buf,
-                length = 1,
-                left = null,
-                right = null,
-            };
-        }
-
-        /*
-            0xxxxxxx --> 7 bit positive integer
-            11000000 --> -2^31
-            11100000 --> -2^63
-            100syyyy --> y-byte positive integer followed by y-bytes to be converted into an integer. Then if s is 1, flip the sign.
-        */
-        public static ByteStringBuilder bsbFromInt(long value)
-        {
-            byte[] buf;
-            if (value >= 0 && value < 128)
-            {
-                buf = new byte[1];
-                buf[0] = (byte)value;
-            }
-            else if (value == int.MinValue)
-            {
-                buf = new byte[1];
-                buf[0] = 0xC0;
-            }
-            else if (value == int.MinValue)
-            {
-                buf = new byte[1];
-                buf[0] = 0xE0;
-            }
-            else
-            {
-                byte firstByte = 0x80;
-
-
-                bool isNegative = value < 0;
-                if (isNegative)
-                {
-                    value *= -1;
-                    firstByte |= 0x10;
-                }
-
-                if (value < 256)
-                {
-                    firstByte |= 0x01;
-                    buf = new byte[2];
-                    buf[0] = firstByte;
-                    buf[1] = (byte)(value & 0xFF);
-                }
-                else if (value <= 0xFFFF)
-                {
-                    firstByte |= 0x02;
-                    buf = new byte[3];
-                    buf[0] = firstByte;
-                    buf[1] = (byte)((value >> 8) & 0xFF);
-                    buf[2] = (byte)(value & 0xFF);
-                }
-                else if (value <= 0xFFFFFF)
-                {
-                    firstByte |= 0x03;
-                    buf = new byte[4];
-                    buf[0] = firstByte;
-                    buf[1] = (byte)((value >> 16) & 0xFF);
-                    buf[2] = (byte)((value >> 8) & 0xFF);
-                    buf[3] = (byte)(value & 0xFF);
-                }
-                else if (value <= 0xFFFFFFFF)
-                {
-                    firstByte |= 0x04;
-                    buf = new byte[5];
-                    buf[0] = firstByte;
-                    buf[1] = (byte)((value >> 24) & 0xFF);
-                    buf[2] = (byte)((value >> 16) & 0xFF);
-                    buf[3] = (byte)((value >> 8) & 0xFF);
-                    buf[4] = (byte)(value & 0xFF);
-                }
-                else if (value <= 0xFFFFFFFFFFL)
-                {
-                    // TODO: etc.
-                    throw new NotImplementedException();
-                }
-                else
-                {
-                    throw new NotImplementedException();
-                }
-
-            }
-
-            return new ByteStringBuilder()
-            {
-                length = buf.Length,
-                bytes = buf,
-                isLeaf = true,
-                left = null,
-                right = null,
-            };
-        }
-
-        public static ByteStringBuilder bsbJoin2(ByteStringBuilder a, ByteStringBuilder b)
-        {
-            if (a == null) return b;
-            if (b == null) return a;
-            return new ByteStringBuilder()
-            {
-                isLeaf = false,
-                bytes = null,
-                length = a.length + b.length,
-                left = a,
-                right = b,
-            };
-        }
-
-        public static ByteStringBuilder bsbJoin3(
-            ByteStringBuilder a,
-            ByteStringBuilder b,
-            ByteStringBuilder c)
-        {
-            return bsbJoin4(a, b, c, null);
-        }
-
-        public static ByteStringBuilder bsbJoin4(
-            ByteStringBuilder a,
-            ByteStringBuilder b,
-            ByteStringBuilder c,
-            ByteStringBuilder d)
-        {
-            return bsbJoin2(bsbJoin2(a, b), bsbJoin2(c, d));
-        }
-
-        public static ByteStringBuilder bsbJoin5(
-            ByteStringBuilder a,
-            ByteStringBuilder b,
-            ByteStringBuilder c,
-            ByteStringBuilder d,
-            ByteStringBuilder e)
-        {
-            return bsbJoin3(bsbJoin2(a, b), bsbJoin2(c, d), e);
-        }
-
-        public static ByteStringBuilder bsbJoin6(
-            ByteStringBuilder a,
-            ByteStringBuilder b,
-            ByteStringBuilder c,
-            ByteStringBuilder d,
-            ByteStringBuilder e,
-            ByteStringBuilder f)
-        {
-            return bsbJoin3(bsbJoin2(a, b), bsbJoin2(c, d), bsbJoin2(e, f));
-        }
-
-        public static ByteStringBuilder bsbJoin8(
-            ByteStringBuilder a,
-            ByteStringBuilder b,
-            ByteStringBuilder c,
-            ByteStringBuilder d,
-            ByteStringBuilder e,
-            ByteStringBuilder f,
-            ByteStringBuilder g,
-            ByteStringBuilder h)
-        {
-            return bsbJoin2(bsbJoin4(a, b, c, d), bsbJoin4(e, f, g, h));
-        } 
 
         public static byte[] bsbFlatten(ByteStringBuilder sbs)
         {
@@ -443,7 +232,12 @@ namespace CommonScript.Compiler
                 q.RemoveAt(q.Count - 1);
                 if (current.isLeaf)
                 {
-                    output.AddRange(current.bytes);
+                    int[] currentBytes = current.bytes;
+                    int len = currentBytes.Length;
+                    for (int i = 0; i < len; i++)
+                    {
+                        output.Add((byte)currentBytes[i]);
+                    }
                 }
                 else
                 {
