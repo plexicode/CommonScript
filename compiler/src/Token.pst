@@ -22,3 +22,13 @@ string Token_getFingerprint(Token t) {
 Token createFakeToken(TokenStream tokens, int type, string value, int line, int col) {
     return Token_new(value, type, tokens.file, line, col);    
 }
+
+
+Token createFakeTokenFromTemplate(Token template, string value, int tokenType) {
+    return Token_new(
+        value,
+        tokenType,
+        template.File,
+        template.Line,
+        template.Col);
+}

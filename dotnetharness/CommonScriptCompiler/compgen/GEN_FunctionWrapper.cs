@@ -23,14 +23,6 @@ namespace CommonScript.Compiler.Internal
             return output;
         }
 
-        private static string PST_FloatToString(double value)
-        {
-            string output = value.ToString();
-            if (output[0] == '.') output = "0" + output;
-            if (!output.Contains('.')) output += ".0";
-            return output;
-        }
-
         private static readonly string[] PST_SplitSep = new string[1];
 
         private static string[] PST_StringSplit(string value, string sep)
@@ -39,6 +31,14 @@ namespace CommonScript.Compiler.Internal
             if (sep.Length == 0) return value.ToCharArray().Select<char, string>(c => "" + c).ToArray();
             PST_SplitSep[0] = sep;
             return value.Split(PST_SplitSep, System.StringSplitOptions.None);
+        }
+
+        private static string PST_FloatToString(double value)
+        {
+            string output = value.ToString();
+            if (output[0] == '.') output = "0" + output;
+            if (!output.Contains('.')) output += ".0";
+            return output;
         }
 
         public static void PST_ParseFloat(string strValue, double[] output)
@@ -333,6 +333,12 @@ namespace CommonScript.Compiler.Internal
         public static ByteStringBuilder bsbJoin8(ByteStringBuilder a, ByteStringBuilder b, ByteStringBuilder c, ByteStringBuilder d, ByteStringBuilder e, ByteStringBuilder f, ByteStringBuilder g, ByteStringBuilder h)
         {
             return bsbJoin2(bsbJoin4(a, b, c, d), bsbJoin4(e, f, g, h));
+        }
+
+        public static Expression BuildFakeDotChain(string root, string field)
+        {
+            Expression varRoot = Expression_createVariable(null, root);
+            return Expression_createDotField(varRoot, null, field);
         }
 
         public static void bundleClass(ClassEntity classEntity, CompilationBundle bundle)
@@ -829,6 +835,20 @@ namespace CommonScript.Compiler.Internal
             return new CompiledModule(id, new Dictionary<string, string>(), null, null, null, null);
         }
 
+        public static AbstractEntity CompiledModuleEntityLookup(CompiledModule mod, string fqName)
+        {
+            if (mod.entitiesNoEnumParents.ContainsKey(fqName))
+            {
+                return mod.entitiesNoEnumParents[fqName];
+            }
+            string potentialEnumParentName = string.Join(".", StringArraySlice(PST_StringSplit(fqName, "."), 0, 1));
+            if (mod.entitiesNoEnumParents.ContainsKey(potentialEnumParentName))
+            {
+                return mod.entitiesNoEnumParents[potentialEnumParentName];
+            }
+            return null;
+        }
+
         public static string[] CompilerContext_CalculateCompilationOrder(CompilerContext compiler)
         {
             System.Collections.Generic.Dictionary<string, int> recurseState = new Dictionary<string, int>();
@@ -963,6 +983,11 @@ namespace CommonScript.Compiler.Internal
         public static Token createFakeToken(TokenStream tokens, int type, string value, int line, int col)
         {
             return Token_new(value, type, tokens.file, line, col);
+        }
+
+        public static Token createFakeTokenFromTemplate(Token template, string value, int tokenType)
+        {
+            return Token_new(value, tokenType, template.File, template.Line, template.Col);
         }
 
         public static string[] DotField_getVariableRootedDottedChain(Expression outermostDotField, string errorMessage)
@@ -2189,6 +2214,227 @@ namespace CommonScript.Compiler.Internal
             }
         }
 
+        public static string[] Resolver_DetermineConstAndEnumResolutionOrder(Resolver resolver, System.Collections.Generic.List<ConstEntity> constants, System.Collections.Generic.List<EnumEntity> enums)
+        {
+            int i = 0;
+            System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> referencesMadeByFqItem = new Dictionary<string, System.Collections.Generic.List<string>>();
+            i = 0;
+            while (i < constants.Count)
+            {
+                ConstEntity c = constants[i];
+                string ns = "";
+                if (c.baseData.nestParent != null)
+                {
+                    ns = c.baseData.nestParent.fqName;
+                }
+                System.Collections.Generic.List<string> refsOut = new List<string>();
+                c.constValue = Resolver_GetListOfUnresolvedConstReferences(resolver, c.baseData.fileContext, ns, c.constValue, refsOut);
+                referencesMadeByFqItem[c.baseData.fqName] = refsOut;
+                i += 1;
+            }
+            i = 0;
+            while (i < enums.Count)
+            {
+                EnumEntity e = enums[i];
+                string ns = "";
+                if (e.baseData.nestParent != null)
+                {
+                    ns = e.baseData.nestParent.fqName;
+                }
+                int memCount = e.memberNameTokens.Length;
+                int j = 0;
+                while (j < memCount)
+                {
+                    string memFqName = string.Join("", new string[] { e.baseData.fqName, ".", e.memberNameTokens[j].Value });
+                    Expression val = e.memberValues[j];
+                    System.Collections.Generic.List<string> refsOut = new List<string>();
+                    e.memberValues[j] = Resolver_GetListOfUnresolvedConstReferences(resolver, e.baseData.fileContext, ns, val, refsOut);
+                    referencesMadeByFqItem[memFqName] = refsOut;
+                    j++;
+                }
+                i += 1;
+            }
+            System.Collections.Generic.Dictionary<string, int> resolutionStatus = new Dictionary<string, int>();
+            System.Collections.Generic.List<string> resolutionOrder = new List<string>();
+            System.Collections.Generic.List<string> q = StringArrayToList(referencesMadeByFqItem.Keys.ToArray().OrderBy<string, string>(_PST_GEN_arg => _PST_GEN_arg).ToArray());
+            q.Reverse();
+            while (q.Count > 0)
+            {
+                int lastIndex = q.Count - 1;
+                string itemFqName = q[lastIndex];
+                q.RemoveAt(lastIndex);
+                if (itemFqName == "*")
+                {
+                    string resolvedItem = q[lastIndex - 1];
+                    q.RemoveAt(lastIndex - 1);
+                    resolutionStatus[resolvedItem] = 2;
+                    resolutionOrder.Add(resolvedItem);
+                }
+                else
+                {
+                    AbstractEntity item = resolver.flattenedEntitiesAndEnumValues[itemFqName];
+                    Token itemToken = item.firstToken;
+                    if (item.fqName != itemFqName)
+                    {
+                        EnumEntity parentEnum = (EnumEntity)item.specificData;
+                        int enumValIndex = Resolver_GetEnumMemberIndex(resolver, itemFqName, parentEnum);
+                        itemToken = parentEnum.memberNameTokens[enumValIndex];
+                    }
+                    int status = 0;
+                    if (resolutionStatus.ContainsKey(itemFqName))
+                    {
+                        status = resolutionStatus[itemFqName];
+                    }
+                    if (status == 1)
+                    {
+                        Errors_Throw(item.firstToken, "This definition contains a resolution cycle.");
+                    }
+                    if (status == 2)
+                    {
+                    }
+                    else
+                    {
+                        q.Add(itemFqName);
+                        q.Add("*");
+                        resolutionStatus[itemFqName] = 1;
+                        System.Collections.Generic.List<string> references = referencesMadeByFqItem[itemFqName];
+                        i = references.Count - 1;
+                        while (i >= 0)
+                        {
+                            q.Add(references[i]);
+                            i -= 1;
+                        }
+                    }
+                }
+            }
+            return resolutionOrder.ToArray();
+        }
+
+        public static int Resolver_GetEnumMemberIndex(Resolver resolver, string memNameOrFqMemName, EnumEntity enumEntity)
+        {
+            int lastDot = memNameOrFqMemName.LastIndexOf(".");
+            string memName = memNameOrFqMemName;
+            if (lastDot != -1)
+            {
+                memName = memNameOrFqMemName.Substring(lastDot + 1, memNameOrFqMemName.Length - lastDot - 1);
+            }
+            int i = 0;
+            while (i < enumEntity.memberNameTokens.Length)
+            {
+                if (enumEntity.memberNameTokens[i].Value == memName)
+                {
+                    return i;
+                }
+                i += 1;
+            }
+            return -1;
+        }
+
+        public static Expression Resolver_GetListOfUnresolvedConstReferences(Resolver resolver, FileContext file, string fqNamespace, Expression expr, System.Collections.Generic.List<string> refsOut)
+        {
+            return Resolver_GetListOfUnresolvedConstReferencesImpl(resolver, file, fqNamespace, expr, refsOut);
+        }
+
+        public static Expression Resolver_GetListOfUnresolvedConstReferencesImpl(Resolver resolver, FileContext file, string fqNamespace, Expression expr, System.Collections.Generic.List<string> refs)
+        {
+            switch (expr.type)
+            {
+                case 22:
+                    return expr;
+                case 5:
+                    return expr;
+                case 16:
+                    return expr;
+                case 26:
+                    return expr;
+                case 28:
+                    return expr;
+                case 3:
+                    expr.left = Resolver_GetListOfUnresolvedConstReferencesImpl(resolver, file, fqNamespace, expr.left, refs);
+                    expr.right = Resolver_GetListOfUnresolvedConstReferencesImpl(resolver, file, fqNamespace, expr.right, refs);
+                    return expr;
+                case 31:
+                    AbstractEntity referenced = TryDoExactLookupForConstantEntity(resolver, file, fqNamespace, expr.strVal);
+                    if (referenced == null)
+                    {
+                        Errors_Throw(expr.firstToken, string.Join("", new string[] { "No definition for '", expr.strVal, "'" }));
+                    }
+                    else
+                    {
+                        if (referenced.fileContext.compiledModule != file.compiledModule)
+                        {
+                            if (referenced.type == 2)
+                            {
+                                fail("Not implemented");
+                            }
+                            else if (referenced.type == 4)
+                            {
+                                fail("Not implemented");
+                            }
+                            else
+                            {
+                                fail("Not implemented");
+                            }
+                        }
+                        switch (referenced.type)
+                        {
+                            case 2:
+                                refs.Add(referenced.fqName);
+                                break;
+                            case 4:
+                                fail("Not implemented");
+                                break;
+                            default:
+                                Errors_Throw(expr.firstToken, "Cannot refer to this entity from a constant expression.");
+                                break;
+                        }
+                    }
+                    return expr;
+                case 11:
+                    string[] fullRefSegments = DotField_getVariableRootedDottedChain(expr, "Cannot use this type of entity from a constant expression.");
+                    string fullRefDotted = string.Join(".", fullRefSegments);
+                    AbstractEntity reffedEntity = TryDoExactLookupForConstantEntity(resolver, file, fqNamespace, fullRefDotted);
+                    if (reffedEntity == null)
+                    {
+                        Errors_Throw(expr.firstToken, "Invalid expression for constant.");
+                    }
+                    if (reffedEntity.fileContext.compiledModule != file.compiledModule)
+                    {
+                        if (reffedEntity.type == 2)
+                        {
+                            return ((ConstEntity)reffedEntity.specificData).constValue;
+                        }
+                        if (reffedEntity.type == 4)
+                        {
+                            fail("Not implemented");
+                        }
+                        else
+                        {
+                            fail("Not implemented");
+                        }
+                    }
+                    if (reffedEntity.type == 2)
+                    {
+                        refs.Add(reffedEntity.fqName);
+                    }
+                    else if (reffedEntity.type == 4)
+                    {
+                        string enumMemberName = fullRefSegments[fullRefSegments.Length - 1];
+                        string enumName = fullRefDotted.Substring(0, fullRefDotted.Length - enumMemberName.Length - 1);
+                        refs.Add(string.Join("", new string[] { reffedEntity.fqName, ".", enumMemberName }));
+                    }
+                    else
+                    {
+                        Errors_Throw(expr.firstToken, "Cannot reference this entity from here.");
+                    }
+                    return expr;
+                default:
+                    Errors_Throw(expr.firstToken, "Invalid expression for constant.");
+                    break;
+            }
+            return null;
+        }
+
         public static Resolver Resolver_new(StaticContext staticCtx, System.Collections.Generic.Dictionary<string, AbstractEntity> rootEntities, System.Collections.Generic.List<string> extensionNames)
         {
             Resolver r = new Resolver(staticCtx, rootEntities, new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new List<FunctionEntity>(), null, null, null, 0, StringSet_fromList(extensionNames));
@@ -3271,6 +3517,18 @@ namespace CommonScript.Compiler.Internal
             return output;
         }
 
+        public static System.Collections.Generic.List<string> StringArrayToList(string[] arr)
+        {
+            System.Collections.Generic.List<string> output = new List<string>();
+            int i = 0;
+            while (i < arr.Length)
+            {
+                output.Add(arr[i]);
+                i += 1;
+            }
+            return output;
+        }
+
         public static StringSet StringSet_add(StringSet s, string item)
         {
             s.items[item] = true;
@@ -3849,6 +4107,42 @@ namespace CommonScript.Compiler.Internal
         public static TokenStream TokenStream_new(string file, Token[] tokens)
         {
             return new TokenStream(0, tokens.Length, tokens, file);
+        }
+
+        public static AbstractEntity TryDoExactLookupForConstantEntity(Resolver resolver, FileContext file, string fqNamespace, string dottedEntityName)
+        {
+            if (resolver.flattenedEntitiesNoEnumParents.ContainsKey(dottedEntityName))
+            {
+                return resolver.flattenedEntitiesNoEnumParents[dottedEntityName];
+            }
+            System.Collections.Generic.List<string> nsParts = StringArrayToList(PST_StringSplit(fqNamespace, "."));
+            while (nsParts.Count > 0)
+            {
+                string lookupName = string.Join("", new string[] { string.Join(".", nsParts), ".", dottedEntityName });
+                if (resolver.flattenedEntitiesNoEnumParents.ContainsKey(lookupName))
+                {
+                    return resolver.flattenedEntitiesNoEnumParents[lookupName];
+                }
+                nsParts.RemoveAt(nsParts.Count - 1);
+            }
+            string[] entityNameSegments = PST_StringSplit(dottedEntityName, ".");
+            if (file.importsByVar.ContainsKey(entityNameSegments[0]))
+            {
+                CompiledModule targetModule = file.importsByVar[entityNameSegments[0]].compiledModuleRef;
+                string scopedName = string.Join(".", StringArraySlice(entityNameSegments, 1, 0));
+                return CompiledModuleEntityLookup(targetModule, scopedName);
+            }
+            int i = 0;
+            while (i < file.imports.Length)
+            {
+                ImportStatement imp = file.imports[i];
+                if (imp.importTargetVariableName == null)
+                {
+                    return CompiledModuleEntityLookup(imp.compiledModuleRef, dottedEntityName);
+                }
+                i += 1;
+            }
+            return null;
         }
 
         public static double TryParseFloat(Token throwToken, string rawValue)

@@ -53,3 +53,11 @@ Array<string> StringArraySlice(Array<string> arr, int skipStart, int skipEnd) {
     }
     return output;
 }
+
+List<string> StringArrayToList(Array<string> arr) {
+    List<string> output = new List<string>();
+    for (int i = 0; i < arr.Size(); i += 1) {
+        output.Add(arr[i]);
+    }
+    return output;
+}

@@ -19,3 +19,9 @@ bool IsExpressionNumericConstant(Expression expr) {
         t == ExpressionType.FLOAT_CONST ||
         t == ExpressionType.ENUM_CONST;
 }
+
+
+Expression BuildFakeDotChain(string root, string field) {
+    Expression varRoot = Expression_createVariable(null, root);
+    return Expression_createDotField(varRoot, null, field);
+}
