@@ -32,7 +32,7 @@ namespace CommonScript.Compiler
 
             Dictionary<string, string> builtinFiles = new Dictionary<string, string>()
             {
-                { "builtins.script", BuiltinUtil.GetBuiltinSource() },
+                { "builtins.script", FunctionWrapper.GetSourceForBuiltinModule("builtins") },
             };
 
             SupplyFilesForModule(this, "{BUILTIN}", builtinFiles, true, true);
@@ -96,7 +96,7 @@ namespace CommonScript.Compiler
                 string nextKey = compiler.unfulfilledDependencies.Keys.OrderBy(k => k).FirstOrDefault();
                 if (nextKey == null) return null;
 
-                if (!BuiltinUtil.IsBuiltInModule(nextKey))
+                if (!FunctionWrapper.IsBuiltInModule(nextKey))
                 {
                     return nextKey;
                 }
@@ -104,7 +104,10 @@ namespace CommonScript.Compiler
                 SupplyFilesForModule(
                     compiler,
                     nextKey,
-                    new Dictionary<string, string>() { { nextKey + ".script", BuiltinUtil.GetSourceFilesFor(nextKey) } },
+                    new Dictionary<string, string>()
+                    {
+                        { nextKey + ".script", FunctionWrapper.GetSourceForBuiltinModule(nextKey) }
+                    },
                     false,
                     true);
             }

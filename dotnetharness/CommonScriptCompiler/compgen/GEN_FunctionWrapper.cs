@@ -1244,17 +1244,6 @@ namespace CommonScript.Compiler.Internal
             return "@3XmlNode{}\n@3XmlElement:XmlNode{\nfield name;\nfield attributes;\nfield children = [];\nconstructor() : base() { }\n}\n@3XmlText:XmlNode {\nfield value;\nconstructor() : base() { }\n}\n@3XmlParse@6 {\nfield line;\nfield col;\nfield err;\nconstructor(e, l, c) : base('XML Parse Error: ' + e) {\nthis.err = e;\nthis.line = l;\nthis.col = c;\n}\n}\n@5parseXml(s) {\no = [0, 0, 0, 0];\n$xml_parse(s + '', o);\nif(o[0] == 0)\nthrow new XmlParseException(o[1], o[2], o[3]);\n@4_build([0], o[1]);\n}\n@1_build(\ni,\nb\n) {\nif (b[i[0]] == 1) {\ni[0]++;\no = new XmlElement();\no.name = b[i[0]++];\nc = b[i[0]++];\na = { };\nwhile (c --> 0) {\nk = b[i[0]++];\nv = b[i[0]++];\na[k] = v;\n}\no.attributes = a;\nc = b[i[0]++];\nwhile (c --> 0)\no.children.add(_build(i, b));\n} else {\no = new XmlText();\no.value = b[i[0]++];\n}\n@4o;\n}";
         }
 
-        public static string GetBuiltin(string moduleName)
-        {
-            string code = GetBuiltinRawStoredString(moduleName);
-            if (code == null)
-            {
-                fail(moduleName);
-                return null;
-            }
-            return code.Replace("@1", "function ").Replace("@2", " { constructor(m=null):base(m){} }").Replace("@3", "@public class ").Replace("@4", "return ").Replace("@5", "@public function ").Replace("@6", "Exception : Exception");
-        }
-
         public static string GetBuiltinRawStoredString(string m)
         {
             if (m == "builtins")
@@ -1286,6 +1275,17 @@ namespace CommonScript.Compiler.Internal
                 return GEN_BUILTINS_xml();
             }
             return null;
+        }
+
+        public static string GetSourceForBuiltinModule(string moduleName)
+        {
+            string code = GetBuiltinRawStoredString(moduleName);
+            if (code == null)
+            {
+                fail(moduleName);
+                return null;
+            }
+            return code.Replace("@1", "function ").Replace("@2", " { constructor(m=null):base(m){} }").Replace("@3", "@public class ").Replace("@4", "return ").Replace("@5", "@public function ").Replace("@6", "Exception : Exception");
         }
 
         public static ImportStatement[] ImportParser_AdvanceThroughImports(TokenStream tokens, bool isCoreBuiltin)
@@ -1339,6 +1339,11 @@ namespace CommonScript.Compiler.Internal
                 i += 1;
             }
             return new ImportStatement(importToken, tokenChain.ToArray(), string.Join(".", flatName), targetVarName, targetVarName != null && targetVarName.Value == "*", null);
+        }
+
+        public static bool IsBuiltInModule(string moduleId)
+        {
+            return moduleId != "builtins" && GetBuiltinRawStoredString(moduleId) != null;
         }
 
         public static ByteCodeBuffer join2(ByteCodeBuffer a, ByteCodeBuffer b)

@@ -13,7 +13,7 @@ string GetBuiltinRawStoredString(string m) {
     return null;
 }
 
-string GetBuiltin(string moduleName) {
+string GetSourceForBuiltinModule(string moduleName) {
     string code = GetBuiltinRawStoredString(moduleName);
     if (code == null) {
         fail(moduleName); // module not found
@@ -29,4 +29,8 @@ string GetBuiltin(string moduleName) {
         .Replace("@5", "@public function ")
         .Replace("@6", "Exception : Exception")
     ;
+}
+
+bool IsBuiltInModule(string moduleId) {
+    return moduleId != "builtins" && GetBuiltinRawStoredString(moduleId) != null;
 }
