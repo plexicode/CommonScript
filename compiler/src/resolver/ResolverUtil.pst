@@ -1,0 +1,21 @@
+bool IsExpressionConstant(Expression expr) {
+    switch (expr.type)
+    {
+        case ExpressionType.BOOL_CONST:
+        case ExpressionType.NULL_CONST:
+        case ExpressionType.INTEGER_CONST:
+        case ExpressionType.FLOAT_CONST:
+        case ExpressionType.STRING_CONST:
+        case ExpressionType.ENUM_CONST:
+            return true;
+    }
+    return false;
+}
+
+bool IsExpressionNumericConstant(Expression expr) {
+    int t = expr.type;
+    return
+        t == ExpressionType.INTEGER_CONST ||
+        t == ExpressionType.FLOAT_CONST ||
+        t == ExpressionType.ENUM_CONST;
+}

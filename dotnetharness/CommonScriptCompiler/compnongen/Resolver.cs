@@ -57,7 +57,7 @@ namespace CommonScript.Compiler
                 }
                 else
                 {
-                    throw new NotImplementedException();
+                    FunctionWrapper.fail("Not implemented");
                 }
             }
 
@@ -76,13 +76,13 @@ namespace CommonScript.Compiler
 
             for (int i = 0; i < functions.Count; i++)
             {
-                EntityResolverUtil.EntityResolver_ResetAutoVarId(resolver);
+                FunctionWrapper.EntityResolver_ResetAutoVarId(resolver);
                 EntityResolverUtil.EntityResolver_ResolveFunctionFirstPass(resolver, functions[i]);
             }
 
             for (int i = 0; i < constructors.Count; i++)
             {
-                EntityResolverUtil.EntityResolver_ResetAutoVarId(resolver);
+                FunctionWrapper.EntityResolver_ResetAutoVarId(resolver);
                 EntityResolverUtil.EntityResolver_ResolveFunctionFirstPass(resolver, constructors[i]);
             }
 
@@ -90,7 +90,7 @@ namespace CommonScript.Compiler
             // DO NOT CHANGE TO FOR-EACH. This count can grow as a result of nested lambdas.
             for (int i = 0; i < resolver.lambdas.Count; i++) 
             {
-                EntityResolverUtil.EntityResolver_ResetAutoVarId(resolver);
+                FunctionWrapper.EntityResolver_ResetAutoVarId(resolver);
                 EntityResolverUtil.EntityResolver_ResolveFunctionFirstPass(resolver, resolver.lambdas[i]);
             }
 
@@ -124,8 +124,9 @@ namespace CommonScript.Compiler
             ClassEntity[] deterministicOrder = classes.OrderBy(c => c.baseData.fqName).ToArray();
             List<ClassEntity> finalOrder = new List<ClassEntity>();
             List<ClassEntity> baseClassRequired = new List<ClassEntity>();
-            foreach (ClassEntity e in deterministicOrder)
+            for (int i = 0; i < deterministicOrder.Length; i++)
             {
+                ClassEntity e = deterministicOrder[i];
                 if (e.baseClassTokens != null)
                 {
                     baseClassRequired.Add(e);
@@ -135,17 +136,18 @@ namespace CommonScript.Compiler
                     finalOrder.Add(e);
                 }
             }
-            foreach (ClassEntity bc in baseClassRequired)
+            
+            for (int i = 0; i < baseClassRequired.Count; i += 1)
             {
-                string ns = string.Join('.', bc.baseData.fqName.Split('.').SkipLast(1));
+                ClassEntity bc = baseClassRequired[i];
                 resolver.activeEntity = bc.baseData;
                 Token baseClassToken = bc.baseClassTokens[0];
                 AbstractEntity bcEntity = FunctionWrapper.LookupUtil_DoLookupForName(resolver, baseClassToken, baseClassToken.Value);
                 if (bcEntity != null)
                 {
-                    for (int i = 2; i < bc.baseClassTokens.Length; i += 2)
+                    for (int j = 2; j < bc.baseClassTokens.Length; j += 2)
                     {
-                        string next = bc.baseClassTokens[i].Value;
+                        string next = bc.baseClassTokens[j].Value;
                         if (bcEntity != null)
                         {
                             Dictionary<string, AbstractEntity> lookup = FunctionWrapper.Entity_getMemberLookup(resolver.staticCtx, bcEntity);
@@ -163,7 +165,7 @@ namespace CommonScript.Compiler
                 if (bcEntity == null)
                 {
                     FunctionWrapper.Errors_Throw(bc.baseData.firstToken, "Could not resolve base class");
-                    throw new NotImplementedException();
+                    FunctionWrapper.fail("Not implemented");
                 }
                 if (bcEntity.type != (int)EntityType.CLASS)
                 {
@@ -175,12 +177,15 @@ namespace CommonScript.Compiler
             }
 
             Dictionary<string, bool> includedInOrder = new Dictionary<string, bool>();
-            foreach (ClassEntity bc in baseClassRequired)
+            for (int i = 0; i < baseClassRequired.Count; i++)
             {
+                ClassEntity bc = baseClassRequired[i];
                 includedInOrder[bc.baseData.fqName] = false;
             }
-            foreach (ClassEntity bc in baseClassRequired)
+            
+            for (int i = 0; i < baseClassRequired.Count; i++)
             {
+                ClassEntity bc = baseClassRequired[i];
                 ClassEntity walker = bc;
                 List<ClassEntity> order = new List<ClassEntity>();
                 while (walker != null)
@@ -251,7 +256,7 @@ namespace CommonScript.Compiler
                         else
                         {
                             val = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, val);
-                            if (!IsExpressionConstant(val))
+                            if (!FunctionWrapper.IsExpressionConstant(val))
                             {
                                 FunctionWrapper.Errors_Throw(val.firstToken, "A constant expression is required here.");
                             }
@@ -263,22 +268,6 @@ namespace CommonScript.Compiler
                 }
             }
         }
-
-        internal static bool IsExpressionConstant(Expression expr)
-        {
-            switch (expr.type)
-            {
-                case (int) ExpressionType.BOOL_CONST:
-                case (int) ExpressionType.NULL_CONST:
-                case (int) ExpressionType.INTEGER_CONST:
-                case (int) ExpressionType.FLOAT_CONST:
-                case (int) ExpressionType.STRING_CONST:
-                case (int) ExpressionType.ENUM_CONST:
-                    return true;
-            }
-            return false;
-        }
-
 
         private static Token BuildFakeToken(Token template, string value, int tokenType)
         {
@@ -339,9 +328,9 @@ namespace CommonScript.Compiler
             // Then you were thinking about how this only pertains to the first pass, that really this 
             // function should do both passes and be renamed to ResolveConstantsAndEnums()
 
-
-            foreach (ConstEntity c in constants)
+            for (int i = 0; i < constants.Count; i++)
             {
+                ConstEntity c = constants[i];
                 string ns = "";
                 if (c.baseData.nestParent != null) ns = c.baseData.nestParent.fqName;
 
@@ -350,19 +339,20 @@ namespace CommonScript.Compiler
                 referencesMadeByFqItem[c.baseData.fqName] = refsOut;
             }
 
-            foreach (EnumEntity e in enums)
+            for (int i = 0; i < enums.Count; i++)
             {
+                EnumEntity e = enums[i];   
                 string ns = ""; 
                 if (e.baseData.nestParent != null) ns = e.baseData.nestParent.fqName;
                 
                 int memCount = e.memberNameTokens.Length;
 
-                for (int i = 0; i < memCount; i++)
+                for (int j = 0; j < memCount; j++)
                 {
-                    string memFqName = e.baseData.fqName + "." + e.memberNameTokens[i].Value;
-                    Expression val = e.memberValues[i];
+                    string memFqName = e.baseData.fqName + "." + e.memberNameTokens[j].Value;
+                    Expression val = e.memberValues[j];
                     List<string> refsOut = new List<string>();
-                    e.memberValues[i] = ResolverUtil.GetListOfUnresolvedConstReferences(resolver, e.baseData.fileContext, ns, val, refsOut);
+                    e.memberValues[j] = ResolverUtil.GetListOfUnresolvedConstReferences(resolver, e.baseData.fileContext, ns, val, refsOut);
                     referencesMadeByFqItem[memFqName] = refsOut;
                 }
             }
@@ -498,7 +488,8 @@ namespace CommonScript.Compiler
                                 refs.Add(referenced.fqName);
                                 break;
                             case (int)EntityType.ENUM:
-                                throw new NotImplementedException();
+                                FunctionWrapper.fail("Not implemented");
+                                break;
 
                             default:
                                 FunctionWrapper.Errors_Throw(expr.firstToken, "Cannot refer to this entity from a constant expression.");
@@ -587,14 +578,15 @@ namespace CommonScript.Compiler
                 // If it was found, then use the rest of the dotted segment chain as a fully qualified
                 // reference within that imported module.
                 CompiledModule targetModule = file.importsByVar[entityNameSegments[0]].compiledModuleRef;
-                string scopedName = string.Join('.', [.. entityNameSegments.Skip(1)]);
+                string scopedName = string.Join('.', FunctionWrapper.StringArraySlice(entityNameSegments, 1, 0));
                 return CompiledModuleEntityLookup(targetModule, scopedName);
             }
 
             // If it wasn't found locally or in an variable-scoped import, then check the wildcard imports.
             // In these cases, the entity name is fully qualified as-is and does not require truncation.
-            foreach (ImportStatement imp in file.imports)
+            for (int i = 0; i < file.imports.Length; i += 1)
             {
+                ImportStatement imp = file.imports[i];
                 if (imp.importTargetVariableName == null)
                 {
                     return CompiledModuleEntityLookup(imp.compiledModuleRef, dottedEntityName);
@@ -609,8 +601,7 @@ namespace CommonScript.Compiler
             {
                 return mod.entitiesNoEnumParents[fqName];
             }
-            string[] parts = fqName.Split('.');
-            string potentialEnumParentName = string.Join('.', parts.SkipLast(1));
+            string potentialEnumParentName = string.Join('.', FunctionWrapper.StringArraySlice(fqName.Split('.'), 0, 1));
             if (mod.entitiesNoEnumParents.ContainsKey(potentialEnumParentName))
             {
                 return mod.entitiesNoEnumParents[potentialEnumParentName];

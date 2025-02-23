@@ -44,7 +44,8 @@ namespace CommonScript.Compiler
                     break;
 
                 default:
-                    throw new NotImplementedException();
+                    FunctionWrapper.fail("Not implemented");
+                    break;
             }
             return s;
         }
@@ -130,7 +131,7 @@ namespace CommonScript.Compiler
 
         private static Statement StatementResolver_FirstPass_ForEachLoop(Resolver resolver, Statement forEachLoop)
         {
-            forEachLoop.autoId = EntityResolverUtil.EntityResolver_GetNextAutoVarId(resolver);
+            forEachLoop.autoId = FunctionWrapper.EntityResolver_GetNextAutoVarId(resolver);
             forEachLoop.expression = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, forEachLoop.expression);
             ((FunctionEntity)resolver.activeEntity.specificData).variableScope[forEachLoop.varToken.Value] = true;
             StatementResolver_ResolveStatementArrayFirstPass(resolver, forEachLoop.code);
@@ -199,7 +200,7 @@ namespace CommonScript.Compiler
                 {
                     // TODO: the code for resolving a dotted name for a class (particularly in the base class resolution) needs 
                     // to be refactored and used here as well.
-                    throw new NotImplementedException();
+                    FunctionWrapper.fail("Not implemented");
                 }
                 else
                 {
@@ -338,7 +339,7 @@ namespace CommonScript.Compiler
                     {
                         expr = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, expr);
                         chunk.Cases[i] = expr;
-                        if (!ResolverUtil.IsExpressionConstant(expr))
+                        if (!FunctionWrapper.IsExpressionConstant(expr))
                         {
                             FunctionWrapper.Errors_Throw(expr.firstToken, "Only constant expressions are allowed in switch statement cases.");
                         }
@@ -391,7 +392,7 @@ namespace CommonScript.Compiler
         private static Statement StatementResolver_SecondPass_ThrowStatement(Resolver resolver, Statement throwStmnt)
         {
             throwStmnt.expression = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, throwStmnt.expression);
-            if (ResolverUtil.IsExpressionConstant(throwStmnt.expression))
+            if (FunctionWrapper.IsExpressionConstant(throwStmnt.expression))
             {
                 FunctionWrapper.Errors_Throw(throwStmnt.expression.firstToken, "Only instances of Exception are throwable.");
             }

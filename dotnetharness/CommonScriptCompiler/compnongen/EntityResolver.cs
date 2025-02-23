@@ -7,16 +7,6 @@ namespace CommonScript.Compiler
 {
     internal static class EntityResolverUtil
     {
-        public static void EntityResolver_ResetAutoVarId(Resolver resolver)
-        {
-            resolver.autoVarId = 0;
-        }
-
-        public static int EntityResolver_GetNextAutoVarId(Resolver resolver)
-        {
-            return resolver.autoVarId++;
-        }
-
         public static void EntityResolver_DetermineMemberOffsets(ClassEntity classDef)
         {
             // TODO: you need to ensure that the overridden members are exclusively methods, not fields.
@@ -113,7 +103,7 @@ namespace CommonScript.Compiler
                     FieldEntity fld = fields[i];
                     fld.defaultValue = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, fld.defaultValue);
                     Statement setter = EntityResolver_ConvertFieldDefaultValueIntoSetter(fld);
-                    if (ResolverUtil.IsExpressionConstant(fld.defaultValue))
+                    if (FunctionWrapper.IsExpressionConstant(fld.defaultValue))
                     {
                         preBaseFieldInit.Add(setter);
                     }
@@ -163,7 +153,7 @@ namespace CommonScript.Compiler
 
         private static Statement EntityResolver_ConvertFieldDefaultValueIntoSetter(FieldEntity fld)
         {
-            if (fld.opToken == null) throw new InvalidOperationException(); // only applicable to default-value-based fields.
+            if (fld.opToken == null) FunctionWrapper.fail(""); // only applicable to default-value-based fields.
             Expression root = null;
             if (fld.baseData.isStatic)
             {

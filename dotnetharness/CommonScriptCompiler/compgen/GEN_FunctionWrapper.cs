@@ -1011,6 +1011,18 @@ namespace CommonScript.Compiler.Internal
             return staticCtx.emptyLookup;
         }
 
+        public static int EntityResolver_GetNextAutoVarId(Resolver resolver)
+        {
+            int id = resolver.autoVarId;
+            resolver.autoVarId += 1;
+            return id;
+        }
+
+        public static void EntityResolver_ResetAutoVarId(Resolver resolver)
+        {
+            resolver.autoVarId = 0;
+        }
+
         public static EnumEntity EnumEntity_new(Token enumToken, Token nameToken, Token[] memberNames, Expression[] memberValues)
         {
             EnumEntity e = new EnumEntity(memberNames, memberValues, null);
@@ -1881,6 +1893,32 @@ namespace CommonScript.Compiler.Internal
         public static bool IsBuiltInModule(string moduleId)
         {
             return moduleId != "builtins" && GetBuiltinRawStoredString(moduleId) != null;
+        }
+
+        public static bool IsExpressionConstant(Expression expr)
+        {
+            switch (expr.type)
+            {
+                case 5:
+                    return true;
+                case 26:
+                    return true;
+                case 22:
+                    return true;
+                case 16:
+                    return true;
+                case 28:
+                    return true;
+                case 12:
+                    return true;
+            }
+            return false;
+        }
+
+        public static bool IsExpressionNumericConstant(Expression expr)
+        {
+            int t = expr.type;
+            return t == 22 || t == 16 || t == 12;
         }
 
         public static ByteCodeBuffer join2(ByteCodeBuffer a, ByteCodeBuffer b)
@@ -3217,6 +3255,20 @@ namespace CommonScript.Compiler.Internal
         public static StaticContext StaticContext_new()
         {
             return new StaticContext(TokenizerStaticContext_new(), new Dictionary<string, AbstractEntity>(), SpecialActionUtil_new(), StringSet_fromArray(PST_StringSplit("public static", " ")));
+        }
+
+        public static string[] StringArraySlice(string[] arr, int skipStart, int skipEnd)
+        {
+            int srcLen = arr.Length;
+            int dstLen = srcLen - skipStart - skipEnd;
+            string[] output = new string[dstLen];
+            int i = 0;
+            while (i < dstLen)
+            {
+                output[i] = arr[skipStart + i];
+                i += 1;
+            }
+            return output;
         }
 
         public static StringSet StringSet_add(StringSet s, string item)

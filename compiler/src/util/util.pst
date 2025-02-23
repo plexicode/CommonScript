@@ -43,3 +43,13 @@ Array<string> OrderStringsByDescendingFrequencyUsingLookup(
 
     return Core.ListToArray(output);
 }
+
+Array<string> StringArraySlice(Array<string> arr, int skipStart, int skipEnd) {
+    int srcLen = arr.Size();
+    int dstLen = srcLen - skipStart - skipEnd;
+    Array<string> output = new Array<string>(dstLen);
+    for (int i = 0; i < dstLen; i += 1) {
+        output[i] = arr[skipStart + i];
+    }
+    return output;
+}

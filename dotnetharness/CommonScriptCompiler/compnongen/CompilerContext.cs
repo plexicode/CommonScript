@@ -16,8 +16,9 @@ namespace CommonScript.Compiler
 
             compiler.compiledModulesById = new Dictionary<string, CompiledModule>();
 
-            foreach (string moduleId in moduleCompilationOrder)
+            for (int i = 0; i < moduleCompilationOrder.Length; i += 1) 
             {
+                string moduleId = moduleCompilationOrder[i];
                 CompiledModule module = CompilerContext_CompileModule(compiler, moduleId);
                 compiler.compiledModulesById[moduleId] = module;
             }
@@ -34,8 +35,9 @@ namespace CommonScript.Compiler
 
             Dictionary<string, AbstractEntity> rootEntities = new Dictionary<string, AbstractEntity>();
             Dictionary<string, string> sourceCode = new Dictionary<string, string>();
-            foreach (FileContext file in files)
+            for (int i = 0; i < files.Count; i++)
             {
+                FileContext file = files[i];
                 sourceCode[file.path] = file.content;
                 foreach (ImportStatement importStatement in file.imports)
                 {
@@ -57,8 +59,9 @@ namespace CommonScript.Compiler
             m.codeFiles = sourceCode;
             FunctionWrapper.CompiledModule_AddLambdas(m, resolverCtx.lambdas);
             FunctionWrapper.CompiledModule_InitializeLookups(m, resolverCtx.nestedEntities, resolverCtx.flattenedEntities);
-            foreach (FileContext file in files)
+            for (int i = 0; i < files.Count; i++)
             {
+                FileContext file = files[i];
                 file.compiledModule = m;
             }
 
@@ -136,7 +139,8 @@ namespace CommonScript.Compiler
                         break;
 
                     case "property":
-                        throw new NotImplementedException(nextToken);
+                        FunctionWrapper.fail("Not implemented");
+                        break;
 
                     case "import":
                         FunctionWrapper.Errors_Throw(FunctionWrapper.Tokens_peek(tokens), "All imports must appear at the top of the file.");
@@ -280,7 +284,7 @@ namespace CommonScript.Compiler
             Dictionary<string, AbstractEntity> entityBucket = new Dictionary<string, AbstractEntity>();
             while (FunctionWrapper.Tokens_popIfPresent(tokens, "."))
             {
-                throw new NotImplementedException();
+                FunctionWrapper.fail("Not implemented");
             }
             NamespaceEntity nsEntity = FunctionWrapper.NamespaceEntity_new(nsToken, nsFirst, namespacePrefix);
             FunctionWrapper.Tokens_popExpected(tokens, "{");

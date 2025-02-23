@@ -148,7 +148,8 @@ namespace CommonScript.Compiler
             // You left off here realizing that it's actually better to just use CONSTRUCTOR_REF as a parse node, that way 
             // the resolver for the path of the item can be resolve in a normal way e.g. "new myModuleAlias.SomeClass()" should
             // resolve as an invocation of a class reference expression. 
-            throw new NotImplementedException();
+            FunctionWrapper.fail("not implemented");
+            return null;
         }
 
         private static Expression ExpressionResolver_FirstPass_ConstructorReference(Resolver resolver, Expression ctorRef)
@@ -254,12 +255,31 @@ namespace CommonScript.Compiler
 
         private static Expression ExpressionResolver_FirstPass_Lambda(Resolver resolver, Expression lamb)
         {
+            // TODO: pastel should support Core.ArrayToList()
+            List<Token> argNames = new List<Token>();
+            for (int i = 0; i < lamb.argNames.Length; i += 1)
+            {
+                argNames.Add(lamb.argNames[i]);
+            }
+            List<Expression> argValues = new List<Expression>();
+            for (int i = 0; i < lamb.values.Length; i += 1)
+            {
+                argValues.Add(lamb.values[i]);
+            }
+
+            List<Statement> code = new List<Statement>();
+            for (int i = 0; i < lamb.nestedCode.Length; i += 1)
+            {
+                code.Add(lamb.nestedCode[i]);
+            }
+
             FunctionEntity lambdaEnt = FunctionWrapper.FunctionEntity_BuildLambda(
                 resolver.activeEntity.fileContext,
                 lamb.firstToken,
-                [..lamb.argNames],
-                [..lamb.values],
-                [..lamb.nestedCode]);
+                argNames,
+                argValues,
+                code);
+            
             ResolverUtil.ReportNewLambda(resolver, lambdaEnt);
             lamb.entityPtr = lambdaEnt.baseData;
             return lamb;
@@ -376,15 +396,6 @@ namespace CommonScript.Compiler
             return varExpr;
         }
 
-        private static bool IsExpressionNumericConstant(Expression expr)
-        {
-            int t = expr.type;
-            return
-                t == (int) ExpressionType.INTEGER_CONST ||
-                t == (int) ExpressionType.FLOAT_CONST ||
-                t == (int) ExpressionType.ENUM_CONST;
-        }
-
         private static double ExpressionResolver_GetNumericValueOfConstant(Expression exprConst)
         {
             if (exprConst.type == (int)ExpressionType.FLOAT_CONST) return exprConst.floatVal;
@@ -402,7 +413,9 @@ namespace CommonScript.Compiler
                 case (int) ExpressionType.STRING_CONST: return "string";
                 case (int) ExpressionType.ENUM_CONST: return "enum";
             }
-            throw new NotImplementedException(); // this should not happen
+
+            FunctionWrapper.fail("not implemented"); // this should not happen
+            return null;
         }
         private static void ThrowOpNotDefinedError(Token throwToken, string op, int left, int right)
         {
@@ -430,10 +443,11 @@ namespace CommonScript.Compiler
 
 
             // TODO: resolve constants
-            if (ResolverUtil.IsExpressionConstant(expr.left) && ResolverUtil.IsExpressionConstant(expr.right))
+            if (FunctionWrapper.IsExpressionConstant(expr.left) && 
+                FunctionWrapper.IsExpressionConstant(expr.right))
             {
-                bool isLeftNumeric = IsExpressionNumericConstant(expr.left);
-                bool isRightNumeric = IsExpressionNumericConstant(expr.right);
+                bool isLeftNumeric = FunctionWrapper.IsExpressionNumericConstant(expr.left);
+                bool isRightNumeric = FunctionWrapper.IsExpressionNumericConstant(expr.right);
                 bool isRightZero = expr.right.intVal == 0;
                 if (expr.right.type == (int)ExpressionType.FLOAT_CONST) isRightZero = expr.right.floatVal == 0;
 
@@ -594,7 +608,8 @@ namespace CommonScript.Compiler
                         ThrowOpNotDefinedError(opToken, op, expr.left.type, expr.right.type);
                         break;
                 }
-                throw new InvalidOperationException(); // all code paths above cause an exit.
+                
+                FunctionWrapper.fail(""); // all code paths above cause an exit.
             }
 
             return expr;
@@ -632,14 +647,15 @@ namespace CommonScript.Compiler
                 string val = expr.floatVal + "";
                 if (val.ToLowerInvariant().Contains('e'))
                 {
-                    throw new NotImplementedException();
+                    FunctionWrapper.fail("Not implemented");
                 }
                 if (val.Contains(',')) val = val.Replace(',', '.');
                 if (!val.Contains('.')) val += ".0";
                 return val;
             }
 
-            throw new NotImplementedException();
+            FunctionWrapper.fail("Not implemented");
+            return null;
         }
 
         private static Expression ExpressionResolver_SecondPass_ConstructorReference(Resolver resolver, Expression ctorRef, bool isExpected)
@@ -662,7 +678,7 @@ namespace CommonScript.Compiler
         {
             bwn.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, bwn.root);
 
-            if (ResolverUtil.IsExpressionConstant(bwn.root))
+            if (FunctionWrapper.IsExpressionConstant(bwn.root))
             {
                 if (bwn.root.type != (int) ExpressionType.INTEGER_CONST)
                 {
@@ -682,7 +698,7 @@ namespace CommonScript.Compiler
         {
             bn.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, bn.root);
 
-            if (ResolverUtil.IsExpressionConstant(bn.root))
+            if (FunctionWrapper.IsExpressionConstant(bn.root))
             {
                 if (bn.root.type != (int) ExpressionType.BOOLEAN_NOT)
                 {
@@ -840,7 +856,7 @@ namespace CommonScript.Compiler
             if (funcInvoke.root.type == (int) ExpressionType.CONSTRUCTOR_REFERENCE)
             {
                 Expression ctorRef = ExpressionResolver_SecondPass_ConstructorReference(resolver, funcInvoke.root, true);
-                if (ctorRef.type != (int) ExpressionType.CONSTRUCTOR_REFERENCE) throw new InvalidOperationException(); // this shouldn't happen. 
+                if (ctorRef.type != (int) ExpressionType.CONSTRUCTOR_REFERENCE) FunctionWrapper.fail(""); // this shouldn't happen. 
 
                 ExpressionResolver_ResolveExpressionArraySecondPass(resolver, funcInvoke.args);
 
@@ -934,7 +950,7 @@ namespace CommonScript.Compiler
         {
             Expression root = ExpressionResolver_ResolveExpressionSecondPass(resolver, negSign.root);
             negSign.root = root;
-            if (IsExpressionNumericConstant(root))
+            if (FunctionWrapper.IsExpressionNumericConstant(root))
             {
                 switch (root.type)
                 {
@@ -971,7 +987,7 @@ namespace CommonScript.Compiler
                 {
                     Expression expr = ExpressionResolver_ResolveExpressionSecondPass(resolver, slice.args[i]);
                     slice.args[i] = expr;
-                    if (ResolverUtil.IsExpressionConstant(expr))
+                    if (FunctionWrapper.IsExpressionConstant(expr))
                     {
                         if (expr.type != (int) ExpressionType.INTEGER_CONST && expr.type != (int) ExpressionType.ENUM_CONST)
                         {
@@ -995,7 +1011,7 @@ namespace CommonScript.Compiler
             ternary.left = ExpressionResolver_ResolveExpressionSecondPass(resolver, ternary.left);
             ternary.right = ExpressionResolver_ResolveExpressionSecondPass(resolver, ternary.right);
 
-            if (ResolverUtil.IsExpressionConstant(ternary.root))
+            if (FunctionWrapper.IsExpressionConstant(ternary.root))
             {
                 if (ternary.root.type != (int) ExpressionType.BOOL_CONST)
                 {
@@ -1011,7 +1027,10 @@ namespace CommonScript.Compiler
 
         private static Expression ExpressionResolver_SecondPass_ThisConstant(Resolver resolver, Expression thisExpr)
         {
-            if (resolver.activeEntity.nestParent == null) throw new NotImplementedException();
+            if (resolver.activeEntity.nestParent == null)
+            {
+                FunctionWrapper.fail("not implemented");
+            } 
             return thisExpr;
         }
 
@@ -1047,7 +1066,7 @@ namespace CommonScript.Compiler
 
         private static Expression ExpressionResolver_SecondPass_Variable(Resolver resolver, Expression varExpr)
         {
-            if (varExpr.strVal == "print") throw new InvalidOperationException();
+            if (varExpr.strVal == "print") FunctionWrapper.fail(""); // should not happen.
             if (((FunctionEntity)resolver.activeEntity.specificData).variableScope.ContainsKey(varExpr.strVal)) return varExpr;
 
             // TODO: come up with a list of suggestions.
@@ -1069,7 +1088,7 @@ namespace CommonScript.Compiler
                             Expression val = enumParent.memberValues[i];
                             if (val.type != (int) ExpressionType.INTEGER_CONST)
                             {
-                                throw new InvalidOperationException();
+                                FunctionWrapper.fail(""); // invalid operation
                             }
                             return val;
                         }

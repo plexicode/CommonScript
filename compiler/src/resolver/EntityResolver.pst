@@ -1,0 +1,9 @@
+void EntityResolver_ResetAutoVarId(Resolver resolver) {
+    resolver.autoVarId = 0;
+}
+
+int EntityResolver_GetNextAutoVarId(Resolver resolver) {
+    int id = resolver.autoVarId;
+    resolver.autoVarId += 1;
+    return id;
+}
