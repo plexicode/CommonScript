@@ -1,4 +1,135 @@
 
+enum EntityToken {
+    UNKNOWN = 0,
+    FUNCTION = 1,
+    NAMESPACE = 2,
+    CONST = 3,
+    ENUM = 4,
+    CLASS = 5,
+    CONSTRUCTOR = 6,
+    FIELD = 7,
+    PROPERTY = 8,
+    IMPORT = 9,
+    CHAR_CLOSE_CURLY = 10,
+}
+
+int EntityParser_ClassifyToken(string t) {
+    switch (t[0]) {
+        case 'c':
+            if (t == "const") return EntityToken.CONST;
+            if (t == "constructor") return EntityToken.CONSTRUCTOR;
+            if (t == "class") return EntityToken.CLASS;
+            break;
+        case 'e':
+            if (t == "enum") return EntityToken.ENUM;
+            break;
+        case 'f':
+            if (t == "field") return EntityToken.FIELD;
+            if (t == "function") return EntityToken.FUNCTION;
+            break;
+        case 'i':
+            if (t == "import") return EntityToken.IMPORT;
+            break;
+
+        case 'n':
+            if (t == "namespace") return EntityToken.NAMESPACE;
+            break;
+        case 'p':
+            if (t == "property") return EntityToken.PROPERTY;
+            break;
+        case /* { */ '}': // silly comment to make brace pairing in VSCode not go crazy
+            if (t == CLOSE_CURLY_BRACE) return EntityToken.CHAR_CLOSE_CURLY;
+            break;
+    }
+
+    return EntityToken.UNKNOWN;
+}
+
+void ParseOutEntities(
+    CompilerContext compiler,
+    FileContext file,
+    Dictionary<string, AbstractEntity> currentEntityBucket,
+    AbstractEntity nestParent,
+    string namespacePrefix) {
+
+    TokenStream tokens = file.tokens;
+    bool keepChecking = Tokens_hasMore(tokens);
+
+    // note that casting can fail as a namespace so we must check if it's a class.
+    ClassEntity wrappingClass = null;
+    if (nestParent != null && nestParent.type == EntityType.CLASS) {
+        wrappingClass = (ClassEntity) nestParent.specificData;
+    }
+
+    while (keepChecking) {
+        Token firstToken = Tokens_peek(tokens);
+        Dictionary<string, Token> annotationTokens = ParseAnnotations(compiler, tokens);
+
+        string nextToken = Tokens_peekValueNonNull(tokens);
+        AbstractEntity entity = null;
+        switch (EntityParser_ClassifyToken(nextToken)) {
+            case EntityToken.FUNCTION:
+                entity = ParseFunctionDefinition(tokens, annotationTokens, wrappingClass);
+                break;
+
+            case EntityToken.NAMESPACE:
+                entity = ParseNamespace(compiler, file, namespacePrefix);
+                break;
+
+            case EntityToken.CONST:
+                entity = ParseConst(tokens);
+                break;
+
+            case EntityToken.ENUM:
+                entity = ParseEnum(tokens);
+                break;
+
+            case EntityToken.CLASS:
+                entity = ParseClass(compiler, file, namespacePrefix).baseData;
+                break;
+
+            case EntityToken.CONSTRUCTOR:
+                entity = ParseConstructor(tokens, annotationTokens);
+                break;
+
+            case EntityToken.FIELD:
+                entity = ParseField(tokens, annotationTokens);
+                break;
+
+            case EntityToken.PROPERTY:
+                fail("Not implemented");
+                break;
+
+            case EntityToken.IMPORT:
+                Errors_Throw(Tokens_peek(tokens), "All imports must appear at the top of the file.");
+                break;
+
+            case EntityToken.CHAR_CLOSE_CURLY:
+                keepChecking = false;
+                break;
+
+            default:
+                // Unexpected EOF or stray tokens.
+                Tokens_ensureMore(tokens);
+                Errors_Throw(Tokens_peek(tokens), "Unexpected token: '" + Tokens_peekValueNonNull(tokens) + "'");
+                break;
+        }
+
+        if (entity != null) {
+            entity.isStatic = entity.annotations != null && entity.annotations.Contains("static");
+            AttachEntityToParseTree(entity, nestParent, file, namespacePrefix, currentEntityBucket, annotationTokens);
+        }
+
+        if (entity == null && annotationTokens.Size() > 0) {
+            Errors_Throw(firstToken, "This annotation is not attached to any entity.");
+        }
+
+        if (!Tokens_hasMore(tokens)) {
+            keepChecking = false;
+        }
+    }
+}
+
 void ParseArgDefinitionList(TokenStream tokens, List<Token> tokensOut, List<Expression> defaultValuesOut) {
     Tokens_popExpected(tokens, OPEN_PAREN);
     while (!Tokens_popIfPresent(tokens, CLOSE_PAREN)) {
@@ -10,6 +141,65 @@ void ParseArgDefinitionList(TokenStream tokens, List<Token> tokensOut, List<Expr
         }
         defaultValuesOut.Add(argValue);
     }
+}
+
+ClassEntity ParseClass(
+    CompilerContext ctx,
+    FileContext file,
+    string namespacePrefix) {
+
+    TokenStream tokens = file.tokens;
+    Token classToken = Tokens_popKeyword(tokens, "class");
+    Token classNameToken = Tokens_popName(tokens, "class name");
+    Array<Token> baseClassTokens = null;
+    if (Tokens_popIfPresent(tokens, ":")) {
+        string errMsg = "base class or interface name";
+        List<Token> parent = new List<Token>();
+        parent.Add(Tokens_popName(tokens, errMsg));
+
+        while (Tokens_isNext(tokens, ".")) {
+            parent.Add(Tokens_pop(tokens));
+            parent.Add(Tokens_popName(tokens, errMsg));
+        }
+        baseClassTokens = Core.ListToArray(parent);
+    }
+
+    string classFqName = classNameToken.Value;
+    if (namespacePrefix != "") {
+        classFqName = namespacePrefix + "." + classNameToken.Value;
+    }
+
+    ClassEntity classDef = ClassEntity_new(classToken, classNameToken, classFqName);
+    classDef.baseClassTokens = baseClassTokens;
+    Tokens_popExpected(tokens, OPEN_CURLY_BRACE);
+    ParseOutEntities(ctx, file, classDef.classMembers, classDef.baseData, classFqName);
+    Tokens_popExpected(tokens, CLOSE_CURLY_BRACE);
+
+    // inject a fake do-nothing constructor if one was not declared.
+    if (!classDef.classMembers.Contains("@ctor")) {
+        List<Expression> baseArgs = null;
+        if (classDef.baseClassTokens != null) {
+            baseArgs = new List<Expression>();
+        }
+
+        AbstractEntity ctor = FunctionEntity_BuildConstructor(
+            classToken,
+            new List<Token>(),
+            new List<Expression>(),
+            baseArgs,
+            new List<Statement>(),
+            false).baseData;
+
+        AttachEntityToParseTree(
+            ctor,
+            classDef.baseData,
+            classDef.baseData.fileContext,
+            classDef.baseData.fqName,
+            classDef.classMembers,
+            new Dictionary<string, Token>());
+    }
+
+    return classDef;
 }
 
 AbstractEntity ParseConst(TokenStream tokens) {
@@ -107,6 +297,30 @@ AbstractEntity ParseFunctionDefinition(
     AbstractEntity entity = FunctionEntity_BuildMethodOrStandalone(functionKeyword, nameToken, args, argValues, code, isStatic, optionalParentClass).baseData;
     entity.annotations = annotations;
     return entity;
+}
+
+AbstractEntity ParseNamespace(
+    CompilerContext ctx,
+    FileContext file,
+    string namespacePrefix) {
+
+    TokenStream tokens = file.tokens;
+    Token nsToken = Tokens_popKeyword(tokens, "namespace");
+    List<string> namespaceChain = new List<string>();
+    if (namespacePrefix != "") namespaceChain.Add(namespacePrefix);
+    Token nsFirst = Tokens_popName(tokens, "namespace name");
+    namespaceChain.Add(nsFirst.Value);
+    Dictionary<string, AbstractEntity> entityBucket = new Dictionary<string, AbstractEntity>();
+    while (Tokens_popIfPresent(tokens, "."))
+    {
+        fail("Not implemented");
+    }
+    NamespaceEntity nsEntity = NamespaceEntity_new(nsToken, nsFirst, namespacePrefix);
+    Tokens_popExpected(tokens, OPEN_CURLY_BRACE);
+    namespacePrefix = namespaceChain.Join(".");
+    ParseOutEntities(ctx, file, nsEntity.nestedMembers, nsEntity.baseData, namespacePrefix);
+    Tokens_popExpected(tokens, CLOSE_CURLY_BRACE);
+    return nsEntity.baseData;
 }
 
 void AttachEntityToParseTree(
