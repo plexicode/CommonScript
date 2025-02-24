@@ -1721,8 +1721,8 @@ namespace CommonScript.Compiler.Internal
 
         public static Expression ExpressionResolver_FirstPass_BinaryOp(Resolver resolver, Expression binOp)
         {
-            binOp.left = resolver.ResolveExpressionFirstPass(resolver, binOp.left);
-            binOp.right = resolver.ResolveExpressionFirstPass(resolver, binOp.right);
+            binOp.left = ExpressionResolver_ResolveExpressionFirstPass(resolver, binOp.left);
+            binOp.right = ExpressionResolver_ResolveExpressionFirstPass(resolver, binOp.right);
             bool isBitwise = false;
             string token = binOp.opToken.Value;
             switch (token[0])
@@ -1753,7 +1753,7 @@ namespace CommonScript.Compiler.Internal
 
         public static Expression ExpressionResolver_FirstPass_BitwiseNot(Resolver resolver, Expression bwn)
         {
-            bwn.root = resolver.ResolveExpressionFirstPass(resolver, bwn.root);
+            bwn.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, bwn.root);
             bwn.root = ExpressionResolver_IntegerRequired(resolver, bwn.root);
             return bwn;
         }
@@ -1765,7 +1765,7 @@ namespace CommonScript.Compiler.Internal
 
         public static Expression ExpressionResolver_FirstPass_BoolNot(Resolver resolver, Expression booNot)
         {
-            booNot.root = resolver.ResolveExpressionFirstPass(resolver, booNot.root);
+            booNot.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, booNot.root);
             return booNot;
         }
 
@@ -1777,7 +1777,7 @@ namespace CommonScript.Compiler.Internal
 
         public static Expression ExpressionResolver_FirstPass_ConstructorReference(Resolver resolver, Expression ctorRef)
         {
-            ctorRef.root = resolver.ResolveExpressionFirstPass(resolver, ctorRef.root);
+            ctorRef.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, ctorRef.root);
             return ctorRef;
         }
 
@@ -1787,8 +1787,8 @@ namespace CommonScript.Compiler.Internal
             int i = 0;
             while (i < length)
             {
-                dictDef.keys[i] = resolver.ResolveExpressionFirstPass(resolver, dictDef.keys[i]);
-                dictDef.values[i] = resolver.ResolveExpressionFirstPass(resolver, dictDef.values[i]);
+                dictDef.keys[i] = ExpressionResolver_ResolveExpressionFirstPass(resolver, dictDef.keys[i]);
+                dictDef.values[i] = ExpressionResolver_ResolveExpressionFirstPass(resolver, dictDef.values[i]);
                 i += 1;
             }
             return dictDef;
@@ -1796,7 +1796,7 @@ namespace CommonScript.Compiler.Internal
 
         public static Expression ExpressionResolver_FirstPass_DotField(Resolver resolver, Expression dotField)
         {
-            dotField.root = resolver.ResolveExpressionFirstPass(resolver, dotField.root);
+            dotField.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, dotField.root);
             string fieldName = dotField.strVal;
             switch (dotField.root.type)
             {
@@ -1846,21 +1846,21 @@ namespace CommonScript.Compiler.Internal
                 ExpressionResolver_ResolveExpressionArrayFirstPass(resolver, funcInvoke.args);
                 return Expression_createExtensionInvocation(funcInvoke.firstToken, funcInvoke.root.strVal, funcInvoke.args);
             }
-            funcInvoke.root = resolver.ResolveExpressionFirstPass(resolver, funcInvoke.root);
+            funcInvoke.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, funcInvoke.root);
             ExpressionResolver_ResolveExpressionArrayFirstPass(resolver, funcInvoke.args);
             return funcInvoke;
         }
 
         public static Expression ExpressionResolver_FirstPass_Index(Resolver resolver, Expression indexExpr)
         {
-            indexExpr.root = resolver.ResolveExpressionFirstPass(resolver, indexExpr.root);
-            indexExpr.right = resolver.ResolveExpressionFirstPass(resolver, indexExpr.right);
+            indexExpr.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, indexExpr.root);
+            indexExpr.right = ExpressionResolver_ResolveExpressionFirstPass(resolver, indexExpr.right);
             return indexExpr;
         }
 
         public static Expression ExpressionResolver_FirstPass_InlineIncrement(Resolver resolver, Expression inlineIncr)
         {
-            inlineIncr.root = resolver.ResolveExpressionFirstPass(resolver, inlineIncr.root);
+            inlineIncr.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, inlineIncr.root);
             return inlineIncr;
         }
 
@@ -1904,7 +1904,7 @@ namespace CommonScript.Compiler.Internal
             int i = 0;
             while (i < listDef.values.Length)
             {
-                listDef.values[i] = resolver.ResolveExpressionFirstPass(resolver, listDef.values[i]);
+                listDef.values[i] = ExpressionResolver_ResolveExpressionFirstPass(resolver, listDef.values[i]);
                 i += 1;
             }
             return listDef;
@@ -1912,7 +1912,7 @@ namespace CommonScript.Compiler.Internal
 
         public static Expression ExpressionResolver_FirstPass_NegativeSign(Resolver resolver, Expression negSign)
         {
-            negSign.root = resolver.ResolveExpressionFirstPass(resolver, negSign.root);
+            negSign.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, negSign.root);
             return negSign;
         }
 
@@ -1923,13 +1923,13 @@ namespace CommonScript.Compiler.Internal
 
         public static Expression ExpressionResolver_FirstPass_Slice(Resolver resolver, Expression slice)
         {
-            slice.root = resolver.ResolveExpressionFirstPass(resolver, slice.root);
+            slice.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, slice.root);
             int i = 0;
             while (i < 3)
             {
                 if (slice.args[i] != null)
                 {
-                    slice.args[i] = resolver.ResolveExpressionFirstPass(resolver, slice.args[i]);
+                    slice.args[i] = ExpressionResolver_ResolveExpressionFirstPass(resolver, slice.args[i]);
                 }
                 i += 1;
             }
@@ -1943,9 +1943,9 @@ namespace CommonScript.Compiler.Internal
 
         public static Expression ExpressionResolver_FirstPass_Ternary(Resolver resolver, Expression ternary)
         {
-            ternary.root = resolver.ResolveExpressionFirstPass(resolver, ternary.root);
-            ternary.left = resolver.ResolveExpressionFirstPass(resolver, ternary.left);
-            ternary.right = resolver.ResolveExpressionFirstPass(resolver, ternary.right);
+            ternary.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, ternary.root);
+            ternary.left = ExpressionResolver_ResolveExpressionFirstPass(resolver, ternary.left);
+            ternary.right = ExpressionResolver_ResolveExpressionFirstPass(resolver, ternary.right);
             return ternary;
         }
 
@@ -1956,7 +1956,7 @@ namespace CommonScript.Compiler.Internal
 
         public static Expression ExpressionResolver_FirstPass_TypeOf(Resolver resolver, Expression typeofExpr)
         {
-            typeofExpr.root = resolver.ResolveExpressionFirstPass(resolver, typeofExpr.root);
+            typeofExpr.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, typeofExpr.root);
             return typeofExpr;
         }
 
@@ -2020,7 +2020,7 @@ namespace CommonScript.Compiler.Internal
             int i = 0;
             while (i < arr.Length)
             {
-                arr[i] = resolver.ResolveExpressionFirstPass(resolver, arr[i]);
+                arr[i] = ExpressionResolver_ResolveExpressionFirstPass(resolver, arr[i]);
                 i += 1;
             }
         }
@@ -2030,7 +2030,7 @@ namespace CommonScript.Compiler.Internal
             int i = 0;
             while (i < arr.Length)
             {
-                arr[i] = resolver.ResolveExpressionSecondPass(resolver, arr[i]);
+                arr[i] = ExpressionResolver_ResolveExpressionSecondPass(resolver, arr[i]);
                 i += 1;
             }
         }
@@ -2177,12 +2177,12 @@ namespace CommonScript.Compiler.Internal
             Token firstToken = expr.firstToken;
             Token opToken = expr.opToken;
             string op = opToken.Value;
-            expr.left = resolver.ResolveExpressionSecondPass(resolver, expr.left);
+            expr.left = ExpressionResolver_ResolveExpressionSecondPass(resolver, expr.left);
             if (expr.right.type == 7 && op == "is")
             {
                 expr.right.boolVal = true;
             }
-            expr.right = resolver.ResolveExpressionSecondPass(resolver, expr.right);
+            expr.right = ExpressionResolver_ResolveExpressionSecondPass(resolver, expr.right);
             if (IsExpressionConstant(expr.left) && IsExpressionConstant(expr.right))
             {
                 int intLeft = 0;
@@ -2847,7 +2847,7 @@ namespace CommonScript.Compiler.Internal
 
         public static Expression ExpressionResolver_SecondPass_BitwiseNot(Resolver resolver, Expression bwn)
         {
-            bwn.root = resolver.ResolveExpressionSecondPass(resolver, bwn.root);
+            bwn.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, bwn.root);
             if (IsExpressionConstant(bwn.root))
             {
                 if (bwn.root.type != 22)
@@ -2866,7 +2866,7 @@ namespace CommonScript.Compiler.Internal
 
         public static Expression ExpressionResolver_SecondPass_BoolNot(Resolver resolver, Expression bn)
         {
-            bn.root = resolver.ResolveExpressionSecondPass(resolver, bn.root);
+            bn.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, bn.root);
             if (IsExpressionConstant(bn.root))
             {
                 if (bn.root.type != 6)
@@ -2892,7 +2892,7 @@ namespace CommonScript.Compiler.Internal
             if (isExpected)
             {
                 ctorRef.root.boolVal = true;
-                ctorRef.root = resolver.ResolveExpressionSecondPass(resolver, ctorRef.root);
+                ctorRef.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, ctorRef.root);
                 if (ctorRef.root.type != 7)
                 {
                     Errors_Throw(ctorRef.root.firstToken, "This is not a valid class definition.");
@@ -2913,7 +2913,7 @@ namespace CommonScript.Compiler.Internal
             int i = 0;
             while (i < length)
             {
-                Expression key = resolver.ResolveExpressionSecondPass(resolver, dictDef.keys[i]);
+                Expression key = ExpressionResolver_ResolveExpressionSecondPass(resolver, dictDef.keys[i]);
                 bool isMixed = false;
                 bool isCollide = false;
                 if (key.type == 22)
@@ -2941,7 +2941,7 @@ namespace CommonScript.Compiler.Internal
                     Errors_Throw(key.firstToken, "There are multiple keys with this same value.");
                 }
                 dictDef.keys[i] = key;
-                dictDef.values[i] = resolver.ResolveExpressionSecondPass(resolver, dictDef.values[i]);
+                dictDef.values[i] = ExpressionResolver_ResolveExpressionSecondPass(resolver, dictDef.values[i]);
                 i += 1;
             }
             return dictDef;
@@ -2953,7 +2953,7 @@ namespace CommonScript.Compiler.Internal
             {
                 df.root.boolVal = true;
             }
-            df.root = resolver.ResolveExpressionSecondPass(resolver, df.root);
+            df.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, df.root);
             switch (df.root.type)
             {
                 case 28:
@@ -3047,7 +3047,7 @@ namespace CommonScript.Compiler.Internal
                 ExpressionResolver_ResolveExpressionArraySecondPass(resolver, funcInvoke.args);
                 return Expression_createConstructorInvocation(funcInvoke.firstToken, (AbstractEntity)ctorRef.entityPtr, funcInvoke.opToken, funcInvoke.args);
             }
-            funcInvoke.root = resolver.ResolveExpressionSecondPass(resolver, funcInvoke.root);
+            funcInvoke.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, funcInvoke.root);
             switch (funcInvoke.root.type)
             {
                 case 31:
@@ -3083,14 +3083,14 @@ namespace CommonScript.Compiler.Internal
 
         public static Expression ExpressionResolver_SecondPass_Index(Resolver resolver, Expression indexExpr)
         {
-            indexExpr.root = resolver.ResolveExpressionSecondPass(resolver, indexExpr.root);
-            indexExpr.right = resolver.ResolveExpressionSecondPass(resolver, indexExpr.right);
+            indexExpr.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, indexExpr.root);
+            indexExpr.right = ExpressionResolver_ResolveExpressionSecondPass(resolver, indexExpr.right);
             return indexExpr;
         }
 
         public static Expression ExpressionResolver_SecondPass_InlineIncrement(Resolver resolver, Expression inlineIncr)
         {
-            inlineIncr.root = resolver.ResolveExpressionSecondPass(resolver, inlineIncr.root);
+            inlineIncr.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, inlineIncr.root);
             switch (inlineIncr.root.type)
             {
                 case 31:
@@ -3121,7 +3121,7 @@ namespace CommonScript.Compiler.Internal
             int i = 0;
             while (i < listDef.values.Length)
             {
-                listDef.values[i] = resolver.ResolveExpressionSecondPass(resolver, listDef.values[i]);
+                listDef.values[i] = ExpressionResolver_ResolveExpressionSecondPass(resolver, listDef.values[i]);
                 i += 1;
             }
             return listDef;
@@ -3135,7 +3135,7 @@ namespace CommonScript.Compiler.Internal
 
         public static Expression ExpressionResolver_SecondPass_NegativeSign(Resolver resolver, Expression negSign)
         {
-            Expression root = resolver.ResolveExpressionSecondPass(resolver, negSign.root);
+            Expression root = ExpressionResolver_ResolveExpressionSecondPass(resolver, negSign.root);
             negSign.root = root;
             if (IsExpressionNumericConstant(root))
             {
@@ -3166,13 +3166,13 @@ namespace CommonScript.Compiler.Internal
 
         public static Expression ExpressionResolver_SecondPass_Slice(Resolver resolver, Expression slice)
         {
-            slice.root = resolver.ResolveExpressionSecondPass(resolver, slice.root);
+            slice.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, slice.root);
             int i = 0;
             while (i < 3)
             {
                 if (slice.args[i] != null)
                 {
-                    Expression expr = resolver.ResolveExpressionSecondPass(resolver, slice.args[i]);
+                    Expression expr = ExpressionResolver_ResolveExpressionSecondPass(resolver, slice.args[i]);
                     slice.args[i] = expr;
                     if (IsExpressionConstant(expr))
                     {
@@ -3194,9 +3194,9 @@ namespace CommonScript.Compiler.Internal
 
         public static Expression ExpressionResolver_SecondPass_Ternary(Resolver resolver, Expression ternary)
         {
-            ternary.root = resolver.ResolveExpressionSecondPass(resolver, ternary.root);
-            ternary.left = resolver.ResolveExpressionSecondPass(resolver, ternary.left);
-            ternary.right = resolver.ResolveExpressionSecondPass(resolver, ternary.right);
+            ternary.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, ternary.root);
+            ternary.left = ExpressionResolver_ResolveExpressionSecondPass(resolver, ternary.left);
+            ternary.right = ExpressionResolver_ResolveExpressionSecondPass(resolver, ternary.right);
             if (IsExpressionConstant(ternary.root))
             {
                 if (ternary.root.type != 5)
@@ -3223,7 +3223,7 @@ namespace CommonScript.Compiler.Internal
 
         public static Expression ExpressionResolver_SecondPass_TypeOf(Resolver resolver, Expression typeofExpr)
         {
-            typeofExpr.root = resolver.ResolveExpressionSecondPass(resolver, typeofExpr.root);
+            typeofExpr.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, typeofExpr.root);
             string stringConst = null;
             switch (typeofExpr.root.type)
             {
@@ -5373,7 +5373,7 @@ namespace CommonScript.Compiler.Internal
 
         public static Resolver Resolver_new(StaticContext staticCtx, System.Collections.Generic.Dictionary<string, AbstractEntity> rootEntities, System.Collections.Generic.List<string> extensionNames)
         {
-            Resolver r = new Resolver(staticCtx, rootEntities, new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new List<FunctionEntity>(), null, null, null, 0, null, null, null, null, StringSet_fromList(extensionNames));
+            Resolver r = new Resolver(staticCtx, rootEntities, new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new Dictionary<string, AbstractEntity>(), new List<FunctionEntity>(), null, null, null, 0, StringSet_fromList(extensionNames));
             r.entityList = FlattenEntities(staticCtx, rootEntities);
             int i = 0;
             while (i < r.entityList.Length)
@@ -6608,7 +6608,7 @@ namespace CommonScript.Compiler.Internal
                 j = 0;
                 while (j < chunk.Code.Count)
                 {
-                    chunk.Code[j] = resolver.ResolveStatementFirstPass(resolver, chunk.Code[j]);
+                    chunk.Code[j] = StatementResolver_ResolveStatementFirstPass(resolver, chunk.Code[j]);
                     j += 1;
                 }
                 i += 1;
@@ -6662,7 +6662,7 @@ namespace CommonScript.Compiler.Internal
             int i = 0;
             while (i < arr.Length)
             {
-                arr[i] = resolver.ResolveStatementFirstPass(resolver, arr[i]);
+                arr[i] = StatementResolver_ResolveStatementFirstPass(resolver, arr[i]);
                 i += 1;
             }
         }
@@ -6672,9 +6672,84 @@ namespace CommonScript.Compiler.Internal
             int i = 0;
             while (i < arr.Length)
             {
-                arr[i] = resolver.ResolveStatementSecondPass(resolver, arr[i]);
+                arr[i] = StatementResolver_ResolveStatementSecondPass(resolver, arr[i]);
                 i += 1;
             }
+        }
+
+        public static Statement StatementResolver_ResolveStatementFirstPass(Resolver resolver, Statement s)
+        {
+            switch (s.type)
+            {
+                case 1:
+                    return StatementResolver_FirstPass_Assignment(resolver, s);
+                case 2:
+                    return StatementResolver_FirstPass_Break(resolver, s);
+                case 3:
+                    return StatementResolver_FirstPass_Continue(resolver, s);
+                case 4:
+                    return StatementResolver_FirstPass_DoWhileLoop(resolver, s);
+                case 7:
+                    return StatementResolver_FirstPass_ForEachLoop(resolver, s);
+                case 6:
+                    return StatementResolver_FirstPass_ForLoop(resolver, s);
+                case 8:
+                    return StatementResolver_FirstPass_IfStatement(resolver, s);
+                case 10:
+                    return StatementResolver_FirstPass_SwitchStatement(resolver, s);
+                case 12:
+                    return StatementResolver_FirstPass_Try(resolver, s);
+                case 13:
+                    return StatementResolver_FirstPass_WhileLoop(resolver, s);
+                case 9:
+                    s.expression = ExpressionResolver_ResolveExpressionFirstPass(resolver, s.expression);
+                    break;
+                case 11:
+                    s.expression = ExpressionResolver_ResolveExpressionFirstPass(resolver, s.expression);
+                    break;
+                case 5:
+                    s.expression = ExpressionResolver_ResolveExpressionFirstPass(resolver, s.expression);
+                    break;
+                default:
+                    fail("Not implemented");
+                    break;
+            }
+            return s;
+        }
+
+        public static Statement StatementResolver_ResolveStatementSecondPass(Resolver resolver, Statement s)
+        {
+            switch (s.type)
+            {
+                case 1:
+                    return StatementResolver_SecondPass_Assignment(resolver, s);
+                case 2:
+                    return StatementResolver_SecondPass_Break(resolver, s);
+                case 3:
+                    return StatementResolver_SecondPass_Continue(resolver, s);
+                case 4:
+                    return StatementResolver_SecondPass_DoWhileLoop(resolver, s);
+                case 5:
+                    return StatementResolver_SecondPass_ExpressionAsStatement(resolver, s);
+                case 6:
+                    return StatementResolver_SecondPass_ForLoop(resolver, s);
+                case 7:
+                    return StatementResolver_SecondPass_ForEachLoop(resolver, s);
+                case 8:
+                    return StatementResolver_SecondPass_IfStatement(resolver, s);
+                case 9:
+                    return StatementResolver_SecondPass_Return(resolver, s);
+                case 10:
+                    return StatementResolver_SecondPass_SwitchStatement(resolver, s);
+                case 11:
+                    return StatementResolver_SecondPass_ThrowStatement(resolver, s);
+                case 12:
+                    return StatementResolver_SecondPass_TryStatement(resolver, s);
+                case 13:
+                    return StatementResolver_SecondPass_WhileLoop(resolver, s);
+            }
+            fail("Not implemented");
+            return null;
         }
 
         public static Statement StatementResolver_SecondPass_Assignment(Resolver resolver, Statement assignment)
@@ -6827,7 +6902,7 @@ namespace CommonScript.Compiler.Internal
                 j = 0;
                 while (j < chunk.Code.Count)
                 {
-                    chunk.Code[j] = resolver.ResolveStatementSecondPass(resolver, chunk.Code[j]);
+                    chunk.Code[j] = StatementResolver_ResolveStatementSecondPass(resolver, chunk.Code[j]);
                     j += 1;
                 }
                 switch (chunk.Code[chunk.Code.Count - 1].type)

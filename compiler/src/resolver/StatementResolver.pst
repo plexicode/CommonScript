@@ -1,14 +1,62 @@
+
+Statement StatementResolver_ResolveStatementFirstPass(Resolver resolver, Statement s) {
+    switch (s.type) {
+        case StatementType.ASSIGNMENT: return StatementResolver_FirstPass_Assignment(resolver, s);
+        case StatementType.BREAK: return StatementResolver_FirstPass_Break(resolver, s);
+        case StatementType.CONTINUE: return StatementResolver_FirstPass_Continue(resolver, s);
+        case StatementType.DO_WHILE_LOOP: return StatementResolver_FirstPass_DoWhileLoop(resolver, s);
+        case StatementType.FOR_EACH_LOOP: return StatementResolver_FirstPass_ForEachLoop(resolver, s);
+        case StatementType.FOR_LOOP: return StatementResolver_FirstPass_ForLoop(resolver, s);
+        case StatementType.IF_STATEMENT: return StatementResolver_FirstPass_IfStatement(resolver, s);
+        case StatementType.SWITCH_STATEMENT: return StatementResolver_FirstPass_SwitchStatement(resolver, s);
+        case StatementType.TRY: return StatementResolver_FirstPass_Try(resolver, s);
+        case StatementType.WHILE_LOOP: return StatementResolver_FirstPass_WhileLoop(resolver, s);
+
+        case StatementType.RETURN:
+        case StatementType.THROW:
+        case StatementType.EXPRESSION_AS_STATEMENT:
+            s.expression = ExpressionResolver_ResolveExpressionFirstPass(resolver, s.expression);
+            break;
+
+        default:
+            fail("Not implemented");
+            break;
+    }
+    return s;
+}
+
+Statement StatementResolver_ResolveStatementSecondPass(Resolver resolver, Statement s) {
+    switch (s.type) {
+        case StatementType.ASSIGNMENT: return StatementResolver_SecondPass_Assignment(resolver, s);
+        case StatementType.BREAK: return StatementResolver_SecondPass_Break(resolver, s);
+        case StatementType.CONTINUE: return StatementResolver_SecondPass_Continue(resolver, s);
+        case StatementType.DO_WHILE_LOOP: return StatementResolver_SecondPass_DoWhileLoop(resolver, s);
+        case StatementType.EXPRESSION_AS_STATEMENT: return StatementResolver_SecondPass_ExpressionAsStatement(resolver, s);
+        case StatementType.FOR_LOOP: return StatementResolver_SecondPass_ForLoop(resolver, s);
+        case StatementType.FOR_EACH_LOOP: return StatementResolver_SecondPass_ForEachLoop(resolver, s);
+        case StatementType.IF_STATEMENT: return StatementResolver_SecondPass_IfStatement(resolver, s);
+        case StatementType.RETURN: return StatementResolver_SecondPass_Return(resolver, s);
+        case StatementType.SWITCH_STATEMENT: return StatementResolver_SecondPass_SwitchStatement(resolver, s);
+        case StatementType.THROW: return StatementResolver_SecondPass_ThrowStatement(resolver, s);
+        case StatementType.TRY: return StatementResolver_SecondPass_TryStatement(resolver, s);
+        case StatementType.WHILE_LOOP: return StatementResolver_SecondPass_WhileLoop(resolver, s);
+    }
+
+    fail("Not implemented");
+    return null;
+}
+
 ////// HELPERS 
 
 void StatementResolver_ResolveStatementArrayFirstPass(Resolver resolver, Array<Statement> arr) {
     for (int i = 0; i < arr.Size(); i += 1) {
-        arr[i] = resolver.ResolveStatementFirstPass(resolver, arr[i]);
+        arr[i] = StatementResolver_ResolveStatementFirstPass(resolver, arr[i]);
     }
 }
 
 void StatementResolver_ResolveStatementArraySecondPass(Resolver resolver, Array<Statement> arr) {
     for (int i = 0; i < arr.Size(); i += 1) {
-        arr[i] = resolver.ResolveStatementSecondPass(resolver, arr[i]);
+        arr[i] = StatementResolver_ResolveStatementSecondPass(resolver, arr[i]);
     }
 }
 
@@ -99,7 +147,7 @@ Statement StatementResolver_FirstPass_SwitchStatement(Resolver resolver, Stateme
         }
 
         for (j = 0; j < chunk.Code.Size(); j += 1) {
-            chunk.Code[j] = resolver.ResolveStatementFirstPass(resolver, chunk.Code[j]);
+            chunk.Code[j] = StatementResolver_ResolveStatementFirstPass(resolver, chunk.Code[j]);
         }
     }
     resolver.breakContext = oldBreakContext;
@@ -268,7 +316,7 @@ Statement StatementResolver_SecondPass_SwitchStatement(Resolver resolver, Statem
         }
 
         for (j = 0; j < chunk.Code.Size(); j += 1) {
-            chunk.Code[j] = resolver.ResolveStatementSecondPass(resolver, chunk.Code[j]);
+            chunk.Code[j] = StatementResolver_ResolveStatementSecondPass(resolver, chunk.Code[j]);
         }
 
         switch (chunk.Code[chunk.Code.Size() - 1].type) {

@@ -10,15 +10,6 @@ struct Resolver {
     Array<AbstractEntity> entityList;
     Statement breakContext;
     int autoVarId;
-
-    // HACK: temporarily add function pointer references for the resolver entry points.
-    // These references will be set when the resolver is created to break the dependency
-    // cycle to allow incremental migration of the code from C# to pastel.
-    Func<Expression, Resolver, Expression> ResolveExpressionFirstPass;
-    Func<Expression, Resolver, Expression> ResolveExpressionSecondPass;
-    Func<Statement, Resolver, Statement> ResolveStatementFirstPass;
-    Func<Statement, Resolver, Statement> ResolveStatementSecondPass;
-
     StringSet extensionNames;
 }
 
@@ -35,13 +26,6 @@ Resolver Resolver_new(StaticContext staticCtx, Dictionary<string, AbstractEntity
         null, // entityList
         null, // breakContext
         0, // autoVarId
-        
-        // temp hack stuff
-        null, 
-        null, 
-        null, 
-        null, 
-
         StringSet_fromList(extensionNames) // nested entities
     );
 

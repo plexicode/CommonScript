@@ -124,7 +124,7 @@ namespace CommonScript.Compiler
                 Expression baseCtorRef = FunctionWrapper.Expression_createBaseCtorReference(baseCtor);
                 Expression baseCtorInvoke = FunctionWrapper.Expression_createFunctionInvocation(baseCtorRef, baseCtorParen, ctorEnt.baseCtorArgValues);
                 Statement baseCtorStmnt = FunctionWrapper.Statement_createExpressionAsStatement(baseCtorInvoke);
-                baseCtorStmnt = StatementResolverUtil.StatementResolver_ResolveStatementFirstPass(resolver, baseCtorStmnt);
+                baseCtorStmnt = FunctionWrapper.StatementResolver_ResolveStatementFirstPass(resolver, baseCtorStmnt);
                 baseCtorInvocation.Add(baseCtorStmnt);
             }
 

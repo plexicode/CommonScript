@@ -78,13 +78,13 @@ Expression ExpressionResolver_ResolveExpressionSecondPass(Resolver resolver, Exp
 
 void ExpressionResolver_ResolveExpressionArrayFirstPass(Resolver resolver, Array<Expression> arr) {
     for (int i = 0; i < arr.Size(); i += 1) {
-        arr[i] = resolver.ResolveExpressionFirstPass(resolver, arr[i]);
+        arr[i] = ExpressionResolver_ResolveExpressionFirstPass(resolver, arr[i]);
     }
 }
 
 void ExpressionResolver_ResolveExpressionArraySecondPass(Resolver resolver, Array<Expression> arr) {
     for (int i = 0; i < arr.Size(); i += 1) {
-        arr[i] = resolver.ResolveExpressionSecondPass(resolver, arr[i]);
+        arr[i] = ExpressionResolver_ResolveExpressionSecondPass(resolver, arr[i]);
     }
 }
 
@@ -93,8 +93,8 @@ Expression ExpressionResolver_FirstPass_BaseCtorReference(Resolver resolver, Exp
 }
 
 Expression ExpressionResolver_FirstPass_BinaryOp(Resolver resolver, Expression binOp) {
-    binOp.left = resolver.ResolveExpressionFirstPass(resolver, binOp.left);
-    binOp.right = resolver.ResolveExpressionFirstPass(resolver, binOp.right);
+    binOp.left = ExpressionResolver_ResolveExpressionFirstPass(resolver, binOp.left);
+    binOp.right = ExpressionResolver_ResolveExpressionFirstPass(resolver, binOp.right);
     bool isBitwise = false;
     string token = binOp.opToken.Value;
     switch (token[0]) {
@@ -114,7 +114,7 @@ Expression ExpressionResolver_FirstPass_BinaryOp(Resolver resolver, Expression b
 }
 
 Expression ExpressionResolver_FirstPass_BitwiseNot(Resolver resolver, Expression bwn) {
-    bwn.root = resolver.ResolveExpressionFirstPass(resolver, bwn.root);
+    bwn.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, bwn.root);
     bwn.root = ExpressionResolver_IntegerRequired(resolver, bwn.root);
     return bwn;
 }
@@ -124,7 +124,7 @@ Expression ExpressionResolver_FirstPass_BoolConst(Resolver resolver, Expression 
 }
 
 Expression ExpressionResolver_FirstPass_BoolNot(Resolver resolver, Expression booNot) {
-    booNot.root = resolver.ResolveExpressionFirstPass(resolver, booNot.root);
+    booNot.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, booNot.root);
     return booNot;
 }
 
@@ -137,7 +137,7 @@ Expression ExpressionResolver_FirstPass_ConstructorInvocation(Resolver resolver,
 }
 
 Expression ExpressionResolver_FirstPass_ConstructorReference(Resolver resolver, Expression ctorRef) {
-    ctorRef.root = resolver.ResolveExpressionFirstPass(resolver, ctorRef.root);
+    ctorRef.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, ctorRef.root);
     return ctorRef;
 }
 
@@ -152,14 +152,14 @@ Expression ExpressionResolver_FirstPass_IntegerConstant(Resolver resolver, Expre
 Expression ExpressionResolver_FirstPass_DictionaryDefinition(Resolver resolver, Expression dictDef) {
     int length = dictDef.keys.Size();
     for (int i = 0; i < length; i += 1) {
-        dictDef.keys[i] = resolver.ResolveExpressionFirstPass(resolver, dictDef.keys[i]);
-        dictDef.values[i] = resolver.ResolveExpressionFirstPass(resolver, dictDef.values[i]);
+        dictDef.keys[i] = ExpressionResolver_ResolveExpressionFirstPass(resolver, dictDef.keys[i]);
+        dictDef.values[i] = ExpressionResolver_ResolveExpressionFirstPass(resolver, dictDef.values[i]);
     }
     return dictDef;
 }
 
 Expression ExpressionResolver_FirstPass_DotField(Resolver resolver, Expression dotField) {
-    dotField.root = resolver.ResolveExpressionFirstPass(resolver, dotField.root);
+    dotField.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, dotField.root);
     string fieldName = dotField.strVal;
 
     switch (dotField.root.type) {
@@ -203,20 +203,20 @@ Expression ExpressionResolver_FirstPass_FunctionInvocation(Resolver resolver, Ex
         return Expression_createExtensionInvocation(funcInvoke.firstToken, funcInvoke.root.strVal, funcInvoke.args);
     }
     
-    funcInvoke.root = resolver.ResolveExpressionFirstPass(resolver, funcInvoke.root);
+    funcInvoke.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, funcInvoke.root);
     ExpressionResolver_ResolveExpressionArrayFirstPass(resolver, funcInvoke.args);
 
     return funcInvoke;
 }
 
 Expression ExpressionResolver_FirstPass_Index(Resolver resolver, Expression indexExpr) {
-    indexExpr.root = resolver.ResolveExpressionFirstPass(resolver, indexExpr.root);
-    indexExpr.right = resolver.ResolveExpressionFirstPass(resolver, indexExpr.right);
+    indexExpr.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, indexExpr.root);
+    indexExpr.right = ExpressionResolver_ResolveExpressionFirstPass(resolver, indexExpr.right);
     return indexExpr;
 }
 
 Expression ExpressionResolver_FirstPass_InlineIncrement(Resolver resolver, Expression inlineIncr) {
-    inlineIncr.root = resolver.ResolveExpressionFirstPass(resolver, inlineIncr.root);
+    inlineIncr.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, inlineIncr.root);
     return inlineIncr;
 }
 
@@ -252,13 +252,13 @@ Expression ExpressionResolver_FirstPass_Lambda(Resolver resolver, Expression lam
 
 Expression ExpressionResolver_FirstPass_ListDefinition(Resolver resolver, Expression listDef) {
     for (int i = 0; i < listDef.values.Size(); i += 1) {
-        listDef.values[i] = resolver.ResolveExpressionFirstPass(resolver, listDef.values[i]);
+        listDef.values[i] = ExpressionResolver_ResolveExpressionFirstPass(resolver, listDef.values[i]);
     }
     return listDef;
 }
 
 Expression ExpressionResolver_FirstPass_NegativeSign(Resolver resolver, Expression negSign) {
-    negSign.root = resolver.ResolveExpressionFirstPass(resolver, negSign.root);
+    negSign.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, negSign.root);
     return negSign;
 }
 
@@ -267,9 +267,9 @@ Expression ExpressionResolver_FirstPass_NullConst(Resolver resolver, Expression 
 }
 
 Expression ExpressionResolver_FirstPass_Slice(Resolver resolver, Expression slice) {
-    slice.root = resolver.ResolveExpressionFirstPass(resolver, slice.root);
+    slice.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, slice.root);
     for (int i = 0; i < 3; i += 1) {
-        if (slice.args[i] != null) slice.args[i] = resolver.ResolveExpressionFirstPass(resolver, slice.args[i]);
+        if (slice.args[i] != null) slice.args[i] = ExpressionResolver_ResolveExpressionFirstPass(resolver, slice.args[i]);
     }
     return slice;
 }
@@ -279,9 +279,9 @@ Expression ExpressionResolver_FirstPass_StringConstant(Resolver resolver, Expres
 }
 
 Expression ExpressionResolver_FirstPass_Ternary(Resolver resolver, Expression ternary) {
-    ternary.root = resolver.ResolveExpressionFirstPass(resolver, ternary.root);
-    ternary.left = resolver.ResolveExpressionFirstPass(resolver, ternary.left);
-    ternary.right = resolver.ResolveExpressionFirstPass(resolver, ternary.right);
+    ternary.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, ternary.root);
+    ternary.left = ExpressionResolver_ResolveExpressionFirstPass(resolver, ternary.left);
+    ternary.right = ExpressionResolver_ResolveExpressionFirstPass(resolver, ternary.right);
     return ternary;
 }
 
@@ -290,7 +290,7 @@ Expression ExpressionResolver_FirstPass_This(Resolver resolver, Expression thisE
 }
 
 Expression ExpressionResolver_FirstPass_TypeOf(Resolver resolver, Expression typeofExpr) {
-    typeofExpr.root = resolver.ResolveExpressionFirstPass(resolver, typeofExpr.root);
+    typeofExpr.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, typeofExpr.root);
     return typeofExpr;
 }
 
@@ -320,11 +320,11 @@ Expression ExpressionResolver_SecondPass_BinaryOp(Resolver resolver, Expression 
     Token opToken = expr.opToken;
     string op = opToken.Value;
 
-    expr.left = resolver.ResolveExpressionSecondPass(resolver, expr.left);
+    expr.left = ExpressionResolver_ResolveExpressionSecondPass(resolver, expr.left);
     if (expr.right.type == ExpressionType.CLASS_REFERENCE && op == "is") {
         expr.right.boolVal = true;
     }
-    expr.right = resolver.ResolveExpressionSecondPass(resolver, expr.right);
+    expr.right = ExpressionResolver_ResolveExpressionSecondPass(resolver, expr.right);
 
     // TODO: resolve constants
     if (IsExpressionConstant(expr.left) && IsExpressionConstant(expr.right)) {
@@ -501,7 +501,7 @@ Expression ExpressionResolver_SecondPass_BinaryOp(Resolver resolver, Expression 
 }
 
 Expression ExpressionResolver_SecondPass_BitwiseNot(Resolver resolver, Expression bwn) {
-    bwn.root = resolver.ResolveExpressionSecondPass(resolver, bwn.root);
+    bwn.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, bwn.root);
 
     if (IsExpressionConstant(bwn.root)) {
         if (bwn.root.type != ExpressionType.INTEGER_CONST) {
@@ -517,7 +517,7 @@ Expression ExpressionResolver_SecondPass_BoolConst(Resolver resolver, Expression
 }
 
 Expression ExpressionResolver_SecondPass_BoolNot(Resolver resolver, Expression bn) {
-    bn.root = resolver.ResolveExpressionSecondPass(resolver, bn.root);
+    bn.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, bn.root);
 
     if (IsExpressionConstant(bn.root)) {
         if (bn.root.type != ExpressionType.BOOLEAN_NOT) {
@@ -539,7 +539,7 @@ Expression ExpressionResolver_SecondPass_ClassReference(Resolver resolver, Expre
 Expression ExpressionResolver_SecondPass_ConstructorReference(Resolver resolver, Expression ctorRef, bool isExpected) {
     if (isExpected) {
         ctorRef.root.boolVal = true;
-        ctorRef.root = resolver.ResolveExpressionSecondPass(resolver, ctorRef.root);
+        ctorRef.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, ctorRef.root);
         if (ctorRef.root.type != ExpressionType.CLASS_REFERENCE) {
             Errors_Throw(ctorRef.root.firstToken, "This is not a valid class definition.");
         }
@@ -557,7 +557,7 @@ Expression ExpressionResolver_SecondPass_DictionaryDefinition(Resolver resolver,
     Dictionary<string, bool> strCollide = new Dictionary<string, bool>();
     Dictionary<int, bool> intCollide = new Dictionary<int, bool>();
     for (int i = 0; i < length; i += 1) {
-        Expression key = resolver.ResolveExpressionSecondPass(resolver, dictDef.keys[i]);
+        Expression key = ExpressionResolver_ResolveExpressionSecondPass(resolver, dictDef.keys[i]);
         bool isMixed = false;
         bool isCollide = false;
         if (key.type == ExpressionType.INTEGER_CONST) {
@@ -581,7 +581,7 @@ Expression ExpressionResolver_SecondPass_DictionaryDefinition(Resolver resolver,
         }
 
         dictDef.keys[i] = key;
-        dictDef.values[i] = resolver.ResolveExpressionSecondPass(resolver, dictDef.values[i]);
+        dictDef.values[i] = ExpressionResolver_ResolveExpressionSecondPass(resolver, dictDef.values[i]);
     }
     return dictDef;
 }
@@ -590,7 +590,7 @@ Expression ExpressionResolver_SecondPass_DotField(Resolver resolver, Expression 
     // This is the only way to refer to a class reference.
     if (df.root.type == ExpressionType.CLASS_REFERENCE) df.root.boolVal = true;
 
-    df.root = resolver.ResolveExpressionSecondPass(resolver, df.root);
+    df.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, df.root);
     switch (df.root.type) {
         case ExpressionType.STRING_CONST:
             if (df.strVal == "length") {
@@ -669,7 +669,7 @@ Expression ExpressionResolver_SecondPass_FunctionInvocation(Resolver resolver, E
             funcInvoke.args);
     }
 
-    funcInvoke.root = resolver.ResolveExpressionSecondPass(resolver, funcInvoke.root);
+    funcInvoke.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, funcInvoke.root);
 
     switch (funcInvoke.root.type) {
         case ExpressionType.VARIABLE:
@@ -702,13 +702,13 @@ Expression ExpressionResolver_SecondPass_ImportReference(Resolver resolver, Expr
 }
 
 Expression ExpressionResolver_SecondPass_Index(Resolver resolver, Expression indexExpr) {
-    indexExpr.root = resolver.ResolveExpressionSecondPass(resolver, indexExpr.root);
-    indexExpr.right = resolver.ResolveExpressionSecondPass(resolver, indexExpr.right);
+    indexExpr.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, indexExpr.root);
+    indexExpr.right = ExpressionResolver_ResolveExpressionSecondPass(resolver, indexExpr.right);
     return indexExpr;
 }
 
 Expression ExpressionResolver_SecondPass_InlineIncrement(Resolver resolver, Expression inlineIncr) {
-    inlineIncr.root = resolver.ResolveExpressionSecondPass(resolver, inlineIncr.root);
+    inlineIncr.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, inlineIncr.root);
     switch (inlineIncr.root.type) {
         case ExpressionType.VARIABLE:
         case ExpressionType.INDEX:
@@ -733,7 +733,7 @@ Expression ExpressionResolver_SecondPass_Lambda(Resolver resolver, Expression la
 
 Expression ExpressionResolver_SecondPass_ListDefinition(Resolver resolver, Expression listDef) {
     for (int i = 0; i < listDef.values.Size(); i += 1) {
-        listDef.values[i] = resolver.ResolveExpressionSecondPass(resolver, listDef.values[i]);
+        listDef.values[i] = ExpressionResolver_ResolveExpressionSecondPass(resolver, listDef.values[i]);
     }
     return listDef;
 }
@@ -744,7 +744,7 @@ Expression ExpressionResolver_SecondPass_NamespaceReference(Resolver resolver, E
 }
 
 Expression ExpressionResolver_SecondPass_NegativeSign(Resolver resolver, Expression negSign) {
-    Expression root = resolver.ResolveExpressionSecondPass(resolver, negSign.root);
+    Expression root = ExpressionResolver_ResolveExpressionSecondPass(resolver, negSign.root);
     negSign.root = root;
     if (IsExpressionNumericConstant(root)) {
         switch (root.type) {
@@ -772,10 +772,10 @@ Expression ExpressionResolver_SecondPass_NullConstant(Resolver resolver, Express
 }
     
 Expression ExpressionResolver_SecondPass_Slice(Resolver resolver, Expression slice) {
-    slice.root = resolver.ResolveExpressionSecondPass(resolver, slice.root);
+    slice.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, slice.root);
     for (int i = 0; i < 3; i++) {
         if (slice.args[i] != null) {
-            Expression expr = resolver.ResolveExpressionSecondPass(resolver, slice.args[i]);
+            Expression expr = ExpressionResolver_ResolveExpressionSecondPass(resolver, slice.args[i]);
             slice.args[i] = expr;
             if (IsExpressionConstant(expr)) {
                 if (expr.type != ExpressionType.INTEGER_CONST && expr.type != ExpressionType.ENUM_CONST) {
@@ -793,9 +793,9 @@ Expression ExpressionResolver_SecondPass_StringConstant(Resolver resolver, Expre
 }
 
 Expression ExpressionResolver_SecondPass_Ternary(Resolver resolver, Expression ternary) {
-    ternary.root = resolver.ResolveExpressionSecondPass(resolver, ternary.root);
-    ternary.left = resolver.ResolveExpressionSecondPass(resolver, ternary.left);
-    ternary.right = resolver.ResolveExpressionSecondPass(resolver, ternary.right);
+    ternary.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, ternary.root);
+    ternary.left = ExpressionResolver_ResolveExpressionSecondPass(resolver, ternary.left);
+    ternary.right = ExpressionResolver_ResolveExpressionSecondPass(resolver, ternary.right);
 
     if (IsExpressionConstant(ternary.root)) {
         if (ternary.root.type != ExpressionType.BOOL_CONST) {
@@ -817,7 +817,7 @@ Expression ExpressionResolver_SecondPass_ThisConstant(Resolver resolver, Express
 }
 
 Expression ExpressionResolver_SecondPass_TypeOf(Resolver resolver, Expression typeofExpr) {
-    typeofExpr.root = resolver.ResolveExpressionSecondPass(resolver, typeofExpr.root);
+    typeofExpr.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, typeofExpr.root);
     string stringConst = null;
     switch (typeofExpr.root.type) {
         case ExpressionType.INTEGER_CONST: stringConst = "int"; break;
