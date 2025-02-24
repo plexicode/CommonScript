@@ -1206,6 +1206,58 @@ namespace CommonScript.Compiler.Internal
             return Statement_createAssignment(target, equal, fld.defaultValue);
         }
 
+        public static void EntityResolver_DetermineMemberOffsets(ClassEntity classDef)
+        {
+            int i = 0;
+            if (classDef.directMemberToOffset != null)
+            {
+                return;
+            }
+            ClassEntity parent = classDef.baseClassEntity;
+            if (parent != null)
+            {
+                EntityResolver_DetermineMemberOffsets(parent);
+            }
+            classDef.directMemberToOffset = new Dictionary<string, int>();
+            classDef.flattenedMemberOffsetLookup = new Dictionary<string, int>();
+            System.Collections.Generic.List<string> newDirectMembers = new List<string>();
+            System.Collections.Generic.List<string> staticFieldNames = new List<string>();
+            System.Collections.Generic.List<string> staticMethodNames = new List<string>();
+            if (parent != null)
+            {
+                string[] parentKeys = parent.flattenedMemberOffsetLookup.Keys.ToArray();
+                i = 0;
+                while (i < parentKeys.Length)
+                {
+                    string parentKey = parentKeys[i];
+                    classDef.flattenedMemberOffsetLookup[parentKey] = parent.flattenedMemberOffsetLookup[parentKey];
+                    i += 1;
+                }
+            }
+            int nextOffset = classDef.flattenedMemberOffsetLookup.Count;
+            string[] memberNames = classDef.classMembers.Keys.ToArray().OrderBy<string, string>(_PST_GEN_arg => _PST_GEN_arg).ToArray();
+            i = 0;
+            while (i < memberNames.Length)
+            {
+                string memberName = memberNames[i];
+                AbstractEntity member = classDef.classMembers[memberName];
+                if (!member.isStatic && (member.type == 5 || member.type == 6))
+                {
+                    int offset = 0;
+                    if (!classDef.flattenedMemberOffsetLookup.ContainsKey(memberName))
+                    {
+                        offset = nextOffset;
+                        nextOffset += 1;
+                        newDirectMembers.Add(memberName);
+                        classDef.directMemberToOffset[memberName] = offset;
+                        classDef.flattenedMemberOffsetLookup[memberName] = offset;
+                    }
+                }
+                i += 1;
+            }
+            classDef.newDirectMemberOffsets = newDirectMembers.ToArray();
+        }
+
         public static int EntityResolver_GetNextAutoVarId(Resolver resolver)
         {
             int id = resolver.autoVarId;

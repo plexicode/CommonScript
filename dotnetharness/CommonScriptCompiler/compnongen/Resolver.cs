@@ -68,7 +68,7 @@ namespace CommonScript.Compiler
 
             for (i = 0; i < orderedClasses.Length; i += 1)
             {
-                EntityResolverUtil.EntityResolver_DetermineMemberOffsets(orderedClasses[i]);
+                FunctionWrapper.EntityResolver_DetermineMemberOffsets(orderedClasses[i]);
             }
 
             for (i = 0; i < functions.Count; i += 1)

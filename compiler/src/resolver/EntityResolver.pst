@@ -8,6 +8,49 @@ int EntityResolver_GetNextAutoVarId(Resolver resolver) {
     return id;
 }
 
+void EntityResolver_DetermineMemberOffsets(ClassEntity classDef) {
+    int i = 0;
+    // TODO: you need to ensure that the overridden members are exclusively methods, not fields.
+
+    if (classDef.directMemberToOffset != null) return;
+    ClassEntity parent = classDef.baseClassEntity;
+    if (parent != null) EntityResolver_DetermineMemberOffsets(parent);
+
+    classDef.directMemberToOffset = new Dictionary<string, int>();
+    classDef.flattenedMemberOffsetLookup = new Dictionary<string, int>();
+    List<string> newDirectMembers = new List<string>();
+    List<string> staticFieldNames = new List<string>();
+    List<string> staticMethodNames = new List<string>();
+
+    if (parent != null) {
+        Array<string> parentKeys = parent.flattenedMemberOffsetLookup.Keys();
+        for (i = 0; i < parentKeys.Size(); i += 1) {
+            string parentKey = parentKeys[i];
+            classDef.flattenedMemberOffsetLookup[parentKey] = parent.flattenedMemberOffsetLookup[parentKey];
+        }
+    }
+
+    int nextOffset = classDef.flattenedMemberOffsetLookup.Size();
+    Array<string> memberNames = Core.SortedCopyOfStringArray(classDef.classMembers.Keys());
+    for (i = 0; i < memberNames.Size(); i += 1) {
+        string memberName = memberNames[i];
+        AbstractEntity member = classDef.classMembers[memberName];
+
+        if (!member.isStatic &&
+            (member.type == EntityType.FIELD || member.type == EntityType.FUNCTION)) {
+            int offset = 0;
+            if (!classDef.flattenedMemberOffsetLookup.Contains(memberName)) {
+                offset = nextOffset;
+                nextOffset += 1;
+                newDirectMembers.Add(memberName);
+                classDef.directMemberToOffset[memberName] = offset;
+                classDef.flattenedMemberOffsetLookup[memberName] = offset;
+            }
+        }
+    }
+
+    classDef.newDirectMemberOffsets = Core.ListToArray(newDirectMembers);
+}
 
 Statement EntityResolver_ConvertFieldDefaultValueIntoSetter(FieldEntity fld) {
     if (fld.opToken == null) {
