@@ -20,7 +20,7 @@ CompilerContext CompilerContext_new(string rootId, string flavorId, string exten
         new Dictionary<string, List<FileContext>>(), // filesByModuleId
         null, // finalCompilationOrder
         new Dictionary<string, bool>(), // unfulfilledDependencies
-        null, // compiledModulesById 
+        null, // compiledModulesById
         extensionVersionId,
         flavorId,
         new List<string>() // extensionNames
@@ -93,7 +93,7 @@ void PUBLIC_EnsureDependenciesFulfilled(object compObj) {
     CompilerContext compiler = (CompilerContext) compObj;
     if (compiler.unfulfilledDependencies.Size() > 0) {
         // TODO: Is this user-facing?
-        fail("Not all dependencies are fulfilled."); 
+        fail("Not all dependencies are fulfilled.");
     }
 }
 
@@ -135,7 +135,7 @@ Array<string> CompilerContext_CalculateCompilationOrder(CompilerContext compiler
         if (recurseState.Contains(currentId)) currentRecurseState = recurseState[currentId];
 
         if (currentRecurseState == 2) {
-            // It's already handled. Move on 
+            // It's already handled. Move on
         } else {
             List<string> deps = compiler.depIdsByModuleId[currentId];
             List<string> newDeps = new List<string>();
@@ -170,4 +170,58 @@ Array<string> CompilerContext_CalculateCompilationOrder(CompilerContext compiler
     }
 
     return Core.ListToArray(order);
+}
+
+Array<int> PUBLIC_CompleteCompilation(object compObj) {
+    CompilerContext compiler = (CompilerContext) compObj;
+
+    Array<string> moduleCompilationOrder = CompilerContext_CalculateCompilationOrder(compiler);
+
+    compiler.compiledModulesById = new Dictionary<string, CompiledModule>();
+
+    for (int i = 0; i < moduleCompilationOrder.Size(); i += 1) {
+        string moduleId = moduleCompilationOrder[i];
+        CompiledModule module = CompilerContext_CompileModule(compiler, moduleId);
+        compiler.compiledModulesById[moduleId] = module;
+    }
+
+    Array<CompiledModule> modules = compiler.compiledModulesById.Values();
+    CompilationBundle bundle = bundleCompilation(compiler.staticCtx, compiler.rootId, modules);
+
+    return ExportUtil_exportBundle(compiler.flavorId, compiler.extensionVersionId, bundle);
+}
+
+CompiledModule CompilerContext_CompileModule(CompilerContext compiler, string moduleId) {
+    int i = 0;
+    List<FileContext> files = compiler.filesByModuleId[moduleId];
+
+    Dictionary<string, AbstractEntity> rootEntities = new Dictionary<string, AbstractEntity>();
+    Dictionary<string, string> sourceCode = new Dictionary<string, string>();
+    for (i = 0; i < files.Size(); i += 1) {
+        FileContext file = files[i];
+        sourceCode[file.path] = file.content;
+        for (int j = 0; j < file.imports.Size(); j += 1) {
+            ImportStatement importStatement = file.imports[j];
+            importStatement.compiledModuleRef = compiler.compiledModulesById[importStatement.flatName];
+        }
+        ParseOutEntities(compiler, file, rootEntities, null, "");
+        Token danglingToken = Tokens_peek(file.tokens);
+        if (danglingToken != null) {
+            Errors_Throw(danglingToken, "Unexpected token: '" + danglingToken.Value + "'. You might have too many close parentheses in this file.");
+        }
+    }
+
+    Resolver resolverCtx = Resolver_new(compiler.staticCtx, rootEntities, compiler.extensionNames);
+    Resolve(resolverCtx);
+
+    CompiledModule m = CompiledModule_new(moduleId);
+    m.codeFiles = sourceCode;
+    CompiledModule_AddLambdas(m, resolverCtx.lambdas);
+    CompiledModule_InitializeLookups(m, resolverCtx.nestedEntities, resolverCtx.flattenedEntities);
+    for (i = 0; i < files.Size(); i += 1) {
+        FileContext file = files[i];
+        file.compiledModule = m;
+    }
+
+    return m;
 }

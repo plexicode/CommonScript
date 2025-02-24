@@ -53,7 +53,7 @@ Resolver Resolver_new(StaticContext staticCtx, Dictionary<string, AbstractEntity
 
 void Resolve(Resolver resolver) {
     int i = 0;
-    
+
     List<FunctionEntity> functions = new List<FunctionEntity>();
     List<ClassEntity> classes = new List<ClassEntity>();
     List<ConstEntity> constants = new List<ConstEntity>();

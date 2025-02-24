@@ -1001,6 +1001,48 @@ namespace CommonScript.Compiler.Internal
             return order.ToArray();
         }
 
+        public static CompiledModule CompilerContext_CompileModule(CompilerContext compiler, string moduleId)
+        {
+            int i = 0;
+            System.Collections.Generic.List<FileContext> files = compiler.filesByModuleId[moduleId];
+            System.Collections.Generic.Dictionary<string, AbstractEntity> rootEntities = new Dictionary<string, AbstractEntity>();
+            System.Collections.Generic.Dictionary<string, string> sourceCode = new Dictionary<string, string>();
+            i = 0;
+            while (i < files.Count)
+            {
+                FileContext file = files[i];
+                sourceCode[file.path] = file.content;
+                int j = 0;
+                while (j < file.imports.Length)
+                {
+                    ImportStatement importStatement = file.imports[j];
+                    importStatement.compiledModuleRef = compiler.compiledModulesById[importStatement.flatName];
+                    j += 1;
+                }
+                ParseOutEntities(compiler, file, rootEntities, null, "");
+                Token danglingToken = Tokens_peek(file.tokens);
+                if (danglingToken != null)
+                {
+                    Errors_Throw(danglingToken, string.Join("", new string[] { "Unexpected token: '", danglingToken.Value, "'. You might have too many close parentheses in this file." }));
+                }
+                i += 1;
+            }
+            Resolver resolverCtx = Resolver_new(compiler.staticCtx, rootEntities, compiler.extensionNames);
+            Resolve(resolverCtx);
+            CompiledModule m = CompiledModule_new(moduleId);
+            m.codeFiles = sourceCode;
+            CompiledModule_AddLambdas(m, resolverCtx.lambdas);
+            CompiledModule_InitializeLookups(m, resolverCtx.nestedEntities, resolverCtx.flattenedEntities);
+            i = 0;
+            while (i < files.Count)
+            {
+                FileContext file = files[i];
+                file.compiledModule = m;
+                i += 1;
+            }
+            return m;
+        }
+
         public static CompilerContext CompilerContext_new(string rootId, string flavorId, string extensionVersionId, string[] extensionNames)
         {
             CompilerContext ctx = new CompilerContext(StaticContext_new(), rootId, new Dictionary<string, System.Collections.Generic.List<string>>(), new Dictionary<string, System.Collections.Generic.List<FileContext>>(), null, new Dictionary<string, bool>(), null, extensionVersionId, flavorId, new List<string>());
@@ -5332,6 +5374,24 @@ namespace CommonScript.Compiler.Internal
                 }
                 passNum += 1;
             }
+        }
+
+        public static int[] PUBLIC_CompleteCompilation(object compObj)
+        {
+            CompilerContext compiler = (CompilerContext)compObj;
+            string[] moduleCompilationOrder = CompilerContext_CalculateCompilationOrder(compiler);
+            compiler.compiledModulesById = new Dictionary<string, CompiledModule>();
+            int i = 0;
+            while (i < moduleCompilationOrder.Length)
+            {
+                string moduleId = moduleCompilationOrder[i];
+                CompiledModule module = CompilerContext_CompileModule(compiler, moduleId);
+                compiler.compiledModulesById[moduleId] = module;
+                i += 1;
+            }
+            CompiledModule[] modules = compiler.compiledModulesById.Values.ToArray();
+            CompilationBundle bundle = bundleCompilation(compiler.staticCtx, compiler.rootId, modules);
+            return ExportUtil_exportBundle(compiler.flavorId, compiler.extensionVersionId, bundle);
         }
 
         public static void PUBLIC_EnsureDependenciesFulfilled(object compObj)

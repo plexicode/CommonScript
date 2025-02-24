@@ -72,8 +72,8 @@ namespace CommonScript.Compiler
         {
             if (!this.isDone) throw new InvalidOperationException();
             FunctionWrapper.PUBLIC_EnsureDependenciesFulfilled(this.genCompiler);
-            int[] output = CompilerContextUtil.PUBLIC_CompleteCompilation(this.genCompiler);
-            byte[] outputBytes = output.Select<int, byte>(i => (byte)i).ToArray();
+            int[] output = FunctionWrapper.PUBLIC_CompleteCompilation(this.genCompiler);
+            byte[] outputBytes = output.Select(i => (byte)i).ToArray();
             return new CompilationResult(outputBytes, null);
         }
     }
