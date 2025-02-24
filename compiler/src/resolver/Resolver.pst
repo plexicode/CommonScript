@@ -51,6 +51,82 @@ Resolver Resolver_new(StaticContext staticCtx, Dictionary<string, AbstractEntity
     return r;
 }
 
+void Resolve(Resolver resolver) {
+    int i = 0;
+    
+    List<FunctionEntity> functions = new List<FunctionEntity>();
+    List<ClassEntity> classes = new List<ClassEntity>();
+    List<ConstEntity> constants = new List<ConstEntity>();
+    List<EnumEntity> enums = new List<EnumEntity>();
+    List<FunctionEntity> constructors = new List<FunctionEntity>();
+    List<FieldEntity> fields = new List<FieldEntity>();
+
+    Array<AbstractEntity> entities = resolver.flattenedEntities.Values();
+
+    for (i = 0; i < entities.Size(); i += 1) {
+        AbstractEntity tle = entities[i];
+
+        if (tle.type == EntityType.CONST) {
+            constants.Add((ConstEntity)tle.specificData);
+        } else if (tle.type == EntityType.ENUM) {
+            enums.Add((EnumEntity)tle.specificData);
+        } else if (tle.type == EntityType.FUNCTION) {
+            functions.Add((FunctionEntity)tle.specificData);
+        } else if (tle.type == EntityType.CLASS) {
+            classes.Add((ClassEntity)tle.specificData);
+        } else if (tle.type == EntityType.CONSTRUCTOR) {
+            constructors.Add((FunctionEntity)tle.specificData);
+        } else if (tle.type == EntityType.FIELD) {
+            fields.Add((FieldEntity)tle.specificData);
+        } else if (tle.type == EntityType.NAMESPACE) {
+            // Nothing to resolve.
+        } else {
+            fail("Not implemented");
+        }
+    }
+
+    AddImplicitIncrementingEnumValueDefinitions(enums);
+
+    Array<string> constAndEnumResolutionOrder = Resolver_DetermineConstAndEnumResolutionOrder(resolver, constants, enums);
+
+    PerformFullResolutionPassOnConstAndEnums(resolver, constAndEnumResolutionOrder);
+
+    Array<ClassEntity> orderedClasses = ResolveBaseClassesAndEstablishClassOrder(resolver, classes, resolver.flattenedEntities);
+
+    for (i = 0; i < orderedClasses.Size(); i += 1) {
+        EntityResolver_DetermineMemberOffsets(orderedClasses[i]);
+    }
+
+    for (i = 0; i < functions.Size(); i += 1) {
+        EntityResolver_ResetAutoVarId(resolver);
+        EntityResolver_ResolveFunctionFirstPass(resolver, functions[i]);
+    }
+
+    for (i = 0; i < constructors.Size(); i += 1) {
+        EntityResolver_ResetAutoVarId(resolver);
+        EntityResolver_ResolveFunctionFirstPass(resolver, constructors[i]);
+    }
+
+    // At this point, all lambdas have been reported.
+    // DO NOT CHANGE TO FOR-EACH. This count can grow as a result of nested lambdas.
+    for (i = 0; i < resolver.lambdas.Size(); i += 1) {
+        EntityResolver_ResetAutoVarId(resolver);
+        EntityResolver_ResolveFunctionFirstPass(resolver, resolver.lambdas[i]);
+    }
+
+    for (i = 0; i < functions.Size(); i += 1) {
+        EntityResolver_ResolveFunctionSecondPass(resolver, functions[i]);
+    }
+
+    for (i = 0; i < constructors.Size(); i += 1) {
+        EntityResolver_ResolveFunctionSecondPass(resolver, constructors[i]);
+    }
+
+    for (i = 0; i < resolver.lambdas.Size(); i += 1) {
+        EntityResolver_ResolveFunctionSecondPass(resolver, resolver.lambdas[i]);
+    }
+}
+
 Array<AbstractEntity> FlattenEntities(StaticContext staticCtx, Dictionary<string, AbstractEntity> rootEntities) {
     List<AbstractEntity> output = new List<AbstractEntity>();
     List<AbstractEntity> queue = new List<AbstractEntity>();

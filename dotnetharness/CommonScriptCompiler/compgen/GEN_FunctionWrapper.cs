@@ -5418,6 +5418,104 @@ namespace CommonScript.Compiler.Internal
             }
         }
 
+        public static void Resolve(Resolver resolver)
+        {
+            int i = 0;
+            System.Collections.Generic.List<FunctionEntity> functions = new List<FunctionEntity>();
+            System.Collections.Generic.List<ClassEntity> classes = new List<ClassEntity>();
+            System.Collections.Generic.List<ConstEntity> constants = new List<ConstEntity>();
+            System.Collections.Generic.List<EnumEntity> enums = new List<EnumEntity>();
+            System.Collections.Generic.List<FunctionEntity> constructors = new List<FunctionEntity>();
+            System.Collections.Generic.List<FieldEntity> fields = new List<FieldEntity>();
+            AbstractEntity[] entities = resolver.flattenedEntities.Values.ToArray();
+            i = 0;
+            while (i < entities.Length)
+            {
+                AbstractEntity tle = entities[i];
+                if (tle.type == 2)
+                {
+                    constants.Add((ConstEntity)tle.specificData);
+                }
+                else if (tle.type == 4)
+                {
+                    enums.Add((EnumEntity)tle.specificData);
+                }
+                else if (tle.type == 6)
+                {
+                    functions.Add((FunctionEntity)tle.specificData);
+                }
+                else if (tle.type == 1)
+                {
+                    classes.Add((ClassEntity)tle.specificData);
+                }
+                else if (tle.type == 3)
+                {
+                    constructors.Add((FunctionEntity)tle.specificData);
+                }
+                else if (tle.type == 5)
+                {
+                    fields.Add((FieldEntity)tle.specificData);
+                }
+                else if (tle.type == 7)
+                {
+                }
+                else
+                {
+                    fail("Not implemented");
+                }
+                i += 1;
+            }
+            AddImplicitIncrementingEnumValueDefinitions(enums);
+            string[] constAndEnumResolutionOrder = Resolver_DetermineConstAndEnumResolutionOrder(resolver, constants, enums);
+            PerformFullResolutionPassOnConstAndEnums(resolver, constAndEnumResolutionOrder);
+            ClassEntity[] orderedClasses = ResolveBaseClassesAndEstablishClassOrder(resolver, classes, resolver.flattenedEntities);
+            i = 0;
+            while (i < orderedClasses.Length)
+            {
+                EntityResolver_DetermineMemberOffsets(orderedClasses[i]);
+                i += 1;
+            }
+            i = 0;
+            while (i < functions.Count)
+            {
+                EntityResolver_ResetAutoVarId(resolver);
+                EntityResolver_ResolveFunctionFirstPass(resolver, functions[i]);
+                i += 1;
+            }
+            i = 0;
+            while (i < constructors.Count)
+            {
+                EntityResolver_ResetAutoVarId(resolver);
+                EntityResolver_ResolveFunctionFirstPass(resolver, constructors[i]);
+                i += 1;
+            }
+            i = 0;
+            while (i < resolver.lambdas.Count)
+            {
+                EntityResolver_ResetAutoVarId(resolver);
+                EntityResolver_ResolveFunctionFirstPass(resolver, resolver.lambdas[i]);
+                i += 1;
+            }
+            i = 0;
+            while (i < functions.Count)
+            {
+                EntityResolver_ResolveFunctionSecondPass(resolver, functions[i]);
+                i += 1;
+            }
+            i = 0;
+            while (i < constructors.Count)
+            {
+                EntityResolver_ResolveFunctionSecondPass(resolver, constructors[i]);
+                i += 1;
+            }
+            i = 0;
+            while (i < resolver.lambdas.Count)
+            {
+                EntityResolver_ResolveFunctionSecondPass(resolver, resolver.lambdas[i]);
+                i += 1;
+            }
+        }
+
         public static ClassEntity[] ResolveBaseClassesAndEstablishClassOrder(Resolver resolver, System.Collections.Generic.List<ClassEntity> classes, System.Collections.Generic.Dictionary<string, AbstractEntity> flattenedEntities)
         {
             int i = 0;

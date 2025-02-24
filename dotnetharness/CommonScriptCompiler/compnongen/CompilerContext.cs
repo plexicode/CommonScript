@@ -52,7 +52,7 @@ namespace CommonScript.Compiler
             }
 
             Resolver resolverCtx = FunctionWrapper.Resolver_new(compiler.staticCtx, rootEntities, compiler.extensionNames);
-            ResolverUtil.Resolve(resolverCtx);
+            FunctionWrapper.Resolve(resolverCtx);
 
             CompiledModule m = FunctionWrapper.CompiledModule_new(moduleId);
             m.codeFiles = sourceCode;
