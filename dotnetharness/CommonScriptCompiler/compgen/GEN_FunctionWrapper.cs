@@ -2041,6 +2041,679 @@ namespace CommonScript.Compiler.Internal
             return baseCtor;
         }
 
+        public static Expression ExpressionResolver_SecondPass_BinaryOp(Resolver resolver, Expression expr)
+        {
+            Token firstToken = expr.firstToken;
+            Token opToken = expr.opToken;
+            string op = opToken.Value;
+            expr.left = resolver.ResolveExpressionSecondPass(resolver, expr.left);
+            if (expr.right.type == 7 && op == "is")
+            {
+                expr.right.boolVal = true;
+            }
+            expr.right = resolver.ResolveExpressionSecondPass(resolver, expr.right);
+            if (IsExpressionConstant(expr.left) && IsExpressionConstant(expr.right))
+            {
+                int intLeft = 0;
+                int intRight = 0;
+                int resultInt = 0;
+                double floatLeft = 0.0;
+                double floatRight = 0.0;
+                double floatResult = 0.0;
+                bool isLeftNumeric = IsExpressionNumericConstant(expr.left);
+                bool isRightNumeric = IsExpressionNumericConstant(expr.right);
+                bool isRightZero = expr.right.intVal == 0;
+                if (expr.right.type == 16)
+                {
+                    isRightZero = expr.right.floatVal == 0;
+                }
+                if (isRightNumeric)
+                {
+                    if (op == "/" || op == "%")
+                    {
+                        if (isRightZero)
+                        {
+                            if (op == "%")
+                            {
+                                Errors_Throw(opToken, "Modulo by zero");
+                            }
+                            Errors_Throw(opToken, "Division by zero");
+                        }
+                    }
+                }
+                if (isLeftNumeric && isRightNumeric)
+                {
+                    floatLeft = GetNumericValueOfConstantExpression(expr.left);
+                    floatRight = GetNumericValueOfConstantExpression(expr.right);
+                    if (op == "<")
+                    {
+                        return Expression_createBoolConstant(firstToken, floatLeft < floatRight);
+                    }
+                    if (op == ">")
+                    {
+                        return Expression_createBoolConstant(firstToken, floatLeft > floatRight);
+                    }
+                    if (op == "<=")
+                    {
+                        return Expression_createBoolConstant(firstToken, floatLeft <= floatRight);
+                    }
+                    if (op == ">=")
+                    {
+                        return Expression_createBoolConstant(firstToken, floatLeft >= floatRight);
+                    }
+                    if (op == "==")
+                    {
+                        return Expression_createBoolConstant(firstToken, floatLeft == floatRight);
+                    }
+                    if (op == "!=")
+                    {
+                        return Expression_createBoolConstant(firstToken, floatLeft != floatRight);
+                    }
+                }
+                if (op == "+" && (expr.left.type == 28 || expr.right.type == 28))
+                {
+                    string leftStr = GetStringFromConstantExpression(expr.left);
+                    string rightStr = GetStringFromConstantExpression(expr.right);
+                    return Expression_createStringConstant(expr.firstToken, leftStr + rightStr);
+                }
+                switch (expr.left.type * 34 + expr.right.type)
+                {
+                    case 770:
+                        intLeft = expr.left.intVal;
+                        intRight = expr.right.intVal;
+                        if (op == "**")
+                        {
+                            return Expression_createFloatConstant(opToken, System.Math.Pow(intLeft, intRight));
+                        }
+                        resultInt = 0;
+                        if (op == "+")
+                        {
+                            resultInt = intLeft + intRight;
+                        }
+                        else if (op == "-")
+                        {
+                            resultInt = intLeft - intRight;
+                        }
+                        else if (op == "*")
+                        {
+                            resultInt = intLeft * intRight;
+                        }
+                        else if (op == "/")
+                        {
+                            resultInt = intLeft / intRight;
+                        }
+                        else if (op == "%")
+                        {
+                            if (intRight < 0)
+                            {
+                                intRight = -intRight;
+                                resultInt = intLeft % intRight;
+                                if (resultInt > 0)
+                                {
+                                    resultInt -= intRight;
+                                }
+                            }
+                            else
+                            {
+                                resultInt = intLeft % intRight;
+                                if (resultInt < 0)
+                                {
+                                    resultInt += intRight;
+                                }
+                            }
+                        }
+                        else if (op == "|")
+                        {
+                            resultInt = intLeft | intRight;
+                        }
+                        else if (op == "&")
+                        {
+                            resultInt = intLeft & intRight;
+                        }
+                        else if (op == "^")
+                        {
+                            resultInt = intLeft ^ intRight;
+                        }
+                        else if (op == "<<")
+                        {
+                            resultInt = intLeft << intRight;
+                        }
+                        else if (op == ">>")
+                        {
+                            resultInt = intLeft >> intRight;
+                        }
+                        else if (op == ">>>")
+                        {
+                            fail("Not implemented");
+                        }
+                        else
+                        {
+                            ThrowOpNotDefinedError(opToken, op, expr.left.type, expr.right.type);
+                        }
+                        return Expression_createIntegerConstant(opToken, resultInt);
+                    case 760:
+                        intLeft = expr.left.intVal;
+                        intRight = expr.right.intVal;
+                        if (op == "**")
+                        {
+                            return Expression_createFloatConstant(opToken, System.Math.Pow(intLeft, intRight));
+                        }
+                        resultInt = 0;
+                        if (op == "+")
+                        {
+                            resultInt = intLeft + intRight;
+                        }
+                        else if (op == "-")
+                        {
+                            resultInt = intLeft - intRight;
+                        }
+                        else if (op == "*")
+                        {
+                            resultInt = intLeft * intRight;
+                        }
+                        else if (op == "/")
+                        {
+                            resultInt = intLeft / intRight;
+                        }
+                        else if (op == "%")
+                        {
+                            if (intRight < 0)
+                            {
+                                intRight = -intRight;
+                                resultInt = intLeft % intRight;
+                                if (resultInt > 0)
+                                {
+                                    resultInt -= intRight;
+                                }
+                            }
+                            else
+                            {
+                                resultInt = intLeft % intRight;
+                                if (resultInt < 0)
+                                {
+                                    resultInt += intRight;
+                                }
+                            }
+                        }
+                        else if (op == "|")
+                        {
+                            resultInt = intLeft | intRight;
+                        }
+                        else if (op == "&")
+                        {
+                            resultInt = intLeft & intRight;
+                        }
+                        else if (op == "^")
+                        {
+                            resultInt = intLeft ^ intRight;
+                        }
+                        else if (op == "<<")
+                        {
+                            resultInt = intLeft << intRight;
+                        }
+                        else if (op == ">>")
+                        {
+                            resultInt = intLeft >> intRight;
+                        }
+                        else if (op == ">>>")
+                        {
+                            fail("Not implemented");
+                        }
+                        else
+                        {
+                            ThrowOpNotDefinedError(opToken, op, expr.left.type, expr.right.type);
+                        }
+                        return Expression_createIntegerConstant(opToken, resultInt);
+                    case 430:
+                        intLeft = expr.left.intVal;
+                        intRight = expr.right.intVal;
+                        if (op == "**")
+                        {
+                            return Expression_createFloatConstant(opToken, System.Math.Pow(intLeft, intRight));
+                        }
+                        resultInt = 0;
+                        if (op == "+")
+                        {
+                            resultInt = intLeft + intRight;
+                        }
+                        else if (op == "-")
+                        {
+                            resultInt = intLeft - intRight;
+                        }
+                        else if (op == "*")
+                        {
+                            resultInt = intLeft * intRight;
+                        }
+                        else if (op == "/")
+                        {
+                            resultInt = intLeft / intRight;
+                        }
+                        else if (op == "%")
+                        {
+                            if (intRight < 0)
+                            {
+                                intRight = -intRight;
+                                resultInt = intLeft % intRight;
+                                if (resultInt > 0)
+                                {
+                                    resultInt -= intRight;
+                                }
+                            }
+                            else
+                            {
+                                resultInt = intLeft % intRight;
+                                if (resultInt < 0)
+                                {
+                                    resultInt += intRight;
+                                }
+                            }
+                        }
+                        else if (op == "|")
+                        {
+                            resultInt = intLeft | intRight;
+                        }
+                        else if (op == "&")
+                        {
+                            resultInt = intLeft & intRight;
+                        }
+                        else if (op == "^")
+                        {
+                            resultInt = intLeft ^ intRight;
+                        }
+                        else if (op == "<<")
+                        {
+                            resultInt = intLeft << intRight;
+                        }
+                        else if (op == ">>")
+                        {
+                            resultInt = intLeft >> intRight;
+                        }
+                        else if (op == ">>>")
+                        {
+                            fail("Not implemented");
+                        }
+                        else
+                        {
+                            ThrowOpNotDefinedError(opToken, op, expr.left.type, expr.right.type);
+                        }
+                        return Expression_createIntegerConstant(opToken, resultInt);
+                    case 420:
+                        intLeft = expr.left.intVal;
+                        intRight = expr.right.intVal;
+                        if (op == "**")
+                        {
+                            return Expression_createFloatConstant(opToken, System.Math.Pow(intLeft, intRight));
+                        }
+                        resultInt = 0;
+                        if (op == "+")
+                        {
+                            resultInt = intLeft + intRight;
+                        }
+                        else if (op == "-")
+                        {
+                            resultInt = intLeft - intRight;
+                        }
+                        else if (op == "*")
+                        {
+                            resultInt = intLeft * intRight;
+                        }
+                        else if (op == "/")
+                        {
+                            resultInt = intLeft / intRight;
+                        }
+                        else if (op == "%")
+                        {
+                            if (intRight < 0)
+                            {
+                                intRight = -intRight;
+                                resultInt = intLeft % intRight;
+                                if (resultInt > 0)
+                                {
+                                    resultInt -= intRight;
+                                }
+                            }
+                            else
+                            {
+                                resultInt = intLeft % intRight;
+                                if (resultInt < 0)
+                                {
+                                    resultInt += intRight;
+                                }
+                            }
+                        }
+                        else if (op == "|")
+                        {
+                            resultInt = intLeft | intRight;
+                        }
+                        else if (op == "&")
+                        {
+                            resultInt = intLeft & intRight;
+                        }
+                        else if (op == "^")
+                        {
+                            resultInt = intLeft ^ intRight;
+                        }
+                        else if (op == "<<")
+                        {
+                            resultInt = intLeft << intRight;
+                        }
+                        else if (op == ">>")
+                        {
+                            resultInt = intLeft >> intRight;
+                        }
+                        else if (op == ">>>")
+                        {
+                            fail("Not implemented");
+                        }
+                        else
+                        {
+                            ThrowOpNotDefinedError(opToken, op, expr.left.type, expr.right.type);
+                        }
+                        return Expression_createIntegerConstant(opToken, resultInt);
+                    case 560:
+                        floatLeft = GetNumericValueOfConstantExpression(expr.left);
+                        floatRight = GetNumericValueOfConstantExpression(expr.right);
+                        floatResult = 0.0;
+                        if (op == "+")
+                        {
+                            floatResult = floatLeft + floatRight;
+                        }
+                        else if (op == "-")
+                        {
+                            floatResult = floatLeft - floatRight;
+                        }
+                        else if (op == "*")
+                        {
+                            floatResult = floatLeft * floatRight;
+                        }
+                        else if (op == "/")
+                        {
+                            floatResult = floatLeft / floatRight;
+                        }
+                        else if (op == "%")
+                        {
+                            if (floatRight < 0)
+                            {
+                                floatRight = -floatRight;
+                                floatResult = floatLeft % floatRight;
+                                if (floatResult > 0)
+                                {
+                                    floatResult -= floatRight;
+                                }
+                            }
+                            else
+                            {
+                                floatResult = floatLeft % floatRight;
+                                if (floatResult < 0)
+                                {
+                                    floatResult += floatRight;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ThrowOpNotDefinedError(opToken, op, expr.left.type, expr.right.type);
+                        }
+                        return Expression_createFloatConstant(opToken, floatResult);
+                    case 764:
+                        floatLeft = GetNumericValueOfConstantExpression(expr.left);
+                        floatRight = GetNumericValueOfConstantExpression(expr.right);
+                        floatResult = 0.0;
+                        if (op == "+")
+                        {
+                            floatResult = floatLeft + floatRight;
+                        }
+                        else if (op == "-")
+                        {
+                            floatResult = floatLeft - floatRight;
+                        }
+                        else if (op == "*")
+                        {
+                            floatResult = floatLeft * floatRight;
+                        }
+                        else if (op == "/")
+                        {
+                            floatResult = floatLeft / floatRight;
+                        }
+                        else if (op == "%")
+                        {
+                            if (floatRight < 0)
+                            {
+                                floatRight = -floatRight;
+                                floatResult = floatLeft % floatRight;
+                                if (floatResult > 0)
+                                {
+                                    floatResult -= floatRight;
+                                }
+                            }
+                            else
+                            {
+                                floatResult = floatLeft % floatRight;
+                                if (floatResult < 0)
+                                {
+                                    floatResult += floatRight;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ThrowOpNotDefinedError(opToken, op, expr.left.type, expr.right.type);
+                        }
+                        return Expression_createFloatConstant(opToken, floatResult);
+                    case 566:
+                        floatLeft = GetNumericValueOfConstantExpression(expr.left);
+                        floatRight = GetNumericValueOfConstantExpression(expr.right);
+                        floatResult = 0.0;
+                        if (op == "+")
+                        {
+                            floatResult = floatLeft + floatRight;
+                        }
+                        else if (op == "-")
+                        {
+                            floatResult = floatLeft - floatRight;
+                        }
+                        else if (op == "*")
+                        {
+                            floatResult = floatLeft * floatRight;
+                        }
+                        else if (op == "/")
+                        {
+                            floatResult = floatLeft / floatRight;
+                        }
+                        else if (op == "%")
+                        {
+                            if (floatRight < 0)
+                            {
+                                floatRight = -floatRight;
+                                floatResult = floatLeft % floatRight;
+                                if (floatResult > 0)
+                                {
+                                    floatResult -= floatRight;
+                                }
+                            }
+                            else
+                            {
+                                floatResult = floatLeft % floatRight;
+                                if (floatResult < 0)
+                                {
+                                    floatResult += floatRight;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ThrowOpNotDefinedError(opToken, op, expr.left.type, expr.right.type);
+                        }
+                        return Expression_createFloatConstant(opToken, floatResult);
+                    case 424:
+                        floatLeft = GetNumericValueOfConstantExpression(expr.left);
+                        floatRight = GetNumericValueOfConstantExpression(expr.right);
+                        floatResult = 0.0;
+                        if (op == "+")
+                        {
+                            floatResult = floatLeft + floatRight;
+                        }
+                        else if (op == "-")
+                        {
+                            floatResult = floatLeft - floatRight;
+                        }
+                        else if (op == "*")
+                        {
+                            floatResult = floatLeft * floatRight;
+                        }
+                        else if (op == "/")
+                        {
+                            floatResult = floatLeft / floatRight;
+                        }
+                        else if (op == "%")
+                        {
+                            if (floatRight < 0)
+                            {
+                                floatRight = -floatRight;
+                                floatResult = floatLeft % floatRight;
+                                if (floatResult > 0)
+                                {
+                                    floatResult -= floatRight;
+                                }
+                            }
+                            else
+                            {
+                                floatResult = floatLeft % floatRight;
+                                if (floatResult < 0)
+                                {
+                                    floatResult += floatRight;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ThrowOpNotDefinedError(opToken, op, expr.left.type, expr.right.type);
+                        }
+                        return Expression_createFloatConstant(opToken, floatResult);
+                    case 556:
+                        floatLeft = GetNumericValueOfConstantExpression(expr.left);
+                        floatRight = GetNumericValueOfConstantExpression(expr.right);
+                        floatResult = 0.0;
+                        if (op == "+")
+                        {
+                            floatResult = floatLeft + floatRight;
+                        }
+                        else if (op == "-")
+                        {
+                            floatResult = floatLeft - floatRight;
+                        }
+                        else if (op == "*")
+                        {
+                            floatResult = floatLeft * floatRight;
+                        }
+                        else if (op == "/")
+                        {
+                            floatResult = floatLeft / floatRight;
+                        }
+                        else if (op == "%")
+                        {
+                            if (floatRight < 0)
+                            {
+                                floatRight = -floatRight;
+                                floatResult = floatLeft % floatRight;
+                                if (floatResult > 0)
+                                {
+                                    floatResult -= floatRight;
+                                }
+                            }
+                            else
+                            {
+                                floatResult = floatLeft % floatRight;
+                                if (floatResult < 0)
+                                {
+                                    floatResult += floatRight;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ThrowOpNotDefinedError(opToken, op, expr.left.type, expr.right.type);
+                        }
+                        return Expression_createFloatConstant(opToken, floatResult);
+                    case 974:
+                        if (op == "*")
+                        {
+                            Expression strExpr = expr.left;
+                            Expression intExpr = expr.right;
+                            if (expr.left.type == 22)
+                            {
+                                strExpr = expr.right;
+                                intExpr = expr.left;
+                            }
+                            int size = intExpr.intVal;
+                            string val = strExpr.strVal;
+                            if (size == 0)
+                            {
+                                return Expression_createStringConstant(expr.firstToken, "");
+                            }
+                            if (size == 1)
+                            {
+                                return strExpr;
+                            }
+                            if (val.Length * size < 12)
+                            {
+                                System.Collections.Generic.List<string> sb = new List<string>();
+                                int i = 0;
+                                while (i < size)
+                                {
+                                    sb.Add(val);
+                                    i += 1;
+                                }
+                                return Expression_createStringConstant(expr.firstToken, string.Join("", sb));
+                            }
+                            return expr;
+                        }
+                        ThrowOpNotDefinedError(opToken, op, expr.left.type, expr.right.type);
+                        break;
+                    case 776:
+                        if (op == "*")
+                        {
+                            Expression strExpr = expr.left;
+                            Expression intExpr = expr.right;
+                            if (expr.left.type == 22)
+                            {
+                                strExpr = expr.right;
+                                intExpr = expr.left;
+                            }
+                            int size = intExpr.intVal;
+                            string val = strExpr.strVal;
+                            if (size == 0)
+                            {
+                                return Expression_createStringConstant(expr.firstToken, "");
+                            }
+                            if (size == 1)
+                            {
+                                return strExpr;
+                            }
+                            if (val.Length * size < 12)
+                            {
+                                System.Collections.Generic.List<string> sb = new List<string>();
+                                int i = 0;
+                                while (i < size)
+                                {
+                                    sb.Add(val);
+                                    i += 1;
+                                }
+                                return Expression_createStringConstant(expr.firstToken, string.Join("", sb));
+                            }
+                            return expr;
+                        }
+                        ThrowOpNotDefinedError(opToken, op, expr.left.type, expr.right.type);
+                        break;
+                    default:
+                        ThrowOpNotDefinedError(opToken, op, expr.left.type, expr.right.type);
+                        break;
+                }
+                fail("");
+            }
+            return expr;
+        }
+
         public static Expression ExpressionResolver_SecondPass_BitwiseNot(Resolver resolver, Expression bwn)
         {
             bwn.root = resolver.ResolveExpressionSecondPass(resolver, bwn.root);

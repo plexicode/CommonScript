@@ -238,6 +238,191 @@ Expression ExpressionResolver_SecondPass_BaseCtorReference(Resolver resolver, Ex
     return baseCtor;
 }
 
+Expression ExpressionResolver_SecondPass_BinaryOp(Resolver resolver, Expression expr) {
+    Token firstToken = expr.firstToken;
+    Token opToken = expr.opToken;
+    string op = opToken.Value;
+
+    expr.left = resolver.ResolveExpressionSecondPass(resolver, expr.left);
+    if (expr.right.type == ExpressionType.CLASS_REFERENCE && op == "is") {
+        expr.right.boolVal = true;
+    }
+    expr.right = resolver.ResolveExpressionSecondPass(resolver, expr.right);
+
+    // TODO: resolve constants
+    if (IsExpressionConstant(expr.left) && IsExpressionConstant(expr.right)) {
+
+        int intLeft = 0;
+        int intRight = 0;
+        int resultInt = 0;
+        double floatLeft = 0.0;
+        double floatRight = 0.0;
+        double floatResult = 0.0;
+
+        bool isLeftNumeric = IsExpressionNumericConstant(expr.left);
+        bool isRightNumeric = IsExpressionNumericConstant(expr.right);
+        bool isRightZero = expr.right.intVal == 0;
+        if (expr.right.type == ExpressionType.FLOAT_CONST) isRightZero = expr.right.floatVal == 0;
+
+        if (isRightNumeric) {
+            if (op == "/" || op == "%") {
+                if (isRightZero) {
+                    if (op == "%") Errors_Throw(opToken, "Modulo by zero");
+                    Errors_Throw(opToken, "Division by zero");
+                }
+            }
+        }
+
+        if (isLeftNumeric && isRightNumeric) {
+            floatLeft = GetNumericValueOfConstantExpression(expr.left);
+            floatRight = GetNumericValueOfConstantExpression(expr.right);
+
+            if (op == "<") return Expression_createBoolConstant(firstToken, floatLeft < floatRight);
+            if (op == ">") return Expression_createBoolConstant(firstToken, floatLeft > floatRight);
+            if (op == "<=") return Expression_createBoolConstant(firstToken, floatLeft <= floatRight);
+            if (op == ">=") return Expression_createBoolConstant(firstToken, floatLeft >= floatRight);
+
+            // TODO
+            // strict equality comparison on floats is okay in the case that these are converted
+            // from integers because they'll still be whole numbers. There is a bug here where they'll
+            // be inaccurate for float comparisons which is to be expected BUT they'll be slightly
+            // inaccurate in different ways across platforms.
+            // As a hypothetical example:
+            //     value = ln(e ** 2) == 2;
+            //       vs
+            //     x = 2
+            //     value = ln(e ** x) == x;
+            // This value may different if the runtime language and compile time language are different.
+            if (op == "==") return Expression_createBoolConstant(firstToken, floatLeft == floatRight);
+            if (op == "!=") return Expression_createBoolConstant(firstToken, floatLeft != floatRight);
+        }
+
+        if (op == "+" && (expr.left.type == ExpressionType.STRING_CONST || expr.right.type == ExpressionType.STRING_CONST)) {
+            string leftStr = GetStringFromConstantExpression(expr.left);
+            string rightStr = GetStringFromConstantExpression(expr.right);
+            return Expression_createStringConstant(expr.firstToken, leftStr + rightStr);
+        }
+
+        switch (expr.left.type * ExpressionType.MAX_VALUE + expr.right.type) {
+            case ExpressionType.INTEGER_CONST * ExpressionType.MAX_VALUE + ExpressionType.INTEGER_CONST:
+            case ExpressionType.INTEGER_CONST * ExpressionType.MAX_VALUE + ExpressionType.ENUM_CONST:
+            case ExpressionType.ENUM_CONST * ExpressionType.MAX_VALUE + ExpressionType.INTEGER_CONST:
+            case ExpressionType.ENUM_CONST * ExpressionType.MAX_VALUE + ExpressionType.ENUM_CONST:
+                intLeft = expr.left.intVal;
+                intRight = expr.right.intVal;
+                if (op == "**") {
+                    return Expression_createFloatConstant(opToken, Core.Pow(intLeft, intRight));
+                }
+                resultInt = 0;
+                if (op == "+") {
+                    resultInt = intLeft + intRight;
+                } else if (op == "-") {
+                    resultInt = intLeft - intRight;
+                } else if (op == "*") {
+                    resultInt = intLeft * intRight;
+                } else if (op == "/") {
+                    resultInt = Core.IntegerDivision(intLeft, intRight);
+                } else if (op == "%") {
+                    if (intRight < 0) {
+                        intRight = -intRight;
+                        resultInt = intLeft % intRight;
+                        if (resultInt > 0) resultInt -= intRight;
+                    } else {
+                        resultInt = intLeft % intRight;
+                        if (resultInt < 0) resultInt += intRight;
+                    }
+                } else if (op == "|") {
+                    resultInt = intLeft | intRight;   
+                } else if (op == "&") {
+                    resultInt = intLeft & intRight;   
+                } else if (op == "^") {
+                    resultInt = intLeft ^ intRight;
+                } else if (op == "<<") {
+                    resultInt = intLeft << intRight;
+                } else if (op == ">>") {
+                    resultInt = intLeft >> intRight;   
+                } else if (op == ">>>") {
+                    // resultInt = intLeft >>> intRight;
+                    fail("Not implemented");
+                } else {
+                    ThrowOpNotDefinedError(opToken, op, expr.left.type, expr.right.type);
+                }
+                
+                return Expression_createIntegerConstant(opToken, resultInt);
+
+            case ExpressionType.FLOAT_CONST * ExpressionType.MAX_VALUE + ExpressionType.FLOAT_CONST:
+            case ExpressionType.INTEGER_CONST * ExpressionType.MAX_VALUE + ExpressionType.FLOAT_CONST:
+            case ExpressionType.FLOAT_CONST * ExpressionType.MAX_VALUE + ExpressionType.INTEGER_CONST:
+            case ExpressionType.ENUM_CONST * ExpressionType.MAX_VALUE + ExpressionType.FLOAT_CONST:
+            case ExpressionType.FLOAT_CONST * ExpressionType.MAX_VALUE + ExpressionType.ENUM_CONST:
+                floatLeft = GetNumericValueOfConstantExpression(expr.left);
+                floatRight = GetNumericValueOfConstantExpression(expr.right);
+                floatResult = 0.0;
+                if (op == "+") {
+                    floatResult = floatLeft + floatRight; 
+                } else if (op == "-") {
+                    floatResult = floatLeft - floatRight; 
+                } else if (op == "*") {
+                    floatResult = floatLeft * floatRight; 
+                } else if (op == "/") {
+                    floatResult = Core.FloatDivision(floatLeft, floatRight); 
+                } else if (op == "%") {
+                    if (floatRight < 0) {
+                        floatRight = -floatRight;
+                        floatResult = floatLeft % floatRight;
+                        if (floatResult > 0) floatResult -= floatRight;
+                    } else {
+                        floatResult = floatLeft % floatRight;
+                        if (floatResult < 0) floatResult += floatRight;
+                    }
+                } else {
+                    ThrowOpNotDefinedError(opToken, op, expr.left.type, expr.right.type);
+                }
+                
+                return Expression_createFloatConstant(opToken, floatResult);
+
+            case ExpressionType.STRING_CONST * ExpressionType.MAX_VALUE + ExpressionType.INTEGER_CONST:
+            case ExpressionType.INTEGER_CONST * ExpressionType.MAX_VALUE + ExpressionType.STRING_CONST:
+                if (op == "*") {
+                    Expression strExpr = expr.left;
+                    Expression intExpr = expr.right;
+                    if (expr.left.type == ExpressionType.INTEGER_CONST) {
+                        strExpr = expr.right;
+                        intExpr = expr.left;
+                    }
+                    
+                    int size = intExpr.intVal;
+                    string val = strExpr.strVal;
+                    if (size == 0) return Expression_createStringConstant(expr.firstToken, "");
+                    if (size == 1) return strExpr;
+                    
+                    // an arbitrary heuristic. If the new string is 12 characters or longer, leave it 
+                    // in its original expression form. You don't want something like "x" * 10000 adding 
+                    // a full 10 kilobytes to the output bundle.
+                    if (val.Size() * size < 12) { 
+                        List<string> sb = new List<string>();
+                        for (int i = 0; i < size; i += 1) {
+                            sb.Add(val);
+                        }
+                        return Expression_createStringConstant(expr.firstToken, sb.Join(""));
+                    }
+                    return expr;
+                }
+
+                ThrowOpNotDefinedError(opToken, op, expr.left.type, expr.right.type);
+                break;
+
+            default:
+                ThrowOpNotDefinedError(opToken, op, expr.left.type, expr.right.type);
+                break;
+        }
+        
+        fail(""); // all code paths above cause an exit.
+    }
+
+    return expr;
+}
+
 Expression ExpressionResolver_SecondPass_BitwiseNot(Resolver resolver, Expression bwn) {
     bwn.root = resolver.ResolveExpressionSecondPass(resolver, bwn.root);
 
