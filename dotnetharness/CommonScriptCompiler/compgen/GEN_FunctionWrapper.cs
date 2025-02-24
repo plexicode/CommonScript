@@ -6525,6 +6525,213 @@ namespace CommonScript.Compiler.Internal
             }
         }
 
+        public static Statement StatementResolver_SecondPass_Assignment(Resolver resolver, Statement assignment)
+        {
+            assignment.assignTarget = ExpressionResolver_ResolveExpressionSecondPass(resolver, assignment.assignTarget);
+            assignment.assignValue = ExpressionResolver_ResolveExpressionSecondPass(resolver, assignment.assignValue);
+            Expression target = assignment.assignTarget;
+            switch (target.type)
+            {
+                case 20:
+                    break;
+                case 11:
+                    break;
+                case 31:
+                    break;
+                default:
+                    Errors_Throw(assignment.assignOp, "Invalid assignment. Cannot assign to this type of expression.");
+                    break;
+            }
+            return assignment;
+        }
+
+        public static Statement StatementResolver_SecondPass_Break(Resolver resolver, Statement br)
+        {
+            return br;
+        }
+
+        public static Statement StatementResolver_SecondPass_Continue(Resolver resolver, Statement cont)
+        {
+            return cont;
+        }
+
+        public static Statement StatementResolver_SecondPass_DoWhileLoop(Resolver resolver, Statement doWhileLoop)
+        {
+            Statement oldBreakContext = resolver.breakContext;
+            resolver.breakContext = doWhileLoop;
+            StatementResolver_ResolveStatementArraySecondPass(resolver, doWhileLoop.code);
+            doWhileLoop.condition = ExpressionResolver_ResolveExpressionSecondPass(resolver, doWhileLoop.condition);
+            resolver.breakContext = oldBreakContext;
+            return doWhileLoop;
+        }
+
+        public static Statement StatementResolver_SecondPass_ExpressionAsStatement(Resolver resolver, Statement exprAsStmnt)
+        {
+            exprAsStmnt.expression = ExpressionResolver_ResolveExpressionSecondPass(resolver, exprAsStmnt.expression);
+            switch (exprAsStmnt.expression.type)
+            {
+                case 17:
+                    break;
+                case 14:
+                    break;
+                case 21:
+                    break;
+                default:
+                    Errors_Throw(exprAsStmnt.firstToken, "This type of expression cannot exist by itself. Did you mean to assign it to a variable?");
+                    break;
+            }
+            return exprAsStmnt;
+        }
+
+        public static Statement StatementResolver_SecondPass_ForEachLoop(Resolver resolver, Statement forEachLoop)
+        {
+            forEachLoop.expression = ExpressionResolver_ResolveExpressionSecondPass(resolver, forEachLoop.expression);
+            StatementResolver_ResolveStatementArraySecondPass(resolver, forEachLoop.code);
+            return forEachLoop;
+        }
+
+        public static Statement StatementResolver_SecondPass_ForLoop(Resolver resolver, Statement forLoop)
+        {
+            Statement oldBreakContext = resolver.breakContext;
+            resolver.breakContext = forLoop;
+            StatementResolver_ResolveStatementArraySecondPass(resolver, forLoop.forInit);
+            forLoop.condition = ExpressionResolver_ResolveExpressionSecondPass(resolver, forLoop.condition);
+            StatementResolver_ResolveStatementArraySecondPass(resolver, forLoop.forStep);
+            StatementResolver_ResolveStatementArraySecondPass(resolver, forLoop.code);
+            resolver.breakContext = oldBreakContext;
+            return forLoop;
+        }
+
+        public static Statement StatementResolver_SecondPass_IfStatement(Resolver resolver, Statement ifStatement)
+        {
+            ifStatement.condition = ExpressionResolver_ResolveExpressionSecondPass(resolver, ifStatement.condition);
+            StatementResolver_ResolveStatementArraySecondPass(resolver, ifStatement.code);
+            StatementResolver_ResolveStatementArraySecondPass(resolver, ifStatement.elseCode);
+            return ifStatement;
+        }
+
+        public static Statement StatementResolver_SecondPass_Return(Resolver resolver, Statement ret)
+        {
+            ret.expression = ExpressionResolver_ResolveExpressionSecondPass(resolver, ret.expression);
+            return ret;
+        }
+
+        public static Statement StatementResolver_SecondPass_SwitchStatement(Resolver resolver, Statement switchStmnt)
+        {
+            switchStmnt.condition = ExpressionResolver_ResolveExpressionSecondPass(resolver, switchStmnt.condition);
+            int exprType = -1;
+            System.Collections.Generic.Dictionary<string, bool> strCollisions = new Dictionary<string, bool>();
+            System.Collections.Generic.Dictionary<int, bool> intCollisions = new Dictionary<int, bool>();
+            int j = 0;
+            int i = 0;
+            while (i < switchStmnt.switchChunks.Length)
+            {
+                SwitchChunk chunk = switchStmnt.switchChunks[i];
+                j = 0;
+                while (j < chunk.Cases.Count)
+                {
+                    Expression expr = chunk.Cases[j];
+                    if (expr != null)
+                    {
+                        expr = ExpressionResolver_ResolveExpressionSecondPass(resolver, expr);
+                        chunk.Cases[j] = expr;
+                        if (!IsExpressionConstant(expr))
+                        {
+                            Errors_Throw(expr.firstToken, "Only constant expressions are allowed in switch statement cases.");
+                        }
+                        int currentType = -1;
+                        bool hadCollision = false;
+                        if (expr.type == 22)
+                        {
+                            currentType = 1;
+                            hadCollision = intCollisions.ContainsKey(expr.intVal);
+                            intCollisions[expr.intVal] = true;
+                        }
+                        else if (expr.type == 28)
+                        {
+                            currentType = 2;
+                            hadCollision = strCollisions.ContainsKey(expr.strVal);
+                            strCollisions[expr.strVal] = true;
+                        }
+                        else
+                        {
+                            Errors_Throw(expr.firstToken, "Only integer and string constants are allowed to be used as switch statement cases.");
+                        }
+                        if (exprType == -1)
+                        {
+                            exprType = currentType;
+                        }
+                        if (exprType != currentType)
+                        {
+                            Errors_Throw(expr.firstToken, "Switch statement cases must use the same type for all cases.");
+                        }
+                        if (hadCollision)
+                        {
+                            Errors_Throw(expr.firstToken, "Switch statement contains multiple cases with the same value.");
+                        }
+                    }
+                    j += 1;
+                }
+                j = 0;
+                while (j < chunk.Code.Count)
+                {
+                    chunk.Code[j] = resolver.ResolveStatementSecondPass(resolver, chunk.Code[j]);
+                    j += 1;
+                }
+                switch (chunk.Code[chunk.Code.Count - 1].type)
+                {
+                    case 2:
+                        break;
+                    case 9:
+                        break;
+                    case 11:
+                        break;
+                    default:
+                        Errors_Throw(chunk.CaseTokens[chunk.CaseTokens.Count - 1], "This switch statement case has a fall-through.");
+                        break;
+                }
+                i += 1;
+            }
+            return switchStmnt;
+        }
+
+        public static Statement StatementResolver_SecondPass_ThrowStatement(Resolver resolver, Statement throwStmnt)
+        {
+            throwStmnt.expression = ExpressionResolver_ResolveExpressionSecondPass(resolver, throwStmnt.expression);
+            if (IsExpressionConstant(throwStmnt.expression))
+            {
+                Errors_Throw(throwStmnt.expression.firstToken, "Only instances of Exception are throwable.");
+            }
+            return throwStmnt;
+        }
+
+        public static Statement StatementResolver_SecondPass_TryStatement(Resolver resolver, Statement tryStmnt)
+        {
+            Statement oldBreakContext = resolver.breakContext;
+            resolver.breakContext = tryStmnt;
+            StatementResolver_ResolveStatementArraySecondPass(resolver, tryStmnt.code);
+            int i = 0;
+            while (i < tryStmnt.catchChunks.Length)
+            {
+                CatchChunk cc = tryStmnt.catchChunks[i];
+                StatementResolver_ResolveStatementArraySecondPass(resolver, cc.Code);
+                i += 1;
+            }
+            StatementResolver_ResolveStatementArraySecondPass(resolver, tryStmnt.finallyCode);
+            resolver.breakContext = oldBreakContext;
+            return tryStmnt;
+        }
+
+        public static Statement StatementResolver_SecondPass_WhileLoop(Resolver resolver, Statement whileLoop)
+        {
+            Statement oldBreakContext = resolver.breakContext;
+            resolver.breakContext = whileLoop;
+            whileLoop.condition = ExpressionResolver_ResolveExpressionSecondPass(resolver, whileLoop.condition);
+            StatementResolver_ResolveStatementArraySecondPass(resolver, whileLoop.code);
+            resolver.breakContext = oldBreakContext;
+            return whileLoop;
+        }
+
         public static StaticContext StaticContext_new()
         {
             return new StaticContext(TokenizerStaticContext_new(), new Dictionary<string, AbstractEntity>(), SpecialActionUtil_new(), StringSet_fromArray(PST_StringSplit("public static", " ")));

@@ -38,19 +38,19 @@ namespace CommonScript.Compiler
         {
             switch (s.type)
             {
-                case (int) StatementType.ASSIGNMENT: return StatementResolver_SecondPass_Assignment(resolver, s);
-                case (int) StatementType.BREAK: return StatementResolver_SecondPass_Break(resolver, s);
-                case (int) StatementType.CONTINUE: return StatementResolver_SecondPass_Continue(resolver, s);
-                case (int) StatementType.DO_WHILE_LOOP: return StatementResolver_SecondPass_DoWhileLoop(resolver, s);
-                case (int) StatementType.EXPRESSION_AS_STATEMENT: return StatementResolver_SecondPass_ExpressionAsStatement(resolver, s);
-                case (int) StatementType.FOR_LOOP: return StatementResolver_SecondPass_ForLoop(resolver, s);
-                case (int) StatementType.FOR_EACH_LOOP: return StatementResolver_SecondPass_ForEachLoop(resolver, s);
-                case (int) StatementType.IF_STATEMENT: return StatementResolver_SecondPass_IfStatement(resolver, s);
-                case (int) StatementType.RETURN: return StatementResolver_SecondPass_Return(resolver, s);
-                case (int) StatementType.SWITCH_STATEMENT: return StatementResolver_SecondPass_SwitchStatement(resolver, s);
-                case (int) StatementType.THROW: return StatementResolver_SecondPass_ThrowStatement(resolver, s);
-                case (int) StatementType.TRY: return StatementResolver_SecondPass_TryStatement(resolver, s);
-                case (int) StatementType.WHILE_LOOP: return StatementResolver_SecondPass_WhileLoop(resolver, s);
+                case (int) StatementType.ASSIGNMENT: return FunctionWrapper.StatementResolver_SecondPass_Assignment(resolver, s);
+                case (int) StatementType.BREAK: return FunctionWrapper.StatementResolver_SecondPass_Break(resolver, s);
+                case (int) StatementType.CONTINUE: return FunctionWrapper.StatementResolver_SecondPass_Continue(resolver, s);
+                case (int) StatementType.DO_WHILE_LOOP: return FunctionWrapper.StatementResolver_SecondPass_DoWhileLoop(resolver, s);
+                case (int) StatementType.EXPRESSION_AS_STATEMENT: return FunctionWrapper.StatementResolver_SecondPass_ExpressionAsStatement(resolver, s);
+                case (int) StatementType.FOR_LOOP: return FunctionWrapper.StatementResolver_SecondPass_ForLoop(resolver, s);
+                case (int) StatementType.FOR_EACH_LOOP: return FunctionWrapper.StatementResolver_SecondPass_ForEachLoop(resolver, s);
+                case (int) StatementType.IF_STATEMENT: return FunctionWrapper.StatementResolver_SecondPass_IfStatement(resolver, s);
+                case (int) StatementType.RETURN: return FunctionWrapper.StatementResolver_SecondPass_Return(resolver, s);
+                case (int) StatementType.SWITCH_STATEMENT: return FunctionWrapper.StatementResolver_SecondPass_SwitchStatement(resolver, s);
+                case (int) StatementType.THROW: return FunctionWrapper.StatementResolver_SecondPass_ThrowStatement(resolver, s);
+                case (int) StatementType.TRY: return FunctionWrapper.StatementResolver_SecondPass_TryStatement(resolver, s);
+                case (int) StatementType.WHILE_LOOP: return FunctionWrapper.StatementResolver_SecondPass_WhileLoop(resolver, s);
             }
 
             FunctionWrapper.fail("Not implemented");
@@ -148,20 +148,21 @@ namespace CommonScript.Compiler
             Statement oldBreakContext = resolver.breakContext;
             resolver.breakContext = switchStmnt;
             switchStmnt.condition = FunctionWrapper.ExpressionResolver_ResolveExpressionFirstPass(resolver, switchStmnt.condition);
-            foreach (SwitchChunk chunk in switchStmnt.switchChunks)
+            for (int i = 0; i < switchStmnt.switchChunks.Length; i += 1)
             {
-                for (int i = 0; i < chunk.Cases.Count; i++)
+                SwitchChunk chunk = switchStmnt.switchChunks[i];
+                for (int j = 0; j < chunk.Cases.Count; j += 1)
                 {
-                    Expression expr = chunk.Cases[i];
+                    Expression expr = chunk.Cases[j];
                     if (expr != null)
                     {
-                        chunk.Cases[i] = FunctionWrapper.ExpressionResolver_ResolveExpressionFirstPass(resolver, expr);
+                        chunk.Cases[j] = FunctionWrapper.ExpressionResolver_ResolveExpressionFirstPass(resolver, expr);
                     }
                 }
 
-                for (int i = 0; i < chunk.Code.Count; i++)
+                for (int j = 0; j < chunk.Code.Count; j += 1)
                 {
-                    chunk.Code[i] = StatementResolver_ResolveStatementFirstPass(resolver, chunk.Code[i]);
+                    chunk.Code[j] = resolver.ResolveStatementFirstPass(resolver, chunk.Code[j]);
                 }
             }
             resolver.breakContext = oldBreakContext;
@@ -173,8 +174,9 @@ namespace CommonScript.Compiler
             Statement oldBreakContext = resolver.breakContext;
             resolver.breakContext = tryStatement;
             FunctionWrapper.StatementResolver_ResolveStatementArrayFirstPass(resolver, tryStatement.code);
-            foreach (CatchChunk cc in tryStatement.catchChunks)
+            for (int i = 0; i < tryStatement.catchChunks.Length; i += 1)
             {
+                CatchChunk cc = tryStatement.catchChunks[i];
                 if (cc.exceptionVarName != null)
                 {
                     ((FunctionEntity)resolver.activeEntity.specificData).variableScope[cc.exceptionVarName.Value] = true;
@@ -210,202 +212,6 @@ namespace CommonScript.Compiler
             Statement oldBreakContext = resolver.breakContext;
             resolver.breakContext = whileLoop;
             FunctionWrapper.StatementResolver_ResolveStatementArrayFirstPass(resolver, whileLoop.code);
-            resolver.breakContext = oldBreakContext;
-            return whileLoop;
-        }
-
-        private static Statement StatementResolver_SecondPass_Assignment(Resolver resolver, Statement assignment)
-        {
-            assignment.assignTarget = FunctionWrapper.ExpressionResolver_ResolveExpressionSecondPass(resolver, assignment.assignTarget);
-            assignment.assignValue = FunctionWrapper.ExpressionResolver_ResolveExpressionSecondPass(resolver, assignment.assignValue);
-
-            Expression target = assignment.assignTarget;
-            switch (target.type)
-            {
-                case (int) ExpressionType.INDEX:
-                case (int) ExpressionType.DOT_FIELD:
-                case (int) ExpressionType.VARIABLE:
-                    // These are fine.
-                    break;
-
-                default:
-                    FunctionWrapper.Errors_Throw(assignment.assignOp, "Invalid assignment. Cannot assign to this type of expression.");
-                    break;
-            }
-            return assignment;
-        }
-
-        private static Statement StatementResolver_SecondPass_Break(Resolver resolver, Statement br)
-        {
-            return br;
-        }
-
-        private static Statement StatementResolver_SecondPass_Continue(Resolver resolver, Statement cont)
-        {
-            return cont;
-        }
-
-        private static Statement StatementResolver_SecondPass_DoWhileLoop(Resolver resolver, Statement doWhileLoop)
-        {
-            Statement oldBreakContext = resolver.breakContext;
-            resolver.breakContext = doWhileLoop;
-            FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, doWhileLoop.code);
-            doWhileLoop.condition = FunctionWrapper.ExpressionResolver_ResolveExpressionSecondPass(resolver, doWhileLoop.condition);
-            resolver.breakContext = oldBreakContext;
-            return doWhileLoop;
-        }
-
-        private static Statement StatementResolver_SecondPass_ExpressionAsStatement(Resolver resolver, Statement exprAsStmnt)
-        {
-            exprAsStmnt.expression = FunctionWrapper.ExpressionResolver_ResolveExpressionSecondPass(resolver, exprAsStmnt.expression);
-            switch (exprAsStmnt.expression.type)
-            {
-                case (int) ExpressionType.FUNCTION_INVOKE:
-                case (int) ExpressionType.EXTENSION_INVOCATION:
-                case (int) ExpressionType.INLINE_INCREMENT:
-                    // these are fine 
-                    break;
-
-                default:
-                    FunctionWrapper.Errors_Throw(exprAsStmnt.firstToken, "This type of expression cannot exist by itself. Did you mean to assign it to a variable?");
-                    break;
-            }
-
-            return exprAsStmnt;
-        }
-
-        private static Statement StatementResolver_SecondPass_ForLoop(Resolver resolver, Statement forLoop)
-        {
-            Statement oldBreakContext = resolver.breakContext;
-            resolver.breakContext = forLoop;
-            FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, forLoop.forInit);
-            forLoop.condition = FunctionWrapper.ExpressionResolver_ResolveExpressionSecondPass(resolver, forLoop.condition);
-            FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, forLoop.forStep);
-            FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, forLoop.code);
-            resolver.breakContext = oldBreakContext;
-            return forLoop;
-        }
-
-        private static Statement StatementResolver_SecondPass_ForEachLoop(Resolver resolver, Statement forEachLoop)
-        {
-            forEachLoop.expression = FunctionWrapper.ExpressionResolver_ResolveExpressionSecondPass(resolver, forEachLoop.expression);
-            FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, forEachLoop.code);
-            return forEachLoop;
-        }
-
-        private static Statement StatementResolver_SecondPass_IfStatement(Resolver resolver, Statement ifStatement)
-        {
-            ifStatement.condition = FunctionWrapper.ExpressionResolver_ResolveExpressionSecondPass(resolver, ifStatement.condition);
-            FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, ifStatement.code);
-            FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, ifStatement.elseCode);
-            return ifStatement;
-        }
-
-        private static Statement StatementResolver_SecondPass_Return(Resolver resolver, Statement ret)
-        {
-            ret.expression = FunctionWrapper.ExpressionResolver_ResolveExpressionSecondPass(resolver, ret.expression);
-            return ret;
-        }
-
-        private static Statement StatementResolver_SecondPass_SwitchStatement(Resolver resolver, Statement switchStmnt)
-        {
-            switchStmnt.condition = FunctionWrapper.ExpressionResolver_ResolveExpressionSecondPass(resolver, switchStmnt.condition);
-            int exprType = -1; // { -1: indeterminite | 1: ints | 2: strings }
-            Dictionary<string, bool> strCollisions = new Dictionary<string, bool>();
-            Dictionary<int, bool> intCollisions = new Dictionary<int, bool>();
-
-            foreach (SwitchChunk chunk in switchStmnt.switchChunks)
-            {
-                for (int i = 0; i < chunk.Cases.Count; i++)
-                {
-                    Expression expr = chunk.Cases[i];
-                    if (expr != null)
-                    {
-                        expr = FunctionWrapper.ExpressionResolver_ResolveExpressionSecondPass(resolver, expr);
-                        chunk.Cases[i] = expr;
-                        if (!FunctionWrapper.IsExpressionConstant(expr))
-                        {
-                            FunctionWrapper.Errors_Throw(expr.firstToken, "Only constant expressions are allowed in switch statement cases.");
-                        }
-                        int currentType = -1;
-                        bool hadCollision = false;
-                        if (expr.type == (int) ExpressionType.INTEGER_CONST)
-                        {
-                            currentType = 1;
-                            hadCollision = intCollisions.ContainsKey(expr.intVal);
-                            intCollisions[expr.intVal] = true;
-                        }
-                        else if (expr.type == (int) ExpressionType.STRING_CONST)
-                        {
-                            currentType = 2;
-                            hadCollision = strCollisions.ContainsKey(expr.strVal);
-                            strCollisions[expr.strVal] = true;
-                        }
-                        else
-                        {
-                            FunctionWrapper.Errors_Throw(expr.firstToken, "Only integer and string constants are allowed to be used as switch statement cases.");
-                        }
-                        if (exprType == -1) exprType = currentType;
-                        if (exprType != currentType) FunctionWrapper.Errors_Throw(expr.firstToken, "Switch statement cases must use the same type for all cases.");
-                        if (hadCollision) FunctionWrapper.Errors_Throw(expr.firstToken, "Switch statement contains multiple cases with the same value.");
-                    }
-                }
-
-                for (int i = 0; i < chunk.Code.Count; i++)
-                {
-                    chunk.Code[i] = StatementResolver_ResolveStatementSecondPass(resolver, chunk.Code[i]);
-                }
-
-                switch (chunk.Code[chunk.Code.Count - 1].type)
-                {
-                    case (int) StatementType.BREAK:
-                    case (int) StatementType.RETURN:
-                    case (int) StatementType.THROW:
-                        // these are fine.
-                        break;
-
-                    default:
-                        FunctionWrapper.Errors_Throw(chunk.CaseTokens[chunk.CaseTokens.Count - 1], "This switch statement case has a fall-through.");
-                        break;
-                }
-            }
-
-            return switchStmnt;
-        }
-
-        private static Statement StatementResolver_SecondPass_ThrowStatement(Resolver resolver, Statement throwStmnt)
-        {
-            throwStmnt.expression = FunctionWrapper.ExpressionResolver_ResolveExpressionSecondPass(resolver, throwStmnt.expression);
-            if (FunctionWrapper.IsExpressionConstant(throwStmnt.expression))
-            {
-                FunctionWrapper.Errors_Throw(throwStmnt.expression.firstToken, "Only instances of Exception are throwable.");
-            }
-            return throwStmnt;
-        }
-
-        private static Statement StatementResolver_SecondPass_TryStatement(Resolver resolver, Statement tryStmnt)
-        {
-            Statement oldBreakContext = resolver.breakContext;
-            resolver.breakContext = tryStmnt;
-            FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, tryStmnt.code);
-            for (int i = 0; i < tryStmnt.catchChunks.Length; i++)
-            {
-                CatchChunk cc = tryStmnt.catchChunks[i];
-                FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, cc.Code);
-            }
-            FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, tryStmnt.finallyCode);
-
-            resolver.breakContext = oldBreakContext;
-
-            return tryStmnt;
-        }
-
-        private static Statement StatementResolver_SecondPass_WhileLoop(Resolver resolver, Statement whileLoop)
-        {
-            Statement oldBreakContext = resolver.breakContext;
-            resolver.breakContext = whileLoop;
-            whileLoop.condition = FunctionWrapper.ExpressionResolver_ResolveExpressionSecondPass(resolver, whileLoop.condition);
-            FunctionWrapper.StatementResolver_ResolveStatementArraySecondPass(resolver, whileLoop.code);
             resolver.breakContext = oldBreakContext;
             return whileLoop;
         }
