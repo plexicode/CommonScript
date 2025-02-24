@@ -1295,7 +1295,7 @@ namespace CommonScript.Compiler.Internal
             System.Collections.Generic.List<Statement> preBaseFieldInit = new List<Statement>();
             System.Collections.Generic.List<Statement> postBaseFieldInit = new List<Statement>();
             System.Collections.Generic.List<Statement> baseCtorInvocation = new List<Statement>();
-            bool isCtor = funcDef.baseData.type == (int)3;
+            bool isCtor = funcDef.baseData.type == 3;
             FunctionEntity ctorEnt = null;
             if (isCtor)
             {
@@ -5280,6 +5280,60 @@ namespace CommonScript.Compiler.Internal
             return Statement_createWhileLoop(whileToken, condition, code);
         }
 
+        public static void PerformFullResolutionPassOnConstAndEnums(Resolver resolver, string[] resOrder)
+        {
+            int passNum = 1;
+            while (passNum <= 2)
+            {
+                int i = 0;
+                while (i < resOrder.Length)
+                {
+                    AbstractEntity entity = resolver.flattenedEntitiesAndEnumValues[resOrder[i]];
+                    resolver.activeEntity = entity;
+                    if (entity.type == 4)
+                    {
+                        EnumEntity enumDef = (EnumEntity)entity.specificData;
+                        int memberIndex = Resolver_GetEnumMemberIndex(resolver, resOrder[i], enumDef);
+                        Expression val = enumDef.memberValues[memberIndex];
+                        if (passNum == 1)
+                        {
+                            val = ExpressionResolver_ResolveExpressionFirstPass(resolver, val);
+                        }
+                        else
+                        {
+                            val = ExpressionResolver_ResolveExpressionSecondPass(resolver, val);
+                        }
+                        if (passNum == 2 && val.type != 22)
+                        {
+                            Errors_Throw(enumDef.memberNameTokens[memberIndex], "This enum value has a non-integer value.");
+                        }
+                        enumDef.memberValues[memberIndex] = val;
+                    }
+                    else
+                    {
+                        ConstEntity constEnt = (ConstEntity)entity.specificData;
+                        Expression val = constEnt.constValue;
+                        if (passNum == 1)
+                        {
+                            val = ExpressionResolver_ResolveExpressionFirstPass(resolver, val);
+                        }
+                        else
+                        {
+                            val = ExpressionResolver_ResolveExpressionSecondPass(resolver, val);
+                            if (!IsExpressionConstant(val))
+                            {
+                                Errors_Throw(val.firstToken, "A constant expression is required here.");
+                            }
+                        }
+                        constEnt.constValue = val;
+                    }
+                    resolver.activeEntity = null;
+                    i += 1;
+                }
+                passNum += 1;
+            }
+        }
+
         public static void PUBLIC_EnsureDependenciesFulfilled(object compObj)
         {
             CompilerContext compiler = (CompilerContext)compObj;
@@ -5362,6 +5416,111 @@ namespace CommonScript.Compiler.Internal
                 }
                 i += 1;
             }
+        }
+
+        public static ClassEntity[] ResolveBaseClassesAndEstablishClassOrder(Resolver resolver, System.Collections.Generic.List<ClassEntity> classes, System.Collections.Generic.Dictionary<string, AbstractEntity> flattenedEntities)
+        {
+            int i = 0;
+            int j = 0;
+            ClassEntity[] deterministicOrder = ClassSorter_SortClassesInDeterministicDependencyOrder(classes.ToArray(), false);
+            System.Collections.Generic.List<ClassEntity> finalOrder = new List<ClassEntity>();
+            System.Collections.Generic.List<ClassEntity> baseClassRequired = new List<ClassEntity>();
+            i = 0;
+            while (i < deterministicOrder.Length)
+            {
+                ClassEntity e = deterministicOrder[i];
+                if (e.baseClassTokens != null)
+                {
+                    baseClassRequired.Add(e);
+                }
+                else
+                {
+                    finalOrder.Add(e);
+                }
+                i += 1;
+            }
+            i = 0;
+            while (i < baseClassRequired.Count)
+            {
+                ClassEntity bc = baseClassRequired[i];
+                resolver.activeEntity = bc.baseData;
+                Token baseClassToken = bc.baseClassTokens[0];
+                AbstractEntity bcEntity = LookupUtil_DoLookupForName(resolver, baseClassToken, baseClassToken.Value);
+                if (bcEntity != null)
+                {
+                    j = 2;
+                    while (j < bc.baseClassTokens.Length)
+                    {
+                        string next = bc.baseClassTokens[j].Value;
+                        if (bcEntity != null)
+                        {
+                            System.Collections.Generic.Dictionary<string, AbstractEntity> lookup = Entity_getMemberLookup(resolver.staticCtx, bcEntity);
+                            if (lookup.ContainsKey(next))
+                            {
+                                bcEntity = lookup[next];
+                            }
+                            else
+                            {
+                                bcEntity = null;
+                            }
+                        }
+                        j += 2;
+                    }
+                }
+                if (bcEntity == null)
+                {
+                    Errors_Throw(bc.baseData.firstToken, "Could not resolve base class");
+                    fail("Not implemented");
+                }
+                if (bcEntity.type != 1)
+                {
+                    Errors_Throw(bc.baseData.firstToken, bcEntity.fqName + " is not a valid class.");
+                }
+                bc.baseClassEntity = (ClassEntity)bcEntity.specificData;
+                resolver.activeEntity = null;
+                i += 1;
+            }
+            System.Collections.Generic.Dictionary<string, bool> includedInOrder = new Dictionary<string, bool>();
+            i = 0;
+            while (i < baseClassRequired.Count)
+            {
+                ClassEntity bc = baseClassRequired[i];
+                includedInOrder[bc.baseData.fqName] = false;
+                i += 1;
+            }
+            i = 0;
+            while (i < baseClassRequired.Count)
+            {
+                ClassEntity bc = baseClassRequired[i];
+                ClassEntity walker = bc;
+                System.Collections.Generic.List<ClassEntity> order = new List<ClassEntity>();
+                while (walker != null)
+                {
+                    if (!includedInOrder.ContainsKey(walker.baseData.fqName) || includedInOrder[walker.baseData.fqName])
+                    {
+                        walker = null;
+                    }
+                    else
+                    {
+                        order.Add(walker);
+                        includedInOrder[walker.baseData.fqName] = true;
+                        walker = walker.baseClassEntity;
+                    }
+                    if (order.Count > deterministicOrder.Length)
+                    {
+                        Errors_Throw(bc.baseData.firstToken, "This class has a cycle in its base class chain.");
+                    }
+                }
+                order.Reverse();
+                j = 0;
+                while (j < order.Count)
+                {
+                    finalOrder.Add(order[j]);
+                    j += 1;
+                }
+                i += 1;
+            }
+            return finalOrder.ToArray();
         }
 
         public static string[] Resolver_DetermineConstAndEnumResolutionOrder(Resolver resolver, System.Collections.Generic.List<ConstEntity> constants, System.Collections.Generic.List<EnumEntity> enums)

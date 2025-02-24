@@ -94,7 +94,7 @@ void EntityResolver_ResolveFunctionFirstPass(Resolver resolver, FunctionEntity f
     List<Statement> postBaseFieldInit = new List<Statement>();
     List<Statement> baseCtorInvocation = new List<Statement>();
 
-    bool isCtor = funcDef.baseData.type == (int)EntityType.CONSTRUCTOR;
+    bool isCtor = funcDef.baseData.type == EntityType.CONSTRUCTOR;
     FunctionEntity ctorEnt = null;
 
     if (isCtor) {
@@ -191,4 +191,131 @@ void EntityResolver_ResolveFunctionSecondPass(Resolver resolver, FunctionEntity 
 
     resolver.activeEntity = null;
     resolver.breakContext = null;
+}
+
+void PerformFullResolutionPassOnConstAndEnums(Resolver resolver, Array<string> resOrder) {
+    for (int passNum = 1; passNum <= 2; passNum += 1) {
+        for (int i = 0; i < resOrder.Size(); i += 1) {
+            AbstractEntity entity = resolver.flattenedEntitiesAndEnumValues[resOrder[i]];
+            resolver.activeEntity = entity;
+            if (entity.type == EntityType.ENUM) {
+                EnumEntity enumDef = (EnumEntity)entity.specificData;
+                int memberIndex = Resolver_GetEnumMemberIndex(resolver, resOrder[i], enumDef);
+                Expression val = enumDef.memberValues[memberIndex];
+                if (passNum == 1) {
+                    val = ExpressionResolver_ResolveExpressionFirstPass(resolver, val);
+                } else {
+                    val = ExpressionResolver_ResolveExpressionSecondPass(resolver, val);
+                }
+
+                if (passNum == 2 && val.type != ExpressionType.INTEGER_CONST) {
+                    Errors_Throw(enumDef.memberNameTokens[memberIndex], "This enum value has a non-integer value.");
+                }
+
+                enumDef.memberValues[memberIndex] = val;
+            } else {
+                ConstEntity constEnt = (ConstEntity)entity.specificData;
+                Expression val = constEnt.constValue;
+                if (passNum == 1) {
+                    val = ExpressionResolver_ResolveExpressionFirstPass(resolver, val);
+                } else {
+                    val = ExpressionResolver_ResolveExpressionSecondPass(resolver, val);
+                    if (!IsExpressionConstant(val)) {
+                        Errors_Throw(val.firstToken, "A constant expression is required here.");
+                    }
+                }
+
+                constEnt.constValue = val;
+            }
+
+            resolver.activeEntity = null;
+        }
+    }
+}
+
+Array<ClassEntity> ResolveBaseClassesAndEstablishClassOrder(
+    Resolver resolver, 
+    List<ClassEntity> classes,
+    Dictionary<string, AbstractEntity> flattenedEntities) {
+    int i = 0;
+    int j = 0;
+    
+    // TODO: add external module resolving as a separate feature.
+
+    Array<ClassEntity> deterministicOrder = ClassSorter_SortClassesInDeterministicDependencyOrder(Core.ListToArray(classes), false);
+    
+    List<ClassEntity> finalOrder = new List<ClassEntity>();
+    List<ClassEntity> baseClassRequired = new List<ClassEntity>();
+    for (i = 0; i < deterministicOrder.Size(); i += 1) {
+        ClassEntity e = deterministicOrder[i];
+        if (e.baseClassTokens != null) {
+            baseClassRequired.Add(e);
+        } else {
+            finalOrder.Add(e);
+        }
+    }
+    
+    for (i = 0; i < baseClassRequired.Size(); i += 1) {
+        ClassEntity bc = baseClassRequired[i];
+        resolver.activeEntity = bc.baseData;
+        Token baseClassToken = bc.baseClassTokens[0];
+        AbstractEntity bcEntity = LookupUtil_DoLookupForName(resolver, baseClassToken, baseClassToken.Value);
+        if (bcEntity != null) {
+            for (j = 2; j < bc.baseClassTokens.Size(); j += 2) {
+                string next = bc.baseClassTokens[j].Value;
+                if (bcEntity != null) {
+                    Dictionary<string, AbstractEntity> lookup = Entity_getMemberLookup(resolver.staticCtx, bcEntity);
+                    if (lookup.Contains(next)) {
+                        bcEntity = lookup[next];
+                    } else {
+                        bcEntity = null;
+                    }
+                }
+            }
+        }
+        if (bcEntity == null) {
+            Errors_Throw(bc.baseData.firstToken, "Could not resolve base class");
+            fail("Not implemented");
+        }
+        if (bcEntity.type != EntityType.CLASS) {
+            Errors_Throw(bc.baseData.firstToken, bcEntity.fqName + " is not a valid class.");
+        }
+
+        bc.baseClassEntity = (ClassEntity)bcEntity.specificData;
+        resolver.activeEntity = null;
+    }
+
+    Dictionary<string, bool> includedInOrder = new Dictionary<string, bool>();
+    for (i = 0; i < baseClassRequired.Size(); i += 1) {
+        ClassEntity bc = baseClassRequired[i];
+        includedInOrder[bc.baseData.fqName] = false;
+    }
+    
+    for (i = 0; i < baseClassRequired.Size(); i += 1) {
+        ClassEntity bc = baseClassRequired[i];
+        ClassEntity walker = bc;
+        List<ClassEntity> order = new List<ClassEntity>();
+        while (walker != null) {
+            // If it's external or already included, stop.
+            if (!includedInOrder.Contains(walker.baseData.fqName) ||
+                includedInOrder[walker.baseData.fqName]) {
+                walker = null;
+            } else {
+                order.Add(walker);
+                includedInOrder[walker.baseData.fqName] = true;
+                walker = walker.baseClassEntity;
+            }
+
+            if (order.Size() > deterministicOrder.Size()) {
+                Errors_Throw(bc.baseData.firstToken, "This class has a cycle in its base class chain.");
+            }
+        }
+
+        order.Reverse();
+        for (j = 0; j < order.Size(); j += 1) {
+            finalOrder.Add(order[j]);
+        }
+    }
+
+    return Core.ListToArray(finalOrder);
 }
