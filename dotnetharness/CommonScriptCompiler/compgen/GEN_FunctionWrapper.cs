@@ -1186,6 +1186,26 @@ namespace CommonScript.Compiler.Internal
             return 0;
         }
 
+        public static Statement EntityResolver_ConvertFieldDefaultValueIntoSetter(FieldEntity fld)
+        {
+            if (fld.opToken == null)
+            {
+                fail("");
+            }
+            Expression root = null;
+            if (fld.baseData.isStatic)
+            {
+                root = Expression_createClassReference(null, fld.baseData.nestParent);
+            }
+            else
+            {
+                root = Expression_createThisReference(null);
+            }
+            Expression target = Expression_createDotField(root, null, fld.baseData.simpleName);
+            Token equal = fld.opToken;
+            return Statement_createAssignment(target, equal, fld.defaultValue);
+        }
+
         public static int EntityResolver_GetNextAutoVarId(Resolver resolver)
         {
             int id = resolver.autoVarId;
@@ -1196,6 +1216,153 @@ namespace CommonScript.Compiler.Internal
         public static void EntityResolver_ResetAutoVarId(Resolver resolver)
         {
             resolver.autoVarId = 0;
+        }
+
+        public static void EntityResolver_ResolveFunctionFirstPass(Resolver resolver, FunctionEntity funcDef)
+        {
+            int i = 0;
+            funcDef.variableScope = new Dictionary<string, bool>();
+            resolver.activeEntity = funcDef.baseData;
+            resolver.breakContext = null;
+            i = 0;
+            while (i < funcDef.argTokens.Length)
+            {
+                Token arg = funcDef.argTokens[i];
+                if (funcDef.variableScope.ContainsKey(arg.Value))
+                {
+                    Errors_Throw(arg, string.Join("", new string[] { "There are multiple arguments named '", arg.Value, "'." }));
+                }
+                funcDef.variableScope[arg.Value] = true;
+                Expression defVal = funcDef.argDefaultValues[i];
+                if (defVal != null)
+                {
+                    funcDef.argDefaultValues[i] = ExpressionResolver_ResolveExpressionFirstPass(resolver, defVal);
+                }
+                i += 1;
+            }
+            System.Collections.Generic.List<Statement> preBaseFieldInit = new List<Statement>();
+            System.Collections.Generic.List<Statement> postBaseFieldInit = new List<Statement>();
+            System.Collections.Generic.List<Statement> baseCtorInvocation = new List<Statement>();
+            bool isCtor = funcDef.baseData.type == (int)3;
+            FunctionEntity ctorEnt = null;
+            if (isCtor)
+            {
+                ctorEnt = funcDef;
+                System.Collections.Generic.Dictionary<string, AbstractEntity> siblings = Entity_getMemberLookup(resolver.staticCtx, funcDef.baseData.nestParent);
+                System.Collections.Generic.List<FieldEntity> fields = new List<FieldEntity>();
+                string[] fieldKeys = siblings.Keys.ToArray().OrderBy<string, string>(_PST_GEN_arg => _PST_GEN_arg).ToArray();
+                i = 0;
+                while (i < fieldKeys.Length)
+                {
+                    AbstractEntity sibling = siblings[fieldKeys[i]];
+                    if (sibling.type == 5 && sibling.isStatic == ctorEnt.baseData.isStatic)
+                    {
+                        FieldEntity fe = (FieldEntity)sibling.specificData;
+                        if (fe.defaultValue != null)
+                        {
+                            fields.Add(fe);
+                        }
+                    }
+                    i += 1;
+                }
+                i = 0;
+                while (i < fields.Count)
+                {
+                    FieldEntity fld = fields[i];
+                    fld.defaultValue = ExpressionResolver_ResolveExpressionFirstPass(resolver, fld.defaultValue);
+                    Statement setter = EntityResolver_ConvertFieldDefaultValueIntoSetter(fld);
+                    if (IsExpressionConstant(fld.defaultValue))
+                    {
+                        preBaseFieldInit.Add(setter);
+                    }
+                    else
+                    {
+                        postBaseFieldInit.Add(setter);
+                    }
+                    i += 1;
+                }
+            }
+            if (isCtor && funcDef.baseData.nestParent.type == 1 && ((ClassEntity)funcDef.baseData.nestParent.specificData).baseClassEntity != null)
+            {
+                Token baseCtor = funcDef.baseData.firstToken;
+                Token baseCtorParen = funcDef.baseData.firstToken;
+                Expression baseCtorRef = Expression_createBaseCtorReference(baseCtor);
+                Expression baseCtorInvoke = Expression_createFunctionInvocation(baseCtorRef, baseCtorParen, ctorEnt.baseCtorArgValues);
+                Statement baseCtorStmnt = Statement_createExpressionAsStatement(baseCtorInvoke);
+                baseCtorStmnt = StatementResolver_ResolveStatementFirstPass(resolver, baseCtorStmnt);
+                baseCtorInvocation.Add(baseCtorStmnt);
+            }
+            StatementResolver_ResolveStatementArrayFirstPass(resolver, funcDef.code);
+            System.Collections.Generic.List<Statement> flattened = new List<Statement>();
+            i = 0;
+            while (i < preBaseFieldInit.Count)
+            {
+                flattened.Add(preBaseFieldInit[i]);
+                i += 1;
+            }
+            i = 0;
+            while (i < baseCtorInvocation.Count)
+            {
+                flattened.Add(baseCtorInvocation[i]);
+                i += 1;
+            }
+            i = 0;
+            while (i < postBaseFieldInit.Count)
+            {
+                flattened.Add(postBaseFieldInit[i]);
+                i += 1;
+            }
+            i = 0;
+            while (i < funcDef.code.Length)
+            {
+                flattened.Add(funcDef.code[i]);
+                i += 1;
+            }
+            Statement lastStatement = null;
+            if (flattened.Count > 0)
+            {
+                lastStatement = flattened[flattened.Count - 1];
+            }
+            bool autoReturnNeeded = lastStatement == null || (lastStatement.type != 9 && lastStatement.type != 11);
+            if (autoReturnNeeded)
+            {
+                flattened.Add(Statement_createReturn(null, Expression_createNullConstant(null)));
+            }
+            funcDef.code = flattened.ToArray();
+            resolver.activeEntity = null;
+            resolver.breakContext = null;
+        }
+
+        public static void EntityResolver_ResolveFunctionSecondPass(Resolver resolver, FunctionEntity funcDef)
+        {
+            int i = 0;
+            resolver.activeEntity = funcDef.baseData;
+            resolver.breakContext = null;
+            i = 0;
+            while (i < funcDef.argDefaultValues.Length)
+            {
+                Expression defVal = funcDef.argDefaultValues[i];
+                if (defVal != null)
+                {
+                    funcDef.argDefaultValues[i] = ExpressionResolver_ResolveExpressionSecondPass(resolver, defVal);
+                }
+                i += 1;
+            }
+            StatementResolver_ResolveStatementArraySecondPass(resolver, funcDef.code);
+            if (funcDef.code.Length == 0 || funcDef.code[funcDef.code.Length - 1].type != 9)
+            {
+                System.Collections.Generic.List<Statement> newCode = new List<Statement>();
+                i = 0;
+                while (i < funcDef.code.Length)
+                {
+                    newCode.Add(funcDef.code[i]);
+                    i += 1;
+                }
+                newCode.Add(Statement_createReturn(null, Expression_createNullConstant(null)));
+                funcDef.code = newCode.ToArray();
+            }
+            resolver.activeEntity = null;
+            resolver.breakContext = null;
         }
 
         public static EnumEntity EnumEntity_new(Token enumToken, Token nameToken, Token[] memberNames, Expression[] memberValues)

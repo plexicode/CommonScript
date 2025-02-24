@@ -7,3 +7,145 @@ int EntityResolver_GetNextAutoVarId(Resolver resolver) {
     resolver.autoVarId += 1;
     return id;
 }
+
+
+Statement EntityResolver_ConvertFieldDefaultValueIntoSetter(FieldEntity fld) {
+    if (fld.opToken == null) {
+        fail(""); // only applicable to default-value-based fields.
+    }
+
+    Expression root = null;
+    if (fld.baseData.isStatic) {
+        root = Expression_createClassReference(null, fld.baseData.nestParent);
+    } else {
+        root = Expression_createThisReference(null);
+    }
+
+    Expression target = Expression_createDotField(root, null, fld.baseData.simpleName);
+
+    Token equal = fld.opToken;
+
+    return Statement_createAssignment(target, equal, fld.defaultValue);
+}
+
+void EntityResolver_ResolveFunctionFirstPass(Resolver resolver, FunctionEntity funcDef) {
+    int i = 0;
+    
+    funcDef.variableScope = new Dictionary<string, bool>();
+
+    resolver.activeEntity = funcDef.baseData;
+    resolver.breakContext = null;
+
+    for (i = 0; i < funcDef.argTokens.Size(); i += 1) {
+        Token arg = funcDef.argTokens[i];
+        if (funcDef.variableScope.Contains(arg.Value)) {
+            Errors_Throw(arg, "There are multiple arguments named '" + arg.Value + "'.");
+        }
+        funcDef.variableScope[arg.Value] = true;
+
+        Expression defVal = funcDef.argDefaultValues[i];
+        if (defVal != null) funcDef.argDefaultValues[i] = ExpressionResolver_ResolveExpressionFirstPass(resolver, defVal);
+    }
+
+    List<Statement> preBaseFieldInit = new List<Statement>();
+    List<Statement> postBaseFieldInit = new List<Statement>();
+    List<Statement> baseCtorInvocation = new List<Statement>();
+
+    bool isCtor = funcDef.baseData.type == (int)EntityType.CONSTRUCTOR;
+    FunctionEntity ctorEnt = null;
+
+    if (isCtor) {
+        ctorEnt = funcDef;
+
+        Dictionary<string, AbstractEntity> siblings = Entity_getMemberLookup(resolver.staticCtx, funcDef.baseData.nestParent);
+
+
+        // TODO: this is wrong. The fields should be processed in the order that they appear in the code itself.
+        // This will affect runtime order of complex expressions which could have observable consequences.
+        // TODO: simple constant initial values should be conveyed in the metadata and direct-copied from a template.
+        // Ctrl+F for initialValues in the runtime.
+        List<FieldEntity> fields = new List<FieldEntity>();
+        Array<string> fieldKeys = Core.SortedCopyOfStringArray(siblings.Keys());
+        for (i = 0; i < fieldKeys.Size(); i += 1) {
+            AbstractEntity sibling = siblings[fieldKeys[i]];
+            if (sibling.type == EntityType.FIELD && sibling.isStatic == ctorEnt.baseData.isStatic) {
+                FieldEntity fe = (FieldEntity) sibling.specificData;
+                if (fe.defaultValue != null) {
+                    fields.Add(fe);
+                }
+            }
+        }
+        
+        for (i = 0; i < fields.Size(); i += 1) {
+            FieldEntity fld = fields[i];
+            fld.defaultValue = ExpressionResolver_ResolveExpressionFirstPass(resolver, fld.defaultValue);
+            Statement setter = EntityResolver_ConvertFieldDefaultValueIntoSetter(fld);
+            if (IsExpressionConstant(fld.defaultValue)) {
+                preBaseFieldInit.Add(setter);
+            } else {
+                postBaseFieldInit.Add(setter);
+            }
+        }
+    }
+
+    if (isCtor && 
+        funcDef.baseData.nestParent.type == EntityType.CLASS && 
+        ((ClassEntity) funcDef.baseData.nestParent.specificData).baseClassEntity != null) {
+        // TODO: verify arg count
+        Token baseCtor = funcDef.baseData.firstToken; // TODO: this is wrong, get the actual 'base' token
+        Token baseCtorParen = funcDef.baseData.firstToken; // TODO: this is even more wrong 
+        Expression baseCtorRef = Expression_createBaseCtorReference(baseCtor);
+        Expression baseCtorInvoke = Expression_createFunctionInvocation(baseCtorRef, baseCtorParen, ctorEnt.baseCtorArgValues);
+        Statement baseCtorStmnt = Statement_createExpressionAsStatement(baseCtorInvoke);
+        baseCtorStmnt = StatementResolver_ResolveStatementFirstPass(resolver, baseCtorStmnt);
+        baseCtorInvocation.Add(baseCtorStmnt);
+    }
+
+    StatementResolver_ResolveStatementArrayFirstPass(resolver, funcDef.code);
+
+    List<Statement> flattened = new List<Statement>();
+    for (i = 0; i < preBaseFieldInit.Size(); i+= 1) flattened.Add(preBaseFieldInit[i]);
+    for (i = 0; i < baseCtorInvocation.Size(); i += 1) flattened.Add(baseCtorInvocation[i]);
+    for (i = 0; i < postBaseFieldInit.Size(); i += 1) flattened.Add(postBaseFieldInit[i]);
+    for (i = 0; i < funcDef.code.Size(); i += 1) flattened.Add(funcDef.code[i]);
+
+    Statement lastStatement = null;
+    if (flattened.Size() > 0) lastStatement = flattened[flattened.Size() - 1];
+    
+    bool autoReturnNeeded = lastStatement == null ||
+        (lastStatement.type != StatementType.RETURN && lastStatement.type != StatementType.THROW);
+    if (autoReturnNeeded) {
+        flattened.Add(Statement_createReturn(null, Expression_createNullConstant(null)));
+    }
+    funcDef.code = Core.ListToArray(flattened);
+
+    resolver.activeEntity = null;
+    resolver.breakContext = null;
+}
+
+void EntityResolver_ResolveFunctionSecondPass(Resolver resolver, FunctionEntity funcDef) {
+    int i = 0;
+
+    resolver.activeEntity = funcDef.baseData;
+    resolver.breakContext = null;
+
+    for (i = 0; i < funcDef.argDefaultValues.Size(); i += 1) {
+        Expression defVal = funcDef.argDefaultValues[i];
+        if (defVal != null) {
+            funcDef.argDefaultValues[i] = ExpressionResolver_ResolveExpressionSecondPass(resolver, defVal);
+        }
+    }
+
+    StatementResolver_ResolveStatementArraySecondPass(resolver, funcDef.code);
+
+    if (funcDef.code.Size() == 0 || funcDef.code[funcDef.code.Size() - 1].type != StatementType.RETURN) {
+        List<Statement> newCode = new List<Statement>();
+        for (i = 0; i < funcDef.code.Size(); i += 1) newCode.Add(funcDef.code[i]);
+
+        newCode.Add(Statement_createReturn(null, Expression_createNullConstant(null)));
+        funcDef.code = Core.ListToArray(newCode);
+    }
+
+    resolver.activeEntity = null;
+    resolver.breakContext = null;
+}

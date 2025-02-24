@@ -9,6 +9,8 @@ namespace CommonScript.Compiler
     {
         public static void Resolve(Resolver resolver)
         {
+            int i = 0;
+            
             List<FunctionEntity> functions = new List<FunctionEntity>();
             List<ClassEntity> classes = new List<ClassEntity>();
             List<ConstEntity> constants = new List<ConstEntity>();
@@ -18,7 +20,7 @@ namespace CommonScript.Compiler
 
             AbstractEntity[] entities = resolver.flattenedEntities.Values.ToArray();
 
-            for (int i = 0; i < entities.Length; i++)
+            for (i = 0; i < entities.Length; i += 1)
             {
                 AbstractEntity tle = entities[i];
 
@@ -64,44 +66,44 @@ namespace CommonScript.Compiler
 
             ClassEntity[] orderedClasses = ResolveBaseClassesAndEstablishClassOrder(resolver, classes, resolver.flattenedEntities);
 
-            for (int i = 0; i < orderedClasses.Length; i++)
+            for (i = 0; i < orderedClasses.Length; i += 1)
             {
                 EntityResolverUtil.EntityResolver_DetermineMemberOffsets(orderedClasses[i]);
             }
 
-            for (int i = 0; i < functions.Count; i++)
+            for (i = 0; i < functions.Count; i += 1)
             {
                 FunctionWrapper.EntityResolver_ResetAutoVarId(resolver);
-                EntityResolverUtil.EntityResolver_ResolveFunctionFirstPass(resolver, functions[i]);
+                FunctionWrapper.EntityResolver_ResolveFunctionFirstPass(resolver, functions[i]);
             }
 
-            for (int i = 0; i < constructors.Count; i++)
+            for (i = 0; i < constructors.Count; i += 1)
             {
                 FunctionWrapper.EntityResolver_ResetAutoVarId(resolver);
-                EntityResolverUtil.EntityResolver_ResolveFunctionFirstPass(resolver, constructors[i]);
+                FunctionWrapper.EntityResolver_ResolveFunctionFirstPass(resolver, constructors[i]);
             }
 
             // At this point, all lambdas have been reported.
             // DO NOT CHANGE TO FOR-EACH. This count can grow as a result of nested lambdas.
-            for (int i = 0; i < resolver.lambdas.Count; i++) 
+            for (i = 0; i < resolver.lambdas.Count; i += 1) 
             {
                 FunctionWrapper.EntityResolver_ResetAutoVarId(resolver);
-                EntityResolverUtil.EntityResolver_ResolveFunctionFirstPass(resolver, resolver.lambdas[i]);
+                FunctionWrapper.EntityResolver_ResolveFunctionFirstPass(resolver, resolver.lambdas[i]);
             }
 
-            for (int i = 0; i < functions.Count; i++)
+            for (i = 0; i < functions.Count; i += 1)
             {
-                EntityResolverUtil.EntityResolver_ResolveFunctionSecondPass(resolver, functions[i]);
+                FunctionWrapper.EntityResolver_ResolveFunctionSecondPass(resolver, functions[i]);
             }
 
-            for (int i = 0; i < constructors.Count; i++)
+            for (i = 0; i < constructors.Count; i += 1)
             {
-                EntityResolverUtil.EntityResolver_ResolveFunctionSecondPass(resolver, constructors[i]);
+                FunctionWrapper.EntityResolver_ResolveFunctionSecondPass(resolver, constructors[i]);
             }
 
-            for (int i = 0; i < resolver.lambdas.Count; i++)
+            for (i = 0; i < resolver.lambdas.Count; i += 1)
             {
-                EntityResolverUtil.EntityResolver_ResolveFunctionSecondPass(resolver, resolver.lambdas[i]);
+                FunctionWrapper.EntityResolver_ResolveFunctionSecondPass(resolver, resolver.lambdas[i]);
             }
         }
 
@@ -110,6 +112,9 @@ namespace CommonScript.Compiler
             List<ClassEntity> classes,
             Dictionary<string, AbstractEntity> flattenedEntities)
         {
+            int i = 0;
+            int j = 0;
+            
             // TODO: add external module resolving as a separate feature.
 
             ClassEntity[] deterministicOrder = FunctionWrapper.ClassSorter_SortClassesInDeterministicDependencyOrder(
@@ -117,7 +122,7 @@ namespace CommonScript.Compiler
             
             List<ClassEntity> finalOrder = new List<ClassEntity>();
             List<ClassEntity> baseClassRequired = new List<ClassEntity>();
-            for (int i = 0; i < deterministicOrder.Length; i++)
+            for (i = 0; i < deterministicOrder.Length; i += 1)
             {
                 ClassEntity e = deterministicOrder[i];
                 if (e.baseClassTokens != null)
@@ -130,7 +135,7 @@ namespace CommonScript.Compiler
                 }
             }
             
-            for (int i = 0; i < baseClassRequired.Count; i += 1)
+            for (i = 0; i < baseClassRequired.Count; i += 1)
             {
                 ClassEntity bc = baseClassRequired[i];
                 resolver.activeEntity = bc.baseData;
@@ -138,7 +143,7 @@ namespace CommonScript.Compiler
                 AbstractEntity bcEntity = FunctionWrapper.LookupUtil_DoLookupForName(resolver, baseClassToken, baseClassToken.Value);
                 if (bcEntity != null)
                 {
-                    for (int j = 2; j < bc.baseClassTokens.Length; j += 2)
+                    for (j = 2; j < bc.baseClassTokens.Length; j += 2)
                     {
                         string next = bc.baseClassTokens[j].Value;
                         if (bcEntity != null)
@@ -170,13 +175,13 @@ namespace CommonScript.Compiler
             }
 
             Dictionary<string, bool> includedInOrder = new Dictionary<string, bool>();
-            for (int i = 0; i < baseClassRequired.Count; i++)
+            for (i = 0; i < baseClassRequired.Count; i += 1)
             {
                 ClassEntity bc = baseClassRequired[i];
                 includedInOrder[bc.baseData.fqName] = false;
             }
             
-            for (int i = 0; i < baseClassRequired.Count; i++)
+            for (i = 0; i < baseClassRequired.Count; i += 1)
             {
                 ClassEntity bc = baseClassRequired[i];
                 ClassEntity walker = bc;
@@ -203,7 +208,7 @@ namespace CommonScript.Compiler
                 }
 
                 order.Reverse();
-                for (int j = 0; j < order.Count; j++)
+                for (j = 0; j < order.Count; j += 1)
                 {
                     finalOrder.Add(order[j]);
                 }
@@ -214,9 +219,9 @@ namespace CommonScript.Compiler
 
         private static void PerformFullResolutionPassOnConstAndEnums(Resolver resolver, string[] resOrder)
         {
-            for (int passNum = 1; passNum <= 2; passNum++)
+            for (int passNum = 1; passNum <= 2; passNum += 1)
             {
-                for (int i = 0; i < resOrder.Length; i++)
+                for (int i = 0; i < resOrder.Length; i += 1)
                 {
                     AbstractEntity entity = resolver.flattenedEntitiesAndEnumValues[resOrder[i]];
                     resolver.activeEntity = entity;
