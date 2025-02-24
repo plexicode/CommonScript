@@ -2035,6 +2035,137 @@ namespace CommonScript.Compiler.Internal
             }
         }
 
+        public static Expression ExpressionResolver_ResolveExpressionFirstPass(Resolver resolver, Expression expr)
+        {
+            switch (expr.type)
+            {
+                case 2:
+                    return ExpressionResolver_FirstPass_BaseCtorReference(resolver, expr);
+                case 3:
+                    return ExpressionResolver_FirstPass_BinaryOp(resolver, expr);
+                case 4:
+                    return ExpressionResolver_FirstPass_BitwiseNot(resolver, expr);
+                case 5:
+                    return ExpressionResolver_FirstPass_BoolConst(resolver, expr);
+                case 6:
+                    return ExpressionResolver_FirstPass_BoolNot(resolver, expr);
+                case 8:
+                    return ExpressionResolver_FirstPass_ConstructorInvocation(resolver, expr);
+                case 9:
+                    return ExpressionResolver_FirstPass_ConstructorReference(resolver, expr);
+                case 10:
+                    return ExpressionResolver_FirstPass_DictionaryDefinition(resolver, expr);
+                case 11:
+                    return ExpressionResolver_FirstPass_DotField(resolver, expr);
+                case 16:
+                    return ExpressionResolver_FirstPass_FloatConstant(resolver, expr);
+                case 17:
+                    return ExpressionResolver_FirstPass_FunctionInvocation(resolver, expr);
+                case 20:
+                    return ExpressionResolver_FirstPass_Index(resolver, expr);
+                case 21:
+                    return ExpressionResolver_FirstPass_InlineIncrement(resolver, expr);
+                case 22:
+                    return ExpressionResolver_FirstPass_IntegerConstant(resolver, expr);
+                case 23:
+                    return ExpressionResolver_FirstPass_Lambda(resolver, expr);
+                case 24:
+                    return ExpressionResolver_FirstPass_ListDefinition(resolver, expr);
+                case 25:
+                    return ExpressionResolver_FirstPass_NegativeSign(resolver, expr);
+                case 26:
+                    return ExpressionResolver_FirstPass_NullConst(resolver, expr);
+                case 27:
+                    return ExpressionResolver_FirstPass_Slice(resolver, expr);
+                case 28:
+                    return ExpressionResolver_FirstPass_StringConstant(resolver, expr);
+                case 29:
+                    return ExpressionResolver_FirstPass_Ternary(resolver, expr);
+                case 30:
+                    return ExpressionResolver_FirstPass_This(resolver, expr);
+                case 33:
+                    return ExpressionResolver_FirstPass_TypeOf(resolver, expr);
+                case 31:
+                    return ExpressionResolver_FirstPass_Variable(resolver, expr);
+                case 15:
+                    Errors_Throw(expr.firstToken, "Extension method references must be invoked immediately.");
+                    break;
+                default:
+                    Errors_ThrowNotImplemented(expr.firstToken, "first pass for this type");
+                    break;
+            }
+            return expr;
+        }
+
+        public static Expression ExpressionResolver_ResolveExpressionSecondPass(Resolver resolver, Expression expr)
+        {
+            switch (expr.type)
+            {
+                case 2:
+                    return ExpressionResolver_SecondPass_BaseCtorReference(resolver, expr);
+                case 3:
+                    return ExpressionResolver_SecondPass_BinaryOp(resolver, expr);
+                case 4:
+                    return ExpressionResolver_SecondPass_BitwiseNot(resolver, expr);
+                case 5:
+                    return ExpressionResolver_SecondPass_BoolConst(resolver, expr);
+                case 6:
+                    return ExpressionResolver_SecondPass_BoolNot(resolver, expr);
+                case 7:
+                    return ExpressionResolver_SecondPass_ClassReference(resolver, expr);
+                case 9:
+                    return ExpressionResolver_SecondPass_ConstructorReference(resolver, expr, false);
+                case 10:
+                    return ExpressionResolver_SecondPass_DictionaryDefinition(resolver, expr);
+                case 11:
+                    return ExpressionResolver_SecondPass_DotField(resolver, expr);
+                case 12:
+                    return ExpressionResolver_SecondPass_EnumConstant(resolver, expr);
+                case 14:
+                    return ExpressionResolver_SecondPass_ExtensionInvocation(resolver, expr);
+                case 16:
+                    return ExpressionResolver_SecondPass_FloatConstant(resolver, expr);
+                case 17:
+                    return ExpressionResolver_SecondPass_FunctionInvocation(resolver, expr);
+                case 18:
+                    return ExpressionResolver_SecondPass_FunctionReference(resolver, expr);
+                case 19:
+                    return ExpressionResolver_SecondPass_ImportReference(resolver, expr);
+                case 20:
+                    return ExpressionResolver_SecondPass_Index(resolver, expr);
+                case 21:
+                    return ExpressionResolver_SecondPass_InlineIncrement(resolver, expr);
+                case 22:
+                    return ExpressionResolver_SecondPass_IntegerConstant(resolver, expr);
+                case 23:
+                    return ExpressionResolver_SecondPass_Lambda(resolver, expr);
+                case 24:
+                    return ExpressionResolver_SecondPass_ListDefinition(resolver, expr);
+                case 32:
+                    return ExpressionResolver_SecondPass_NamespaceReference(resolver, expr);
+                case 25:
+                    return ExpressionResolver_SecondPass_NegativeSign(resolver, expr);
+                case 26:
+                    return ExpressionResolver_SecondPass_NullConstant(resolver, expr);
+                case 27:
+                    return ExpressionResolver_SecondPass_Slice(resolver, expr);
+                case 28:
+                    return ExpressionResolver_SecondPass_StringConstant(resolver, expr);
+                case 29:
+                    return ExpressionResolver_SecondPass_Ternary(resolver, expr);
+                case 30:
+                    return ExpressionResolver_SecondPass_ThisConstant(resolver, expr);
+                case 33:
+                    return ExpressionResolver_SecondPass_TypeOf(resolver, expr);
+                case 31:
+                    return ExpressionResolver_SecondPass_Variable(resolver, expr);
+                default:
+                    Errors_ThrowNotImplemented(expr.firstToken, "second pass for this type");
+                    break;
+            }
+            return expr;
+        }
+
         public static Expression ExpressionResolver_SecondPass_BaseCtorReference(Resolver resolver, Expression baseCtor)
         {
             baseCtor.entityPtr = ((ClassEntity)resolver.activeEntity.nestParent.specificData).baseClassEntity.baseData;

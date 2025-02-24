@@ -1,3 +1,80 @@
+Expression ExpressionResolver_ResolveExpressionFirstPass(Resolver resolver, Expression expr) {
+    switch (expr.type) {
+        case ExpressionType.BASE_CTOR_REFERENCE: return ExpressionResolver_FirstPass_BaseCtorReference(resolver, expr);
+        case ExpressionType.BINARY_OP: return ExpressionResolver_FirstPass_BinaryOp(resolver, expr);
+        case ExpressionType.BITWISE_NOT: return ExpressionResolver_FirstPass_BitwiseNot(resolver, expr);
+        case ExpressionType.BOOL_CONST: return ExpressionResolver_FirstPass_BoolConst(resolver, expr);
+        case ExpressionType.BOOLEAN_NOT: return ExpressionResolver_FirstPass_BoolNot(resolver, expr);
+        case ExpressionType.CONSTRUCTOR_INVOCATION: return ExpressionResolver_FirstPass_ConstructorInvocation(resolver, expr);
+        case ExpressionType.CONSTRUCTOR_REFERENCE: return ExpressionResolver_FirstPass_ConstructorReference(resolver, expr);
+        case ExpressionType.DICTIONARY_DEFINITION: return ExpressionResolver_FirstPass_DictionaryDefinition(resolver, expr);
+        case ExpressionType.DOT_FIELD: return ExpressionResolver_FirstPass_DotField(resolver, expr);
+        case ExpressionType.FLOAT_CONST: return ExpressionResolver_FirstPass_FloatConstant(resolver, expr);
+        case ExpressionType.FUNCTION_INVOKE: return ExpressionResolver_FirstPass_FunctionInvocation(resolver, expr);
+        case ExpressionType.INDEX: return ExpressionResolver_FirstPass_Index(resolver, expr);
+        case ExpressionType.INLINE_INCREMENT: return ExpressionResolver_FirstPass_InlineIncrement(resolver, expr);
+        case ExpressionType.INTEGER_CONST: return ExpressionResolver_FirstPass_IntegerConstant(resolver, expr);
+        case ExpressionType.LAMBDA: return ExpressionResolver_FirstPass_Lambda(resolver, expr);
+        case ExpressionType.LIST_DEFINITION: return ExpressionResolver_FirstPass_ListDefinition(resolver, expr);
+        case ExpressionType.NEGATIVE_SIGN: return ExpressionResolver_FirstPass_NegativeSign(resolver, expr);
+        case ExpressionType.NULL_CONST: return ExpressionResolver_FirstPass_NullConst(resolver, expr);
+        case ExpressionType.SLICE: return ExpressionResolver_FirstPass_Slice(resolver, expr);
+        case ExpressionType.STRING_CONST: return ExpressionResolver_FirstPass_StringConstant(resolver, expr);
+        case ExpressionType.TERNARY: return ExpressionResolver_FirstPass_Ternary(resolver, expr);
+        case ExpressionType.THIS: return ExpressionResolver_FirstPass_This(resolver, expr);
+        case ExpressionType.TYPEOF: return ExpressionResolver_FirstPass_TypeOf(resolver, expr);
+        case ExpressionType.VARIABLE: return ExpressionResolver_FirstPass_Variable(resolver, expr);
+
+        case ExpressionType.EXTENSION_REFERENCE:
+            Errors_Throw(expr.firstToken, "Extension method references must be invoked immediately.");
+            break;
+
+        default:
+            Errors_ThrowNotImplemented(expr.firstToken, "first pass for this type");
+            break;
+    }
+    return expr;
+}
+
+Expression ExpressionResolver_ResolveExpressionSecondPass(Resolver resolver, Expression expr) {
+    switch (expr.type) {
+        case ExpressionType.BASE_CTOR_REFERENCE: return ExpressionResolver_SecondPass_BaseCtorReference(resolver, expr);
+        case ExpressionType.BINARY_OP: return ExpressionResolver_SecondPass_BinaryOp(resolver, expr);
+        case ExpressionType.BITWISE_NOT: return ExpressionResolver_SecondPass_BitwiseNot(resolver, expr);
+        case ExpressionType.BOOL_CONST: return ExpressionResolver_SecondPass_BoolConst(resolver, expr);
+        case ExpressionType.BOOLEAN_NOT: return ExpressionResolver_SecondPass_BoolNot(resolver, expr);
+        case ExpressionType.CLASS_REFERENCE: return ExpressionResolver_SecondPass_ClassReference(resolver, expr);
+        case ExpressionType.CONSTRUCTOR_REFERENCE: return ExpressionResolver_SecondPass_ConstructorReference(resolver, expr, false);
+        case ExpressionType.DICTIONARY_DEFINITION: return ExpressionResolver_SecondPass_DictionaryDefinition(resolver, expr);
+        case ExpressionType.DOT_FIELD: return ExpressionResolver_SecondPass_DotField(resolver, expr);
+        case ExpressionType.ENUM_CONST: return ExpressionResolver_SecondPass_EnumConstant(resolver, expr);
+        case ExpressionType.EXTENSION_INVOCATION: return ExpressionResolver_SecondPass_ExtensionInvocation(resolver, expr);
+        case ExpressionType.FLOAT_CONST: return ExpressionResolver_SecondPass_FloatConstant(resolver, expr);
+        case ExpressionType.FUNCTION_INVOKE: return ExpressionResolver_SecondPass_FunctionInvocation(resolver, expr);
+        case ExpressionType.FUNCTION_REFERENCE: return ExpressionResolver_SecondPass_FunctionReference(resolver, expr);
+        case ExpressionType.IMPORT_REFERENCE: return ExpressionResolver_SecondPass_ImportReference(resolver, expr);
+        case ExpressionType.INDEX: return ExpressionResolver_SecondPass_Index(resolver, expr);
+        case ExpressionType.INLINE_INCREMENT: return ExpressionResolver_SecondPass_InlineIncrement(resolver, expr);
+        case ExpressionType.INTEGER_CONST: return ExpressionResolver_SecondPass_IntegerConstant(resolver, expr);
+        case ExpressionType.LAMBDA: return ExpressionResolver_SecondPass_Lambda(resolver, expr);
+        case ExpressionType.LIST_DEFINITION: return ExpressionResolver_SecondPass_ListDefinition(resolver, expr);
+        case ExpressionType.NAMESPACE_REFERENCE: return ExpressionResolver_SecondPass_NamespaceReference(resolver, expr);
+        case ExpressionType.NEGATIVE_SIGN: return ExpressionResolver_SecondPass_NegativeSign(resolver, expr);
+        case ExpressionType.NULL_CONST: return ExpressionResolver_SecondPass_NullConstant(resolver, expr);
+        case ExpressionType.SLICE: return ExpressionResolver_SecondPass_Slice(resolver, expr);
+        case ExpressionType.STRING_CONST: return ExpressionResolver_SecondPass_StringConstant(resolver, expr);
+        case ExpressionType.TERNARY: return ExpressionResolver_SecondPass_Ternary(resolver, expr);
+        case ExpressionType.THIS: return ExpressionResolver_SecondPass_ThisConstant(resolver, expr);
+        case ExpressionType.TYPEOF: return ExpressionResolver_SecondPass_TypeOf(resolver, expr);
+        case ExpressionType.VARIABLE: return ExpressionResolver_SecondPass_Variable(resolver, expr);
+        default:
+            Errors_ThrowNotImplemented(expr.firstToken, "second pass for this type");
+            break;
+    }
+    return expr;
+}
+
+////////////////// FIRST PASS 
 
 void ExpressionResolver_ResolveExpressionArrayFirstPass(Resolver resolver, Array<Expression> arr) {
     for (int i = 0; i < arr.Size(); i += 1) {

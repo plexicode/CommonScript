@@ -227,11 +227,11 @@ namespace CommonScript.Compiler
                         Expression val = enumDef.memberValues[memberIndex];
                         if (passNum == 1)
                         {
-                            val = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, val);
+                            val = FunctionWrapper.ExpressionResolver_ResolveExpressionFirstPass(resolver, val);
                         }
                         else
                         {
-                            val = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, val);
+                            val = FunctionWrapper.ExpressionResolver_ResolveExpressionSecondPass(resolver, val);
                         }
 
                         if (passNum == 2 && val.type != (int) ExpressionType.INTEGER_CONST)
@@ -247,11 +247,11 @@ namespace CommonScript.Compiler
                         Expression val = constEnt.constValue;
                         if (passNum == 1)
                         {
-                            val = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, val);
+                            val = FunctionWrapper.ExpressionResolver_ResolveExpressionFirstPass(resolver, val);
                         }
                         else
                         {
-                            val = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, val);
+                            val = FunctionWrapper.ExpressionResolver_ResolveExpressionSecondPass(resolver, val);
                             if (!FunctionWrapper.IsExpressionConstant(val))
                             {
                                 FunctionWrapper.Errors_Throw(val.firstToken, "A constant expression is required here.");

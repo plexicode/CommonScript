@@ -71,7 +71,7 @@ namespace CommonScript.Compiler
                 funcDef.variableScope[arg.Value] = true;
 
                 Expression defVal = funcDef.argDefaultValues[i];
-                if (defVal != null) funcDef.argDefaultValues[i] = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, defVal);
+                if (defVal != null) funcDef.argDefaultValues[i] = FunctionWrapper.ExpressionResolver_ResolveExpressionFirstPass(resolver, defVal);
             }
 
             List<Statement> preBaseFieldInit = new List<Statement>();
@@ -101,7 +101,7 @@ namespace CommonScript.Compiler
                 for (int i = 0; i < fields.Length; i++)
                 {
                     FieldEntity fld = fields[i];
-                    fld.defaultValue = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionFirstPass(resolver, fld.defaultValue);
+                    fld.defaultValue = FunctionWrapper.ExpressionResolver_ResolveExpressionFirstPass(resolver, fld.defaultValue);
                     Statement setter = EntityResolver_ConvertFieldDefaultValueIntoSetter(fld);
                     if (FunctionWrapper.IsExpressionConstant(fld.defaultValue))
                     {
@@ -178,7 +178,7 @@ namespace CommonScript.Compiler
                 Expression defVal = funcDef.argDefaultValues[i];
                 if (defVal != null)
                 {
-                    funcDef.argDefaultValues[i] = ExpressionResolverUtil.ExpressionResolver_ResolveExpressionSecondPass(resolver, defVal);
+                    funcDef.argDefaultValues[i] = FunctionWrapper.ExpressionResolver_ResolveExpressionSecondPass(resolver, defVal);
                 }
             }
 
