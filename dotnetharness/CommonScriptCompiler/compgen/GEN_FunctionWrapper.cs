@@ -1866,9 +1866,37 @@ namespace CommonScript.Compiler.Internal
             return baseCtor;
         }
 
+        public static Expression ExpressionResolver_SecondPass_BitwiseNot(Resolver resolver, Expression bwn)
+        {
+            bwn.root = resolver.ResolveExpressionSecondPass(resolver, bwn.root);
+            if (IsExpressionConstant(bwn.root))
+            {
+                if (bwn.root.type != 22)
+                {
+                    Errors_Throw(bwn.firstToken, "Bitwise-NOT operator can only be applied on integers.");
+                }
+                return Expression_createIntegerConstant(bwn.firstToken, -bwn.root.intVal - 1);
+            }
+            return bwn;
+        }
+
         public static Expression ExpressionResolver_SecondPass_BoolConst(Resolver resolver, Expression bc)
         {
             return bc;
+        }
+
+        public static Expression ExpressionResolver_SecondPass_BoolNot(Resolver resolver, Expression bn)
+        {
+            bn.root = resolver.ResolveExpressionSecondPass(resolver, bn.root);
+            if (IsExpressionConstant(bn.root))
+            {
+                if (bn.root.type != 6)
+                {
+                    Errors_Throw(bn.firstToken, "Boolean-NOT operator can only be applied to booleans.");
+                }
+                return Expression_createBoolConstant(bn.firstToken, !bn.root.boolVal);
+            }
+            return bn;
         }
 
         public static Expression ExpressionResolver_SecondPass_ClassReference(Resolver resolver, Expression classRef)
@@ -1880,14 +1908,187 @@ namespace CommonScript.Compiler.Internal
             return classRef;
         }
 
+        public static Expression ExpressionResolver_SecondPass_ConstructorReference(Resolver resolver, Expression ctorRef, bool isExpected)
+        {
+            if (isExpected)
+            {
+                ctorRef.root.boolVal = true;
+                ctorRef.root = resolver.ResolveExpressionSecondPass(resolver, ctorRef.root);
+                if (ctorRef.root.type != 7)
+                {
+                    Errors_Throw(ctorRef.root.firstToken, "This is not a valid class definition.");
+                }
+                ctorRef.entityPtr = ctorRef.root.entityPtr;
+                ctorRef.root = null;
+                return ctorRef;
+            }
+            Errors_Throw(ctorRef.firstToken, "A constructor must be immediately invoked.");
+            return ctorRef;
+        }
+
+        public static Expression ExpressionResolver_SecondPass_DictionaryDefinition(Resolver resolver, Expression dictDef)
+        {
+            int length = dictDef.keys.Length;
+            System.Collections.Generic.Dictionary<string, bool> strCollide = new Dictionary<string, bool>();
+            System.Collections.Generic.Dictionary<int, bool> intCollide = new Dictionary<int, bool>();
+            int i = 0;
+            while (i < length)
+            {
+                Expression key = resolver.ResolveExpressionSecondPass(resolver, dictDef.keys[i]);
+                bool isMixed = false;
+                bool isCollide = false;
+                if (key.type == 22)
+                {
+                    isMixed = strCollide.Count > 0;
+                    isCollide = intCollide.ContainsKey(key.intVal);
+                    intCollide[key.intVal] = true;
+                }
+                else if (key.type == 28)
+                {
+                    isMixed = intCollide.Count > 0;
+                    isCollide = strCollide.ContainsKey(key.strVal);
+                    strCollide[key.strVal] = true;
+                }
+                else
+                {
+                    Errors_Throw(key.firstToken, "This type of expression cannot be used as a dictionary key. Dictionary keys must be constant integer or string expressions.");
+                }
+                if (isMixed)
+                {
+                    Errors_Throw(key.firstToken, "Dictionary cannot contain mixed types for keys.");
+                }
+                if (isCollide)
+                {
+                    Errors_Throw(key.firstToken, "There are multiple keys with this same value.");
+                }
+                dictDef.keys[i] = key;
+                dictDef.values[i] = resolver.ResolveExpressionSecondPass(resolver, dictDef.values[i]);
+                i += 1;
+            }
+            return dictDef;
+        }
+
+        public static Expression ExpressionResolver_SecondPass_DotField(Resolver resolver, Expression df)
+        {
+            if (df.root.type == 7)
+            {
+                df.root.boolVal = true;
+            }
+            df.root = resolver.ResolveExpressionSecondPass(resolver, df.root);
+            switch (df.root.type)
+            {
+                case 28:
+                    if (df.strVal == "length")
+                    {
+                        return Expression_createIntegerConstant(df.firstToken, df.root.strVal.Length);
+                    }
+                    break;
+                case 30:
+                    break;
+                case 1:
+                    break;
+                case 7:
+                    ClassEntity classDef = (ClassEntity)df.root.entityPtr.specificData;
+                    AbstractEntity member = null;
+                    if (classDef.classMembers.ContainsKey(df.strVal))
+                    {
+                        member = classDef.classMembers[df.strVal];
+                        if (!member.isStatic)
+                        {
+                            Errors_Throw(df.opToken, string.Join("", new string[] { classDef.baseData.fqName, ".", df.strVal, " is not static." }));
+                        }
+                    }
+                    else
+                    {
+                        Errors_Throw(df.opToken, string.Join("", new string[] { "The class ", classDef.baseData.fqName, " does not have a member named '.", df.strVal, "'." }));
+                    }
+                    break;
+            }
+            return df;
+        }
+
         public static Expression ExpressionResolver_SecondPass_EnumConstant(Resolver resolver, Expression enumConst)
         {
             return enumConst;
         }
 
+        public static Expression ExpressionResolver_SecondPass_ExtensionInvocation(Resolver resolver, Expression expr)
+        {
+            ExpressionResolver_ResolveExpressionArraySecondPass(resolver, expr.args);
+            int argc = -1;
+            if (SpecialActionUtil_IsSpecialActionAndNotExtension(resolver.staticCtx.specialActionUtil, expr.strVal))
+            {
+                argc = SpecialActionUtil_GetSpecialActionArgc(resolver.staticCtx.specialActionUtil, expr.strVal);
+            }
+            else
+            {
+                string name = expr.strVal;
+                if (name == "delay_invoke")
+                {
+                    argc = 2;
+                }
+                else if (name == "io_stdout")
+                {
+                    argc = 1;
+                }
+                else if (name == "sleep")
+                {
+                    argc = 1;
+                }
+                else if (Resolver_isValidRegisteredExtension(resolver, expr.strVal))
+                {
+                    return expr;
+                }
+                else
+                {
+                    Errors_Throw(expr.firstToken, "Extension is not registered: " + expr.strVal);
+                }
+            }
+            if (argc != -1 && expr.args.Length != argc)
+            {
+                Errors_Throw(expr.firstToken, "Incorrect number of arguments to extension");
+            }
+            return expr;
+        }
+
         public static Expression ExpressionResolver_SecondPass_FloatConstant(Resolver resolver, Expression floatConst)
         {
             return floatConst;
+        }
+
+        public static Expression ExpressionResolver_SecondPass_FunctionInvocation(Resolver resolver, Expression funcInvoke)
+        {
+            if (funcInvoke.root.type == 9)
+            {
+                Expression ctorRef = ExpressionResolver_SecondPass_ConstructorReference(resolver, funcInvoke.root, true);
+                if (ctorRef.type != 9)
+                {
+                    fail("");
+                }
+                ExpressionResolver_ResolveExpressionArraySecondPass(resolver, funcInvoke.args);
+                return Expression_createConstructorInvocation(funcInvoke.firstToken, (AbstractEntity)ctorRef.entityPtr, funcInvoke.opToken, funcInvoke.args);
+            }
+            funcInvoke.root = resolver.ResolveExpressionSecondPass(resolver, funcInvoke.root);
+            switch (funcInvoke.root.type)
+            {
+                case 31:
+                    break;
+                case 1:
+                    break;
+                case 18:
+                    break;
+                case 11:
+                    break;
+                case 2:
+                    break;
+                case 20:
+                    break;
+                default:
+                    Errors_Throw(funcInvoke.opToken, "Cannot invoke this type of expression like a function.");
+                    break;
+            }
+            ExpressionResolver_ResolveExpressionArraySecondPass(resolver, funcInvoke.args);
+            return funcInvoke;
         }
 
         public static Expression ExpressionResolver_SecondPass_FunctionReference(Resolver resolver, Expression funcRef)
@@ -1901,6 +2102,31 @@ namespace CommonScript.Compiler.Internal
             return null;
         }
 
+        public static Expression ExpressionResolver_SecondPass_Index(Resolver resolver, Expression indexExpr)
+        {
+            indexExpr.root = resolver.ResolveExpressionSecondPass(resolver, indexExpr.root);
+            indexExpr.right = resolver.ResolveExpressionSecondPass(resolver, indexExpr.right);
+            return indexExpr;
+        }
+
+        public static Expression ExpressionResolver_SecondPass_InlineIncrement(Resolver resolver, Expression inlineIncr)
+        {
+            inlineIncr.root = resolver.ResolveExpressionSecondPass(resolver, inlineIncr.root);
+            switch (inlineIncr.root.type)
+            {
+                case 31:
+                    break;
+                case 20:
+                    break;
+                case 11:
+                    break;
+                default:
+                    Errors_Throw(inlineIncr.opToken, string.Join("", new string[] { "Cannot use the '", inlineIncr.opToken.Value, "' operator on this type of expression." }));
+                    break;
+            }
+            return inlineIncr;
+        }
+
         public static Expression ExpressionResolver_SecondPass_IntegerConstant(Resolver resolver, Expression intConst)
         {
             return intConst;
@@ -1911,10 +2137,47 @@ namespace CommonScript.Compiler.Internal
             return lambda;
         }
 
+        public static Expression ExpressionResolver_SecondPass_ListDefinition(Resolver resolver, Expression listDef)
+        {
+            int i = 0;
+            while (i < listDef.values.Length)
+            {
+                listDef.values[i] = resolver.ResolveExpressionSecondPass(resolver, listDef.values[i]);
+                i += 1;
+            }
+            return listDef;
+        }
+
         public static Expression ExpressionResolver_SecondPass_NamespaceReference(Resolver resolver, Expression nsRef)
         {
             Errors_Throw(nsRef.firstToken, "You cannot use a namespace reference like this.");
             return null;
+        }
+
+        public static Expression ExpressionResolver_SecondPass_NegativeSign(Resolver resolver, Expression negSign)
+        {
+            Expression root = resolver.ResolveExpressionSecondPass(resolver, negSign.root);
+            negSign.root = root;
+            if (IsExpressionNumericConstant(root))
+            {
+                switch (root.type)
+                {
+                    case 22:
+                        root.intVal *= -1;
+                        break;
+                    case 16:
+                        root.floatVal *= -1;
+                        break;
+                    case 12:
+                        root = Expression_createIntegerConstant(root.firstToken, -root.intVal);
+                        break;
+                    default:
+                        fail("Not implemented");
+                        break;
+                }
+                return root;
+            }
+            return negSign;
         }
 
         public static Expression ExpressionResolver_SecondPass_NullConstant(Resolver resolver, Expression nullConst)
@@ -1922,9 +2185,52 @@ namespace CommonScript.Compiler.Internal
             return nullConst;
         }
 
+        public static Expression ExpressionResolver_SecondPass_Slice(Resolver resolver, Expression slice)
+        {
+            slice.root = resolver.ResolveExpressionSecondPass(resolver, slice.root);
+            int i = 0;
+            while (i < 3)
+            {
+                if (slice.args[i] != null)
+                {
+                    Expression expr = resolver.ResolveExpressionSecondPass(resolver, slice.args[i]);
+                    slice.args[i] = expr;
+                    if (IsExpressionConstant(expr))
+                    {
+                        if (expr.type != 22 && expr.type != 12)
+                        {
+                            Errors_Throw(expr.firstToken, "Only integers may be used in a slice expression.");
+                        }
+                    }
+                }
+                i++;
+            }
+            return slice;
+        }
+
         public static Expression ExpressionResolver_SecondPass_StringConstant(Resolver resolver, Expression strConst)
         {
             return strConst;
+        }
+
+        public static Expression ExpressionResolver_SecondPass_Ternary(Resolver resolver, Expression ternary)
+        {
+            ternary.root = resolver.ResolveExpressionSecondPass(resolver, ternary.root);
+            ternary.left = resolver.ResolveExpressionSecondPass(resolver, ternary.left);
+            ternary.right = resolver.ResolveExpressionSecondPass(resolver, ternary.right);
+            if (IsExpressionConstant(ternary.root))
+            {
+                if (ternary.root.type != 5)
+                {
+                    Errors_Throw(ternary.root.firstToken, "Only booleans can be used as ternary conditions.");
+                }
+                if (ternary.root.boolVal)
+                {
+                    return ternary.left;
+                }
+                return ternary.right;
+            }
+            return ternary;
         }
 
         public static Expression ExpressionResolver_SecondPass_ThisConstant(Resolver resolver, Expression thisExpr)
@@ -1934,6 +2240,50 @@ namespace CommonScript.Compiler.Internal
                 fail("not implemented");
             }
             return thisExpr;
+        }
+
+        public static Expression ExpressionResolver_SecondPass_TypeOf(Resolver resolver, Expression typeofExpr)
+        {
+            typeofExpr.root = resolver.ResolveExpressionSecondPass(resolver, typeofExpr.root);
+            string stringConst = null;
+            switch (typeofExpr.root.type)
+            {
+                case 22:
+                    stringConst = "int";
+                    break;
+                case 16:
+                    stringConst = "float";
+                    break;
+                case 26:
+                    stringConst = "null";
+                    break;
+                case 5:
+                    stringConst = "bool";
+                    break;
+                case 28:
+                    stringConst = "string";
+                    break;
+                case 18:
+                    stringConst = "function";
+                    break;
+                case 24:
+                    if (typeofExpr.root.values.Length == 0)
+                    {
+                        stringConst = "list";
+                    }
+                    break;
+                case 10:
+                    if (typeofExpr.root.keys.Length == 0)
+                    {
+                        stringConst = "dict";
+                    }
+                    break;
+            }
+            if (stringConst != null)
+            {
+                return Expression_createStringConstant(typeofExpr.firstToken, stringConst);
+            }
+            return typeofExpr;
         }
 
         public static Expression ExpressionResolver_SecondPass_Variable(Resolver resolver, Expression varExpr)

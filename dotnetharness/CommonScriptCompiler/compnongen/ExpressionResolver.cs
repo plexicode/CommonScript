@@ -52,32 +52,32 @@ namespace CommonScript.Compiler
             {
                 case (int) ExpressionType.BASE_CTOR_REFERENCE: return FunctionWrapper.ExpressionResolver_SecondPass_BaseCtorReference(resolver, expr);
                 case (int) ExpressionType.BINARY_OP: return ExpressionResolver_SecondPass_BinaryOp(resolver, expr);
-                case (int) ExpressionType.BITWISE_NOT: return ExpressionResolver_SecondPass_BitwiseNot(resolver, expr);
+                case (int) ExpressionType.BITWISE_NOT: return FunctionWrapper.ExpressionResolver_SecondPass_BitwiseNot(resolver, expr);
                 case (int) ExpressionType.BOOL_CONST: return FunctionWrapper.ExpressionResolver_SecondPass_BoolConst(resolver, expr);
-                case (int) ExpressionType.BOOLEAN_NOT: return ExpressionResolver_SecondPass_BoolNot(resolver, expr);
+                case (int) ExpressionType.BOOLEAN_NOT: return FunctionWrapper.ExpressionResolver_SecondPass_BoolNot(resolver, expr);
                 case (int) ExpressionType.CLASS_REFERENCE: return FunctionWrapper.ExpressionResolver_SecondPass_ClassReference(resolver, expr);
-                case (int) ExpressionType.CONSTRUCTOR_REFERENCE: return ExpressionResolver_SecondPass_ConstructorReference(resolver, expr, false);
-                case (int) ExpressionType.DICTIONARY_DEFINITION: return ExpressionResolver_SecondPass_DictionaryDefinition(resolver, expr);
-                case (int) ExpressionType.DOT_FIELD: return ExpressionResolver_SecondPass_DotField(resolver, expr);
+                case (int) ExpressionType.CONSTRUCTOR_REFERENCE: return FunctionWrapper.ExpressionResolver_SecondPass_ConstructorReference(resolver, expr, false);
+                case (int) ExpressionType.DICTIONARY_DEFINITION: return FunctionWrapper.ExpressionResolver_SecondPass_DictionaryDefinition(resolver, expr);
+                case (int) ExpressionType.DOT_FIELD: return FunctionWrapper.ExpressionResolver_SecondPass_DotField(resolver, expr);
                 case (int) ExpressionType.ENUM_CONST: return FunctionWrapper.ExpressionResolver_SecondPass_EnumConstant(resolver, expr);
-                case (int) ExpressionType.EXTENSION_INVOCATION: return ExpressionResolver_SecondPass_ExtensionInvocation(resolver, expr);
+                case (int) ExpressionType.EXTENSION_INVOCATION: return FunctionWrapper.ExpressionResolver_SecondPass_ExtensionInvocation(resolver, expr);
                 case (int) ExpressionType.FLOAT_CONST: return FunctionWrapper.ExpressionResolver_SecondPass_FloatConstant(resolver, expr);
-                case (int) ExpressionType.FUNCTION_INVOKE: return ExpressionResolver_SecondPass_FunctionInvocation(resolver, expr);
+                case (int) ExpressionType.FUNCTION_INVOKE: return FunctionWrapper.ExpressionResolver_SecondPass_FunctionInvocation(resolver, expr);
                 case (int) ExpressionType.FUNCTION_REFERENCE: return FunctionWrapper.ExpressionResolver_SecondPass_FunctionReference(resolver, expr);
                 case (int) ExpressionType.IMPORT_REFERENCE: return FunctionWrapper.ExpressionResolver_SecondPass_ImportReference(resolver, expr);
-                case (int) ExpressionType.INDEX: return ExpressionResolver_SecondPass_Index(resolver, expr);
-                case (int) ExpressionType.INLINE_INCREMENT: return ExpressionResolver_SecondPass_InlineIncrement(resolver, expr);
+                case (int) ExpressionType.INDEX: return FunctionWrapper.ExpressionResolver_SecondPass_Index(resolver, expr);
+                case (int) ExpressionType.INLINE_INCREMENT: return FunctionWrapper.ExpressionResolver_SecondPass_InlineIncrement(resolver, expr);
                 case (int) ExpressionType.INTEGER_CONST: return FunctionWrapper.ExpressionResolver_SecondPass_IntegerConstant(resolver, expr);
                 case (int) ExpressionType.LAMBDA: return FunctionWrapper.ExpressionResolver_SecondPass_Lambda(resolver, expr);
-                case (int) ExpressionType.LIST_DEFINITION: return ExpressionResolver_SecondPass_ListDefinition(resolver, expr);
+                case (int) ExpressionType.LIST_DEFINITION: return FunctionWrapper.ExpressionResolver_SecondPass_ListDefinition(resolver, expr);
                 case (int) ExpressionType.NAMESPACE_REFERENCE: return FunctionWrapper.ExpressionResolver_SecondPass_NamespaceReference(resolver, expr);
-                case (int) ExpressionType.NEGATIVE_SIGN: return ExpressionResolver_SecondPass_NegativeSign(resolver, expr);
+                case (int) ExpressionType.NEGATIVE_SIGN: return FunctionWrapper.ExpressionResolver_SecondPass_NegativeSign(resolver, expr);
                 case (int) ExpressionType.NULL_CONST: return FunctionWrapper.ExpressionResolver_SecondPass_NullConstant(resolver, expr);
-                case (int) ExpressionType.SLICE: return ExpressionResolver_SecondPass_Slice(resolver, expr);
+                case (int) ExpressionType.SLICE: return FunctionWrapper.ExpressionResolver_SecondPass_Slice(resolver, expr);
                 case (int) ExpressionType.STRING_CONST: return FunctionWrapper.ExpressionResolver_SecondPass_StringConstant(resolver, expr);
-                case (int) ExpressionType.TERNARY: return ExpressionResolver_SecondPass_Ternary(resolver, expr);
+                case (int) ExpressionType.TERNARY: return FunctionWrapper.ExpressionResolver_SecondPass_Ternary(resolver, expr);
                 case (int) ExpressionType.THIS: return FunctionWrapper.ExpressionResolver_SecondPass_ThisConstant(resolver, expr);
-                case (int) ExpressionType.TYPEOF: return ExpressionResolver_SecondPass_TypeOf(resolver, expr);
+                case (int) ExpressionType.TYPEOF: return FunctionWrapper.ExpressionResolver_SecondPass_TypeOf(resolver, expr);
                 case (int) ExpressionType.VARIABLE: return FunctionWrapper.ExpressionResolver_SecondPass_Variable(resolver, expr);
                 default:
                     FunctionWrapper.Errors_ThrowNotImplemented(expr.firstToken, "second pass for this type");
@@ -441,336 +441,6 @@ namespace CommonScript.Compiler
             }
 
             return expr;
-        }
-
-        private static Expression ExpressionResolver_SecondPass_ConstructorReference(Resolver resolver, Expression ctorRef, bool isExpected)
-        {
-            if (isExpected)
-            {
-                ctorRef.root.boolVal = true;
-                ctorRef.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, ctorRef.root);
-                if (ctorRef.root.type != (int) ExpressionType.CLASS_REFERENCE) FunctionWrapper.Errors_Throw(ctorRef.root.firstToken, "This is not a valid class definition.");
-                ctorRef.entityPtr = ctorRef.root.entityPtr;
-                ctorRef.root = null;
-                return ctorRef;
-            }
-
-            FunctionWrapper.Errors_Throw(ctorRef.firstToken, "A constructor must be immediately invoked.");
-            return ctorRef;
-        }
-
-        private static Expression ExpressionResolver_SecondPass_BitwiseNot(Resolver resolver, Expression bwn)
-        {
-            bwn.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, bwn.root);
-
-            if (FunctionWrapper.IsExpressionConstant(bwn.root))
-            {
-                if (bwn.root.type != (int) ExpressionType.INTEGER_CONST)
-                {
-                    FunctionWrapper.Errors_Throw(bwn.firstToken, "Bitwise-NOT operator can only be applied on integers.");
-                }
-                return FunctionWrapper.Expression_createIntegerConstant(bwn.firstToken, ~bwn.root.intVal);
-            }
-            return bwn;
-        }
-
-        private static Expression ExpressionResolver_SecondPass_BoolNot(Resolver resolver, Expression bn)
-        {
-            bn.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, bn.root);
-
-            if (FunctionWrapper.IsExpressionConstant(bn.root))
-            {
-                if (bn.root.type != (int) ExpressionType.BOOLEAN_NOT)
-                {
-                    FunctionWrapper.Errors_Throw(bn.firstToken, "Boolean-NOT operator can only be applied to booleans.");
-                }
-                return FunctionWrapper.Expression_createBoolConstant(bn.firstToken, !bn.root.boolVal);
-            }
-
-            return bn;
-        }
-
-        private static Expression ExpressionResolver_SecondPass_DictionaryDefinition(Resolver resolver, Expression dictDef)
-        {
-            int length = dictDef.keys.Length;
-            Dictionary<string, bool> strCollide = new Dictionary<string, bool>();
-            Dictionary<int, bool> intCollide = new Dictionary<int, bool>();
-            for (int i = 0; i < length; i++)
-            {
-                Expression key = ExpressionResolver_ResolveExpressionSecondPass(resolver, dictDef.keys[i]);
-                bool isMixed = false;
-                bool isCollide = false;
-                if (key.type == (int) ExpressionType.INTEGER_CONST)
-                {
-                    isMixed = strCollide.Count > 0;
-                    isCollide = intCollide.ContainsKey(key.intVal);
-                    intCollide[key.intVal] = true;
-                }
-                else if (key.type == (int) ExpressionType.STRING_CONST)
-                {
-                    isMixed = intCollide.Count > 0;
-                    isCollide = strCollide.ContainsKey(key.strVal);
-                    strCollide[key.strVal] = true;
-                }
-                else
-                {
-                    FunctionWrapper.Errors_Throw(key.firstToken, "This type of expression cannot be used as a dictionary key. Dictionary keys must be constant integer or string expressions.");
-                }
-
-                if (isMixed)
-                {
-                    FunctionWrapper.Errors_Throw(key.firstToken, "Dictionary cannot contain mixed types for keys.");
-                }
-
-                if (isCollide)
-                {
-                    FunctionWrapper.Errors_Throw(key.firstToken, "There are multiple keys with this same value.");
-                }
-
-                dictDef.keys[i] = key;
-                dictDef.values[i] = ExpressionResolver_ResolveExpressionSecondPass(resolver, dictDef.values[i]);
-            }
-            return dictDef;
-        }
-
-        private static Expression ExpressionResolver_SecondPass_DotField(Resolver resolver, Expression df)
-        {
-            // This is the only way to refer to a class reference.
-            if (df.root.type == (int) ExpressionType.CLASS_REFERENCE) df.root.boolVal = true;
-
-            df.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, df.root);
-            switch (df.root.type)
-            {
-                case (int) ExpressionType.STRING_CONST:
-                    if (df.strVal == "length")
-                    {
-                        return FunctionWrapper.Expression_createIntegerConstant(df.firstToken, df.root.strVal.Length);
-                    }
-                    break;
-
-                case (int) ExpressionType.THIS:
-                case (int) ExpressionType.BASE:
-                    // TODO: check to see if field exists.
-                    // For now, just trust it at runtime as if it were a blind variable.
-                    break;
-
-                case (int) ExpressionType.CLASS_REFERENCE:
-                    ClassEntity classDef = (ClassEntity)df.root.entityPtr.specificData;
-                    AbstractEntity member = null;
-                    if (classDef.classMembers.ContainsKey(df.strVal))
-                    {
-                        member = classDef.classMembers[df.strVal];
-                        if (!member.isStatic)
-                        {
-                            FunctionWrapper.Errors_Throw(df.opToken, classDef.baseData.fqName + "." + df.strVal + " is not static.");
-                        }
-                    }
-                    else
-                    {
-                        FunctionWrapper.Errors_Throw(df.opToken, "The class " + classDef.baseData.fqName + " does not have a member named '." + df.strVal + "'.");
-                    }
-                    break;
-
-                default:
-                    break;
-            }
-
-            return df;
-        }
-
-        private static Expression ExpressionResolver_SecondPass_ExtensionInvocation(Resolver resolver, Expression expr)
-        {
-            FunctionWrapper.ExpressionResolver_ResolveExpressionArraySecondPass(resolver, expr.args);
-            int argc = -1;
-            if (FunctionWrapper.SpecialActionUtil_IsSpecialActionAndNotExtension(resolver.staticCtx.specialActionUtil, expr.strVal))
-            {
-                argc = FunctionWrapper.SpecialActionUtil_GetSpecialActionArgc(resolver.staticCtx.specialActionUtil, expr.strVal);
-            }
-            else
-            {
-                string name = expr.strVal;
-                if (name == "delay_invoke") argc = 2;
-                else if (name == "io_stdout") argc = 1;
-                else if (name == "sleep") argc = 1;
-                else if (FunctionWrapper.Resolver_isValidRegisteredExtension(resolver, expr.strVal)) {
-                    return expr;
-                } else {
-                    FunctionWrapper.Errors_Throw(expr.firstToken, "Extension is not registered: " + expr.strVal);
-                }
-            }
-
-            if (argc != -1 && expr.args.Length != argc) {
-                FunctionWrapper.Errors_Throw(expr.firstToken, "Incorrect number of arguments to extension");
-            }
-
-            return expr;
-        }
-
-        private static Expression ExpressionResolver_SecondPass_FunctionInvocation(Resolver resolver, Expression funcInvoke)
-        {
-            if (funcInvoke.root.type == (int) ExpressionType.CONSTRUCTOR_REFERENCE)
-            {
-                Expression ctorRef = ExpressionResolver_SecondPass_ConstructorReference(resolver, funcInvoke.root, true);
-                if (ctorRef.type != (int) ExpressionType.CONSTRUCTOR_REFERENCE) FunctionWrapper.fail(""); // this shouldn't happen. 
-
-                FunctionWrapper.ExpressionResolver_ResolveExpressionArraySecondPass(resolver, funcInvoke.args);
-
-                return FunctionWrapper.Expression_createConstructorInvocation(funcInvoke.firstToken, (AbstractEntity)ctorRef.entityPtr, funcInvoke.opToken, funcInvoke.args);
-            }
-
-            funcInvoke.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, funcInvoke.root);
-
-            switch (funcInvoke.root.type)
-            {
-                case (int) ExpressionType.VARIABLE:
-                case (int) ExpressionType.BASE:
-                case (int) ExpressionType.FUNCTION_REFERENCE:
-                case (int) ExpressionType.DOT_FIELD:
-                case (int) ExpressionType.BASE_CTOR_REFERENCE:
-                case (int) ExpressionType.INDEX:
-                    break;
-
-                default:
-                    FunctionWrapper.Errors_Throw(funcInvoke.opToken, "Cannot invoke this type of expression like a function.");
-                    break;
-            }
-
-            FunctionWrapper.ExpressionResolver_ResolveExpressionArraySecondPass(resolver, funcInvoke.args);
-
-            return funcInvoke;
-        }
-
-        private static Expression ExpressionResolver_SecondPass_Index(Resolver resolver, Expression indexExpr)
-        {
-            indexExpr.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, indexExpr.root);
-            indexExpr.right = ExpressionResolver_ResolveExpressionSecondPass(resolver, indexExpr.right);
-            return indexExpr;
-        }
-
-        private static Expression ExpressionResolver_SecondPass_InlineIncrement(Resolver resolver, Expression inlineIncr)
-        {
-            inlineIncr.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, inlineIncr.root);
-            switch (inlineIncr.root.type)
-            {
-                case (int) ExpressionType.VARIABLE:
-                case (int) ExpressionType.INDEX:
-                case (int) ExpressionType.DOT_FIELD:
-                    // these are fine
-                    break;
-
-                default:
-                    FunctionWrapper.Errors_Throw(inlineIncr.opToken, "Cannot use the '" + inlineIncr.opToken.Value + "' operator on this type of expression.");
-                    break;
-            }
-            return inlineIncr;
-        }
-
-        private static Expression ExpressionResolver_SecondPass_ListDefinition(Resolver resolver, Expression listDef)
-        {
-            for (int i = 0; i < listDef.values.Length; i++)
-            {
-                listDef.values[i] = ExpressionResolver_ResolveExpressionSecondPass(resolver, listDef.values[i]);
-            }
-            return listDef;
-        }
-
-        private static Expression ExpressionResolver_SecondPass_NegativeSign(Resolver resolver, Expression negSign)
-        {
-            Expression root = ExpressionResolver_ResolveExpressionSecondPass(resolver, negSign.root);
-            negSign.root = root;
-            if (FunctionWrapper.IsExpressionNumericConstant(root))
-            {
-                switch (root.type)
-                {
-                    case (int) ExpressionType.INTEGER_CONST:
-                        root.intVal *= -1;
-                        break;
-                    case (int) ExpressionType.FLOAT_CONST:
-                        root.floatVal *= -1;
-                        break;
-                    case (int) ExpressionType.ENUM_CONST:
-                        root = FunctionWrapper.Expression_createIntegerConstant(root.firstToken, -root.intVal);
-                        break;
-                    default:
-                        FunctionWrapper.fail("Not implemented");
-                        break;
-                }
-                return root;
-            }
-
-            return negSign;
-        }
-
-        private static Expression ExpressionResolver_SecondPass_Slice(Resolver resolver, Expression slice)
-        {
-            slice.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, slice.root);
-            for (int i = 0; i < 3; i++)
-            {
-                if (slice.args[i] != null)
-                {
-                    Expression expr = ExpressionResolver_ResolveExpressionSecondPass(resolver, slice.args[i]);
-                    slice.args[i] = expr;
-                    if (FunctionWrapper.IsExpressionConstant(expr))
-                    {
-                        if (expr.type != (int) ExpressionType.INTEGER_CONST && expr.type != (int) ExpressionType.ENUM_CONST)
-                        {
-                            FunctionWrapper.Errors_Throw(expr.firstToken, "Only integers may be used in a slice expression.");
-                        }
-                    }
-                }
-            }
-
-            return slice;
-        }
-
-        private static Expression ExpressionResolver_SecondPass_Ternary(Resolver resolver, Expression ternary)
-        {
-            ternary.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, ternary.root);
-            ternary.left = ExpressionResolver_ResolveExpressionSecondPass(resolver, ternary.left);
-            ternary.right = ExpressionResolver_ResolveExpressionSecondPass(resolver, ternary.right);
-
-            if (FunctionWrapper.IsExpressionConstant(ternary.root))
-            {
-                if (ternary.root.type != (int) ExpressionType.BOOL_CONST)
-                {
-                    FunctionWrapper.Errors_Throw(ternary.root.firstToken, "Only booleans can be used as ternary conditions.");
-                }
-
-                if (ternary.root.boolVal) return ternary.left;
-                return ternary.right;
-            }
-
-            return ternary;
-        }
-
-        private static Expression ExpressionResolver_SecondPass_TypeOf(Resolver resolver, Expression typeofExpr)
-        {
-            typeofExpr.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, typeofExpr.root);
-            string stringConst = null;
-            switch (typeofExpr.root.type)
-            {
-                case (int) ExpressionType.INTEGER_CONST: stringConst = "int"; break;
-                case (int) ExpressionType.FLOAT_CONST: stringConst = "float"; break;
-                case (int) ExpressionType.NULL_CONST: stringConst = "null"; break;
-                case (int) ExpressionType.BOOL_CONST: stringConst = "bool"; break;
-                case (int) ExpressionType.STRING_CONST: stringConst = "string"; break;
-                case (int) ExpressionType.FUNCTION_REFERENCE: stringConst = "function"; break;
-
-                case (int) ExpressionType.LIST_DEFINITION:
-                    if (typeofExpr.root.values.Length == 0) stringConst = "list";
-                    break;
-
-                case (int) ExpressionType.DICTIONARY_DEFINITION:
-                    if (typeofExpr.root.keys.Length == 0) stringConst = "dict";
-                    break;
-            }
-
-            if (stringConst != null)
-            {
-                return FunctionWrapper.Expression_createStringConstant(typeofExpr.firstToken, stringConst);
-            }
-
-            return typeofExpr;
         }
     }
 }
