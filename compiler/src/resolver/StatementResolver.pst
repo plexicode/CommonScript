@@ -1,3 +1,4 @@
+////// HELPERS 
 
 void StatementResolver_ResolveStatementArrayFirstPass(Resolver resolver, Array<Statement> arr) {
     for (int i = 0; i < arr.Size(); i += 1) {
@@ -10,6 +11,142 @@ void StatementResolver_ResolveStatementArraySecondPass(Resolver resolver, Array<
         arr[i] = resolver.ResolveStatementSecondPass(resolver, arr[i]);
     }
 }
+
+////// FIRST PASS 
+
+Statement StatementResolver_FirstPass_Assignment(Resolver resolver, Statement assign) {
+    assign.assignTarget = ExpressionResolver_ResolveExpressionFirstPass(resolver, assign.assignTarget);
+    assign.assignValue = ExpressionResolver_ResolveExpressionFirstPass(resolver, assign.assignValue);
+
+    if (assign.assignTarget.type == ExpressionType.VARIABLE) {
+        // register that this variable was assigned to in this variable scope
+        ((FunctionEntity)resolver.activeEntity.specificData).variableScope[assign.assignTarget.strVal] = true;
+    }
+
+    return assign;
+}
+
+Statement StatementResolver_FirstPass_Break(Resolver resolver, Statement br) {
+    if (resolver.breakContext == null) {
+        Errors_Throw(br.firstToken, "The 'break' keyword can only be used inside loops and switch statements.");
+    } else if (resolver.breakContext.type == StatementType.TRY) {
+        Errors_Throw(br.firstToken, "The 'break' keyword cannot be used inside a try/catch/finally block");
+    }
+
+    return br;
+}
+
+Statement StatementResolver_FirstPass_Continue(Resolver resolver, Statement cont) {
+    if (resolver.breakContext == null) {
+        Errors_Throw(cont.firstToken, "The 'continue' keyword can only be used inside loops.");
+    } else if (resolver.breakContext.type == StatementType.SWITCH_STATEMENT) {
+        Errors_Throw(cont.firstToken, "The 'continue' keyword cannot be used in switch statements, even if nested in a loop.");
+    } else if (resolver.breakContext.type == StatementType.TRY) {
+        Errors_Throw(cont.firstToken, "The 'continue' keyword cannot be used inside a try/catch/finally block");
+    }
+
+    return cont;
+}
+
+Statement StatementResolver_FirstPass_DoWhileLoop(Resolver resolver, Statement doWhileLoop) {
+    Statement oldBreakContext = resolver.breakContext;
+    resolver.breakContext = doWhileLoop;
+    StatementResolver_ResolveStatementArrayFirstPass(resolver, doWhileLoop.code);
+    resolver.breakContext = oldBreakContext;
+    doWhileLoop.condition = ExpressionResolver_ResolveExpressionFirstPass(resolver, doWhileLoop.condition);
+    return doWhileLoop;
+}
+
+Statement StatementResolver_FirstPass_ForEachLoop(Resolver resolver, Statement forEachLoop) {
+    forEachLoop.autoId = EntityResolver_GetNextAutoVarId(resolver);
+    forEachLoop.expression = ExpressionResolver_ResolveExpressionFirstPass(resolver, forEachLoop.expression);
+    ((FunctionEntity)resolver.activeEntity.specificData).variableScope[forEachLoop.varToken.Value] = true;
+    StatementResolver_ResolveStatementArrayFirstPass(resolver, forEachLoop.code);
+    return forEachLoop;
+}
+
+Statement StatementResolver_FirstPass_ForLoop(Resolver resolver, Statement forLoop) {
+    StatementResolver_ResolveStatementArrayFirstPass(resolver, forLoop.forInit);
+    forLoop.condition = ExpressionResolver_ResolveExpressionFirstPass(resolver, forLoop.condition);
+    StatementResolver_ResolveStatementArrayFirstPass(resolver, forLoop.forStep);
+
+    Statement oldBreakContext = resolver.breakContext;
+    resolver.breakContext = forLoop;
+    StatementResolver_ResolveStatementArrayFirstPass(resolver, forLoop.code);
+    resolver.breakContext = oldBreakContext;
+    return forLoop;
+}
+
+Statement StatementResolver_FirstPass_IfStatement(Resolver resolver, Statement ifStatement) {
+    ifStatement.condition = ExpressionResolver_ResolveExpressionFirstPass(resolver, ifStatement.condition);
+    StatementResolver_ResolveStatementArrayFirstPass(resolver, ifStatement.code);
+    StatementResolver_ResolveStatementArrayFirstPass(resolver, ifStatement.elseCode);
+    return ifStatement;
+}
+
+Statement StatementResolver_FirstPass_SwitchStatement(Resolver resolver, Statement switchStmnt) {
+    int j = 0;
+    Statement oldBreakContext = resolver.breakContext;
+    resolver.breakContext = switchStmnt;
+    switchStmnt.condition = ExpressionResolver_ResolveExpressionFirstPass(resolver, switchStmnt.condition);
+    for (int i = 0; i < switchStmnt.switchChunks.Size(); i += 1) {
+        SwitchChunk chunk = switchStmnt.switchChunks[i];
+        for (j = 0; j < chunk.Cases.Size(); j += 1) {
+            Expression expr = chunk.Cases[j];
+            if (expr != null) {
+                chunk.Cases[j] = ExpressionResolver_ResolveExpressionFirstPass(resolver, expr);
+            }
+        }
+
+        for (j = 0; j < chunk.Code.Size(); j += 1) {
+            chunk.Code[j] = resolver.ResolveStatementFirstPass(resolver, chunk.Code[j]);
+        }
+    }
+    resolver.breakContext = oldBreakContext;
+    return switchStmnt;
+}
+
+Statement StatementResolver_FirstPass_Try(Resolver resolver, Statement tryStatement) {
+    Statement oldBreakContext = resolver.breakContext;
+    resolver.breakContext = tryStatement;
+    StatementResolver_ResolveStatementArrayFirstPass(resolver, tryStatement.code);
+    for (int i = 0; i < tryStatement.catchChunks.Size(); i += 1) {
+        CatchChunk cc = tryStatement.catchChunks[i];
+        if (cc.exceptionVarName != null) {
+            ((FunctionEntity)resolver.activeEntity.specificData).variableScope[cc.exceptionVarName.Value] = true;
+        }
+
+        if (cc.ExceptionNames.Size() > 0) {
+            // TODO: the code for resolving a dotted name for a class (particularly in the base class resolution) needs 
+            // to be refactored and used here as well.
+            fail("Not implemented");
+        } else {
+            cc.IsCatchAll = true;
+            cc.ClassDefinitions = new Array<ClassEntity>(0);
+        }
+
+        StatementResolver_ResolveStatementArrayFirstPass(resolver, cc.Code);
+    }
+
+    // TODO: check order and redundancy of exceptions.
+
+    StatementResolver_ResolveStatementArrayFirstPass(resolver, tryStatement.finallyCode);
+
+    resolver.breakContext = oldBreakContext;
+
+    return tryStatement;
+}
+
+Statement StatementResolver_FirstPass_WhileLoop(Resolver resolver, Statement whileLoop) {
+    whileLoop.condition = ExpressionResolver_ResolveExpressionFirstPass(resolver, whileLoop.condition);
+    Statement oldBreakContext = resolver.breakContext;
+    resolver.breakContext = whileLoop;
+    StatementResolver_ResolveStatementArrayFirstPass(resolver, whileLoop.code);
+    resolver.breakContext = oldBreakContext;
+    return whileLoop;
+}
+
+////// SECOND PASS 
 
 Statement StatementResolver_SecondPass_Assignment(Resolver resolver, Statement assignment) {
     assignment.assignTarget = ExpressionResolver_ResolveExpressionSecondPass(resolver, assignment.assignTarget);
@@ -27,7 +164,7 @@ Statement StatementResolver_SecondPass_Assignment(Resolver resolver, Statement a
             Errors_Throw(assignment.assignOp, "Invalid assignment. Cannot assign to this type of expression.");
             break;
     }
-    
+
     return assignment;
 }
 
