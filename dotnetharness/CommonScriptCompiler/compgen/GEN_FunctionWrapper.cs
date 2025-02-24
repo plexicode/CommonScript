@@ -1719,9 +1719,54 @@ namespace CommonScript.Compiler.Internal
             return baseCtor;
         }
 
+        public static Expression ExpressionResolver_FirstPass_BinaryOp(Resolver resolver, Expression binOp)
+        {
+            binOp.left = resolver.ResolveExpressionFirstPass(resolver, binOp.left);
+            binOp.right = resolver.ResolveExpressionFirstPass(resolver, binOp.right);
+            bool isBitwise = false;
+            string token = binOp.opToken.Value;
+            switch (token[0])
+            {
+                case '|':
+                    isBitwise = token == "|";
+                    break;
+                case '&':
+                    isBitwise = token == "&";
+                    break;
+                case '^':
+                    isBitwise = token == "^";
+                    break;
+                case '<':
+                    isBitwise = token == "<<";
+                    break;
+                case '>':
+                    isBitwise = token == ">>" || token == ">>>";
+                    break;
+            }
+            if (isBitwise)
+            {
+                binOp.left = ExpressionResolver_IntegerRequired(resolver, binOp.left);
+                binOp.right = ExpressionResolver_IntegerRequired(resolver, binOp.right);
+            }
+            return binOp;
+        }
+
+        public static Expression ExpressionResolver_FirstPass_BitwiseNot(Resolver resolver, Expression bwn)
+        {
+            bwn.root = resolver.ResolveExpressionFirstPass(resolver, bwn.root);
+            bwn.root = ExpressionResolver_IntegerRequired(resolver, bwn.root);
+            return bwn;
+        }
+
         public static Expression ExpressionResolver_FirstPass_BoolConst(Resolver resolver, Expression bc)
         {
             return bc;
+        }
+
+        public static Expression ExpressionResolver_FirstPass_BoolNot(Resolver resolver, Expression booNot)
+        {
+            booNot.root = resolver.ResolveExpressionFirstPass(resolver, booNot.root);
+            return booNot;
         }
 
         public static Expression ExpressionResolver_FirstPass_ConstructorInvocation(Resolver resolver, Expression ctorInvoke)
@@ -1730,9 +1775,93 @@ namespace CommonScript.Compiler.Internal
             return null;
         }
 
+        public static Expression ExpressionResolver_FirstPass_ConstructorReference(Resolver resolver, Expression ctorRef)
+        {
+            ctorRef.root = resolver.ResolveExpressionFirstPass(resolver, ctorRef.root);
+            return ctorRef;
+        }
+
+        public static Expression ExpressionResolver_FirstPass_DictionaryDefinition(Resolver resolver, Expression dictDef)
+        {
+            int length = dictDef.keys.Length;
+            int i = 0;
+            while (i < length)
+            {
+                dictDef.keys[i] = resolver.ResolveExpressionFirstPass(resolver, dictDef.keys[i]);
+                dictDef.values[i] = resolver.ResolveExpressionFirstPass(resolver, dictDef.values[i]);
+                i += 1;
+            }
+            return dictDef;
+        }
+
+        public static Expression ExpressionResolver_FirstPass_DotField(Resolver resolver, Expression dotField)
+        {
+            dotField.root = resolver.ResolveExpressionFirstPass(resolver, dotField.root);
+            string fieldName = dotField.strVal;
+            switch (dotField.root.type)
+            {
+                case 19:
+                    ImportStatement importRef = dotField.root.importPtr;
+                    CompiledModule moduleRef = importRef.compiledModuleRef;
+                    Expression output = LookupUtil_tryCreateModuleMemberReference(moduleRef, dotField.firstToken, fieldName);
+                    if (output == null)
+                    {
+                        Errors_Throw(dotField.opToken, string.Join("", new string[] { "The module does not have a member named '", fieldName, "'" }));
+                    }
+                    return output;
+                case 13:
+                    EnumEntity enumRef = (EnumEntity)dotField.root.entityPtr.specificData;
+                    int i = 0;
+                    while (i < enumRef.memberNameTokens.Length)
+                    {
+                        if (enumRef.memberNameTokens[i].Value == fieldName)
+                        {
+                            return Expression_createEnumConstant(dotField.firstToken, enumRef.baseData, fieldName, enumRef.memberValues[i].intVal);
+                        }
+                        i += 1;
+                    }
+                    Errors_Throw(dotField.opToken, string.Join("", new string[] { "The enum ", enumRef.baseData.fqName, " does not have a member named '", fieldName, "'" }));
+                    break;
+                case 32:
+                    NamespaceEntity nsEntity = (NamespaceEntity)dotField.root.entityPtr.specificData;
+                    if (!nsEntity.nestedMembers.ContainsKey(fieldName))
+                    {
+                        Errors_Throw(dotField.opToken, string.Join("", new string[] { "There is no member of this namespace named '", fieldName, "'." }));
+                    }
+                    AbstractEntity referencedEntity = nsEntity.nestedMembers[fieldName];
+                    return ExpressionResolver_WrapEntityIntoReferenceExpression(resolver, dotField.firstToken, referencedEntity);
+            }
+            return dotField;
+        }
+
         public static Expression ExpressionResolver_FirstPass_FloatConstant(Resolver resolver, Expression floatConst)
         {
             return floatConst;
+        }
+
+        public static Expression ExpressionResolver_FirstPass_FunctionInvocation(Resolver resolver, Expression funcInvoke)
+        {
+            if (funcInvoke.root.type == 15)
+            {
+                ExpressionResolver_ResolveExpressionArrayFirstPass(resolver, funcInvoke.args);
+                return Expression_createExtensionInvocation(funcInvoke.firstToken, funcInvoke.root.strVal, funcInvoke.args);
+            }
+            funcInvoke.root = resolver.ResolveExpressionFirstPass(resolver, funcInvoke.root);
+            ExpressionResolver_ResolveExpressionArrayFirstPass(resolver, funcInvoke.args);
+            return funcInvoke;
+        }
+
+        public static Expression ExpressionResolver_FirstPass_Index(Resolver resolver, Expression indexExpr)
+        {
+            indexExpr.root = resolver.ResolveExpressionFirstPass(resolver, indexExpr.root);
+            indexExpr.right = resolver.ResolveExpressionFirstPass(resolver, indexExpr.right);
+            return indexExpr;
+        }
+
+        public static Expression ExpressionResolver_FirstPass_InlineIncrement(Resolver resolver, Expression inlineIncr)
+        {
+            inlineIncr.root = resolver.ResolveExpressionFirstPass(resolver, inlineIncr.root);
+            return inlineIncr;
         }
 
         public static Expression ExpressionResolver_FirstPass_IntegerConstant(Resolver resolver, Expression intConst)
@@ -1770,9 +1899,41 @@ namespace CommonScript.Compiler.Internal
             return lamb;
         }
 
+        public static Expression ExpressionResolver_FirstPass_ListDefinition(Resolver resolver, Expression listDef)
+        {
+            int i = 0;
+            while (i < listDef.values.Length)
+            {
+                listDef.values[i] = resolver.ResolveExpressionFirstPass(resolver, listDef.values[i]);
+                i += 1;
+            }
+            return listDef;
+        }
+
+        public static Expression ExpressionResolver_FirstPass_NegativeSign(Resolver resolver, Expression negSign)
+        {
+            negSign.root = resolver.ResolveExpressionFirstPass(resolver, negSign.root);
+            return negSign;
+        }
+
         public static Expression ExpressionResolver_FirstPass_NullConst(Resolver resolver, Expression nullConst)
         {
             return nullConst;
+        }
+
+        public static Expression ExpressionResolver_FirstPass_Slice(Resolver resolver, Expression slice)
+        {
+            slice.root = resolver.ResolveExpressionFirstPass(resolver, slice.root);
+            int i = 0;
+            while (i < 3)
+            {
+                if (slice.args[i] != null)
+                {
+                    slice.args[i] = resolver.ResolveExpressionFirstPass(resolver, slice.args[i]);
+                }
+                i += 1;
+            }
+            return slice;
         }
 
         public static Expression ExpressionResolver_FirstPass_StringConstant(Resolver resolver, Expression strConst)
@@ -1780,9 +1941,23 @@ namespace CommonScript.Compiler.Internal
             return strConst;
         }
 
+        public static Expression ExpressionResolver_FirstPass_Ternary(Resolver resolver, Expression ternary)
+        {
+            ternary.root = resolver.ResolveExpressionFirstPass(resolver, ternary.root);
+            ternary.left = resolver.ResolveExpressionFirstPass(resolver, ternary.left);
+            ternary.right = resolver.ResolveExpressionFirstPass(resolver, ternary.right);
+            return ternary;
+        }
+
         public static Expression ExpressionResolver_FirstPass_This(Resolver resolver, Expression thisExpr)
         {
             return thisExpr;
+        }
+
+        public static Expression ExpressionResolver_FirstPass_TypeOf(Resolver resolver, Expression typeofExpr)
+        {
+            typeofExpr.root = resolver.ResolveExpressionFirstPass(resolver, typeofExpr.root);
+            return typeofExpr;
         }
 
         public static Expression ExpressionResolver_FirstPass_Variable(Resolver resolver, Expression varExpr)

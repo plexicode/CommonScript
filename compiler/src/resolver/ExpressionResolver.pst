@@ -15,8 +15,40 @@ Expression ExpressionResolver_FirstPass_BaseCtorReference(Resolver resolver, Exp
     return baseCtor;
 }
 
+Expression ExpressionResolver_FirstPass_BinaryOp(Resolver resolver, Expression binOp) {
+    binOp.left = resolver.ResolveExpressionFirstPass(resolver, binOp.left);
+    binOp.right = resolver.ResolveExpressionFirstPass(resolver, binOp.right);
+    bool isBitwise = false;
+    string token = binOp.opToken.Value;
+    switch (token[0]) {
+        case '|': isBitwise = token == "|"; break;
+        case '&': isBitwise = token == "&"; break;
+        case '^': isBitwise = token == "^"; break;
+        case '<': isBitwise = token == "<<"; break;
+        case '>': isBitwise = token == ">>" || token == ">>>"; break;
+    }
+    
+    if (isBitwise) {
+        binOp.left = ExpressionResolver_IntegerRequired(resolver, binOp.left);
+        binOp.right = ExpressionResolver_IntegerRequired(resolver, binOp.right);
+    }
+
+    return binOp;
+}
+
+Expression ExpressionResolver_FirstPass_BitwiseNot(Resolver resolver, Expression bwn) {
+    bwn.root = resolver.ResolveExpressionFirstPass(resolver, bwn.root);
+    bwn.root = ExpressionResolver_IntegerRequired(resolver, bwn.root);
+    return bwn;
+}
+
 Expression ExpressionResolver_FirstPass_BoolConst(Resolver resolver, Expression bc) {
     return bc;
+}
+
+Expression ExpressionResolver_FirstPass_BoolNot(Resolver resolver, Expression booNot) {
+    booNot.root = resolver.ResolveExpressionFirstPass(resolver, booNot.root);
+    return booNot;
 }
 
 Expression ExpressionResolver_FirstPass_ConstructorInvocation(Resolver resolver, Expression ctorInvoke) {
@@ -27,12 +59,88 @@ Expression ExpressionResolver_FirstPass_ConstructorInvocation(Resolver resolver,
     return null;
 }
 
+Expression ExpressionResolver_FirstPass_ConstructorReference(Resolver resolver, Expression ctorRef) {
+    ctorRef.root = resolver.ResolveExpressionFirstPass(resolver, ctorRef.root);
+    return ctorRef;
+}
+
 Expression ExpressionResolver_FirstPass_FloatConstant(Resolver resolver, Expression floatConst) {
     return floatConst;
 }
 
 Expression ExpressionResolver_FirstPass_IntegerConstant(Resolver resolver, Expression intConst) {
     return intConst;
+}
+
+Expression ExpressionResolver_FirstPass_DictionaryDefinition(Resolver resolver, Expression dictDef) {
+    int length = dictDef.keys.Size();
+    for (int i = 0; i < length; i += 1) {
+        dictDef.keys[i] = resolver.ResolveExpressionFirstPass(resolver, dictDef.keys[i]);
+        dictDef.values[i] = resolver.ResolveExpressionFirstPass(resolver, dictDef.values[i]);
+    }
+    return dictDef;
+}
+
+Expression ExpressionResolver_FirstPass_DotField(Resolver resolver, Expression dotField) {
+    dotField.root = resolver.ResolveExpressionFirstPass(resolver, dotField.root);
+    string fieldName = dotField.strVal;
+
+    switch (dotField.root.type) {
+        case ExpressionType.IMPORT_REFERENCE:
+            ImportStatement importRef = dotField.root.importPtr;
+            CompiledModule moduleRef = importRef.compiledModuleRef;
+            Expression output = LookupUtil_tryCreateModuleMemberReference(moduleRef, dotField.firstToken, fieldName);
+            if (output == null) {
+                Errors_Throw(dotField.opToken, "The module does not have a member named '" + fieldName + "'");
+            }
+            return output;
+
+        case ExpressionType.ENUM_REFERENCE:
+            EnumEntity enumRef = (EnumEntity)dotField.root.entityPtr.specificData;
+            // TODO: ew, gross. Cache and stash a dictionary somewhere on the entity.
+            // Otherwise this could potentially turn problematic in the off chance there's an enum with a
+            // few hundred members in it (e.g. generated code).
+            for (int i = 0; i < enumRef.memberNameTokens.Size(); i += 1) {
+                if (enumRef.memberNameTokens[i].Value == fieldName) {
+                    return Expression_createEnumConstant(dotField.firstToken, enumRef.baseData, fieldName, enumRef.memberValues[i].intVal);
+                }
+            }
+            Errors_Throw(dotField.opToken, "The enum " + enumRef.baseData.fqName + " does not have a member named '" + fieldName + "'");
+            break;
+
+        case ExpressionType.NAMESPACE_REFERENCE:
+            NamespaceEntity nsEntity = (NamespaceEntity)dotField.root.entityPtr.specificData;
+            if (!nsEntity.nestedMembers.Contains(fieldName)) {
+                Errors_Throw(dotField.opToken, "There is no member of this namespace named '" + fieldName + "'.");
+            }
+            AbstractEntity referencedEntity = nsEntity.nestedMembers[fieldName];
+            return ExpressionResolver_WrapEntityIntoReferenceExpression(resolver, dotField.firstToken, referencedEntity);
+    }
+
+    return dotField;
+}
+
+Expression ExpressionResolver_FirstPass_FunctionInvocation(Resolver resolver, Expression funcInvoke) {
+    if (funcInvoke.root.type == ExpressionType.EXTENSION_REFERENCE) {
+        ExpressionResolver_ResolveExpressionArrayFirstPass(resolver, funcInvoke.args);
+        return Expression_createExtensionInvocation(funcInvoke.firstToken, funcInvoke.root.strVal, funcInvoke.args);
+    }
+    
+    funcInvoke.root = resolver.ResolveExpressionFirstPass(resolver, funcInvoke.root);
+    ExpressionResolver_ResolveExpressionArrayFirstPass(resolver, funcInvoke.args);
+
+    return funcInvoke;
+}
+
+Expression ExpressionResolver_FirstPass_Index(Resolver resolver, Expression indexExpr) {
+    indexExpr.root = resolver.ResolveExpressionFirstPass(resolver, indexExpr.root);
+    indexExpr.right = resolver.ResolveExpressionFirstPass(resolver, indexExpr.right);
+    return indexExpr;
+}
+
+Expression ExpressionResolver_FirstPass_InlineIncrement(Resolver resolver, Expression inlineIncr) {
+    inlineIncr.root = resolver.ResolveExpressionFirstPass(resolver, inlineIncr.root);
+    return inlineIncr;
 }
 
 Expression ExpressionResolver_FirstPass_Lambda(Resolver resolver, Expression lamb) {
@@ -65,16 +173,48 @@ Expression ExpressionResolver_FirstPass_Lambda(Resolver resolver, Expression lam
     return lamb;
 }
 
+Expression ExpressionResolver_FirstPass_ListDefinition(Resolver resolver, Expression listDef) {
+    for (int i = 0; i < listDef.values.Size(); i += 1) {
+        listDef.values[i] = resolver.ResolveExpressionFirstPass(resolver, listDef.values[i]);
+    }
+    return listDef;
+}
+
+Expression ExpressionResolver_FirstPass_NegativeSign(Resolver resolver, Expression negSign) {
+    negSign.root = resolver.ResolveExpressionFirstPass(resolver, negSign.root);
+    return negSign;
+}
+
 Expression ExpressionResolver_FirstPass_NullConst(Resolver resolver, Expression nullConst) {
     return nullConst;
+}
+
+Expression ExpressionResolver_FirstPass_Slice(Resolver resolver, Expression slice) {
+    slice.root = resolver.ResolveExpressionFirstPass(resolver, slice.root);
+    for (int i = 0; i < 3; i += 1) {
+        if (slice.args[i] != null) slice.args[i] = resolver.ResolveExpressionFirstPass(resolver, slice.args[i]);
+    }
+    return slice;
 }
 
 Expression ExpressionResolver_FirstPass_StringConstant(Resolver resolver, Expression strConst) {
     return strConst;
 }
 
+Expression ExpressionResolver_FirstPass_Ternary(Resolver resolver, Expression ternary) {
+    ternary.root = resolver.ResolveExpressionFirstPass(resolver, ternary.root);
+    ternary.left = resolver.ResolveExpressionFirstPass(resolver, ternary.left);
+    ternary.right = resolver.ResolveExpressionFirstPass(resolver, ternary.right);
+    return ternary;
+}
+
 Expression ExpressionResolver_FirstPass_This(Resolver resolver, Expression thisExpr) {
     return thisExpr;
+}
+
+Expression ExpressionResolver_FirstPass_TypeOf(Resolver resolver, Expression typeofExpr) {
+    typeofExpr.root = resolver.ResolveExpressionFirstPass(resolver, typeofExpr.root);
+    return typeofExpr;
 }
 
 Expression ExpressionResolver_FirstPass_Variable(Resolver resolver, Expression varExpr) {
