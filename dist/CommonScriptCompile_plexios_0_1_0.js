@@ -6809,7 +6809,7 @@ return [PST$registerExtensibleCallback, _Errors_ThrowImpl, AbstractEntity_new, A
     };
   })();
 
-  const IS_DEBUG = true;
+  const IS_DEBUG = false;
 
   PST.registerExt('throwParserException', (args) => {
     // TODO: this should just receive a string instead of making a distinction here to assemble the error message.
@@ -6830,6 +6830,7 @@ return [PST$registerExtensibleCallback, _Errors_ThrowImpl, AbstractEntity_new, A
       let compiler = PST.CompilerContext_new(rootModuleId + '', languageId + '', version + '', [...extensionNames]);
       let nextModuleIdCache = null;
       let isDone = false;
+      let errorOverride = null;
 
       let updateNext = () => {
         nextModuleIdCache = PST.PUBLIC_GetNextRequiredModuleId(compiler);
@@ -6840,12 +6841,24 @@ return [PST$registerExtensibleCallback, _Errors_ThrowImpl, AbstractEntity_new, A
       // TODO: why is isBuiltIn ignored?
       let provideFilesImpl = (nextModId, filesLookup, isBuiltIn) => {
         if (nextModId !== nextModuleIdCache) throw new Error('');
-        PST.PUBLIC_SupplyFilesForModule(compiler, nextModId, { ...filesLookup }, false, false);
+        if (IS_DEBUG) {
+          PST.PUBLIC_SupplyFilesForModule(compiler, nextModId, { ...filesLookup }, false, false);
+        } else {
+          try {
+            PST.PUBLIC_SupplyFilesForModule(compiler, nextModId, { ...filesLookup }, false, false);
+          } catch (ex) {
+            isDone = true;
+            errorOverride = ex.message;
+            return;
+          }
+        }
         updateNext();
       };
 
       let getCompilation = () => {
         if (!isDone) throw new Error('');
+        if (errorOverride) return { errorMessage: errorOverride };
+
         PST.PUBLIC_EnsureDependenciesFulfilled(compiler);
         let bytes = PST.PUBLIC_CompleteCompilation(compiler);
         return { byteCodePayload: bytes };
