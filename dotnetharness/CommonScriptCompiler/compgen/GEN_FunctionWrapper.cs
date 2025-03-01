@@ -5424,6 +5424,15 @@ namespace CommonScript.Compiler.Internal
             }
         }
 
+        public static string PUBLIC_getTokenErrPrefix(Token tok)
+        {
+            if (tok == null)
+            {
+                return "";
+            }
+            return string.Join("", new string[] { "[", tok.File, " Line ", tok.Line.ToString(), " Col ", tok.Col.ToString(), "]" });
+        }
+
         public static void PUBLIC_SupplyFilesForModule(object compObj, string moduleId, System.Collections.Generic.Dictionary<string, string> fileLookup, bool isCoreBuiltin, bool isBuiltInLib)
         {
             int i = 0;

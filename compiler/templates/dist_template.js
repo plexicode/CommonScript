@@ -8,23 +8,19 @@ const CommonScriptCompiler = (() => {
       PUBLIC_SupplyFilesForModule,
       PUBLIC_EnsureDependenciesFulfilled,
       PUBLIC_CompleteCompilation,
+      PUBLIC_getTokenErrPrefix,
       registerExt: PASTEL_regCallback,
     };
   })();
 
   const IS_DEBUG = true;
 
-  let constructTokenPrefix = tok => {
-    if (!tok) return '';
-    // Need getters for each field or just move this to generated code.
-    return `[TODO: token unpacking]: `;
-  };
-
   PST.registerExt('throwParserException', (args) => {
-    let t = args[0];
-    if (t === 1) throw new Error(constructTokenPrefix(t[1]) + t[2]);
-    if (t === 2) throw new Error(`[${t[1]}] ${t[2]}`);
-    if (t === 3) throw new Error(t[1])
+    // TODO: this should just receive a string instead of making a distinction here to assemble the error message.
+    let [n, a, b] = args;
+    if (n === 1) throw new Error(PST.PUBLIC_getTokenErrPrefix(a) + b);
+    if (n === 2) throw new Error(`[${a}] ${b}`);
+    if (n === 3) throw new Error(a)
     throw new Error();
   });
 
