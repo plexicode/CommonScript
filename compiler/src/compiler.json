@@ -13,6 +13,13 @@
         "functions-path": "../../dotnetharness/CommonScriptCompiler/compgen/GEN_FunctionWrapper.cs",
         "functions-wrapper-class": "FunctionWrapper"
       }
+    },
+    {
+      "name": "javascript",
+      "language": "javascript",
+      "output": {
+        "functions-path": "../templates/gen.js"
+      }
     }
   ]
 }
