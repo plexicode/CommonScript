@@ -5430,7 +5430,7 @@ namespace CommonScript.Compiler.Internal
             {
                 return "";
             }
-            return string.Join("", new string[] { "[", tok.File, " Line ", tok.Line.ToString(), " Col ", tok.Col.ToString(), "]" });
+            return string.Join("", new string[] { "[", tok.File, " Line ", tok.Line.ToString(), " Col ", tok.Col.ToString(), "] " });
         }
 
         public static void PUBLIC_SupplyFilesForModule(object compObj, string moduleId, System.Collections.Generic.Dictionary<string, string> fileLookup, bool isCoreBuiltin, bool isBuiltInLib)
