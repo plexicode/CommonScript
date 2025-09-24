@@ -1,97 +1,69 @@
-'''
-Usage:
-  You MUST build the pastel code before running this.
-  pastel runtime/src/runtime.json javascript|csharp
-  python build.py target
 
-  target options:
-  - jsruntime: populates all runtime JavaScript for dist/CommonScriptRuntime_*_{ver}.js
-  - jscompiler: populates all JavaScript compilers for dist/CommonScriptCompiler_*_{ver}.js
-'''
+import plexibuild
+from plexibuild import fileio
 
-VERSION = (0, 1, 0)
-VERSION_DOTTED = '.'.join(map(str, VERSION))
+VERSION_DOTTED = fileio.file_read_text("./current-version.txt").strip().split('\n').pop()
 VERSION_UNDERSCORE = VERSION_DOTTED.replace('.', '_')
+VERSION = tuple(map(lambda s: int(s), VERSION_DOTTED.split('.')))
 
-import os
-import sys
+def build_js_runtime():
+  dir = './runtime/templates'
+  code = {
+    'dist_main': fileio.file_read_text(dir + '/dist_template.js'),
+    'dist_web': fileio.file_read_text(dir + '/dist_template_web.js'),
+    'dist_node': fileio.file_read_text(dir + '/dist_template_node.js'),
+    'dist_plexios': fileio.file_read_text(dir + '/dist_template_plexios.js'),
+    'gen': fileio.file_read_text(dir + '/gen.js'),
+    'wrapper': fileio.file_read_text(dir + '/commonscript.js'),
+  }
 
-def file_read_text(path):
-  c = open(path.replace('/', os.sep), 'rt')
-  t = c.read().replace('\r\n', '\n')
-  c.close()
-  return t
+  common_script_base_code = (code['dist_main']
+    ).replace('%%%VERSION%%%', VERSION_DOTTED
+    ).replace('%%%JS_WRAPPER%%%', '\n' + code['wrapper']
+    ).replace('%%%PASTEL_GENERATED%%%', '\n' + code['gen'])
 
-def file_write_text(path, content):
-  c = open(path.replace('/', os.sep), 'wt', newline='\n')
-  c.write(content)
-  c.close()
+  web_code = (code['dist_web']
+    ).replace('%%%VERSION%%%', VERSION_DOTTED
+    ).replace('%%%COMMON_SCRIPT%%%', common_script_base_code)
 
-def main(args):
-  mode = (args + [''])[:1][0]
-  is_js = mode in ('jsruntime', )
-  is_js_compiler = mode in ('jscompiler', )
+  node_code = (code['dist_node']
+    ).replace('%%%VERSION%%%', VERSION_DOTTED
+    ).replace('%%%COMMON_SCRIPT%%%', common_script_base_code)
 
-  if is_js:
-    dir = 'runtime/templates'
-    code = {
-      'dist_main': file_read_text(dir + '/dist_template.js'),
-      'dist_web': file_read_text(dir + '/dist_template_web.js'),
-      'dist_node': file_read_text(dir + '/dist_template_node.js'),
-      'dist_plexios': file_read_text(dir + '/dist_template_plexios.js'),
-      'gen': file_read_text(dir + '/gen.js'),
-      'wrapper': file_read_text(dir + '/commonscript.js'),
-    }
+  plexios_code = (code['dist_plexios']
+    ).replace('%%%VERSION%%%', VERSION_DOTTED
+    ).replace('%%%COMMON_SCRIPT%%%', common_script_base_code)
 
-    common_script_base_code = (code['dist_main']
-      ).replace('%%%VERSION%%%', VERSION_DOTTED
-      ).replace('%%%JS_WRAPPER%%%', '\n' + code['wrapper']
-      ).replace('%%%PASTEL_GENERATED%%%', '\n' + code['gen'])
+  files = {}
+  files['CommonScriptRuntime_web_' + VERSION_UNDERSCORE + '.js'] = web_code
+  files['CommonScriptRuntime_node_' + VERSION_UNDERSCORE + '.js'] = node_code
+  files['CommonScriptRuntime_plexios_' + VERSION_UNDERSCORE + '.js'] = plexios_code
+  fileio.ensure_directory('./dist')
+  fileio.batch_write_to_dir('./dist', files)
 
-    web_code = (code['dist_web']
-      ).replace('%%%VERSION%%%', VERSION_DOTTED
-      ).replace('%%%COMMON_SCRIPT%%%', common_script_base_code)
+def build_js_compiler():
+  dir = 'compiler/templates'
+  code = {
+    'dist_main': fileio.file_read_text(dir + '/dist_template.js'),
+    'dist_plexios': fileio.file_read_text(dir + '/dist_template_plexios.js'),
+    'gen': fileio.file_read_text(dir + '/gen.js'),
+  }
+  common_script_base_code = (code['dist_main']
+    ).replace('%%%PASTEL_GENERATED%%%', '\n' + code['gen'])
+  plexios_code = (code['dist_plexios']
+    ).replace('%%%VERSION%%%', VERSION_DOTTED
+    ).replace('%%%VERSION_UNDERSCORE%%%', VERSION_UNDERSCORE
+    ).replace('%%%COMMON_SCRIPT%%%', common_script_base_code)
 
-    node_code = (code['dist_node']
-      ).replace('%%%VERSION%%%', VERSION_DOTTED
-      ).replace('%%%COMMON_SCRIPT%%%', common_script_base_code)
-
-    plexios_code = (code['dist_plexios']
-      ).replace('%%%VERSION%%%', VERSION_DOTTED
-      ).replace('%%%COMMON_SCRIPT%%%', common_script_base_code)
-
-    output_path = 'dist/CommonScriptRuntime_web_' + VERSION_UNDERSCORE + '.js'
-    file_write_text(output_path, web_code)
-    output_path = 'dist/CommonScriptRuntime_node_' + VERSION_UNDERSCORE + '.js'
-    file_write_text(output_path, node_code)
-    output_path = 'dist/CommonScriptRuntime_plexios_' + VERSION_UNDERSCORE + '.js'
-    file_write_text(output_path, plexios_code)
-  elif is_js_compiler:
-    dir = 'compiler/templates'
-    code = {
-      'dist_main': file_read_text(dir + '/dist_template.js'),
-      'dist_plexios': file_read_text(dir + '/dist_template_plexios.js'),
-      'gen': file_read_text(dir + '/gen.js'),
-    }
-    common_script_base_code = (code['dist_main']
-      ).replace('%%%PASTEL_GENERATED%%%', '\n' + code['gen'])
-    plexios_code = (code['dist_plexios']
-      ).replace('%%%VERSION%%%', VERSION_DOTTED
-      ).replace('%%%VERSION_UNDERSCORE%%%', VERSION_UNDERSCORE
-      ).replace('%%%COMMON_SCRIPT%%%', common_script_base_code)
-
-    output_path = 'dist/CommonScriptCompile_plexios_' + VERSION_UNDERSCORE + '.js'
-    file_write_text(output_path, plexios_code)
-  else:
-    return 'ERROR: invalid target option'
-
-  return 'Done'
+  output_path = 'dist/CommonScriptCompile_plexios_' + VERSION_UNDERSCORE + '.js'
+  fileio.ensure_directory('./dist')
+  fileio.file_write_text(output_path, plexios_code)
 
 def copy_builtins():
   items = {}
-  for file in os.listdir('builtins'):
+  for file in fileio.list_files('./builtins'):
     if file.endswith('.script'):
-      code = file_read_text(os.path.join('builtins', file))
+      code = fileio.file_read_text('./builtins/' + file)
       # TODO: a real minifier goes here!
       min_lines = []
       for line in code.split('\n'):
@@ -114,13 +86,14 @@ def copy_builtins():
     code = items[key]
     escaped_code = code.replace('\\', '\\\\').replace('"', '\\"').replace('\r\n', '\n').replace('\n', '\\n')
     gen_builtins.append('string GEN_BUILTINS_' + key + '() { return "' + escaped_code + '"; }')
-  file_write_text('compiler/src/builtins/gen_builtins.pst', '\n'.join(gen_builtins) + '\n')
-  return 'Done'
+  fileio.file_write_text('./compiler/src/builtins/gen_builtins.pst', '\n'.join(gen_builtins) + '\n')
+
+def main():
+  copy_builtins()
+  build_js_compiler()
+  build_js_runtime()
+
+  plexibuild.display_completion_message()
 
 if __name__ == '__main__':
-  args = sys.argv[1:]
-  if len(args) == 1 and args[0] == 'copybuiltins':
-    msg = copy_builtins()
-  else:
-    msg = main(args)
-  print(msg)
+  main()

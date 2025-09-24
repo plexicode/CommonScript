@@ -1,0 +1,4 @@
+The last non-empty line of this file is used by the build script to generate the
+version number in the exported files.
+
+0.1.0
