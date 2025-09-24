@@ -17,7 +17,7 @@ ExecutionResult ExRes_HardCrash(ExecutionTask task, string message) {
     if (isDebug == 1) {
         Array<object> failArgs = new Array<object>(1);
         failArgs[0] = message;
-        object ignore = Core.ExtensibleCallbackInvoke("hardCrash", failArgs);
+        object ignore = Pastel.invokeExtension("hardCrash", failArgs);
     }
     return res;
 }

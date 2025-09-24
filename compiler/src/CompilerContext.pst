@@ -26,8 +26,8 @@ CompilerContext CompilerContext_new(string rootId, string flavorId, string exten
         new List<string>() // extensionNames
     );
 
-    for (int i = 0; i < extensionNames.Size(); i += 1) {
-        ctx.extensionNames.Add(extensionNames[i]);
+    for (int i = 0; i < extensionNames.size(); i += 1) {
+        ctx.extensionNames.add(extensionNames[i]);
     }
 
     ctx.unfulfilledDependencies[rootId] = true;
@@ -56,34 +56,34 @@ void PUBLIC_SupplyFilesForModule(
 
     List<FileContext> files = new List<FileContext>();
     Dictionary<string, ImportStatement> imports = new Dictionary<string, ImportStatement>();
-    Array<string> fileNamesOrdered = Core.SortedCopyOfStringArray(fileLookup.Keys());
-    for (i = 0; i < fileNamesOrdered.Size(); i += 1) {
+    Array<string> fileNamesOrdered = Sorting.getLexicalSortedCopy(fileLookup.keys());
+    for (i = 0; i < fileNamesOrdered.size(); i += 1) {
         string path = fileNamesOrdered[i];
         FileContext fileCtx = FileContext_new(compiler.staticCtx, path, fileLookup[path]);
         fileCtx.isCoreBuiltin = isCoreBuiltin;
         fileCtx.isBuiltInLib = isBuiltInLib;
-        files.Add(fileCtx);
+        files.add(fileCtx);
         fileCtx.imports = ImportParser_AdvanceThroughImports(fileCtx.tokens, isCoreBuiltin);
         FileContext_initializeImportLookup(fileCtx);
-        for (j = 0; j < fileCtx.imports.Size(); j += 1) {
+        for (j = 0; j < fileCtx.imports.size(); j += 1) {
             ImportStatement impStmnt = fileCtx.imports[j];
             imports[impStmnt.flatName] = impStmnt;
         }
     }
     compiler.filesByModuleId[moduleId] = files;
 
-    if (compiler.unfulfilledDependencies.Contains(moduleId)) {
-        compiler.unfulfilledDependencies.Remove(moduleId);
+    if (compiler.unfulfilledDependencies.contains(moduleId)) {
+        compiler.unfulfilledDependencies.remove(moduleId);
     }
 
     List<string> allDeps = new List<string>();
-    Array<string> importedIds = imports.Keys();
-    for (i = 0; i < importedIds.Size(); i += 1) allDeps.Add(importedIds[i]);
+    Array<string> importedIds = imports.keys();
+    for (i = 0; i < importedIds.size(); i += 1) allDeps.add(importedIds[i]);
 
     compiler.depIdsByModuleId[moduleId] = allDeps;
-    for (i = 0; i < allDeps.Size(); i += 1) {
+    for (i = 0; i < allDeps.size(); i += 1) {
         string depId = allDeps[i];
-        if (!compiler.filesByModuleId.Contains(depId)) {
+        if (!compiler.filesByModuleId.contains(depId)) {
             compiler.unfulfilledDependencies[depId] = true;
         }
     }
@@ -91,7 +91,7 @@ void PUBLIC_SupplyFilesForModule(
 
 void PUBLIC_EnsureDependenciesFulfilled(object compObj) {
     CompilerContext compiler = (CompilerContext) compObj;
-    if (compiler.unfulfilledDependencies.Size() > 0) {
+    if (compiler.unfulfilledDependencies.size() > 0) {
         // TODO: Is this user-facing?
         fail("Not all dependencies are fulfilled.");
     }
@@ -100,9 +100,9 @@ void PUBLIC_EnsureDependenciesFulfilled(object compObj) {
 string PUBLIC_GetNextRequiredModuleId(object compObj) {
     CompilerContext compiler = (CompilerContext)compObj;
     while (true) {
-        if (compiler.unfulfilledDependencies.Size() == 0) return null;
+        if (compiler.unfulfilledDependencies.size() == 0) return null;
 
-        Array<string> unfulfilledDependencies = Core.SortedCopyOfStringArray(compiler.unfulfilledDependencies.Keys());
+        Array<string> unfulfilledDependencies = Sorting.getLexicalSortedCopy(compiler.unfulfilledDependencies.keys());
         string nextKey = unfulfilledDependencies[0];
 
         if (!IsBuiltInModule(nextKey)) {
@@ -125,14 +125,14 @@ Array<string> CompilerContext_CalculateCompilationOrder(CompilerContext compiler
     Dictionary<string, int> recurseState = new Dictionary<string, int>();
     List<string> order = new List<string>();
     List<string> queue = new List<string>();
-    queue.Add(compiler.rootId);
+    queue.add(compiler.rootId);
 
-    while (queue.Size() > 0) {
-        int last = queue.Size() - 1;
+    while (queue.size() > 0) {
+        int last = queue.size() - 1;
         string currentId = queue[last];
-        queue.RemoveAt(last);
+        queue.removeAt(last);
         int currentRecurseState = 0;
-        if (recurseState.Contains(currentId)) currentRecurseState = recurseState[currentId];
+        if (recurseState.contains(currentId)) currentRecurseState = recurseState[currentId];
 
         if (currentRecurseState == 2) {
             // It's already handled. Move on
@@ -141,9 +141,9 @@ Array<string> CompilerContext_CalculateCompilationOrder(CompilerContext compiler
             List<string> newDeps = new List<string>();
 
 
-            for (int i = 0; i < deps.Size(); i += 1) {
+            for (int i = 0; i < deps.size(); i += 1) {
                 string depId = deps[i];
-                if (recurseState.Contains(depId)) {
+                if (recurseState.contains(depId)) {
                     if (recurseState[depId] == 2) {
                         // already added, just ignore it.
                     } else if (recurseState[depId] == 1) {
@@ -152,24 +152,24 @@ Array<string> CompilerContext_CalculateCompilationOrder(CompilerContext compiler
                         fail("There is a cyclical dependency involving " + depId + " and " + currentId);
                     }
                 } else {
-                    newDeps.Add(depId);
+                    newDeps.add(depId);
                 }
             }
 
-            if (newDeps.Size() == 0) {
+            if (newDeps.size() == 0) {
                 recurseState[currentId] = 2;
-                order.Add(currentId);
+                order.add(currentId);
             } else {
                 recurseState[currentId] = 1;
-                queue.Add(currentId);
-                for (i = 0; i < newDeps.Size(); i += 1) {
-                    queue.Add(newDeps[i]);
+                queue.add(currentId);
+                for (i = 0; i < newDeps.size(); i += 1) {
+                    queue.add(newDeps[i]);
                 }
             }
         }
     }
 
-    return Core.ListToArray(order);
+    return order.toArray();
 }
 
 Array<int> PUBLIC_CompleteCompilation(object compObj) {
@@ -179,13 +179,13 @@ Array<int> PUBLIC_CompleteCompilation(object compObj) {
 
     compiler.compiledModulesById = new Dictionary<string, CompiledModule>();
 
-    for (int i = 0; i < moduleCompilationOrder.Size(); i += 1) {
+    for (int i = 0; i < moduleCompilationOrder.size(); i += 1) {
         string moduleId = moduleCompilationOrder[i];
         CompiledModule module = CompilerContext_CompileModule(compiler, moduleId);
         compiler.compiledModulesById[moduleId] = module;
     }
 
-    Array<CompiledModule> modules = compiler.compiledModulesById.Values();
+    Array<CompiledModule> modules = compiler.compiledModulesById.values();
     CompilationBundle bundle = bundleCompilation(compiler.staticCtx, compiler.rootId, modules);
 
     return ExportUtil_exportBundle(compiler.flavorId, compiler.extensionVersionId, bundle);
@@ -197,10 +197,10 @@ CompiledModule CompilerContext_CompileModule(CompilerContext compiler, string mo
 
     Dictionary<string, AbstractEntity> rootEntities = new Dictionary<string, AbstractEntity>();
     Dictionary<string, string> sourceCode = new Dictionary<string, string>();
-    for (i = 0; i < files.Size(); i += 1) {
+    for (i = 0; i < files.size(); i += 1) {
         FileContext file = files[i];
         sourceCode[file.path] = file.content;
-        for (int j = 0; j < file.imports.Size(); j += 1) {
+        for (int j = 0; j < file.imports.size(); j += 1) {
             ImportStatement importStatement = file.imports[j];
             importStatement.compiledModuleRef = compiler.compiledModulesById[importStatement.flatName];
         }
@@ -218,7 +218,7 @@ CompiledModule CompilerContext_CompileModule(CompilerContext compiler, string mo
     m.codeFiles = sourceCode;
     CompiledModule_AddLambdas(m, resolverCtx.lambdas);
     CompiledModule_InitializeLookups(m, resolverCtx.nestedEntities, resolverCtx.flattenedEntities);
-    for (i = 0; i < files.Size(); i += 1) {
+    for (i = 0; i < files.size(); i += 1) {
         FileContext file = files[i];
         file.compiledModule = m;
     }

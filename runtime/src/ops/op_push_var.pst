@@ -1,10 +1,10 @@
 name = row.stringArg;
-if (locals.Contains(name)) {
+if (locals.contains(name)) {
     @import("macros/ensurevaluestackcapacity.pst");
     valueStack[valueStackSize] = locals[name];
     valueStackSize += 1;
 } else {
     errorId = ExceptionTypeId.FATAL;
-    errorMsg = Core.StringConcatAll("The variable '", row.stringArg, "' has not been assigned a value.");
+    errorMsg = "The variable '" + row.stringArg + "' has not been assigned a value.";
     @import("macros/throw.pst");
 }

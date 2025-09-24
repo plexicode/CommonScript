@@ -34,7 +34,7 @@ List<FunctionInfo> ParseRaw_entitiesSection_parseFunctions(
     bool isLambda) {
 
     List<FunctionInfo> functions = new List<FunctionInfo>();
-    functions.Add(null);
+    functions.add(null);
     for (int i = 0; i < fnCount; i += 1) {
         if (!ParseRaw_popInt(rdp)) return null;
         int argcMin = rdp.intOut;
@@ -52,12 +52,12 @@ List<FunctionInfo> ParseRaw_entitiesSection_parseFunctions(
         int codeLen = rdp.intOut;
         Array<ByteCodeRow> byteCode = ParseRaw_popByteCodeRows(rdp, codeLen);
         if (byteCode == null) return null;
-        int pc = byteCodeOut.Size();
+        int pc = byteCodeOut.size();
         FunctionInfo fn = new FunctionInfo(argcMin, argcMax, pc, null, fnName);
         for (int j = 0; j < codeLen; j += 1) {
-            byteCodeOut.Add(byteCode[j]);
+            byteCodeOut.add(byteCode[j]);
         }
-        functions.Add(fn);
+        functions.add(fn);
     }
     return functions;
 }
@@ -67,7 +67,7 @@ List<EnumInfo> ParseRaw_entitiesSection_parseEnums(
     int enumCount) {
 
     List<EnumInfo> enums = new List<EnumInfo>();
-    enums.Add(null);
+    enums.add(null);
     for (int i = 0; i < enumCount; i += 1) {
         if (!ParseRaw_popInt(rdp)) return null;
         int memberCount = rdp.intOut;
@@ -81,7 +81,7 @@ List<EnumInfo> ParseRaw_entitiesSection_parseEnums(
             enumNames[j] = enumName;
             enumValues[j] = rdp.intOut;
         }
-        enums.Add(new EnumInfo(id, enumNames, enumValues));
+        enums.add(new EnumInfo(id, enumNames, enumValues));
     }
 
     return enums;
@@ -124,7 +124,7 @@ List<ClassInfo> ParseRaw_entitiesSection_parseClasses(
     int j = 0;
 
     List<ClassInfo> classes = new List<ClassInfo>();
-    classes.Add(null);
+    classes.add(null);
     ClassInfo cd = null;
     for (id = 1; id <= classCount; id += 1) {
         string className = ParseRaw_popLenString(rdp);
@@ -133,10 +133,10 @@ List<ClassInfo> ParseRaw_entitiesSection_parseClasses(
         int parentId = rdp.intOut;
         if (!ParseRaw_popInt(rdp)) return null;
         int ctorId = rdp.intOut;
-        if (ctorId >= functions.Size() || ctorId < 1) return null;
+        if (ctorId >= functions.size() || ctorId < 1) return null;
         if (!ParseRaw_popInt(rdp)) return null;
         int cctorId = rdp.intOut;
-        if (cctorId >= functions.Size() || cctorId < 0) return null; // can be 0 if not present.
+        if (cctorId >= functions.size() || cctorId < 0) return null; // can be 0 if not present.
         if (!ParseRaw_popInt(rdp)) return null;
         int fieldCount = rdp.intOut;
         if (!ParseRaw_popInt(rdp)) return null;
@@ -152,8 +152,8 @@ List<ClassInfo> ParseRaw_entitiesSection_parseClasses(
             string memberName = ParseRaw_popLenString(rdp);
             if (memberName == null) return null;
             if (!ParseRaw_popInt(rdp)) return null;
-            newMemberInfo.Add(rdp.intOut);
-            newMembersByOffset.Add(memberName);
+            newMemberInfo.add(rdp.intOut);
+            newMembersByOffset.add(memberName);
         }
 
         cd = createClassInfo(id, parentId, className, functions[ctorId], newMembersByOffset, newMemberInfo, cctorId);
@@ -190,7 +190,7 @@ List<ClassInfo> ParseRaw_entitiesSection_parseClasses(
             cd.staticMemberIsMutable[stMethodName] = false;
         }
 
-        classes.Add(cd);
+        classes.add(cd);
     }
 
     return classes;
@@ -209,7 +209,7 @@ bool ParseRaw_entitiesSection_classMemberResolver(
 
     int j = 0;
 
-    for (int id = 1; id < classes.Size(); id += 1) {
+    for (int id = 1; id < classes.size(); id += 1) {
         ClassInfo cd = classes[id];
 
         // parent ID is 0 when missing, which has a null in the first slot,
@@ -218,9 +218,9 @@ bool ParseRaw_entitiesSection_classMemberResolver(
 
         // calculate how many field counts there are for the current class,
         // parent, and combined.
-        int newFieldCount = cd.newMembersInOffsetOrder.Size();
+        int newFieldCount = cd.newMembersInOffsetOrder.size();
         int parentFieldCount = 0;
-        if (cd.parent != null) parentFieldCount = cd.parent.nameByOffset.Size();
+        if (cd.parent != null) parentFieldCount = cd.parent.nameByOffset.size();
         int fieldCount = newFieldCount + parentFieldCount;
 
         // Do the flattening of all fields into the lookup.
@@ -259,14 +259,14 @@ bool ParseRaw_entitiesSection_classMemberResolver(
                 // If this is a parent method that doesn't have an overriding
                 // definition in the current class, then we should add this to
                 // this class' lookup.
-                if (cd.parent.methods.Contains(memberName) && !cd.methods.Contains(memberName)) {
+                if (cd.parent.methods.contains(memberName) && !cd.methods.contains(memberName)) {
                     cd.methods[memberName] = cd.parent.methods[memberName];
                 }
 
             } else {
                 // check the info flag for this local field...
                 int memberInfoFlag = cd.newMemberInfoFlags[localOffset];
-                bool isMethod = Core.ForceParens(memberInfoFlag & 1) != 0;
+                bool isMethod = (memberInfoFlag & 1) != 0;
 
                 if (isMethod) {
                     // If it's a method, set the initial value to a hard system

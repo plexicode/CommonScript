@@ -30,19 +30,19 @@ Array<int> ExportUtil_exportBundle(string flavorId, string extVersionId, Compila
 
     ByteStringBuilder tokenData = bsbJoin2(
         bsbFromUtf8String("TOK"),
-        bsbFromInt(bundle.tokensById.Size() - 1));
+        bsbFromInt(bundle.tokensById.size() - 1));
     Dictionary<string, int> fileNameToOffset = new Dictionary<string, int>();
     ByteStringBuilder tokenFileNames = null;
-    for (i = 1; i < bundle.tokensById.Size(); i += 1) {
+    for (i = 1; i < bundle.tokensById.size(); i += 1) {
         Token tok = bundle.tokensById[i];
         string filename = tok.File;
-        if (!fileNameToOffset.Contains(filename)) {
-            fileNameToOffset[filename] = fileNameToOffset.Size();
+        if (!fileNameToOffset.contains(filename)) {
+            fileNameToOffset[filename] = fileNameToOffset.size();
             tokenFileNames = bsbJoin2(tokenFileNames, bsbFromLenString(filename));
         }
     }
-    tokenData = bsbJoin3(tokenData, bsbFromInt(fileNameToOffset.Size()), tokenFileNames);
-    for (i = 1; i < bundle.tokensById.Size(); i += 1) {
+    tokenData = bsbJoin3(tokenData, bsbFromInt(fileNameToOffset.size()), tokenFileNames);
+    for (i = 1; i < bundle.tokensById.size(); i += 1) {
         Token tok = bundle.tokensById[i];
         string filename = tok.File;
         int fileOffset = fileNameToOffset[filename];
@@ -51,38 +51,38 @@ Array<int> ExportUtil_exportBundle(string flavorId, string extVersionId, Compila
 
     ByteStringBuilder stringData = bsbJoin2(
         bsbFromUtf8String("STR"),
-        bsbFromInt(bundle.stringById.Size() - 1));
-    for (i = 1; i < bundle.stringById.Size(); i += 1) {
+        bsbFromInt(bundle.stringById.size() - 1));
+    for (i = 1; i < bundle.stringById.size(); i += 1) {
         string val = bundle.stringById[i];
         stringData = bsbJoin2(stringData, bsbFromLenString(val));
     }
 
     ByteStringBuilder entityAcc = null;
 
-    for (i = 1; i < bundle.functionById.Size(); i += 1) {
+    for (i = 1; i < bundle.functionById.size(); i += 1) {
         BundleFunctionInfo fn = bundle.functionById[i];
         entityAcc = bsbJoin2(entityAcc, bsbJoin5(
             bsbFromInt(fn.argcMin),
             bsbFromInt(fn.argcMax),
             bsbFromLenString(fn.name),
-            bsbFromInt(fn.code.Size()),
+            bsbFromInt(fn.code.size()),
             ExportUtil_exportCode(fn.code))
         );
     }
 
-    for (i = 1; i < bundle.lambdaById.Size(); i += 1) {
+    for (i = 1; i < bundle.lambdaById.size(); i += 1) {
         BundleFunctionInfo fn = bundle.lambdaById[i];
         entityAcc = bsbJoin2(entityAcc, bsbJoin4(
             bsbFromInt(fn.argcMin),
             bsbFromInt(fn.argcMax),
-            bsbFromInt(fn.code.Size()),
+            bsbFromInt(fn.code.size()),
             ExportUtil_exportCode(fn.code))
         );
     }
 
-    for (i = 1; i < bundle.enumById.Size(); i += 1) {
+    for (i = 1; i < bundle.enumById.size(); i += 1) {
         BundleEnumInfo bei = bundle.enumById[i];
-        int memberCount = bei.names.Size();
+        int memberCount = bei.names.size();
         entityAcc = bsbJoin2(entityAcc, bsbFromInt(memberCount));
         for (j = 0; j < memberCount; j++) {
             entityAcc = bsbJoin3(
@@ -92,24 +92,24 @@ Array<int> ExportUtil_exportBundle(string flavorId, string extVersionId, Compila
         }
     }
 
-    for (i = 1; i < bundle.classById.Size(); i += 1) {
+    for (i = 1; i < bundle.classById.size(); i += 1) {
         BundleClassInfo bci = bundle.classById[i];
         ByteStringBuilder classInfo = bsbJoin8(
             bsbFromLenString(bci.name),
             bsbFromInt(bci.parentId),
             bsbFromInt(bci.ctorId),
             bsbFromInt(bci.staticCtorId),
-            bsbFromInt(bci.newDirectMembersByNextOffsets.Size()),
-            bsbFromInt(bci.methodsToId.Size()),
-            bsbFromInt(bci.staticFields.Size()),
-            bsbFromInt(bci.staticMethods.Size()));
+            bsbFromInt(bci.newDirectMembersByNextOffsets.size()),
+            bsbFromInt(bci.methodsToId.size()),
+            bsbFromInt(bci.staticFields.size()),
+            bsbFromInt(bci.staticMethods.size()));
 
-        for (j = 0; j < bci.newDirectMembersByNextOffsets.Size(); j += 1) {
+        for (j = 0; j < bci.newDirectMembersByNextOffsets.size(); j += 1) {
             // TODO: encode function ID here instead of below
             // This also means that you'll have to indicate that a string does not contribute to the new direct member count
 
             string memberName = bci.newDirectMembersByNextOffsets[j];
-            bool isMethod = bci.methodsToId.Contains(memberName);
+            bool isMethod = bci.methodsToId.contains(memberName);
             int info = 0;
             if (isMethod) {
                 info = 1;
@@ -124,8 +124,8 @@ Array<int> ExportUtil_exportBundle(string flavorId, string extVersionId, Compila
         }
 
         ByteStringBuilder methodInfo = null;
-        Array<string> methodNames = Core.SortedCopyOfStringArray(bci.methodsToId.Keys());
-        for (j = 0; j < methodNames.Size(); j += 1) {
+        Array<string> methodNames = Sorting.getLexicalSortedCopy(bci.methodsToId.keys());
+        for (j = 0; j < methodNames.size(); j += 1) {
             string methodName = methodNames[j];
             methodInfo = bsbJoin3(
                 methodInfo,
@@ -134,8 +134,8 @@ Array<int> ExportUtil_exportBundle(string flavorId, string extVersionId, Compila
         }
 
         ByteStringBuilder staticFields = null;
-        Array<string> fieldNames = Core.SortedCopyOfStringArray(Core.ListToArray(bci.staticFields));
-        for (j = 0; j < fieldNames.Size(); j += 1) {
+        Array<string> fieldNames = Sorting.getLexicalSortedCopy(bci.staticFields.toArray());
+        for (j = 0; j < fieldNames.size(); j += 1) {
             string staticField = fieldNames[j];
             staticFields = bsbJoin2(
                 staticFields,
@@ -143,8 +143,8 @@ Array<int> ExportUtil_exportBundle(string flavorId, string extVersionId, Compila
         }
 
         ByteStringBuilder staticMethods = null;
-        Array<string> staticMethodNames = Core.SortedCopyOfStringArray(Core.ListToArray(bci.staticMethods));
-        for (j = 0; j < staticMethodNames.Size(); j += 1) {
+        Array<string> staticMethodNames = Sorting.getLexicalSortedCopy(bci.staticMethods.toArray());
+        for (j = 0; j < staticMethodNames.size(); j += 1) {
             string staticMethod = staticMethodNames[j];
             int funcId = bci.methodsToId[staticMethod];
             staticMethods = bsbJoin3(
@@ -163,10 +163,10 @@ Array<int> ExportUtil_exportBundle(string flavorId, string extVersionId, Compila
 
     ByteStringBuilder entityHeader = bsbJoin5(
         bsbFromUtf8String("ENT"),
-        bsbFromInt(bundle.functionById.Size() - 1),
-        bsbFromInt(bundle.enumById.Size() - 1),
-        bsbFromInt(bundle.classById.Size() - 1),
-        bsbFromInt(bundle.lambdaById.Size() - 1));
+        bsbFromInt(bundle.functionById.size() - 1),
+        bsbFromInt(bundle.enumById.size() - 1),
+        bsbFromInt(bundle.classById.size() - 1),
+        bsbFromInt(bundle.lambdaById.size() - 1));
 
     ByteStringBuilder entityData = bsbJoin2(entityHeader, entityAcc);
 
@@ -178,10 +178,10 @@ Array<int> ExportUtil_exportBundle(string flavorId, string extVersionId, Compila
 
 ByteStringBuilder ExportUtil_exportCode(Array<ByteCodeRow> rows) {
     ByteStringBuilder bsb = null;
-    for (int i = 0; i < rows.Size(); i += 1) {
+    for (int i = 0; i < rows.size(); i += 1) {
         ByteCodeRow row = rows[i];
         Array<int> args = row.args;
-        int argsLen = args.Size();
+        int argsLen = args.size();
 
         int flags = argsLen * 4;
 

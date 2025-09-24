@@ -31,13 +31,13 @@ Resolver Resolver_new(StaticContext staticCtx, Dictionary<string, AbstractEntity
 
     r.entityList = FlattenEntities(staticCtx, rootEntities);
 
-    for (int i = 0; i < r.entityList.Size(); i += 1) {
+    for (int i = 0; i < r.entityList.size(); i += 1) {
         AbstractEntity tle = r.entityList[i];
         r.flattenedEntities[tle.fqName] = tle;
         r.flattenedEntitiesAndEnumValues[tle.fqName] = tle;
         if (tle.type == EntityType.ENUM) {
             EnumEntity enumDef = (EnumEntity) tle.specificData;
-            for (int j = 0; j < enumDef.memberNameTokens.Size(); j++) {
+            for (int j = 0; j < enumDef.memberNameTokens.size(); j++) {
                 string fqName = enumDef.baseData.fqName + "." + enumDef.memberNameTokens[j].Value;
                 r.enumsByMemberFqName[fqName] = enumDef.baseData;
                 r.flattenedEntitiesAndEnumValues[fqName] = enumDef.baseData;
@@ -61,23 +61,23 @@ void Resolve(Resolver resolver) {
     List<FunctionEntity> constructors = new List<FunctionEntity>();
     List<FieldEntity> fields = new List<FieldEntity>();
 
-    Array<AbstractEntity> entities = resolver.flattenedEntities.Values();
+    Array<AbstractEntity> entities = resolver.flattenedEntities.values();
 
-    for (i = 0; i < entities.Size(); i += 1) {
+    for (i = 0; i < entities.size(); i += 1) {
         AbstractEntity tle = entities[i];
 
         if (tle.type == EntityType.CONST) {
-            constants.Add((ConstEntity)tle.specificData);
+            constants.add((ConstEntity)tle.specificData);
         } else if (tle.type == EntityType.ENUM) {
-            enums.Add((EnumEntity)tle.specificData);
+            enums.add((EnumEntity)tle.specificData);
         } else if (tle.type == EntityType.FUNCTION) {
-            functions.Add((FunctionEntity)tle.specificData);
+            functions.add((FunctionEntity)tle.specificData);
         } else if (tle.type == EntityType.CLASS) {
-            classes.Add((ClassEntity)tle.specificData);
+            classes.add((ClassEntity)tle.specificData);
         } else if (tle.type == EntityType.CONSTRUCTOR) {
-            constructors.Add((FunctionEntity)tle.specificData);
+            constructors.add((FunctionEntity)tle.specificData);
         } else if (tle.type == EntityType.FIELD) {
-            fields.Add((FieldEntity)tle.specificData);
+            fields.add((FieldEntity)tle.specificData);
         } else if (tle.type == EntityType.NAMESPACE) {
             // Nothing to resolve.
         } else {
@@ -93,36 +93,36 @@ void Resolve(Resolver resolver) {
 
     Array<ClassEntity> orderedClasses = ResolveBaseClassesAndEstablishClassOrder(resolver, classes, resolver.flattenedEntities);
 
-    for (i = 0; i < orderedClasses.Size(); i += 1) {
+    for (i = 0; i < orderedClasses.size(); i += 1) {
         EntityResolver_DetermineMemberOffsets(orderedClasses[i]);
     }
 
-    for (i = 0; i < functions.Size(); i += 1) {
+    for (i = 0; i < functions.size(); i += 1) {
         EntityResolver_ResetAutoVarId(resolver);
         EntityResolver_ResolveFunctionFirstPass(resolver, functions[i]);
     }
 
-    for (i = 0; i < constructors.Size(); i += 1) {
+    for (i = 0; i < constructors.size(); i += 1) {
         EntityResolver_ResetAutoVarId(resolver);
         EntityResolver_ResolveFunctionFirstPass(resolver, constructors[i]);
     }
 
     // At this point, all lambdas have been reported.
     // DO NOT CHANGE TO FOR-EACH. This count can grow as a result of nested lambdas.
-    for (i = 0; i < resolver.lambdas.Size(); i += 1) {
+    for (i = 0; i < resolver.lambdas.size(); i += 1) {
         EntityResolver_ResetAutoVarId(resolver);
         EntityResolver_ResolveFunctionFirstPass(resolver, resolver.lambdas[i]);
     }
 
-    for (i = 0; i < functions.Size(); i += 1) {
+    for (i = 0; i < functions.size(); i += 1) {
         EntityResolver_ResolveFunctionSecondPass(resolver, functions[i]);
     }
 
-    for (i = 0; i < constructors.Size(); i += 1) {
+    for (i = 0; i < constructors.size(); i += 1) {
         EntityResolver_ResolveFunctionSecondPass(resolver, constructors[i]);
     }
 
-    for (i = 0; i < resolver.lambdas.Size(); i += 1) {
+    for (i = 0; i < resolver.lambdas.size(); i += 1) {
         EntityResolver_ResolveFunctionSecondPass(resolver, resolver.lambdas[i]);
     }
 }
@@ -133,23 +133,23 @@ Array<AbstractEntity> FlattenEntities(StaticContext staticCtx, Dictionary<string
 
     // TODO: surely there's a way to copy an Array to a List in Pastel.
     // If not, it needs to be added.
-    Array<AbstractEntity> arrTemp = rootEntities.Values();
-    for (int j = 0; j < arrTemp.Size(); j += 1) {
-        queue.Add(arrTemp[j]);
+    Array<AbstractEntity> arrTemp = rootEntities.values();
+    for (int j = 0; j < arrTemp.size(); j += 1) {
+        queue.add(arrTemp[j]);
     }
 
-    for (int i = 0; i < queue.Size(); i += 1) {
+    for (int i = 0; i < queue.size(); i += 1) {
         AbstractEntity entity = queue[i];
-        output.Add(entity);
+        output.add(entity);
 
-        Array<AbstractEntity> lookupMembers = Entity_getMemberLookup(staticCtx, entity).Values();
-        for (j = 0; j < lookupMembers.Size(); j += 1) {
+        Array<AbstractEntity> lookupMembers = Entity_getMemberLookup(staticCtx, entity).values();
+        for (j = 0; j < lookupMembers.size(); j += 1) {
             AbstractEntity mem = lookupMembers[j];
-            queue.Add(mem);
+            queue.add(mem);
         }
     }
 
-    return Core.ListToArray(output);
+    return output.toArray();
 }
 
 // Returns strings because we treat the individual enum values as separate entities.
@@ -167,7 +167,7 @@ Array<string> Resolver_DetermineConstAndEnumResolutionOrder(
     // Then you were thinking about how this only pertains to the first pass, that really this
     // function should do both passes and be renamed to ResolveConstantsAndEnums()
 
-    for (i = 0; i < constants.Size(); i += 1) {
+    for (i = 0; i < constants.size(); i += 1) {
         ConstEntity c = constants[i];
         string ns = "";
         if (c.baseData.nestParent != null) ns = c.baseData.nestParent.fqName;
@@ -177,12 +177,12 @@ Array<string> Resolver_DetermineConstAndEnumResolutionOrder(
         referencesMadeByFqItem[c.baseData.fqName] = refsOut;
     }
 
-    for (i = 0; i < enums.Size(); i += 1) {
+    for (i = 0; i < enums.size(); i += 1) {
         EnumEntity e = enums[i];
         string ns = "";
         if (e.baseData.nestParent != null) ns = e.baseData.nestParent.fqName;
 
-        int memCount = e.memberNameTokens.Size();
+        int memCount = e.memberNameTokens.size();
 
         for (int j = 0; j < memCount; j++) {
             string memFqName = e.baseData.fqName + "." + e.memberNameTokens[j].Value;
@@ -197,20 +197,20 @@ Array<string> Resolver_DetermineConstAndEnumResolutionOrder(
     Dictionary<string, int> resolutionStatus = new Dictionary<string, int>();
     List<string> resolutionOrder = new List<string>();
 
-    List<string> q = StringArrayToList(Core.SortedCopyOfStringArray(referencesMadeByFqItem.Keys()));
-    q.Reverse();
+    List<string> q = StringArrayToList(Sorting.getLexicalSortedCopy(referencesMadeByFqItem.keys()));
+    q.reverse();
 
-    while (q.Size() > 0) {
-        int lastIndex = q.Size() - 1;
+    while (q.size() > 0) {
+        int lastIndex = q.size() - 1;
         string itemFqName = q[lastIndex];
-        q.RemoveAt(lastIndex);
+        q.removeAt(lastIndex);
         if (itemFqName == "*") {
             // indicator that the next item has all prerequisites added to the list.
             // it is now safe to add it to the list.
             string resolvedItem = q[lastIndex - 1];
-            q.RemoveAt(lastIndex - 1);
+            q.removeAt(lastIndex - 1);
             resolutionStatus[resolvedItem] = 2;
-            resolutionOrder.Add(resolvedItem);
+            resolutionOrder.add(resolvedItem);
         } else {
             AbstractEntity item = resolver.flattenedEntitiesAndEnumValues[itemFqName];
             Token itemToken = item.firstToken;
@@ -222,7 +222,7 @@ Array<string> Resolver_DetermineConstAndEnumResolutionOrder(
             }
 
             int status = 0;
-            if (resolutionStatus.Contains(itemFqName)) status = resolutionStatus[itemFqName];
+            if (resolutionStatus.contains(itemFqName)) status = resolutionStatus[itemFqName];
 
             if (status == 1) {
                 Errors_Throw(item.firstToken, "This definition contains a resolution cycle.");
@@ -231,28 +231,28 @@ Array<string> Resolver_DetermineConstAndEnumResolutionOrder(
             if (status == 2) {
                 // Already resolved. Skip!
             } else {
-                q.Add(itemFqName);
-                q.Add("*");
+                q.add(itemFqName);
+                q.add("*");
                 resolutionStatus[itemFqName] = 1;
                 List<string> references = referencesMadeByFqItem[itemFqName];
-                for (i = references.Size() - 1; i >= 0; i -= 1) {
-                    q.Add(references[i]);
+                for (i = references.size() - 1; i >= 0; i -= 1) {
+                    q.add(references[i]);
                 }
             }
         }
     }
 
-    return Core.ListToArray(resolutionOrder);
+    return resolutionOrder.toArray();
 }
 
 int Resolver_GetEnumMemberIndex(Resolver resolver, string memNameOrFqMemName, EnumEntity enumEntity) {
-    int lastDot = memNameOrFqMemName.LastIndexOf(".");
+    int lastDot = memNameOrFqMemName.lastIndexOf(".");
     string memName = memNameOrFqMemName;
     if (lastDot != -1) {
-        memName = memNameOrFqMemName.SubString(lastDot + 1, memNameOrFqMemName.Size() - lastDot - 1);
+        memName = memNameOrFqMemName.subString(lastDot + 1, memNameOrFqMemName.size() - lastDot - 1);
     }
 
-    for (int i = 0; i < enumEntity.memberNameTokens.Size(); i += 1) {
+    for (int i = 0; i < enumEntity.memberNameTokens.size(); i += 1) {
         if (enumEntity.memberNameTokens[i].Value == memName) {
             return i;
         }
@@ -297,7 +297,7 @@ Expression Resolver_GetListOfUnresolvedConstReferencesImpl(Resolver resolver, Fi
 
                 switch (referenced.type) {
                     case EntityType.CONST:
-                        refs.Add(referenced.fqName);
+                        refs.add(referenced.fqName);
                         break;
                     case EntityType.ENUM:
                         fail("Not implemented");
@@ -313,7 +313,7 @@ Expression Resolver_GetListOfUnresolvedConstReferencesImpl(Resolver resolver, Fi
 
         case ExpressionType.DOT_FIELD:
             Array<string> fullRefSegments = DotField_getVariableRootedDottedChain(expr, "Cannot use this type of entity from a constant expression.");
-            string fullRefDotted = fullRefSegments.Join(".");
+            string fullRefDotted = fullRefSegments.join(".");
             AbstractEntity reffedEntity = TryDoExactLookupForConstantEntity(resolver, file, fqNamespace, fullRefDotted);
             if (reffedEntity == null) {
                 Errors_Throw(expr.firstToken, "Invalid expression for constant.");
@@ -329,11 +329,11 @@ Expression Resolver_GetListOfUnresolvedConstReferencesImpl(Resolver resolver, Fi
             }
 
             if (reffedEntity.type == EntityType.CONST) {
-                refs.Add(reffedEntity.fqName);
+                refs.add(reffedEntity.fqName);
             } else if (reffedEntity.type == EntityType.ENUM) {
-                string enumMemberName = fullRefSegments[fullRefSegments.Size() - 1];
-                string enumName = fullRefDotted.SubString(0, fullRefDotted.Size() - enumMemberName.Size() - 1);
-                refs.Add(reffedEntity.fqName + "." + enumMemberName);
+                string enumMemberName = fullRefSegments[fullRefSegments.size() - 1];
+                string enumName = fullRefDotted.subString(0, fullRefDotted.size() - enumMemberName.size() - 1);
+                refs.add(reffedEntity.fqName + "." + enumMemberName);
             } else {
                 Errors_Throw(expr.firstToken, "Cannot reference this entity from here.");
             }
@@ -351,7 +351,7 @@ Expression Resolver_GetListOfUnresolvedConstReferencesImpl(Resolver resolver, Fi
 // This will find constsants and enum values. Enum parents will be ignored.
 AbstractEntity TryDoExactLookupForConstantEntity(Resolver resolver, FileContext file, string fqNamespace, string dottedEntityName) {
     // If you are using a fully-qualified name, just go with that.
-    if (resolver.flattenedEntitiesNoEnumParents.Contains(dottedEntityName)) {
+    if (resolver.flattenedEntitiesNoEnumParents.contains(dottedEntityName)) {
         return resolver.flattenedEntitiesNoEnumParents[dottedEntityName];
     }
 
@@ -360,31 +360,31 @@ AbstractEntity TryDoExactLookupForConstantEntity(Resolver resolver, FileContext 
     // -> check Foo.Bar.Baz
     // -> check Foo.Baz
     // no need to check just "Baz" as that was done by the previous check hence the > 0 instead of >= 0 loop condition.
-    List<string> nsParts = StringArrayToList(fqNamespace.Split("."));
-    while (nsParts.Size() > 0) {
+    List<string> nsParts = StringArrayToList(fqNamespace.split("."));
+    while (nsParts.size() > 0) {
         // this was originally string.Join(".", [..nsParts, .. dottedEntityName]) which seems wrong, so if it doesn't work, check this.
         // TODO: if it doesn't cause an error in the test suite, then make sure it's being covered.
-        string lookupName = nsParts.Join(".") + "." + dottedEntityName;
-        if (resolver.flattenedEntitiesNoEnumParents.Contains(lookupName)) {
+        string lookupName = nsParts.join(".") + "." + dottedEntityName;
+        if (resolver.flattenedEntitiesNoEnumParents.contains(lookupName)) {
             return resolver.flattenedEntitiesNoEnumParents[lookupName];
         }
-        nsParts.RemoveAt(nsParts.Size() - 1);
+        nsParts.removeAt(nsParts.size() - 1);
     }
 
     // If we didn't find it, it means it doesn't exist in this module. So let's check the imported modules that
     // are scoped to a variable. This means the first segment in the reference is the import variable name.
-    Array<string> entityNameSegments = dottedEntityName.Split(".");
-    if (file.importsByVar.Contains(entityNameSegments[0])) {
+    Array<string> entityNameSegments = dottedEntityName.split(".");
+    if (file.importsByVar.contains(entityNameSegments[0])) {
         // If it was found, then use the rest of the dotted segment chain as a fully qualified
         // reference within that imported module.
         CompiledModule targetModule = file.importsByVar[entityNameSegments[0]].compiledModuleRef;
-        string scopedName = StringArraySlice(entityNameSegments, 1, 0).Join(".");
+        string scopedName = StringArraySlice(entityNameSegments, 1, 0).join(".");
         return CompiledModuleEntityLookup(targetModule, scopedName);
     }
 
     // If it wasn't found locally or in an variable-scoped import, then check the wildcard imports.
     // In these cases, the entity name is fully qualified as-is and does not require truncation.
-    for (int i = 0; i < file.imports.Size(); i += 1) {
+    for (int i = 0; i < file.imports.size(); i += 1) {
         ImportStatement imp = file.imports[i];
         if (imp.importTargetVariableName == null) {
             return CompiledModuleEntityLookup(imp.compiledModuleRef, dottedEntityName);
@@ -395,12 +395,12 @@ AbstractEntity TryDoExactLookupForConstantEntity(Resolver resolver, FileContext 
 }
 
 AbstractEntity CompiledModuleEntityLookup(CompiledModule mod, string fqName) {
-    if (mod.entitiesNoEnumParents.Contains(fqName)) {
+    if (mod.entitiesNoEnumParents.contains(fqName)) {
         return mod.entitiesNoEnumParents[fqName];
     }
 
-    string potentialEnumParentName = StringArraySlice(fqName.Split("."), 0, 1).Join(".");
-    if (mod.entitiesNoEnumParents.Contains(potentialEnumParentName)) {
+    string potentialEnumParentName = StringArraySlice(fqName.split("."), 0, 1).join(".");
+    if (mod.entitiesNoEnumParents.contains(potentialEnumParentName)) {
         return mod.entitiesNoEnumParents[potentialEnumParentName];
     }
 
@@ -408,7 +408,7 @@ AbstractEntity CompiledModuleEntityLookup(CompiledModule mod, string fqName) {
 }
 
 void Resolver_ReportNewLambda(Resolver resolver, FunctionEntity lamb) {
-    resolver.lambdas.Add(lamb);
+    resolver.lambdas.add(lamb);
 }
 
 bool Resolver_isValidRegisteredExtension(Resolver resolver, string extensionName) {
@@ -419,9 +419,9 @@ bool Resolver_isValidRegisteredExtension(Resolver resolver, string extensionName
 // injecting EnumName.MemberName + 1
 // If the first value is undefined, inject 1
 void AddImplicitIncrementingEnumValueDefinitions(List<EnumEntity> enums) {
-    for (int i = 0; i < enums.Size(); i++) {
+    for (int i = 0; i < enums.size(); i++) {
         EnumEntity enumEnt = enums[i];
-        for (int j = 0; j < enumEnt.memberNameTokens.Size(); j++) {
+        for (int j = 0; j < enumEnt.memberNameTokens.size(); j++) {
             Token token = enumEnt.memberNameTokens[j];
             if (enumEnt.memberValues[j] == null) {
                 if (j == 0) {

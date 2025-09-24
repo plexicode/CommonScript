@@ -92,7 +92,7 @@ ByteCodeBuffer serializeExtensionInvocation(StaticContext staticCtx, Expression 
     }
 
     ByteCodeBuffer buf = null;
-    int argc = extInvoke.args.Size();
+    int argc = extInvoke.args.size();
     for (int i = 0; i < argc; i++) {
         buf = join2(buf, serializeExpression(staticCtx, extInvoke.args[i]));
     }
@@ -130,7 +130,7 @@ ByteCodeBuffer serializeClassReference(Expression classRef) {
 ByteCodeBuffer serializeConstructorInvocation(StaticContext staticCtx, Expression ctorInvoke) {
     AbstractEntity classDef = ctorInvoke.entityPtr;
     ByteCodeBuffer buf = null;
-    int argc = ctorInvoke.args.Size();
+    int argc = ctorInvoke.args.size();
     for (int i = 0; i < argc; i += 1) {
         buf = join2(buf, serializeExpression(staticCtx, ctorInvoke.args[i]));
     }
@@ -142,7 +142,7 @@ ByteCodeBuffer serializeConstructorInvocation(StaticContext staticCtx, Expressio
 }
 
 ByteCodeBuffer serializeDictionaryDefinition(StaticContext staticCtx, Expression dictDef) {
-    int sz = dictDef.keys.Size();
+    int sz = dictDef.keys.size();
     ByteCodeBuffer buf = null;
     for (int i = 0; i < sz; i += 1) {
         buf = join3(
@@ -166,7 +166,7 @@ ByteCodeBuffer serializeFloatConstant(Expression floatConst) {
 
 ByteCodeBuffer serializeFunctionInvocation(StaticContext staticCtx, Expression funcInvoke) {
     ByteCodeBuffer buf = serializeExpression(staticCtx, funcInvoke.root);
-    int argc = funcInvoke.args.Size();
+    int argc = funcInvoke.args.size();
     for (int i = 0; i < argc; i += 1) {
         buf = join2(buf, serializeExpression(staticCtx, funcInvoke.args[i]));
     }
@@ -360,7 +360,7 @@ ByteCodeBuffer serializeLambda(Expression lambda) {
 
 ByteCodeBuffer serializeListDefinition(StaticContext staticCtx, Expression listDef) {
     ByteCodeBuffer buf = null;
-    int sz = listDef.values.Size();
+    int sz = listDef.values.size();
     for (int i = 0; i < sz; i += 1) {
         buf = join2(buf, serializeExpression(staticCtx, listDef.values[i]));
     }

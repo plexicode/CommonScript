@@ -8,7 +8,7 @@ StringSet StringSet_new() {
 
 StringSet StringSet_fromArray(Array<string> items) {
     StringSet s = StringSet_new();
-    for (int i = 0; i < items.Size(); i += 1) {
+    for (int i = 0; i < items.size(); i += 1) {
         s.items[items[i]] = true;
     }
     return s;
@@ -16,7 +16,7 @@ StringSet StringSet_fromArray(Array<string> items) {
 
 StringSet StringSet_fromList(List<string> items) {
     StringSet s = StringSet_new();
-    for (int i = 0; i < items.Size(); i += 1) {
+    for (int i = 0; i < items.size(); i += 1) {
         s.items[items[i]] = true;
     }
     return s;
@@ -28,5 +28,5 @@ StringSet StringSet_add(StringSet s, string item) {
 }
 
 bool StringSet_has(StringSet s, string item) {
-    return s.items.Contains(item);
+    return s.items.contains(item);
 }

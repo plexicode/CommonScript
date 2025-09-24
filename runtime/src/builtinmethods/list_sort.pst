@@ -1,6 +1,6 @@
 
 value16[0] = fp.ctx;
-if (args.Size() == 1) value16[1] = args[0];
+if (args.size() == 1) value16[1] = args[0];
 argc += 1;
 args = value16;
 fp = (FunctionPointer) ec.functionsAsValues[ec.significantFunctions["sort"]].internalValue;

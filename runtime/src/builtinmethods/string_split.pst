@@ -9,7 +9,7 @@ if (value1.type != Type.STRING) {
 
 str1 = valueToHumanString(value1);
 valueArr = stringUtil_split(globalValues, fp.ctx, str1);
-sz = valueArr.Size();
+sz = valueArr.size();
 output = new Value(Type.LIST, new ListImpl(ec.nextRefId, sz, sz, valueArr));
 valueArr = null;
 ec.nextRefId += 1;

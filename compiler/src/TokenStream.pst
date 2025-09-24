@@ -6,7 +6,7 @@ struct TokenStream {
 }
 
 TokenStream TokenStream_new(string file, Array<Token> tokens) {
-    return new TokenStream(0, tokens.Size(), tokens, file);
+    return new TokenStream(0, tokens.size(), tokens, file);
 }
 
 Token Tokens_peekAhead(TokenStream tokens, int distance) {

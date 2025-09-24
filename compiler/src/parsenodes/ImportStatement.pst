@@ -11,15 +11,15 @@ struct ImportStatement {
 ImportStatement ImportStatement_new(Token importToken, List<Token> tokenChain, Token targetVarName) {
 
     List<string> flatName = new List<string>();
-    for (int i = 0; i < tokenChain.Size(); i += 1)
+    for (int i = 0; i < tokenChain.size(); i += 1)
     {
-        flatName.Add(tokenChain[i].Value);
+        flatName.add(tokenChain[i].Value);
     }
 
     return new ImportStatement(
         importToken,
-        Core.ListToArray(tokenChain),
-        flatName.Join("."),
+        tokenChain.toArray(),
+        flatName.join("."),
         targetVarName,
         targetVarName != null && targetVarName.Value == "*",
         null // compiledModuleRef

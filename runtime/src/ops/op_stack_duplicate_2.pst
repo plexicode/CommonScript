@@ -3,7 +3,7 @@
 if (valueStackSize + 2 >= valueStackCapacity) {
     // it's not possible for this to only increase the stack size by 1 since duplicate_2 assumes more than 2 things are on the stack
     valueStack = increaseValueStackCapacity(task);
-    valueStackCapacity = valueStack.Size();
+    valueStackCapacity = valueStack.size();
 }
 
 valueStack[valueStackSize] = valueStack[valueStackSize - 2];

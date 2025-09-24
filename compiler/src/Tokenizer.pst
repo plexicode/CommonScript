@@ -6,10 +6,10 @@ enum TokenizerState {
 }
 
 Array<Token> Tokenize(string file, string content, StaticContext ctx) {
-    string contentPadded = content.Replace("\r\n", "\n").Replace("\r", "\n") + "\n\n\n\n\n";
+    string contentPadded = content.replace("\r\n", "\n").replace("\r", "\n") + "\n\n\n\n\n";
 
     Array<int> chars = StringToUnicodeArray(contentPadded);
-    int length = chars.Size();
+    int length = chars.size();
     TokenizerStaticContext tokenizerCtx = ctx.tokenizerCtx;
     Array<int> lines = new Array<int>(length);
     Array<int> cols = new Array<int>(length);
@@ -23,7 +23,7 @@ Array<Token> Tokenize(string file, string content, StaticContext ctx) {
         c = chars[i];
         lines[i] = line;
         cols[i] = col;
-        if (c == Core.Ord('\n')) {
+        if (c == Convert.charToCharCode('\n')) {
             line += 1;
             col = 1;
         } else {
@@ -42,33 +42,33 @@ Array<Token> Tokenize(string file, string content, StaticContext ctx) {
         c = chars[i];
         switch (mode) {
             case TokenizerState.READY:
-                if (tokenizerCtx.whitespace.Contains(c)) {
+                if (tokenizerCtx.whitespace.contains(c)) {
                     // do nothing.
-                } else if (tokenizerCtx.alphanumerics.Contains(c)) {
+                } else if (tokenizerCtx.alphanumerics.contains(c)) {
                     mode = TokenizerState.WORD;
                     tokenStart = i;
-                } else if (c == Core.Ord('"') || c == Core.Ord('\'')) {
+                } else if (c == Convert.charToCharCode('"') || c == Convert.charToCharCode('\'')) {
                     mode = TokenizerState.STRING;
                     tokenStart = i;
                     tokenSubtype = c;
-                } else if (c == Core.Ord('/') && (chars[i + 1] == Core.Ord('/') || chars[i + 1] == Core.Ord('*'))) {
+                } else if (c == Convert.charToCharCode('/') && (chars[i + 1] == Convert.charToCharCode('/') || chars[i + 1] == Convert.charToCharCode('*'))) {
                     mode = TokenizerState.COMMENT;
                     tokenSubtype = chars[i + 1];
                     i += 1; // skip the next character to prevent /*/ from registering as an open-close.
                 } else {
                     tokenVal = null;
-                    if (c == Core.Ord('>') &&
+                    if (c == Convert.charToCharCode('>') &&
                         chars[i + 1] == c &&
                         chars[i + 2] == c &&
-                        chars[i + 3] == Core.Ord('=')) {
+                        chars[i + 3] == Convert.charToCharCode('=')) {
 
                         tokenVal = ">>>=";
-                    } else if (tokenizerCtx.multicharTokensByFirstChar.Contains(c)) {
+                    } else if (tokenizerCtx.multicharTokensByFirstChar.contains(c)) {
                         List<Array<int>> mcharCandidates = tokenizerCtx.multicharTokensByFirstChar[c];
-                        for (j = 0; j < mcharCandidates.Size() && tokenVal == null; j += 1) {
+                        for (j = 0; j < mcharCandidates.size() && tokenVal == null; j += 1) {
                             Array<int> mcharCandidate = mcharCandidates[j];
                             bool isMatch = true;
-                            int mSize = mcharCandidate.Size();
+                            int mSize = mcharCandidate.size();
                             for (k = 1; k < mSize; k += 1) {
                                 if (mcharCandidate[k] != chars[i + k]) {
                                     isMatch = false;
@@ -82,24 +82,24 @@ Array<Token> Tokenize(string file, string content, StaticContext ctx) {
                     }
 
                     if (tokenVal == null) {
-                        tokenVal = Core.Chr(c) + "";
+                        tokenVal = Convert.charCodeToString(c);
                     }
 
-                    tokens.Add(Token_new(tokenVal, TokenType.PUNCTUATION, file, lines[i], cols[i]));
+                    tokens.add(Token_new(tokenVal, TokenType.PUNCTUATION, file, lines[i], cols[i]));
 
-                    i += tokenVal.Size() - 1;
+                    i += tokenVal.size() - 1;
                 }
                 break;
             case TokenizerState.WORD:
-                if (!tokenizerCtx.alphanumerics.Contains(c)) {
+                if (!tokenizerCtx.alphanumerics.contains(c)) {
                     int tokenLen = i - tokenStart;
                     tokenVal = UnicodeArrayToString_slice(chars, tokenStart, tokenLen);
                     int firstChar = chars[tokenStart];
                     int tokenType = TokenType.NAME;
-                    if (tokenizerCtx.numerics.Contains(firstChar)) {
-                        if (firstChar == Core.Ord('0') &&
+                    if (tokenizerCtx.numerics.contains(firstChar)) {
+                        if (firstChar == Convert.charToCharCode('0') &&
                             tokenLen > 2 &&
-                            (chars[tokenStart + 1] == Core.Ord('x') || chars[tokenStart + 1] == Core.Ord('X'))) {
+                            (chars[tokenStart + 1] == Convert.charToCharCode('x') || chars[tokenStart + 1] == Convert.charToCharCode('X'))) {
 
                             tokenType = TokenType.HEX_INTEGER;
                         } else {
@@ -108,15 +108,15 @@ Array<Token> Tokenize(string file, string content, StaticContext ctx) {
                     } else if (StringSet_has(tokenizerCtx.keywords, tokenVal)) {
                         tokenType = TokenType.KEYWORD;
                     }
-                    tokens.Add(Token_new(tokenVal, tokenType, file, lines[tokenStart], cols[tokenStart]));
+                    tokens.add(Token_new(tokenVal, tokenType, file, lines[tokenStart], cols[tokenStart]));
                     i -= 1;
                     mode = TokenizerState.READY;
                 }
                 break;
             case TokenizerState.COMMENT:
-                if (c == Core.Ord('\n') && tokenSubtype == Core.Ord('/')) {
+                if (c == Convert.charToCharCode('\n') && tokenSubtype == Convert.charToCharCode('/')) {
                     mode = TokenizerState.READY;
-                } else if (c == Core.Ord('*') && tokenSubtype == c && chars[i + 1] == Core.Ord('/')) {
+                } else if (c == Convert.charToCharCode('*') && tokenSubtype == c && chars[i + 1] == Convert.charToCharCode('/')) {
                     mode = TokenizerState.READY;
                     i += 1;
                 }
@@ -125,8 +125,8 @@ Array<Token> Tokenize(string file, string content, StaticContext ctx) {
                 if (c == tokenSubtype) {
                     tokenVal = UnicodeArrayToString_slice(chars, tokenStart, i - tokenStart + 1);
                     mode = TokenizerState.READY;
-                    tokens.Add(Token_new(tokenVal, TokenType.STRING, file, lines[tokenStart], cols[tokenStart]));
-                } else if (c == Core.Ord('\\')) {
+                    tokens.add(Token_new(tokenVal, TokenType.STRING, file, lines[tokenStart], cols[tokenStart]));
+                } else if (c == Convert.charToCharCode('\\')) {
                     i += 1;
                 }
                 break;
@@ -140,16 +140,16 @@ Array<Token> Tokenize(string file, string content, StaticContext ctx) {
         Errors_ThrowEof(file, "Unclosed comment.");
     }
 
-    for (i = 0; i < tokens.Size(); i += 1) {
+    for (i = 0; i < tokens.size(); i += 1) {
         Token current = tokens[i];
         if (current != null) {
             Token left = null;
             Token right = null;
 
             if (i > 0) left = tokens[i - 1];
-            if (i + 1 < tokens.Size()) right = tokens[i + 1];
-            if (left != null && (left.Line != current.Line || left.Col + left.Value.Size() != current.Col)) left = null;
-            if (right != null && (right.Line != current.Line || current.Col + current.Value.Size() != right.Col)) right = null;
+            if (i + 1 < tokens.size()) right = tokens[i + 1];
+            if (left != null && (left.Line != current.Line || left.Col + left.Value.size() != current.Col)) left = null;
+            if (right != null && (right.Line != current.Line || current.Col + current.Value.size() != right.Col)) right = null;
             if (current.Value == "@" && right != null && (right.Type == TokenType.NAME || right.Type == TokenType.KEYWORD)) {
                 current.Value += right.Value;
                 current.Type = TokenType.ANNOTATION;
@@ -174,11 +174,11 @@ Array<Token> Tokenize(string file, string content, StaticContext ctx) {
     }
 
     List<Token> output = new List<Token>();
-    for (i = 0; i < tokens.Size(); i += 1) {
+    for (i = 0; i < tokens.size(); i += 1) {
         if (tokens[i] != null) {
-            output.Add(tokens[i]);
+            output.add(tokens[i]);
         }
     }
 
-    return Core.ListToArray(output);
+    return output.toArray();
 }

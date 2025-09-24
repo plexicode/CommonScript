@@ -42,7 +42,7 @@ void bundleClass(ClassEntity classEntity, CompilationBundle bundle) {
     Dictionary<string, AbstractEntity> mems = classEntity.classMembers;
     
     int staticCtorId = 0;
-    if (mems.Contains("@cctor")) staticCtorId = mems["@cctor"].serializationIndex;
+    if (mems.contains("@cctor")) staticCtorId = mems["@cctor"].serializationIndex;
     
     BundleClassInfo bci = BundleClassInfo_new(
         classEntity.baseData.serializationIndex,
@@ -55,18 +55,18 @@ void bundleClass(ClassEntity classEntity, CompilationBundle bundle) {
         new List<string>(),
         new List<string>());
 
-    Array<string> classMemberNames = classEntity.classMembers.Keys(); // going into lookup, unsorted is okay
-    for (int i = 0; i < classMemberNames.Size(); i += 1) {
+    Array<string> classMemberNames = classEntity.classMembers.keys(); // going into lookup, unsorted is okay
+    for (int i = 0; i < classMemberNames.size(); i += 1) {
         string memberName = classMemberNames[i];
         AbstractEntity member = classEntity.classMembers[memberName];
         switch (member.type) {
             case EntityType.FUNCTION:
                 bci.methodsToId[memberName] = member.serializationIndex;
-                if (member.isStatic) bci.staticMethods.Add(memberName);
+                if (member.isStatic) bci.staticMethods.add(memberName);
                 break;
             
             case EntityType.FIELD:
-                if (member.isStatic) bci.staticFields.Add(memberName);
+                if (member.isStatic) bci.staticFields.add(memberName);
                 break;
             
             case EntityType.CONSTRUCTOR:
@@ -78,12 +78,12 @@ void bundleClass(ClassEntity classEntity, CompilationBundle bundle) {
         }
     }
 
-    bundle.classById.Add(bci);
+    bundle.classById.add(bci);
 }
 
 void bundleEnum(EnumEntity enumEntity, CompilationBundle bundle) {
     BundleEnumInfo bei = BundleEnumInfo_createFromEntity(enumEntity);
-    bundle.enumById.Add(bei);
+    bundle.enumById.add(bei);
 }
 
 void bundleFunction(StaticContext staticCtx, FunctionEntity entity, CompilationBundle bundle) {
@@ -91,7 +91,7 @@ void bundleFunction(StaticContext staticCtx, FunctionEntity entity, CompilationB
     
     bool isLambda = entity.baseData.type == EntityType.LAMBDA_ENTITY;
     ByteCodeBuffer buffer = null;
-    int argc = entity.argTokens.Size();
+    int argc = entity.argTokens.size();
     int argcMin = 0;
     for (i = 0; i < argc; i += 1) {
         Token argToken = entity.argTokens[i];
@@ -113,25 +113,25 @@ void bundleFunction(StaticContext staticCtx, FunctionEntity entity, CompilationB
             create0(OP_ASSIGN_VAR, argToken, argToken.Value));
     }
 
-    for (i = 0; i < entity.code.Size(); i += 1) {
+    for (i = 0; i < entity.code.size(); i += 1) {
         Statement stmnt = entity.code[i];
         buffer = join2(buffer, serializeStatement(staticCtx, stmnt));
     }
     
     Array<ByteCodeRow> flatByteCode = flatten(buffer);
     List<ByteCodeRow> byteCodeFinal = new List<ByteCodeRow>();
-    for (i = 0; i < flatByteCode.Size(); i += 1) {
-        byteCodeFinal.Add(flatByteCode[i]);
+    for (i = 0; i < flatByteCode.size(); i += 1) {
+        byteCodeFinal.add(flatByteCode[i]);
     }
 
-    for (i = 0; i < byteCodeFinal.Size(); i += 1) {
+    for (i = 0; i < byteCodeFinal.size(); i += 1) {
         ByteCodeRow row = byteCodeFinal[i];
         if (row.opCode <= 0) fail(""); // break or continue was not resolved.
         if (row.tryCatchInfo != null) {
             Array<int> tryInfoArgs = row.tryCatchInfo;
-            tryInfoArgs[0] = i - byteCodeFinal.Size();
+            tryInfoArgs[0] = i - byteCodeFinal.size();
             ByteCodeRow tryInfoRow = ByteCodeRow_new(OP_TRY_INFO, null, null, tryInfoArgs);
-            byteCodeFinal.Add(tryInfoRow);
+            byteCodeFinal.add(tryInfoRow);
         }
     }
 
@@ -144,8 +144,8 @@ void bundleFunction(StaticContext staticCtx, FunctionEntity entity, CompilationB
         fnName);
     
     if (isLambda) {
-        bundle.lambdaById.Add(fd);
+        bundle.lambdaById.add(fd);
     } else {
-        bundle.functionById.Add(fd);
+        bundle.functionById.add(fd);
     }
 }

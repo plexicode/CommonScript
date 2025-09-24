@@ -33,14 +33,14 @@ Value dictionaryRemove(DictImpl dict, Value key) {
     int index = 0;
     if (key.type == Type.INTEGER) {
         int iKey = (int) key.internalValue;
-        if (!dict.intKeyLookup.Contains(iKey)) return null;
+        if (!dict.intKeyLookup.contains(iKey)) return null;
         index = dict.intKeyLookup[iKey];
-        dict.intKeyLookup.Remove(iKey);
+        dict.intKeyLookup.remove(iKey);
     } else if (key.type == Type.STRING) {
         string sKey = stringUtil_getFlatValue(key);
-        if (!dict.strKeyLookup.Contains(sKey)) return null;
+        if (!dict.strKeyLookup.contains(sKey)) return null;
         index = dict.strKeyLookup[sKey];
-        dict.strKeyLookup.Remove(sKey);
+        dict.strKeyLookup.remove(sKey);
     } else {
         return null;
     }

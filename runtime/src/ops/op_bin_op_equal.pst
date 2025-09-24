@@ -46,7 +46,7 @@ if (left.type != right.type) {
                 } else {
                     if (stringImpl1.isBuilder) stringFlatten(stringImpl1);
                     if (stringImpl2.isBuilder) stringFlatten(stringImpl2);
-                    bool1 = Core.StringEquals(stringImpl1.nativeStr, stringImpl2.nativeStr);
+                    bool1 = stringImpl1.nativeStr == stringImpl2.nativeStr;
                 }
             }
             break;

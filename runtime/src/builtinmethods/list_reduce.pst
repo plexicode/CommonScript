@@ -2,7 +2,7 @@
 value16[0] = fp.ctx;
 value16[1] = args[0];
 value16[2] = null;
-if (args.Size() == 2) value16[2] = args[1];
+if (args.size() == 2) value16[2] = args[1];
 argc += 1;
 args = value16;
 fp = (FunctionPointer) ec.functionsAsValues[ec.significantFunctions["reduce"]].internalValue;

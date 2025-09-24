@@ -17,23 +17,23 @@ CompilationBundle bundleCompilation(StaticContext staticCtx, string rootId, Arra
     List<FunctionEntity> lambdas = new List<FunctionEntity>();
     FunctionEntity mainFunc = null;
 
-    for (i = 0; i < deterministicOrder.Size(); i += 1) {
+    for (i = 0; i < deterministicOrder.size(); i += 1) {
         CompiledModule m = deterministicOrder[i];
-        Array<string> deterministicKeyOrder = Core.SortedCopyOfStringArray(m.flattenedEntities.Keys());
+        Array<string> deterministicKeyOrder = Sorting.getLexicalSortedCopy(m.flattenedEntities.keys());
 
         // If deferring main to an included module, that would go here.
         bool checkForMain = m.id == rootId;
 
         List<AbstractEntity> orderedEntities = new List<AbstractEntity>();
-        for (j = 0; j < deterministicKeyOrder.Size(); j += 1) {
-            orderedEntities.Add(m.flattenedEntities[deterministicKeyOrder[j]]);
+        for (j = 0; j < deterministicKeyOrder.size(); j += 1) {
+            orderedEntities.add(m.flattenedEntities[deterministicKeyOrder[j]]);
         }
 
-        for (j = 0; j < m.lambdaEntities.Size(); j += 1) {
-            orderedEntities.Add(m.lambdaEntities[j]);
+        for (j = 0; j < m.lambdaEntities.size(); j += 1) {
+            orderedEntities.add(m.lambdaEntities[j]);
         }
 
-        for (j = 0; j < orderedEntities.Size(); j += 1) {
+        for (j = 0; j < orderedEntities.size(); j += 1) {
             AbstractEntity tle = orderedEntities[j];
             switch (tle.type) {
                 case EntityType.CONST:
@@ -42,9 +42,9 @@ CompilationBundle bundleCompilation(StaticContext staticCtx, string rootId, Arra
                 case EntityType.FUNCTION:
                     FunctionEntity func = (FunctionEntity)tle.specificData;
                     if (tle.fileContext.isCoreBuiltin) {
-                        coreBuiltInFunctions.Add(func);
+                        coreBuiltInFunctions.add(func);
                     } else {
-                        userFunctions.Add(func);
+                        userFunctions.add(func);
                         if (checkForMain && tle.simpleName == "main") {
                             if (mainFunc != null) {
                                 Errors_Throw(tle.firstToken, "There are multiple functions named main in the root module.");
@@ -56,24 +56,24 @@ CompilationBundle bundleCompilation(StaticContext staticCtx, string rootId, Arra
                     break;
 
                 case EntityType.LAMBDA_ENTITY:
-                    lambdas.Add((FunctionEntity)tle.specificData);
+                    lambdas.add((FunctionEntity)tle.specificData);
                     break;
 
                 case EntityType.FIELD:
-                    fields.Add((FieldEntity)tle.specificData);
+                    fields.add((FieldEntity)tle.specificData);
                     break;
 
 
                 case EntityType.ENUM:
-                    enums.Add((EnumEntity)tle.specificData);
+                    enums.add((EnumEntity)tle.specificData);
                     break;
 
                 case EntityType.CLASS:
-                    classes.Add((ClassEntity)tle.specificData);
+                    classes.add((ClassEntity)tle.specificData);
                     break;
 
                 case EntityType.CONSTRUCTOR:
-                    userFunctions.Add((FunctionEntity)tle.specificData);
+                    userFunctions.add((FunctionEntity)tle.specificData);
                     break;
 
                 case EntityType.NAMESPACE:
@@ -90,40 +90,40 @@ CompilationBundle bundleCompilation(StaticContext staticCtx, string rootId, Arra
     List<AbstractEntity> finalOrder = new List<AbstractEntity>();
 
     List<FunctionEntity> allFunctions = new List<FunctionEntity>();
-    for (i = 0; i < coreBuiltInFunctions.Size(); i += 1) {
-        allFunctions.Add(coreBuiltInFunctions[i]);
+    for (i = 0; i < coreBuiltInFunctions.size(); i += 1) {
+        allFunctions.add(coreBuiltInFunctions[i]);
     }
 
-    for (i = 0; i < userFunctions.Size(); i += 1) {
-        allFunctions.Add(userFunctions[i]);
+    for (i = 0; i < userFunctions.size(); i += 1) {
+        allFunctions.add(userFunctions[i]);
     }
 
-    for (i = 0; i < allFunctions.Size(); i += 1) {
+    for (i = 0; i < allFunctions.size(); i += 1) {
         AbstractEntity fn = allFunctions[i].baseData;
         fn.serializationIndex = i + 1;
-        finalOrder.Add(fn);
+        finalOrder.add(fn);
     }
 
-    for (i = 0; i < enums.Size(); i += 1) {
+    for (i = 0; i < enums.size(); i += 1) {
         enums[i].baseData.serializationIndex = i + 1;
-        finalOrder.Add(enums[i].baseData);
+        finalOrder.add(enums[i].baseData);
     }
 
     Array<ClassEntity> sortedClasses = ClassSorter_SortClassesInDeterministicDependencyOrder(
-        Core.ListToArray(classes), true);
+        classes.toArray(), true);
 
-    for (i = 0; i < sortedClasses.Size(); i += 1) {
+    for (i = 0; i < sortedClasses.size(); i += 1) {
         ClassEntity cls = sortedClasses[i];
         cls.baseData.serializationIndex = i + 1;
-        finalOrder.Add(cls.baseData);
+        finalOrder.add(cls.baseData);
     }
 
-    for (i = 0; i < lambdas.Size(); i += 1) {
+    for (i = 0; i < lambdas.size(); i += 1) {
         lambdas[i].baseData.serializationIndex = i + 1;
-        finalOrder.Add(lambdas[i].baseData);
+        finalOrder.add(lambdas[i].baseData);
     }
 
-    for (i = 0; i < finalOrder.Size(); i += 1) {
+    for (i = 0; i < finalOrder.size(); i += 1) {
         AbstractEntity entity = finalOrder[i];
         bundleEntity(staticCtx, entity, bundle);
     }
@@ -134,7 +134,7 @@ CompilationBundle bundleCompilation(StaticContext staticCtx, string rootId, Arra
         Errors_ThrowGeneralError("There is no main() function defined.");
     }
 
-    if (mainFunc.argTokens.Size() >= 2) {
+    if (mainFunc.argTokens.size() >= 2) {
         Errors_Throw(
             mainFunc.baseData.nameToken,
             "The main function can only take in at most one argument. " +
@@ -142,7 +142,7 @@ CompilationBundle bundleCompilation(StaticContext staticCtx, string rootId, Arra
     }
 
     bundle.mainFunctionId = mainFunc.baseData.serializationIndex;
-    bundle.builtInCount = coreBuiltInFunctions.Size();
+    bundle.builtInCount = coreBuiltInFunctions.size();
 
     return bundle;
 }

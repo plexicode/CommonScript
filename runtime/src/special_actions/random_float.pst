@@ -1,1 +1,1 @@
-output = buildFloat(Core.RandomFloat());
+output = buildFloat(Random.nextFloat());

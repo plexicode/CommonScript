@@ -5,4 +5,4 @@ if (value.type == Type.FLOAT) {
 } else {
     float1 = 0.0 + (int) value.internalValue;
 }
-output = buildFloat(Core.ArcSin(float1));
+output = buildFloat(Math.arcSin(float1));

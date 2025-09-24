@@ -9,7 +9,7 @@ struct Token {
 
 string PUBLIC_getTokenErrPrefix(Token tok) {
     if (tok == null) return "";
-    return "[" + tok.File + " Line " + Core.IntToString(tok.Line) + " Col " + Core.IntToString(tok.Col) + "] ";
+    return "[" + tok.File + " Line " + Convert.intToString(tok.Line) + " Col " + Convert.intToString(tok.Col) + "] ";
 }
 
 Token Token_new(string value, int type, string file, int line, int col) {
@@ -19,7 +19,7 @@ Token Token_new(string value, int type, string file, int line, int col) {
 string Token_getFingerprint(Token t) {
     if (t.Fingerprint == null)
     {
-        t.Fingerprint = Core.StringConcatAll(t.File, ",", Core.IntToString(t.Line), ",", Core.IntToString(t.Col));
+        t.Fingerprint = t.File + "," + Convert.intToString(t.Line) + "," + Convert.intToString(t.Col);
     }
     return t.Fingerprint;
 }

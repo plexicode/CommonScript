@@ -9,10 +9,10 @@ Array<Token> ParseRaw_parseTokenData(RawDataParser rdp) {
         fileCount -= 1;
         string fileName = ParseRaw_popLenString(rdp);
         if (fileName == null) return null;
-        fileNames.Add(fileName);
+        fileNames.add(fileName);
     }
     List<Token> output = new List<Token>();
-    output.Add(null);
+    output.add(null);
     while (tokenCount > 0) {
         tokenCount -= 1;
         if (!ParseRaw_popInt(rdp)) return null;
@@ -21,8 +21,8 @@ Array<Token> ParseRaw_parseTokenData(RawDataParser rdp) {
         int line = rdp.intOut;
         if (!ParseRaw_popInt(rdp)) return null;
         int col = rdp.intOut;
-        if (fileId < 0 || fileId >= fileNames.Size()) return null;
-        output.Add(new Token(fileNames[fileId], line, col));
+        if (fileId < 0 || fileId >= fileNames.size()) return null;
+        output.add(new Token(fileNames[fileId], line, col));
     }
-    return Core.ListToArray(output);
+    return output.toArray();
 }

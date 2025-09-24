@@ -1,6 +1,6 @@
-float1 = Core.CurrentTimeSeconds();
+float1 = DateTime.currentTimeFloat();
 if (row.secondArg == 1) {
     output = buildFloat(float1);
 } else {
-    output = buildInteger(globalValues, Core.Int(float1));
+    output = buildInteger(globalValues, Math.floor(float1));
 }

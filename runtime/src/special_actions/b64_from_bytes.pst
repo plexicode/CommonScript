@@ -15,6 +15,6 @@ bool1 = (bool)valueStack[valueStackSize + 1].internalValue;
 
 str1 = buildBase64String(intArray1);
 if (bool1) {
-    str1 = str1.Replace("+", "-").Replace("/", "_");
+    str1 = str1.replace("+", "-").replace("/", "_");
 }
 output = buildString(globalValues, str1, false);

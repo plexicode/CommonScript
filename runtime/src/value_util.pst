@@ -21,7 +21,7 @@ Value buildFloat(double v) {
 }
 
 Array<Value> valueArrayIncreaseCapacity(Array<Value> oldArr) {
-    int oldCapacity = oldArr.Size();
+    int oldCapacity = oldArr.size();
     int newCapacity = oldCapacity * 2;
     if (newCapacity < 8) newCapacity = 8;
     Array<Value> newArr = new Array<Value>(newCapacity);
@@ -32,7 +32,7 @@ Array<Value> valueArrayIncreaseCapacity(Array<Value> oldArr) {
 }
 
 Value buildString(GlobalValues g, string rawValue, bool isCommon) {
-    if (g.commonStrings.Contains(rawValue)) {
+    if (g.commonStrings.contains(rawValue)) {
         return g.commonStrings[rawValue];
     }
 
@@ -40,10 +40,10 @@ Value buildString(GlobalValues g, string rawValue, bool isCommon) {
     // unicode code point sequences. Until that time, just pretend that the
     // utf8 byte values are also the unicode values. This is fine for ASCII for
     // now. I was going to write out a UTF-8 parser here, but that is silly.
-    Array<int> charValues = rawValue.ToUtf8Bytes();
+    Array<int> charValues = rawValue.toUtf8Bytes();
 
     StringImpl s = new StringImpl(
-        charValues.Size(),
+        charValues.size(),
         false, // literal value, not a builder
         charValues, // unicode characters (this is WRONG for non-ASCII, but limited by Pastel right now)
         rawValue,
@@ -58,7 +58,7 @@ Value buildString(GlobalValues g, string rawValue, bool isCommon) {
 }
 
 StringImpl buildAsciiStringImpl(string rawValue) {
-    return new StringImpl(rawValue.Size(), false, rawValue.ToUtf8Bytes(), rawValue, null, null);
+    return new StringImpl(rawValue.size(), false, rawValue.toUtf8Bytes(), rawValue, null, null);
 }
 
 string valueToHumanString(Value value) {
@@ -68,10 +68,10 @@ string valueToHumanString(Value value) {
             bool b = (bool)value.internalValue;
             if (b) return "true";
             return "false";
-        case Type.INTEGER: return Core.IntToString((int)value.internalValue);
+        case Type.INTEGER: return Convert.intToString((int)value.internalValue);
         case Type.FLOAT:
-            string floatStr = Core.FloatToString((double) value.internalValue);
-            if (!floatStr.Contains(".")) floatStr = floatStr + ".0";
+            string floatStr = Convert.floatToString((double) value.internalValue);
+            if (!floatStr.contains(".")) floatStr = floatStr + ".0";
             return floatStr;
         case Type.STRING:
             StringImpl strImpl = (StringImpl) value.internalValue;
@@ -79,14 +79,14 @@ string valueToHumanString(Value value) {
             return strImpl.nativeStr;
         case Type.INSTANCE:
             Instance inst = (Instance) value.internalValue;
-            return Core.StringConcatAll("Instance<", inst.classDef.name, ":", Core.IntToString(inst.id), ">");
+            return "Instance<" + inst.classDef.name + ":" + Convert.intToString(inst.id) + ">";
         case Type.LIST:
             ListImpl list = (ListImpl) value.internalValue;
-            return Core.StringConcatAll("List[size=", Core.IntToString(list.length), "]");
+            return "List[size=" + Convert.intToString(list.length) + "]";
         default:
             break;
     }
-    return "TODO: to string for type: " + Core.IntToString(value.type);
+    return "TODO: to string for type: " + Convert.intToString(value.type);
 }
 
 Value buildInteger(GlobalValues g, int value) {
@@ -108,8 +108,8 @@ StringImpl convertToStringImpl(GlobalValues g, Value v) {
             return (StringImpl) buildString(g, "false", true).internalValue;
         case Type.INTEGER:
             int n = (int) v.internalValue;
-            if (n < 20 && n > -20) return (StringImpl) buildString(g, Core.IntToString(n), true).internalValue;
-            return buildAsciiStringImpl(Core.IntToString(n));
+            if (n < 20 && n > -20) return (StringImpl) buildString(g, Convert.intToString(n), true).internalValue;
+            return buildAsciiStringImpl(Convert.intToString(n));
         case Type.FLOAT:
             return (StringImpl) buildString(g, valueToHumanString(v), false).internalValue;
         case Type.STRING:
@@ -125,16 +125,16 @@ void stringFlatten(StringImpl s) {
     int ucharOffset = 0;
     List<string> strBuilder = new List<string>();
     List<StringImpl> q = new List<StringImpl>();
-    q.Add(s);
+    q.add(s);
     StringImpl current = null;
     int i = 0;
     int currentLen = 0;
     Array<int> currentUChars = null;
-    while (q.Size() > 0) {
-        current = q.Pop();
+    while (q.size() > 0) {
+        current = q.pop();
         if (current.isBuilder) {
-            q.Add(current.right);
-            q.Add(current.left);
+            q.add(current.right);
+            q.add(current.left);
         } else {
             currentUChars = current.uChars;
             currentLen = current.length;
@@ -142,21 +142,21 @@ void stringFlatten(StringImpl s) {
                 ucharsBuilder[i + ucharOffset] = currentUChars[i];
             }
             ucharOffset += currentLen;
-            strBuilder.Add(current.nativeStr);
+            strBuilder.add(current.nativeStr);
         }
     }
     s.isBuilder = false;
     s.left = null;
     s.right = null;
-    s.nativeStr = strBuilder.Join("");
+    s.nativeStr = strBuilder.join("");
     s.uChars = ucharsBuilder;
 }
 
 Array<Value> stringUtil_split(GlobalValues g, Value str, string sep) {
     StringImpl si = (StringImpl) str.internalValue;
     if (si.isBuilder) stringFlatten(si);
-    Array<string> values = si.nativeStr.Split(sep);
-    int sz = values.Size();
+    Array<string> values = si.nativeStr.split(sep);
+    int sz = values.size();
     Array<Value> o = new Array<Value>(sz);
     for (int i = 0; i < sz; i += 1) {
         o[i] = buildString(g, values[i], false);
@@ -168,7 +168,7 @@ Value buildList(ExecutionContext ec, Array<Value> values, bool copyValues, int l
     int id = ec.nextRefId;
     ec.nextRefId += 1;
     int size = lengthOrNegativeOne;
-    if (size == -1) size = values.Size();
+    if (size == -1) size = values.size();
     if (copyValues) {
         Array<Value> buf = new Array<Value>(size);
         for (int i = 0; i < size; i += 1) {
@@ -218,11 +218,11 @@ bool isValueEqual(Value a, Value b) {
             }
             return true;
         case Type.LIST:
-            return Core.ForceParens((ListImpl) a.internalValue).id == Core.ForceParens((ListImpl) b.internalValue).id;
+            return ((ListImpl) a.internalValue).id == ((ListImpl) b.internalValue).id;
         case Type.DICTIONARY:
-            return Core.ForceParens((DictImpl) a.internalValue).id == Core.ForceParens((DictImpl) b.internalValue).id;
+            return ((DictImpl) a.internalValue).id == ((DictImpl) b.internalValue).id;
         case Type.INSTANCE:
-            return Core.ForceParens((Instance) a.internalValue).id == Core.ForceParens((Instance) b.internalValue).id;
+            return ((Instance) a.internalValue).id == ((Instance) b.internalValue).id;
         default:
             return a.internalValue == b.internalValue;
     }
@@ -238,11 +238,11 @@ Value doExponent(GlobalValues g, double left, double right) {
 
     if (left < 0 && right % 1 != 0) return g.nullValue;
 
-    return new Value(Type.FLOAT, Core.Pow(left, right));
+    return new Value(Type.FLOAT, Math.pow(left, right));
 }
 
 Value buildIntegerListValue(ExecutionContext ec, Array<int> ints) {
-    int sz = ints.Size();
+    int sz = ints.size();
     GlobalValues g = ec.globalValues;
     Array<Value> vals = new Array<Value>(sz);
     int n = 0;
@@ -279,10 +279,10 @@ Array<int> convertListToByteArray(ListImpl list) {
 }
 
 Value buildStringDictionary(ExecutionContext ec, Array<Value> keys, Array<Value> values) {
-    DictImpl dict = new DictImpl(ec.nextRefId, Type.STRING, keys.Size(), keys.Size(), keys, values, null, new Dictionary<string, int>());
+    DictImpl dict = new DictImpl(ec.nextRefId, Type.STRING, keys.size(), keys.size(), keys, values, null, new Dictionary<string, int>());
     ec.nextRefId += 1;
     Dictionary<string, int> lookup = dict.strKeyLookup;
-    for (int i = 0; i < keys.Size(); i += 1) {
+    for (int i = 0; i < keys.size(); i += 1) {
         lookup[stringUtil_getFlatValue(keys[i])] = i;
     }
     return new Value(Type.DICTIONARY, dict);

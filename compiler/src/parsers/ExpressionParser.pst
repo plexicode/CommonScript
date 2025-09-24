@@ -13,11 +13,11 @@ Expression ParseAddition(TokenStream tokens) {
     Expression root = ParseMultiplication(tokens);
     if (Tokens_doesNextInclulde2(tokens, "+", "-")) {
         List<Expression> expressions = new List<Expression>();
-        expressions.Add(root);
+        expressions.add(root);
         List<Token> ops = new List<Token>();
         while (Tokens_doesNextInclulde2(tokens, "+", "-")) {
-            ops.Add(Tokens_pop(tokens));
-            expressions.Add(ParseMultiplication(tokens));
+            ops.add(Tokens_pop(tokens));
+            expressions.add(ParseMultiplication(tokens));
         }
         root = FlattenBinaryOpChain(expressions, ops);
     }
@@ -83,14 +83,14 @@ Expression ParseAtomicExpression(TokenStream tokens) {
             if (next == "new") {
                 Token newTok = Tokens_pop(tokens);
                 List<Token> nameChain = new List<Token>();
-                nameChain.Add(Tokens_popName(tokens, "class name"));
+                nameChain.add(Tokens_popName(tokens, "class name"));
 
                 while (Tokens_isNext(tokens, ".")) {
-                    nameChain.Add(Tokens_pop(tokens));
-                    nameChain.Add(Tokens_popName(tokens, "class name"));
+                    nameChain.add(Tokens_pop(tokens));
+                    nameChain.add(Tokens_popName(tokens, "class name"));
                 }
                 Expression ctorChain = Expression_createVariable(nameChain[0], nameChain[0].Value);
-                for (int i = 1; i < nameChain.Size(); i += 2) {
+                for (int i = 1; i < nameChain.size(); i += 2) {
                     ctorChain = Expression_createDotField(ctorChain, nameChain[i], nameChain[i + 1].Value);
                 }
                 return Expression_createConstructorReference(newTok, ctorChain);
@@ -138,7 +138,7 @@ Expression FlattenBinaryOpChain(List<Expression> expressions, List<Token> ops) {
     string opType = ops[0].Value;
     bool isShortCircuit = opType == "??" || opType == "&&" || opType == "||";
     Expression acc = null;
-    int length = expressions.Size();
+    int length = expressions.size();
     if (isShortCircuit) {
         acc = Expression_createBinaryOp(expressions[length - 2], ops[length - 2], expressions[length - 1]);
         for (i = length - 3; i >= 0; i -= 1) {
@@ -159,11 +159,11 @@ Expression ParseBitshift(TokenStream tokens) {
     Expression root = ParseAddition(tokens);
     if (Tokens_doesNextInclulde3(tokens, "<<", ">>", ">>>")) {
         List<Expression> expressions = new List<Expression>();
-        expressions.Add(root);
+        expressions.add(root);
         List<Token> ops = new List<Token>();
         while (Tokens_doesNextInclulde3(tokens, "<<", ">>", ">>>")) {
-            ops.Add(Tokens_pop(tokens));
-            expressions.Add(ParseAddition(tokens));
+            ops.add(Tokens_pop(tokens));
+            expressions.add(ParseAddition(tokens));
         }
         root = FlattenBinaryOpChain(expressions, ops);
     }
@@ -175,12 +175,12 @@ Expression ParseBitwise(TokenStream tokens) {
     Expression root = ParseEquality(tokens);
     if (Tokens_doesNextInclulde3(tokens, "&", "|", "^")) {
         List<Expression> expressions = new List<Expression>();
-        expressions.Add(root);
+        expressions.add(root);
         List<Token> ops = new List<Token>();
 
         while (Tokens_doesNextInclulde3(tokens, "&", "|", "^")) {
-            ops.Add(Tokens_pop(tokens));
-            expressions.Add(ParseEquality(tokens));
+            ops.add(Tokens_pop(tokens));
+            expressions.add(ParseEquality(tokens));
         }
         return FlattenBinaryOpChain(expressions, ops);
     }
@@ -191,11 +191,11 @@ Expression ParseBooleanCombination(TokenStream tokens) {
     Expression root = ParseBitwise(tokens);
     if (Tokens_doesNextInclulde2(tokens, "||", "&&")) {
         List<Expression> expressions = new List<Expression>();
-        expressions.Add(root);
+        expressions.add(root);
         List<Token> ops = new List<Token>();
         while (Tokens_doesNextInclulde2(tokens, "||", "&&")) {
-            ops.Add(Tokens_pop(tokens));
-            expressions.Add(ParseBitwise(tokens));
+            ops.add(Tokens_pop(tokens));
+            expressions.add(ParseBitwise(tokens));
         }
         return FlattenBinaryOpChain(expressions, ops);
     }
@@ -208,13 +208,13 @@ Expression ParseDictionaryDefinition(TokenStream tokens) {
     List<Expression> values = new List<Expression>();
     bool nextAllowed = true;
     while (nextAllowed && !Tokens_isNext(tokens, CLOSE_CURLY_BRACE)) {
-        keys.Add(ParseExpression(tokens));
+        keys.add(ParseExpression(tokens));
         Tokens_popExpected(tokens, ":");
-        values.Add(ParseExpression(tokens));
+        values.add(ParseExpression(tokens));
         nextAllowed = Tokens_popIfPresent(tokens, ",");
     }
     Tokens_popExpected(tokens, CLOSE_CURLY_BRACE);
-    return Expression_createDictionaryDefinition(openDictionaryToken, Core.ListToArray(keys), Core.ListToArray(values));
+    return Expression_createDictionaryDefinition(openDictionaryToken, keys.toArray(), values.toArray());
 }
 
 Expression ParseEquality(TokenStream tokens) {
@@ -231,11 +231,11 @@ Expression ParseExponent(TokenStream tokens) {
     Expression root = ParseUnaryPrefix(tokens);
     if (Tokens_isNext(tokens, "**")) {
         List<Expression> expressions = new List<Expression>();
-        expressions.Add(root);
+        expressions.add(root);
         List<Token> ops = new List<Token>();
         while (Tokens_isNext(tokens, "**")) {
-            ops.Add(Tokens_pop(tokens));
-            expressions.Add(ParseUnaryPrefix(tokens));
+            ops.add(Tokens_pop(tokens));
+            expressions.add(ParseUnaryPrefix(tokens));
         }
         root = FlattenBinaryOpChain(expressions, ops);
     }
@@ -267,11 +267,11 @@ Expression ParseListDefinition(TokenStream tokens) {
     List<Expression> items = new List<Expression>();
     bool nextAllowed = true;
     while (nextAllowed && !Tokens_isNext(tokens, CLOSE_SQUARE_BRACKET)) {
-        items.Add(ParseExpression(tokens));
+        items.add(ParseExpression(tokens));
         nextAllowed = Tokens_popIfPresent(tokens, ",");
     }
     Tokens_popExpected(tokens, CLOSE_SQUARE_BRACKET);
-    return Expression_createListDefinition(openListToken, Core.ListToArray(items));
+    return Expression_createListDefinition(openListToken, items.toArray());
 }
 
 Expression ParseLambda(TokenStream tokens) {
@@ -280,17 +280,17 @@ Expression ParseLambda(TokenStream tokens) {
     List<Expression> argDefaultValues = new List<Expression>();
     if (Tokens_popIfPresent(tokens, OPEN_PAREN)) {
         while (!Tokens_popIfPresent(tokens, CLOSE_PAREN)) {
-            if (argTokens.Size() > 0) Tokens_popExpected(tokens, ",");
-            argTokens.Add(Tokens_popName(tokens, "argument name"));
+            if (argTokens.size() > 0) Tokens_popExpected(tokens, ",");
+            argTokens.add(Tokens_popName(tokens, "argument name"));
             Expression defaultVal = null;
             if (Tokens_popIfPresent(tokens, "=")) {
                 defaultVal = ParseExpression(tokens);
             }
-            argDefaultValues.Add(defaultVal);
+            argDefaultValues.add(defaultVal);
         }
     } else {
-        argTokens.Add(Tokens_popName(tokens, "argument name"));
-        argDefaultValues.Add(null);
+        argTokens.add(Tokens_popName(tokens, "argument name"));
+        argDefaultValues.add(null);
     }
 
     Token arrow = Tokens_popExpected(tokens, "=>");
@@ -303,18 +303,18 @@ Expression ParseLambda(TokenStream tokens) {
         code = new Array<Statement>(1);
         code[0] = Statement_createReturn(arrow, codeExpr);
     }
-    return Expression_createLambda(firstToken, Core.ListToArray(argTokens), Core.ListToArray(argDefaultValues), arrow, code);
+    return Expression_createLambda(firstToken, argTokens.toArray(), argDefaultValues.toArray(), arrow, code);
 }
 
 Expression ParseMultiplication(TokenStream tokens) {
     Expression root = ParseExponent(tokens);
     if (Tokens_doesNextInclulde3(tokens, "*", "/", "%")) {
         List<Expression> expressions = new List<Expression>();
-        expressions.Add(root);
+        expressions.add(root);
         List<Token> ops = new List<Token>();
         while (Tokens_doesNextInclulde3(tokens, "*", "/", "%")) {
-            ops.Add(Tokens_pop(tokens));
-            expressions.Add(ParseExponent(tokens));
+            ops.add(Tokens_pop(tokens));
+            expressions.add(ParseExponent(tokens));
         }
         root = FlattenBinaryOpChain(expressions, ops);
     }
@@ -399,10 +399,10 @@ Expression ParseUnarySuffix(TokenStream tokens) {
             Token openParen = Tokens_pop(tokens);
             List<Expression> args = new List<Expression>();
             while (!Tokens_popIfPresent(tokens, CLOSE_PAREN)) {
-                if (args.Size() > 0) Tokens_popExpected(tokens, ",");
-                args.Add(ParseExpression(tokens));
+                if (args.size() > 0) Tokens_popExpected(tokens, ",");
+                args.add(ParseExpression(tokens));
             }
-            root = Expression_createFunctionInvocation(root, openParen, Core.ListToArray(args));
+            root = Expression_createFunctionInvocation(root, openParen, args.toArray());
             checkForSuffixes = true;
         } else if (next == OPEN_SQUARE_BRACKET) {
 
@@ -414,12 +414,12 @@ Expression ParseUnarySuffix(TokenStream tokens) {
 
             while (nextExpected && Tokens_hasMore(tokens)) {
                 if (Tokens_popIfPresent(tokens, ":")) {
-                    sliceNums.Add(null);
+                    sliceNums.add(null);
                 } else if (Tokens_isNext(tokens, CLOSE_SQUARE_BRACKET)) {
-                    sliceNums.Add(null);
+                    sliceNums.add(null);
                     nextExpected = false;
                 } else {
-                    sliceNums.Add(ParseExpression(tokens));
+                    sliceNums.add(ParseExpression(tokens));
                     if (!Tokens_popIfPresent(tokens, ":")) {
                         nextExpected = false;
                     }
@@ -428,11 +428,11 @@ Expression ParseUnarySuffix(TokenStream tokens) {
 
             Tokens_popExpected(tokens, CLOSE_SQUARE_BRACKET);
 
-            if (sliceNums.Size() < 0 || sliceNums.Size() > 3) {
+            if (sliceNums.size() < 0 || sliceNums.size() > 3) {
                 Errors_Throw(throwTokenOnInvalidSlice, "Invalid index or slice expression");
             }
 
-            if (sliceNums.Size() == 1) {
+            if (sliceNums.size() == 1) {
                 if (sliceNums[0] == null) {
                     Errors_Throw(throwTokenOnInvalidSlice, "Expected index expression.");
                 }
@@ -440,7 +440,7 @@ Expression ParseUnarySuffix(TokenStream tokens) {
                 root = Expression_createBracketIndex(root, openBracket, sliceNums[0]);
             } else {
                 Expression thirdSliceNum = null;
-                if (sliceNums.Size() == 3) thirdSliceNum = sliceNums[2];
+                if (sliceNums.size() == 3) thirdSliceNum = sliceNums[2];
                 root = Expression_createSliceExpression(root, openBracket, sliceNums[0], sliceNums[1], thirdSliceNum);
             }
 
@@ -461,20 +461,20 @@ int TryParseInteger(Token throwToken, string rawValue, bool isHex) {
     int output = 0;
     int start = 0;
     int baseMultiplier = 10;
-    Array<int> chars = rawValue.ToLower().ToUtf8Bytes();
+    Array<int> chars = rawValue.toLower().toUtf8Bytes();
 
     if (isHex) {
         start = 2; // skip the "0x" prefix which has already been verified before calling this function.
         baseMultiplier = 16;
     }
 
-    for (int i = start; i < chars.Size(); i++) {
+    for (int i = start; i < chars.size(); i++) {
         int d = chars[i];
         int digitVal = 0;
-        if (d >= Core.Ord('0') && d <= Core.Ord('9')) {
-            digitVal = d - Core.Ord('0');
-        } else if (isHex && d >= Core.Ord('a') && d <= Core.Ord('f')) {
-            digitVal = d - Core.Ord('a') + 10;
+        if (d >= Convert.charToCharCode('0') && d <= Convert.charToCharCode('9')) {
+            digitVal = d - Convert.charToCharCode('0');
+        } else if (isHex && d >= Convert.charToCharCode('a') && d <= Convert.charToCharCode('f')) {
+            digitVal = d - Convert.charToCharCode('a') + 10;
         } else {
             if (isHex) Errors_Throw(throwToken, "Invalid hexadecimal constant.");
             Errors_Throw(throwToken, "Invalid integer constant");
@@ -488,7 +488,7 @@ int TryParseInteger(Token throwToken, string rawValue, bool isHex) {
 
 double TryParseFloat(Token throwToken, string rawValue) {
     Array<double> o = new Array<double>(2);
-    Core.TryParseFloat(rawValue, o);
+    Convert.tryParseFloat(rawValue, o);
     if (o[0] > 0) return o[1];
     Errors_Throw(throwToken, "Invalid float constant");
     return 0.0;
@@ -497,17 +497,17 @@ double TryParseFloat(Token throwToken, string rawValue) {
 string TryParseString(Token throwToken, string rawValue) {
     List<string> output = new List<string>();
 
-    int length = rawValue.Size() - 1;
+    int length = rawValue.size() - 1;
     string c = "";
     for (int i = 1; i < length; i += 1) {
-        c = rawValue.SubString(i, 1);
+        c = rawValue.subString(i, 1);
         if (c == "\\") {
             i += 1;
 
             // More of an assert. The tokenizer should outright prevent this from happening ever.
             if (i == length) Errors_Throw(throwToken, "Invalid backslash in string constant.");
 
-            c = rawValue.SubString(i, 1);
+            c = rawValue.subString(i, 1);
             if (c == "n") c = "\n";
             else if (c == "r") c = "\r";
             else if (c == "'" || c == "\"" || c == "\\") { }
@@ -516,8 +516,8 @@ string TryParseString(Token throwToken, string rawValue) {
                 Errors_Throw(throwToken, "Unrecognized string escape sequence: '\\" + c + "'");
             }
         }
-        output.Add(c);
+        output.add(c);
     }
 
-    return output.Join("");
+    return output.join("");
 }

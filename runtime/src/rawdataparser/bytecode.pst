@@ -7,8 +7,8 @@ Array<ByteCodeRow> ParseRaw_popByteCodeRows(RawDataParser rdp, int rowCount) {
         int op = rdp.intOut;
         if (!ParseRaw_popInt(rdp)) return null;
         int flags = rdp.intOut;
-        bool hasString = Core.ForceParens(flags & 1) != 0;
-        bool hasToken = Core.ForceParens(flags & 2) != 0;
+        bool hasString = (flags & 1) != 0;
+        bool hasToken = (flags & 2) != 0;
         int argc = flags >> 2;
         int stringId = 0;
         if (hasString) {

@@ -1,30 +1,30 @@
 /*
     root[start:end:step]
-    slice mask: 
-        1: start is present 
-        2: end is present 
-        4: step is present 
-    
+    slice mask:
+        1: start is present
+        2: end is present
+        4: step is present
+
     components are unpacked as follows:
-        root -> value 
-        start -> int1 
+        root -> value
+        start -> int1
         end -> int2
-        step -> int3  
-        
+        step -> int3
+
         start present? -> bool1
-        end present? -> bool2 
+        end present? -> bool2
         is string? -> bool3
 
-        if step isn't present, 1 is assigned to int3  
+        if step isn't present, 1 is assigned to int3
 
-    Each expression, if present, is already ensured to be an integer. 
+    Each expression, if present, is already ensured to be an integer.
 */
 
 
 i = row.firstArg;
 valueStackSize -= 1;
 
-if (Core.ForceParens(i & 4) > 0) {
+if ((i & 4) > 0) {
     int3 = (int) valueStack[valueStackSize].internalValue;
     if (int3 == 0) {
         errorId = ExceptionTypeId.INVALID_ARGUMENT;
@@ -36,7 +36,7 @@ if (Core.ForceParens(i & 4) > 0) {
     int3 = 1;
 }
 
-if (Core.ForceParens(i & 2) > 0) {
+if ((i & 2) > 0) {
     int2 = (int) valueStack[valueStackSize].internalValue;
     valueStackSize -= 1;
     bool2 = true;
@@ -44,7 +44,7 @@ if (Core.ForceParens(i & 2) > 0) {
     bool2 = false;
 }
 
-if (Core.ForceParens(i & 1) > 0) {
+if ((i & 1) > 0) {
     int1 = (int) valueStack[valueStackSize].internalValue;
     valueStackSize -= 1;
     bool1 = true;
@@ -120,7 +120,7 @@ if (bool1) {
     }
 } else {
     if (bool2) {
-        // actual start to end marker 
+        // actual start to end marker
         if (int3 > 0) {
             // items[:b:+c]
             leftType = 0;
@@ -145,34 +145,34 @@ if (bool1) {
     }
 }
 
-if (bool3) { // string 
+if (bool3) { // string
     intList = new List<int>();
     intArray1 = stringImpl1.uChars;
     if (int3 > 0) {
         for (i = leftType; i < rightType; i += int3) {
-            intList.Add(intArray1[i]);
+            intList.add(intArray1[i]);
         }
     } else {
         for (i = leftType; i > rightType;i += int3) {
-            intList.Add(intArray1[i]);
+            intList.add(intArray1[i]);
         }
     }
-    // TODO: Core.ListToArrayOnlyIfTypedLanguage()
-    output = createStringFromUnicodeArray(globalValues, Core.ListToArray(intList), false);
+    // TODO: only use .toArray() if typed language.
+    output = createStringFromUnicodeArray(globalValues, intList.toArray(), false);
 } else {
     valueList = new List<Value>();
     valueArr = listImpl1.items;
     if (int3 > 0) {
         for (i = leftType; i < rightType; i += int3) {
-            valueList.Add(valueArr[i]);
+            valueList.add(valueArr[i]);
         }
     } else {
         for (i = leftType; i > rightType; i += int3) {
-            valueList.Add(valueArr[i]);
+            valueList.add(valueArr[i]);
         }
     }
-    sz = valueList.Size();
-    output = new Value(Type.LIST, new ListImpl(ec.nextRefId, sz, sz, Core.ListToArray(valueList)));
+    sz = valueList.size();
+    output = new Value(Type.LIST, new ListImpl(ec.nextRefId, sz, sz, valueList.toArray()));
 }
 
 valueStack[valueStackSize] = output;

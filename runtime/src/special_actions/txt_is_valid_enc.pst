@@ -1,7 +1,7 @@
 valueStackSize -= 1;
 str1 = stringUtil_getFlatValue(valueStack[valueStackSize]);
 
-if (Core.StringEquals(str1, "utf8")) {
+if (str1 == "utf8") {
     output = VALUE_TRUE;
 } else {
     output = VALUE_FALSE;

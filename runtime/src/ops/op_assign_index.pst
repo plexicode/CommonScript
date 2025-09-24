@@ -53,7 +53,7 @@ switch (left.type * Type.MAX + right.type) {
         } else if (dictImpl1.keyType == Type.STRING) {
             if (dictImpl1.size == dictImpl1.capacity) DictImpl_ensureCapacity(dictImpl1);
 
-            if (dictImpl1.strKeyLookup.Contains(str1)) {
+            if (dictImpl1.strKeyLookup.contains(str1)) {
                 dictImpl1.values[dictImpl1.strKeyLookup[str1]] = value;
             } else {
                 i = dictImpl1.size;
@@ -88,7 +88,7 @@ switch (left.type * Type.MAX + right.type) {
         } else {
             if (dictImpl1.size == dictImpl1.capacity) DictImpl_ensureCapacity(dictImpl1);
 
-            if (dictImpl1.intKeyLookup.Contains(int1)) {
+            if (dictImpl1.intKeyLookup.contains(int1)) {
                 dictImpl1.values[dictImpl1.intKeyLookup[int1]] = value;
             } else {
                 i = dictImpl1.size;

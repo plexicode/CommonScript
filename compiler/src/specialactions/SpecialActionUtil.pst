@@ -65,7 +65,7 @@ SpecialActionUtil SpecialActionUtil_new() {
 }
 
 bool SpecialActionUtil_IsSpecialActionAndNotExtension(SpecialActionUtil sau, string name) {
-    return sau.SPECIAL_ACTION_BY_FUNC_NAME.Contains(name);
+    return sau.SPECIAL_ACTION_BY_FUNC_NAME.contains(name);
 }
 
 int SpecialActionUtil_GetSpecialActionOpCode(SpecialActionUtil sau, string name) {

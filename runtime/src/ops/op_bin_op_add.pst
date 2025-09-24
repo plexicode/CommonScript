@@ -2,7 +2,7 @@ valueStackSize -= 2;
 left = valueStack[valueStackSize];
 right = valueStack[valueStackSize + 1];
 
-switch (Core.ForceParens(left.type << 5) | right.type) {
+switch ((left.type << 5) | right.type) {
     case (Type.INTEGER << 5) | Type.INTEGER:
         i = (int)left.internalValue + (int)right.internalValue;
         // inlined here for speed.

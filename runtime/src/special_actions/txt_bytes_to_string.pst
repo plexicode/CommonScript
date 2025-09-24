@@ -16,8 +16,8 @@ if (intArray1 == null) {
 }
 
 bool1 = true;
-if (Core.StringEquals(str1, "utf8")) {
-    str1 = Core.Utf8BytesToString(intArray1);
+if (str1 == "utf8") {
+    str1 = Convert.utf8BytesToString(intArray1);
     if (str1 == null) {
         bool1 = false;
     }

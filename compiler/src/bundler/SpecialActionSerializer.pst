@@ -1,6 +1,6 @@
 ByteCodeBuffer serializeSpecialAction(StaticContext staticCtx, Expression action) {
     ByteCodeBuffer argBuffer = null;
-    int argc = action.args.Size();
+    int argc = action.args.size();
     for (int i = 0; i < argc; i++) {
         argBuffer = join2(argBuffer, serializeExpression(staticCtx, action.args[i]));
     }

@@ -5,12 +5,12 @@ Expression LookupUtil_DoFirstPassVariableLookupThroughImports(Resolver ctx, Toke
 
     // If there's an import into a name, this is considered a locally defined name,
     // and therefore will take precedence over pollution imports.
-    if (fileCtx.importsByVar.Contains(name)) {
+    if (fileCtx.importsByVar.contains(name)) {
         return Expression_createImportReference(refToken, fileCtx.importsByVar[name]);
     }
 
     Array<ImportStatement> imports = fileCtx.imports;
-    for (int i = imports.Size() - 1; i >= 0; i -= 1) {
+    for (int i = imports.size() - 1; i >= 0; i -= 1) {
         ImportStatement importStatement = imports[i];
         if (importStatement.isPollutionImport) {
             CompiledModule mod = importStatement.compiledModuleRef;
@@ -25,7 +25,7 @@ Expression LookupUtil_DoFirstPassVariableLookupThroughImports(Resolver ctx, Toke
 }
 
 Expression LookupUtil_tryCreateModuleMemberReference(CompiledModule mod, Token refToken, string name) {
-    if (mod.nestedEntities.Contains(name)) {
+    if (mod.nestedEntities.contains(name)) {
         AbstractEntity tle = mod.nestedEntities[name];
         switch (tle.type) {
             case EntityType.FUNCTION:
@@ -47,28 +47,28 @@ Expression LookupUtil_tryCreateModuleMemberReference(CompiledModule mod, Token r
 
 AbstractEntity LookupUtil_DoLookupForName(Resolver resolver, Token throwToken, string name) {
     // root level entities and namespaces always have precedence.
-    if (resolver.flattenedEntities.Contains(name)) {
+    if (resolver.flattenedEntities.contains(name)) {
         return resolver.flattenedEntities[name];
     }
 
-    if (resolver.activeEntity.fileContext.importsByVar.Contains(name)) {
+    if (resolver.activeEntity.fileContext.importsByVar.contains(name)) {
         return ModuleWrapperEntity_new(throwToken, resolver.activeEntity.fileContext.importsByVar[name]).baseData;
     }
 
     AbstractEntity walker = resolver.activeEntity;
     while (walker != null) {
         Dictionary<string, AbstractEntity> lookup = Entity_getMemberLookup(resolver.staticCtx, walker);
-        if (lookup.Contains(name)) {
+        if (lookup.contains(name)) {
             return lookup[name];
         }
         walker = walker.nestParent;
     }
 
     Array<ImportStatement> importStatements = resolver.activeEntity.fileContext.imports;
-    for (int i = 0; i < importStatements.Size(); i += 1) {
+    for (int i = 0; i < importStatements.size(); i += 1) {
         ImportStatement impStmnt = importStatements[i];
         if (impStmnt.isPollutionImport) {
-            if (impStmnt.compiledModuleRef.nestedEntities.Contains(name)) {
+            if (impStmnt.compiledModuleRef.nestedEntities.contains(name)) {
                 return impStmnt.compiledModuleRef.nestedEntities[name];
             }
         }

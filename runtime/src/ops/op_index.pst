@@ -26,7 +26,7 @@ switch (left.type * Type.MAX + right.type) {
         // TODO: cache single character strings
         intArray1 = new Array<int>(1);
         intArray1[0] = stringImpl1.uChars[i];
-        str1 = stringImpl1.nativeStr.SubString(i, 1);
+        str1 = stringImpl1.nativeStr.subString(i, 1);
         valueStack[valueStackSize - 1] = new Value(Type.STRING, new StringImpl(1, false, intArray1, str1, null, null));
         break;
 
@@ -56,7 +56,7 @@ switch (left.type * Type.MAX + right.type) {
         i = (int) right.internalValue;
 
         if (dictImpl1.keyType == Type.INTEGER) {
-            if (dictImpl1.intKeyLookup.Contains(i)) {
+            if (dictImpl1.intKeyLookup.contains(i)) {
                 bool1 = false;
                 valueStack[valueStackSize - 1] = dictImpl1.values[dictImpl1.intKeyLookup[i]];
             } else {
@@ -81,7 +81,7 @@ switch (left.type * Type.MAX + right.type) {
         str1 = stringImpl1.nativeStr;
 
         if (dictImpl1.keyType == Type.STRING) {
-            if (dictImpl1.strKeyLookup.Contains(str1)) {
+            if (dictImpl1.strKeyLookup.contains(str1)) {
                 bool1 = false;
                 valueStack[valueStackSize - 1] = dictImpl1.values[dictImpl1.strKeyLookup[str1]];
             } else {

@@ -22,12 +22,12 @@ string GetSourceForBuiltinModule(string moduleName) {
 
     // swap out common strings to further reduce the footprint size.
     return code
-        .Replace("@1", "function ")
-        .Replace("@2", " { constructor(m=null):base(m){} }")
-        .Replace("@3", "@public class ")
-        .Replace("@4", "return ")
-        .Replace("@5", "@public function ")
-        .Replace("@6", "Exception : Exception")
+        .replace("@1", "function ")
+        .replace("@2", " { constructor(m=null):base(m){} }")
+        .replace("@3", "@public class ")
+        .replace("@4", "return ")
+        .replace("@5", "@public function ")
+        .replace("@6", "Exception : Exception")
     ;
 }
 

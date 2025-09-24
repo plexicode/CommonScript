@@ -7,7 +7,7 @@ Value json_util_parse(ExecutionContext ec, string rawValue, Array<int> errOut) {
     args[0] = ec;
     args[1] = rawValue;
     args[2] = errOut;
-    object resultObj = Core.ExtensibleCallbackInvoke("jsonParse", args);
+    object resultObj = Pastel.invokeExtension("jsonParse", args);
     if (errOut[0] == 1) return null;
     return (Value) resultObj;
 }
@@ -16,5 +16,5 @@ string json_util_serialize(Value obj, bool useIndent) {
     Array<object> args = new Array<object>(2);
     args[0] = obj;
     args[1] = useIndent;
-    return (string) Core.ExtensibleCallbackInvoke("jsonSerialize", args);
+    return (string) Pastel.invokeExtension("jsonSerialize", args);
 }

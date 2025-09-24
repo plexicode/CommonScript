@@ -1,38 +1,38 @@
 
-const int XML_LT = Core.Ord('<');
-const int XML_GT = Core.Ord('>');
-const int XML_AMP = Core.Ord('&');
-const int XML_QUOT = Core.Ord('"');
-const int XML_APOS = Core.Ord('\'');
-const int XML_EQ = Core.Ord('=');
-const int XML_SP = Core.Ord(' ');
-const int XML_NL = Core.Ord('\n');
-const int XML_CR = Core.Ord('\r');
-const int XML_TAB = Core.Ord('\t');
-const int XML_A = Core.Ord('A');
-const int XML_Z = Core.Ord('Z');
-const int XML_a = Core.Ord('a');
-const int XML_g = Core.Ord('g');
-const int XML_l = Core.Ord('l');
-const int XML_m = Core.Ord('m');
-const int XML_o = Core.Ord('o');
-const int XML_p = Core.Ord('p');
-const int XML_q = Core.Ord('q');
-const int XML_s = Core.Ord('s');
-const int XML_t = Core.Ord('t');
-const int XML_u = Core.Ord('u');
-const int XML_x = Core.Ord('x');
-const int XML_z = Core.Ord('z');
-const int XML_0 = Core.Ord('0');
-const int XML_9 = Core.Ord('9');
-const int XML_DOT = Core.Ord('.');
-const int XML_QUES = Core.Ord('?');
-const int XML_BANG = Core.Ord('!');
-const int XML_COLON = Core.Ord(':');
-const int XML_SLASH = Core.Ord('/');
-const int XML_HYPHEN = Core.Ord('-');
-const int XML_SEMICOLON = Core.Ord(';');
-const int XML_OCTOTHORP = Core.Ord('#');
+const int XML_LT = '<' - 1;
+const int XML_GT = '>' - 1;
+const int XML_AMP = '&' - 1;
+const int XML_QUOT = '"' - 1;
+const int XML_APOS = '\'' - 1;
+const int XML_EQ = '=' - 1;
+const int XML_SP = ' ' - 1;
+const int XML_NL = '\n' - 1;
+const int XML_CR = '\r' - 1;
+const int XML_TAB = '\t' - 1;
+const int XML_A = 'A' - 1;
+const int XML_Z = 'Z' - 1;
+const int XML_a = 'a' - 1;
+const int XML_g = 'g' - 1;
+const int XML_l = 'l' - 1;
+const int XML_m = 'm' - 1;
+const int XML_o = 'o' - 1;
+const int XML_p = 'p' - 1;
+const int XML_q = 'q' - 1;
+const int XML_s = 's' - 1;
+const int XML_t = 't' - 1;
+const int XML_u = 'u' - 1;
+const int XML_x = 'x' - 1;
+const int XML_z = 'z' - 1;
+const int XML_0 = '0' - 1;
+const int XML_9 = '9' - 1;
+const int XML_DOT = '.' - 1;
+const int XML_QUES = '?' - 1;
+const int XML_BANG = '!' - 1;
+const int XML_COLON = ':' - 1;
+const int XML_SLASH = '/' - 1;
+const int XML_HYPHEN = '-' - 1;
+const int XML_SEMICOLON = ';' - 1;
+const int XML_OCTOTHORP = '#' - 1;
 
 struct XmlParseContext {
     int line;
@@ -72,7 +72,7 @@ int xmlUtil_parse(ExecutionContext ec, Array<int> chars, Array<Value> dataOut) {
     dataOut[2] = globals.intZero;
     dataOut[3] = globals.intZero;
 
-    XmlParseContext ctx = new XmlParseContext(1, 1, false, "", 0, chars, chars.Size(), new List<Value>(), globals);
+    XmlParseContext ctx = new XmlParseContext(1, 1, false, "", 0, chars, chars.size(), new List<Value>(), globals);
 
     xml_skipWhitespace(ctx);
     if (!ctx.hasError) xml_skipVersionHeaderIfPresent(ctx);
@@ -94,7 +94,7 @@ int xmlUtil_parse(ExecutionContext ec, Array<int> chars, Array<Value> dataOut) {
         dataOut[3] = buildInteger(globals, ctx.col);
     } else {
         dataOut[0] = globals.intOne;
-        dataOut[1] = buildList(ec, Core.ListToArray(ctx.buffer), true, -1);
+        dataOut[1] = buildList(ec, ctx.buffer.toArray(), true, -1);
     }
 
     return 0;
@@ -223,10 +223,10 @@ int xml_popElement(XmlParseContext ctx) {
         return 0;
     }
 
-    ctx.buffer.Add(ctx.globals.intOne); // PUSH 1
-    ctx.buffer.Add(tagName); // PUSH tag name
-    int attributeSizeIndex = ctx.buffer.Size();
-    ctx.buffer.Add(ctx.globals.intZero); // PUSH dummy value for attribute count
+    ctx.buffer.add(ctx.globals.intOne); // PUSH 1
+    ctx.buffer.add(tagName); // PUSH tag name
+    int attributeSizeIndex = ctx.buffer.size();
+    ctx.buffer.add(ctx.globals.intZero); // PUSH dummy value for attribute count
 
     int attributeCount = 0;
     while (xml_hasMore(ctx) && xml_peekChar(ctx) != XML_GT && xml_peekChar(ctx) != XML_SLASH) {
@@ -245,14 +245,14 @@ int xml_popElement(XmlParseContext ctx) {
         if (ctx.hasError || !xml_ensureMore(ctx)) return 0;
 
         attributeCount += 1;
-        ctx.buffer.Add(attrName);
-        ctx.buffer.Add(attrValue);
+        ctx.buffer.add(attrName);
+        ctx.buffer.add(attrValue);
     }
 
     ctx.buffer[attributeSizeIndex] = buildInteger(ctx.globals, attributeCount);
 
-    int childCountIndex = ctx.buffer.Size();
-    ctx.buffer.Add(ctx.globals.intZero);
+    int childCountIndex = ctx.buffer.size();
+    ctx.buffer.add(ctx.globals.intZero);
 
     if (xml_peekChar(ctx) == XML_SLASH) {
         xml_popChar(ctx);
@@ -288,10 +288,10 @@ int xml_popElement(XmlParseContext ctx) {
             int textEnd = ctx.index;
             List<int> textSpanChars = new List<int>();
             for (int i = textStart; i < textEnd; i += 1) {
-                textSpanChars.Add(ctx.chars[i]);
+                textSpanChars.add(ctx.chars[i]);
             }
             Value textVal = xml_convertCharsToString(ctx.globals, textSpanChars);
-            ctx.buffer.Add(textVal);
+            ctx.buffer.add(textVal);
             childCount += 1;
         }
     }
@@ -363,7 +363,7 @@ Value xml_popQuotedValue(XmlParseContext ctx) {
     int indexStart = ctx.index;
     List<int> chars = new List<int>();
     while (ctx.index < ctx.length && xml_peekChar(ctx) != XML_QUOT) {
-        chars.Add(xml_popChar(ctx));
+        chars.add(xml_popChar(ctx));
     }
     if (!xml_ensureMore(ctx)) return null;
     xml_popChar(ctx); // this will be a quote according to the loop condition
@@ -376,7 +376,7 @@ Value xml_convertCharsToString(GlobalValues globals, List<int> chars) {
 
     // Shift all characters down to close -1 gaps.
     int j = 0;
-    for (int i = 0; i < chars.Size(); i += 1) {
+    for (int i = 0; i < chars.size(); i += 1) {
         int c = chars[i];
         if (c != -1) {
             chars[j] = c;
@@ -384,11 +384,11 @@ Value xml_convertCharsToString(GlobalValues globals, List<int> chars) {
         }
     }
 
-    while (chars.Size() > j) {
-        chars.Pop();
+    while (chars.size() > j) {
+        chars.pop();
     }
-    Array<int> charArr = Core.ListToArray(chars);
-    return createStringFromUnicodeArraySegment(globals, charArr, 0, charArr.Size());
+    Array<int> charArr = chars.toArray();
+    return createStringFromUnicodeArraySegment(globals, charArr, 0, charArr.size());
 }
 
 // The unicode chars list will get transformed from the literal input
@@ -396,10 +396,10 @@ Value xml_convertCharsToString(GlobalValues globals, List<int> chars) {
 // "3 &lt; 5" -> "3 ___< 5" (where '_' represents a -1)
 
 void xml_performEntitySwaps(List<int> chars) {
-    for (int i = 0; i < chars.Size(); i++) {
+    for (int i = 0; i < chars.size(); i++) {
         if (chars[i] == XML_AMP) {
             for (int j = 0; j < 10; j++) {
-                if (i + j < chars.Size() && chars[i + j] == XML_SEMICOLON) {
+                if (i + j < chars.size() && chars[i + j] == XML_SEMICOLON) {
                     int end = i + j;
                     int newChar = xml_getEntity(chars, i + 1, end);
                     if (newChar != -1) {

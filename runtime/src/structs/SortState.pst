@@ -33,7 +33,7 @@ Value Sort_start(Value valueList, Value mirrorList) {
     int sz = values.length;
 
     Array<Value> items = values.items;
-    Array<Value> mirror = Core.ForceParens((ListImpl) mirrorList.internalValue).items;
+    Array<Value> mirror = ((ListImpl) mirrorList.internalValue).items;
     
     SortState o = new SortState(
         null,
@@ -44,13 +44,13 @@ Value Sort_start(Value valueList, Value mirrorList) {
         mirrorList);
 
     if (o.isDone) {
-        if (items.Size() == 1) {
+        if (items.size() == 1) {
             o.output = new SortNode(items[0], mirror[0], null);
         }
     } else {
         List<SortTask> tasks = new List<SortTask>();
         Sort_buildTaskList(0, sz, items, mirror, tasks);
-        for (int i = 1; i < tasks.Size(); i += 1) {
+        for (int i = 1; i < tasks.size(); i += 1) {
             tasks[i - 1].next = tasks[i];
         }
         o.taskQueue = tasks[0];
@@ -63,7 +63,7 @@ SortTask Sort_buildTaskList(int start, int length, Array<Value> items, Array<Val
     if (length == 1) {
         SortNode node = new SortNode(items[start], output[start], null);
         SortTask task = new SortTask(true, null, null, node, node, null, false, null);
-        tasks.Add(task);
+        tasks.add(task);
         return task;
     }
 
@@ -71,7 +71,7 @@ SortTask Sort_buildTaskList(int start, int length, Array<Value> items, Array<Val
         SortNode left = new SortNode(items[start], output[start], null);
         SortNode right = new SortNode(items[start + 1], output[start + 1], null);
         SortTask task2 = new SortTask(false, left, right, null, null, null, false, null);
-        tasks.Add(task2);
+        tasks.add(task2);
         return task2;
     }
 
@@ -82,13 +82,13 @@ SortTask Sort_buildTaskList(int start, int length, Array<Value> items, Array<Val
     leftTask.feedsTo = taskMerge;
     leftTask.feedsToLeft = true;
     rightTask.feedsTo = taskMerge;
-    tasks.Add(taskMerge);
+    tasks.add(taskMerge);
     return taskMerge;
 }
 
 // return true if the pair is set and sorting is not complete
 bool Sort_getNextCmp(Value sortStateValue, Value pairValue) {
-    Array<Value> pair = Core.ForceParens((ListImpl) pairValue.internalValue).items;
+    Array<Value> pair = ((ListImpl) pairValue.internalValue).items;
     SortState o = (SortState) sortStateValue.internalValue;
     SortTask task = o.taskQueue;
     bool keepRunning = true;
@@ -167,7 +167,7 @@ Value Sort_proceedWithCmpResult(Value stateVal, bool isSwap) {
 Value Sort_end(SortState state) {
     // This linked list and array will have the same size.
     Value arr = state.copyBackBuffer;
-    Array<Value> items = Core.ForceParens((ListImpl) arr.internalValue).items;
+    Array<Value> items = ((ListImpl) arr.internalValue).items;
     SortNode walker = state.output;
     for (int i = 0; walker != null; i += 1) {
         items[i] = walker.outputValue;

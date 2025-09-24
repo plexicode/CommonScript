@@ -60,12 +60,12 @@ Value List_join(GlobalValues g, Value v, string sep) {
     ListImpl o = (ListImpl) v.internalValue;
     if (o.length == 0) return g.emptyString;
     List<string> output = new List<string>();
-    output.Add(valueToHumanString(o.items[0]));
+    output.add(valueToHumanString(o.items[0]));
     int sz = o.length;
     for (int i = 1; i < sz; i += 1) {
-        output.Add(valueToHumanString(o.items[i]));
+        output.add(valueToHumanString(o.items[i]));
     }
-    string val = output.Join(sep);
+    string val = output.join(sep);
     return buildString(g, val, false);
 }
 

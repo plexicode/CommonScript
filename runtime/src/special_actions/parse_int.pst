@@ -2,9 +2,9 @@ valueStackSize -= 1;
 value = valueStack[valueStackSize];
 output = VALUE_NULL;
 if (value.type == Type.STRING) {
-    Core.TryParseFloat(stringUtil_getFlatValue(value), floatBuffer16);
+    Convert.tryParseFloat(stringUtil_getFlatValue(value), floatBuffer16);
     if (floatBuffer16[0] > 0) {
-        int1 = Core.Int(floatBuffer16[1]);
+        int1 = Math.floor(floatBuffer16[1]);
         output = buildInteger(globalValues, int1);
     }
 }

@@ -45,7 +45,7 @@ Statement ParseStatement(TokenStream tokens, bool isForLoop) {
 }
 
 Array<Statement> ParseCodeBlock(TokenStream tokens, bool requireCurlyBrace) {
-    return Core.ListToArray(ParseCodeBlockList(tokens, requireCurlyBrace));
+    return ParseCodeBlockList(tokens, requireCurlyBrace).toArray();
 }
 
 List<Statement> ParseCodeBlockList(TokenStream tokens, bool requireCurlyBrace) {
@@ -55,10 +55,10 @@ List<Statement> ParseCodeBlockList(TokenStream tokens, bool requireCurlyBrace) {
     if (curlyBraceNext) {
         Tokens_popExpected(tokens, OPEN_CURLY_BRACE); // will throw when required but not present.
         while (!Tokens_popIfPresent(tokens, CLOSE_CURLY_BRACE)) {
-            output.Add(ParseStatement(tokens, false));
+            output.add(ParseStatement(tokens, false));
         }
     } else {
-        output.Add(ParseStatement(tokens, false));
+        output.add(ParseStatement(tokens, false));
     }
 
     return output;
@@ -253,7 +253,7 @@ Statement ParseSwitch(TokenStream tokens) {
     {
         Tokens_ensureMore(tokens);
         SwitchChunk activeChunk = SwitchChunk_new();
-        chunks.Add(activeChunk);
+        chunks.add(activeChunk);
         while (Tokens_isNext(tokens, "case") || Tokens_isNext(tokens, "default")) {
             if (defaultEncountered) {
                 Errors_Throw(Tokens_peek(tokens), "The default case for a switch statement must appear at the end.");
@@ -262,12 +262,12 @@ Statement ParseSwitch(TokenStream tokens) {
             if (Tokens_isNext(tokens, "case")) {
                 Token caseToken = Tokens_popKeyword(tokens, "case");
                 Expression caseValue = ParseExpression(tokens);
-                activeChunk.CaseTokens.Add(caseToken);
-                activeChunk.Cases.Add(caseValue);
+                activeChunk.CaseTokens.add(caseToken);
+                activeChunk.Cases.add(caseValue);
             } else {
                 Token defaultToken = Tokens_popKeyword(tokens, "default");
-                activeChunk.CaseTokens.Add(defaultToken);
-                activeChunk.Cases.Add(null);
+                activeChunk.CaseTokens.add(defaultToken);
+                activeChunk.Cases.add(null);
                 defaultEncountered = true;
             }
             Tokens_popExpected(tokens, ":");
@@ -278,11 +278,11 @@ Statement ParseSwitch(TokenStream tokens) {
             !Tokens_isNext(tokens, CLOSE_CURLY_BRACE) &&
             Tokens_hasMore(tokens))
         {
-            activeChunk.Code.Add(ParseStatement(tokens, false));
+            activeChunk.Code.add(ParseStatement(tokens, false));
         }
     }
 
-    return Statement_createSwitchStatement(switchToken, condition, Core.ListToArray(chunks));
+    return Statement_createSwitchStatement(switchToken, condition, chunks.toArray());
 }
 
 Statement ParseThrow(TokenStream tokens) {
@@ -299,9 +299,9 @@ Statement ParseTraditionalForLoop(TokenStream tokens) {
     Expression condition = null;
     List<Statement> step = new List<Statement>();
     if (!Tokens_isNext(tokens, ";")) {
-        init.Add(ParseStatement(tokens, true));
+        init.add(ParseStatement(tokens, true));
         while (Tokens_popIfPresent(tokens, ",")) {
-            init.Add(ParseStatement(tokens, true));
+            init.add(ParseStatement(tokens, true));
         }
     }
 
@@ -312,16 +312,16 @@ Statement ParseTraditionalForLoop(TokenStream tokens) {
     Tokens_popExpected(tokens, ";");
 
     if (!Tokens_isNext(tokens, CLOSE_PAREN)) {
-        step.Add(ParseStatement(tokens, true));
+        step.add(ParseStatement(tokens, true));
         while (Tokens_popIfPresent(tokens, ",")) {
-            step.Add(ParseStatement(tokens, true));
+            step.add(ParseStatement(tokens, true));
         }
     }
     Tokens_popExpected(tokens, CLOSE_PAREN);
 
     Array<Statement> code = ParseCodeBlock(tokens, false);
 
-    return Statement_createForLoop(forToken, Core.ListToArray(init), condition, Core.ListToArray(step), code);
+    return Statement_createForLoop(forToken, init.toArray(), condition, step.toArray(), code);
 }
 
 Statement ParseTry(TokenStream tokens) {
@@ -342,18 +342,18 @@ Statement ParseTry(TokenStream tokens) {
             exceptionVarToken = mysteryToken;
         } else {
             List<Token> classNameBuilder = new List<Token>();
-            classNameBuilder.Add(mysteryToken);
+            classNameBuilder.add(mysteryToken);
             while (Tokens_popIfPresent(tokens, ".")) {
-                classNameBuilder.Add(Tokens_popName(tokens, "exception name"));
+                classNameBuilder.add(Tokens_popName(tokens, "exception name"));
             }
-            classNamesRaw.Add(Core.ListToArray(classNameBuilder));
+            classNamesRaw.add(classNameBuilder.toArray());
             while (Tokens_popIfPresent(tokens, "|")) {
-                classNameBuilder.Clear();
-                classNameBuilder.Add(Tokens_popName(tokens, "exception name"));
+                classNameBuilder.clear();
+                classNameBuilder.add(Tokens_popName(tokens, "exception name"));
                 while (Tokens_popIfPresent(tokens, ".")) {
-                    classNameBuilder.Add(Tokens_popName(tokens, "exception name"));
+                    classNameBuilder.add(Tokens_popName(tokens, "exception name"));
                 }
-                classNamesRaw.Add(Core.ListToArray(classNameBuilder));
+                classNamesRaw.add(classNameBuilder.toArray());
             }
 
             if (!Tokens_isNext(tokens, CLOSE_PAREN)) {
@@ -363,7 +363,7 @@ Statement ParseTry(TokenStream tokens) {
         }
 
         Array<Statement> catchCode = ParseCodeBlock(tokens, true);
-        catches.Add(CatchChunk_new(
+        catches.add(CatchChunk_new(
             catchCode,
             classNamesRaw,
             exceptionVarToken));
@@ -376,7 +376,7 @@ Statement ParseTry(TokenStream tokens) {
         finallyCode = new Array<Statement>(0);
     }
 
-    return Statement_createTry(tryToken, tryCode, Core.ListToArray(catches), finallyToken, finallyCode);
+    return Statement_createTry(tryToken, tryCode, catches.toArray(), finallyToken, finallyCode);
 }
 
 Statement ParseWhileLoop(TokenStream tokens) {

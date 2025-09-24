@@ -2,8 +2,8 @@ valueStackSize -= 2;
 str1 = stringUtil_getFlatValue(valueStack[valueStackSize]);
 str2 = stringUtil_getFlatValue(valueStack[valueStackSize + 1]);
 
-if (Core.StringEquals(str2, "utf8")) {
-    intArray1 = str1.ToUtf8Bytes();
+if (str2 == "utf8") {
+    intArray1 = str1.toUtf8Bytes();
 } else {
     errorId = ExceptionTypeId.INVALID_ARGUMENT;
     errorMsg = "Encoding not implemented.";

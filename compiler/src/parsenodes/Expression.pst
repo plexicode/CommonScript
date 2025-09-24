@@ -180,7 +180,7 @@ Expression Expression_createDictionaryDefinition(Token openDict, Array<Expressio
     Expression expr = Expression_new(openDict, ExpressionType.DICTIONARY_DEFINITION);
     expr.keys = keys;
     expr.values = values;
-    for (int i = 0; i < keys.Size(); i += 1) {
+    for (int i = 0; i < keys.size(); i += 1) {
         Expression key = keys[i];
         if (key.type != ExpressionType.STRING_CONST && key.type != ExpressionType.INTEGER_CONST) {
             Errors_Throw(key.firstToken, "Only string and integer constants can be used as dictionary keys");
@@ -260,10 +260,10 @@ Expression Expression_createDotField(Expression root, Token dotToken, string nam
 
 Array<string> DotField_getVariableRootedDottedChain(Expression outermostDotField, string errorMessage) {
     List<string> chain = new List<string>();
-    chain.Add(outermostDotField.strVal);
+    chain.add(outermostDotField.strVal);
     Expression walker = outermostDotField.root;
     while (walker != null) {
-        chain.Add(walker.strVal);
+        chain.add(walker.strVal);
         if (walker.type == ExpressionType.DOT_FIELD) {
             walker = walker.root;
         } else if (walker.type == ExpressionType.VARIABLE) {
@@ -274,8 +274,8 @@ Array<string> DotField_getVariableRootedDottedChain(Expression outermostDotField
             return null;
         }
     }
-    chain.Reverse();
-    return Core.ListToArray(chain);
+    chain.reverse();
+    return chain.toArray();
 }
 
 Expression Expression_createFunctionInvocation(Expression root, Token parenToken, Array<Expression> args) {

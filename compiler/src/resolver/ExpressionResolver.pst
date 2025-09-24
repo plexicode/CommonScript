@@ -77,13 +77,13 @@ Expression ExpressionResolver_ResolveExpressionSecondPass(Resolver resolver, Exp
 ////////////////// FIRST PASS 
 
 void ExpressionResolver_ResolveExpressionArrayFirstPass(Resolver resolver, Array<Expression> arr) {
-    for (int i = 0; i < arr.Size(); i += 1) {
+    for (int i = 0; i < arr.size(); i += 1) {
         arr[i] = ExpressionResolver_ResolveExpressionFirstPass(resolver, arr[i]);
     }
 }
 
 void ExpressionResolver_ResolveExpressionArraySecondPass(Resolver resolver, Array<Expression> arr) {
-    for (int i = 0; i < arr.Size(); i += 1) {
+    for (int i = 0; i < arr.size(); i += 1) {
         arr[i] = ExpressionResolver_ResolveExpressionSecondPass(resolver, arr[i]);
     }
 }
@@ -150,7 +150,7 @@ Expression ExpressionResolver_FirstPass_IntegerConstant(Resolver resolver, Expre
 }
 
 Expression ExpressionResolver_FirstPass_DictionaryDefinition(Resolver resolver, Expression dictDef) {
-    int length = dictDef.keys.Size();
+    int length = dictDef.keys.size();
     for (int i = 0; i < length; i += 1) {
         dictDef.keys[i] = ExpressionResolver_ResolveExpressionFirstPass(resolver, dictDef.keys[i]);
         dictDef.values[i] = ExpressionResolver_ResolveExpressionFirstPass(resolver, dictDef.values[i]);
@@ -177,7 +177,7 @@ Expression ExpressionResolver_FirstPass_DotField(Resolver resolver, Expression d
             // TODO: ew, gross. Cache and stash a dictionary somewhere on the entity.
             // Otherwise this could potentially turn problematic in the off chance there's an enum with a
             // few hundred members in it (e.g. generated code).
-            for (int i = 0; i < enumRef.memberNameTokens.Size(); i += 1) {
+            for (int i = 0; i < enumRef.memberNameTokens.size(); i += 1) {
                 if (enumRef.memberNameTokens[i].Value == fieldName) {
                     return Expression_createEnumConstant(dotField.firstToken, enumRef.baseData, fieldName, enumRef.memberValues[i].intVal);
                 }
@@ -187,7 +187,7 @@ Expression ExpressionResolver_FirstPass_DotField(Resolver resolver, Expression d
 
         case ExpressionType.NAMESPACE_REFERENCE:
             NamespaceEntity nsEntity = (NamespaceEntity)dotField.root.entityPtr.specificData;
-            if (!nsEntity.nestedMembers.Contains(fieldName)) {
+            if (!nsEntity.nestedMembers.contains(fieldName)) {
                 Errors_Throw(dotField.opToken, "There is no member of this namespace named '" + fieldName + "'.");
             }
             AbstractEntity referencedEntity = nsEntity.nestedMembers[fieldName];
@@ -223,19 +223,19 @@ Expression ExpressionResolver_FirstPass_InlineIncrement(Resolver resolver, Expre
 Expression ExpressionResolver_FirstPass_Lambda(Resolver resolver, Expression lamb) {
     int i = 0;
 
-    // TODO: pastel should support Core.ArrayToList()
+    // TODO: pastel should support array.toList()
     List<Token> argNames = new List<Token>();
-    for (i = 0; i < lamb.argNames.Size(); i += 1) {
-        argNames.Add(lamb.argNames[i]);
+    for (i = 0; i < lamb.argNames.size(); i += 1) {
+        argNames.add(lamb.argNames[i]);
     }
     List<Expression> argValues = new List<Expression>();
-    for (i = 0; i < lamb.values.Size(); i += 1) {
-        argValues.Add(lamb.values[i]);
+    for (i = 0; i < lamb.values.size(); i += 1) {
+        argValues.add(lamb.values[i]);
     }
 
     List<Statement> code = new List<Statement>();
-    for (i = 0; i < lamb.nestedCode.Size(); i += 1) {
-        code.Add(lamb.nestedCode[i]);
+    for (i = 0; i < lamb.nestedCode.size(); i += 1) {
+        code.add(lamb.nestedCode[i]);
     }
 
     FunctionEntity lambdaEnt = FunctionEntity_BuildLambda(
@@ -251,7 +251,7 @@ Expression ExpressionResolver_FirstPass_Lambda(Resolver resolver, Expression lam
 }
 
 Expression ExpressionResolver_FirstPass_ListDefinition(Resolver resolver, Expression listDef) {
-    for (int i = 0; i < listDef.values.Size(); i += 1) {
+    for (int i = 0; i < listDef.values.size(); i += 1) {
         listDef.values[i] = ExpressionResolver_ResolveExpressionFirstPass(resolver, listDef.values[i]);
     }
     return listDef;
@@ -388,7 +388,7 @@ Expression ExpressionResolver_SecondPass_BinaryOp(Resolver resolver, Expression 
                 intLeft = expr.left.intVal;
                 intRight = expr.right.intVal;
                 if (op == "**") {
-                    return Expression_createFloatConstant(opToken, Core.Pow(intLeft, intRight));
+                    return Expression_createFloatConstant(opToken, Math.pow(intLeft, intRight));
                 }
                 resultInt = 0;
                 if (op == "+") {
@@ -398,7 +398,7 @@ Expression ExpressionResolver_SecondPass_BinaryOp(Resolver resolver, Expression 
                 } else if (op == "*") {
                     resultInt = intLeft * intRight;
                 } else if (op == "/") {
-                    resultInt = Core.IntegerDivision(intLeft, intRight);
+                    resultInt = intLeft / intRight;
                 } else if (op == "%") {
                     if (intRight < 0) {
                         intRight = -intRight;
@@ -442,7 +442,7 @@ Expression ExpressionResolver_SecondPass_BinaryOp(Resolver resolver, Expression 
                 } else if (op == "*") {
                     floatResult = floatLeft * floatRight; 
                 } else if (op == "/") {
-                    floatResult = Core.FloatDivision(floatLeft, floatRight); 
+                    floatResult = floatLeft / floatRight; 
                 } else if (op == "%") {
                     if (floatRight < 0) {
                         floatRight = -floatRight;
@@ -476,12 +476,12 @@ Expression ExpressionResolver_SecondPass_BinaryOp(Resolver resolver, Expression 
                     // an arbitrary heuristic. If the new string is 12 characters or longer, leave it 
                     // in its original expression form. You don't want something like "x" * 10000 adding 
                     // a full 10 kilobytes to the output bundle.
-                    if (val.Size() * size < 12) { 
+                    if (val.size() * size < 12) { 
                         List<string> sb = new List<string>();
                         for (int i = 0; i < size; i += 1) {
-                            sb.Add(val);
+                            sb.add(val);
                         }
-                        return Expression_createStringConstant(expr.firstToken, sb.Join(""));
+                        return Expression_createStringConstant(expr.firstToken, sb.join(""));
                     }
                     return expr;
                 }
@@ -553,7 +553,7 @@ Expression ExpressionResolver_SecondPass_ConstructorReference(Resolver resolver,
 }
 
 Expression ExpressionResolver_SecondPass_DictionaryDefinition(Resolver resolver, Expression dictDef) {
-    int length = dictDef.keys.Size();
+    int length = dictDef.keys.size();
     Dictionary<string, bool> strCollide = new Dictionary<string, bool>();
     Dictionary<int, bool> intCollide = new Dictionary<int, bool>();
     for (int i = 0; i < length; i += 1) {
@@ -561,12 +561,12 @@ Expression ExpressionResolver_SecondPass_DictionaryDefinition(Resolver resolver,
         bool isMixed = false;
         bool isCollide = false;
         if (key.type == ExpressionType.INTEGER_CONST) {
-            isMixed = strCollide.Size() > 0;
-            isCollide = intCollide.Contains(key.intVal);
+            isMixed = strCollide.size() > 0;
+            isCollide = intCollide.contains(key.intVal);
             intCollide[key.intVal] = true;
         } else if (key.type == ExpressionType.STRING_CONST) {
-            isMixed = intCollide.Size() > 0;
-            isCollide = strCollide.Contains(key.strVal);
+            isMixed = intCollide.size() > 0;
+            isCollide = strCollide.contains(key.strVal);
             strCollide[key.strVal] = true;
         } else {
             Errors_Throw(key.firstToken, "This type of expression cannot be used as a dictionary key. Dictionary keys must be constant integer or string expressions.");
@@ -594,7 +594,7 @@ Expression ExpressionResolver_SecondPass_DotField(Resolver resolver, Expression 
     switch (df.root.type) {
         case ExpressionType.STRING_CONST:
             if (df.strVal == "length") {
-                return Expression_createIntegerConstant(df.firstToken, df.root.strVal.Size());
+                return Expression_createIntegerConstant(df.firstToken, df.root.strVal.size());
             }
             break;
 
@@ -607,7 +607,7 @@ Expression ExpressionResolver_SecondPass_DotField(Resolver resolver, Expression 
         case ExpressionType.CLASS_REFERENCE:
             ClassEntity classDef = (ClassEntity)df.root.entityPtr.specificData;
             AbstractEntity member = null;
-            if (classDef.classMembers.Contains(df.strVal)) {
+            if (classDef.classMembers.contains(df.strVal)) {
                 member = classDef.classMembers[df.strVal];
                 if (!member.isStatic) {
                     Errors_Throw(df.opToken, classDef.baseData.fqName + "." + df.strVal + " is not static.");
@@ -642,7 +642,7 @@ Expression ExpressionResolver_SecondPass_ExtensionInvocation(Resolver resolver, 
         }
     }
 
-    if (argc != -1 && expr.args.Size() != argc) {
+    if (argc != -1 && expr.args.size() != argc) {
         Errors_Throw(expr.firstToken, "Incorrect number of arguments to extension");
     }
 
@@ -732,7 +732,7 @@ Expression ExpressionResolver_SecondPass_Lambda(Resolver resolver, Expression la
 }
 
 Expression ExpressionResolver_SecondPass_ListDefinition(Resolver resolver, Expression listDef) {
-    for (int i = 0; i < listDef.values.Size(); i += 1) {
+    for (int i = 0; i < listDef.values.size(); i += 1) {
         listDef.values[i] = ExpressionResolver_ResolveExpressionSecondPass(resolver, listDef.values[i]);
     }
     return listDef;
@@ -828,11 +828,11 @@ Expression ExpressionResolver_SecondPass_TypeOf(Resolver resolver, Expression ty
         case ExpressionType.FUNCTION_REFERENCE: stringConst = "function"; break;
 
         case ExpressionType.LIST_DEFINITION:
-            if (typeofExpr.root.values.Size() == 0) stringConst = "list";
+            if (typeofExpr.root.values.size() == 0) stringConst = "list";
             break;
 
         case ExpressionType.DICTIONARY_DEFINITION:
-            if (typeofExpr.root.keys.Size() == 0) stringConst = "dict";
+            if (typeofExpr.root.keys.size() == 0) stringConst = "dict";
             break;
     }
 
@@ -845,7 +845,7 @@ Expression ExpressionResolver_SecondPass_TypeOf(Resolver resolver, Expression ty
 
 Expression ExpressionResolver_SecondPass_Variable(Resolver resolver, Expression varExpr) {
     if (varExpr.strVal == "print") fail(""); // should not happen.
-    if (((FunctionEntity)resolver.activeEntity.specificData).variableScope.Contains(varExpr.strVal)) return varExpr;
+    if (((FunctionEntity)resolver.activeEntity.specificData).variableScope.contains(varExpr.strVal)) return varExpr;
 
     // TODO: come up with a list of suggestions.
     Errors_Throw(varExpr.firstToken, "There is no variable by the name of '" + varExpr.strVal + "'.");
@@ -859,7 +859,7 @@ Expression ExpressionResolver_IntegerRequired(Resolver resolver, Expression expr
         case ExpressionType.ENUM_CONST:
             EnumEntity enumParent = (EnumEntity)expr.entityPtr.specificData;
             string enumMem = expr.strVal;
-            for (int i = 0; i < enumParent.memberValues.Size(); i += 1) {
+            for (int i = 0; i < enumParent.memberValues.size(); i += 1) {
                 if (enumMem == enumParent.memberNameTokens[i].Value) {
                     Expression val = enumParent.memberValues[i];
                     if (val.type != ExpressionType.INTEGER_CONST) {
@@ -883,11 +883,11 @@ Expression ExpressionResolver_IntegerRequired(Resolver resolver, Expression expr
 }
 
 AbstractEntity ExpressionResolver_FindLocallyReferencedEntity(StaticContext staticCtx, Dictionary<string, AbstractEntity> lookup, string name) {
-    if (lookup.Contains(name)) {
+    if (lookup.contains(name)) {
         return lookup[name];
     }
 
-    if (lookup.Contains("..")) {
+    if (lookup.contains("..")) {
         Dictionary<string, AbstractEntity> prevLevelLookup = Entity_getMemberLookup(staticCtx, lookup[".."]);
         return ExpressionResolver_FindLocallyReferencedEntity(staticCtx, prevLevelLookup, name);
     }

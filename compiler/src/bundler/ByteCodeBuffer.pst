@@ -113,7 +113,7 @@ ByteCodeBuffer create3(int opCode, Token token, string stringArg, int arg1, int 
 
 ByteCodeBuffer convertToBuffer(Array<ByteCodeRow> flatRows) {
     ByteCodeBuffer buf = null;
-    int length = flatRows.Size();
+    int length = flatRows.size();
     for (int i = 0; i < length; i += 1) {
         buf = join2(buf, ByteCodeBuffer_fromRow(flatRows[i]));
     }
@@ -124,19 +124,19 @@ Array<ByteCodeRow> flatten(ByteCodeBuffer buffer) {
     if (buffer == null) return new Array<ByteCodeRow>(0);
 
     List<ByteCodeBuffer> q = new List<ByteCodeBuffer>();
-    q.Add(buffer);
+    q.add(buffer);
 
     List<ByteCodeRow> output = new List<ByteCodeRow>();
 
-    while (q.Size() > 0) {
-        ByteCodeBuffer current = q[q.Size() - 1];
-        q.RemoveAt(q.Size() - 1);
+    while (q.size() > 0) {
+        ByteCodeBuffer current = q[q.size() - 1];
+        q.removeAt(q.size() - 1);
         if (current.isLeaf) {
-            output.Add(current.row);
+            output.add(current.row);
         } else {
-            q.Add(current.right);
-            q.Add(current.left);
+            q.add(current.right);
+            q.add(current.left);
         }
     }
-    return Core.ListToArray(output);
+    return output.toArray();
 }

@@ -12,7 +12,7 @@ ExecutionTask createNewTask(ExecutionContext ec, Value fpValue, Array<Value> arg
     if (fpValue.type != Type.FUNCTION) return null;
     FunctionPointer fp = (FunctionPointer) fpValue.internalValue;
     int pc = 0;
-    int argc = args.Size();
+    int argc = args.size();
     int argcMax = argc;
     Value context = null;
     switch (fp.funcType) {
@@ -70,8 +70,8 @@ ExecutionTask createMainTask(ExecutionContext ec, Array<string> cliArgs) {
 
     Value args = ec.globalValues.nullValue;
     Array<Value> argList = new Array<Value>(1);
-    Array<Value> argValues = new Array<Value>(cliArgs.Size());
-    for (int i = 0; i < cliArgs.Size(); i += 1) {
+    Array<Value> argValues = new Array<Value>(cliArgs.size());
+    for (int i = 0; i < cliArgs.size(); i += 1) {
         // this array has a lifetime equivalent of main() so just mark it as
         // a common string as it will survive permanently in memory no matter what.
         argValues[i] = buildString(ec.globalValues, cliArgs[i], true);

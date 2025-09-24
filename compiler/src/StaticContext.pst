@@ -10,7 +10,7 @@ StaticContext StaticContext_new() {
         TokenizerStaticContext_new(),
         new Dictionary<string, AbstractEntity>(),
         SpecialActionUtil_new(),
-        StringSet_fromArray("public static".Split(" "))
+        StringSet_fromArray("public static".split(" "))
     );
 }
 
@@ -31,18 +31,18 @@ TokenizerStaticContext TokenizerStaticContext_new() {
 
     int i = 0;
     for (i = 0; i < 10; i += 1) {
-        ctx.numerics[Core.Ord('0') + i] = true;
-        ctx.alphanumerics[Core.Ord('0') + i] = true;
+        ctx.numerics[Convert.charToCharCode('0') + i] = true;
+        ctx.alphanumerics[Convert.charToCharCode('0') + i] = true;
     }
     for (i = 0; i < 26; i += 1) {
-        ctx.alphanumerics[Core.Ord('A') + i] = true;
-        ctx.alphanumerics[Core.Ord('a') + i] = true;
+        ctx.alphanumerics[Convert.charToCharCode('A') + i] = true;
+        ctx.alphanumerics[Convert.charToCharCode('a') + i] = true;
     }
-    ctx.alphanumerics[Core.Ord('_')] = true;
+    ctx.alphanumerics[Convert.charToCharCode('_')] = true;
 
     string ws = " \r\n\t";
-    for (i = 0; i < ws.Size(); i += 1) {
-        ctx.whitespace[Core.Ord(ws[i])] = true;
+    for (i = 0; i < ws.size(); i += 1) {
+        ctx.whitespace[Convert.charToCharCode(ws[i])] = true;
     }
 
     ctx.keywords = StringSet_fromArray("function class field property constructor const enum
@@ -52,22 +52,22 @@ is typeof
 if else for while do break continue switch case default yield return
 throw try catch finally
 import namespace
-public static readonly abstract".Trim().Replace("\n", " ").Split(" "));
+public static readonly abstract".trim().replace("\n", " ").split(" "));
 
     // This list must be sorted by length descending as longer candidates must be checked
     // before shorter ones. For example, it would be a bug for >>> to register as a hit before >>>= does.
-    Array<string> mcharTokens = ">>>= >>> <<= >>= **= ++ -- && || ** == != <= >= => -> << >> ?? += -= *= %= /= |= &= ^=".Split(" ");
-    for (i = 0; i < mcharTokens.Size(); i += 1) {
+    Array<string> mcharTokens = ">>>= >>> <<= >>= **= ++ -- && || ** == != <= >= => -> << >> ?? += -= *= %= /= |= &= ^=".split(" ");
+    for (i = 0; i < mcharTokens.size(); i += 1) {
         string mcharTok = mcharTokens[i];
-        Array<int> uchars = new Array<int>(mcharTok.Size());
-        for (int j = 0; j < uchars.Size(); j += 1) {
-            uchars[j] = Core.Ord(mcharTok[j]);
+        Array<int> uchars = new Array<int>(mcharTok.size());
+        for (int j = 0; j < uchars.size(); j += 1) {
+            uchars[j] = Convert.charToCharCode(mcharTok[j]);
         }
         int firstChar = uchars[0];
-        if (!ctx.multicharTokensByFirstChar.Contains(firstChar)) {
+        if (!ctx.multicharTokensByFirstChar.contains(firstChar)) {
             ctx.multicharTokensByFirstChar[firstChar] = new List<Array<int>>();
         }
-        ctx.multicharTokensByFirstChar[firstChar].Add(uchars);
+        ctx.multicharTokensByFirstChar[firstChar].add(uchars);
     }
 
     return ctx;

@@ -3,7 +3,7 @@ void Errors_ThrowEof(string fileName, string msg) { _Errors_ThrowImpl(2, null, f
 void Errors_ThrowGeneralError(string msg) { _Errors_ThrowImpl(3, null, msg, ""); }
 void Errors_ThrowNotImplemented(Token token, string optionalMsg) {
     if (optionalMsg == null) optionalMsg = "";
-    Errors_Throw(token, ("***NOT IMPLEMENTED*** " + optionalMsg).Trim());
+    Errors_Throw(token, ("***NOT IMPLEMENTED*** " + optionalMsg).trim());
 }
 
 object _Errors_ThrowImpl(int type, Token t, string s1, string s2) {
@@ -19,5 +19,5 @@ object _Errors_ThrowImpl(int type, Token t, string s1, string s2) {
         args[1] = s1;
     }
 
-    return Core.ExtensibleCallbackInvoke("throwParserException", args);
+    return Pastel.invokeExtension("throwParserException", args);
 }

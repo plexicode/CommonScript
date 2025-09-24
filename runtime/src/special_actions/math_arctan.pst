@@ -16,4 +16,4 @@ if (right.type == Type.NULL) {
     float2 = 0.0 + (int) right.internalValue;
 }
 
-output = buildFloat(Core.ArcTan(float1, float2));
+output = buildFloat(Math.arcTan(float1, float2));

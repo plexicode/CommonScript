@@ -1,4 +1,4 @@
 if (valueStackSize == valueStackCapacity) {
     valueStack = increaseValueStackCapacity(task);
-    valueStackCapacity = valueStack.Size();
+    valueStackCapacity = valueStack.size();
 }

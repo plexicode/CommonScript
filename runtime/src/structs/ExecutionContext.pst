@@ -64,23 +64,23 @@ ExecutionContext new_ExecutionContext(
 
         int i = 0;
 
-        ec.functionsAsValues = new Array<Value>(ec.functions.Size());
-        for (i = 1; i < ec.functions.Size(); i += 1) {
+        ec.functionsAsValues = new Array<Value>(ec.functions.size());
+        for (i = 1; i < ec.functions.size(); i += 1) {
             ec.functionsAsValues[i] = buildFunctionFromInfo(ec.functions[i]);
         }
 
-        ec.statelessLambdasAsValues = new Array<Value>(ec.lambdas.Size());
-        for (i = 1; i < ec.lambdas.Size(); i += 1) {
+        ec.statelessLambdasAsValues = new Array<Value>(ec.lambdas.size());
+        for (i = 1; i < ec.lambdas.size(); i += 1) {
             ec.statelessLambdasAsValues[i] = buildFunctionFromInfo(ec.lambdas[i]);
         }
 
-        ec.classRefValues = new Array<Value>(ec.classes.Size());
-        for (i = 1; i < ec.classes.Size(); i += 1) {
+        ec.classRefValues = new Array<Value>(ec.classes.size());
+        for (i = 1; i < ec.classes.size(); i += 1) {
             ec.classRefValues[i] = new Value(Type.CLASS, ec.classes[i]);
         }
 
-        ec.switchIntLookupsByPc = new Array<Dictionary<int, int>>(ec.byteCode.Size());
-        ec.switchStrLookupsByPc = new Array<Dictionary<string, int>>(ec.byteCode.Size());
+        ec.switchIntLookupsByPc = new Array<Dictionary<int, int>>(ec.byteCode.size());
+        ec.switchStrLookupsByPc = new Array<Dictionary<string, int>>(ec.byteCode.size());
 
         generateNameLookup(ec);
     }
@@ -90,7 +90,7 @@ ExecutionContext new_ExecutionContext(
 
 void finalizeExecutionContext(ExecutionContext ec) {
     Array<ByteCodeRow> byteCode = ec.byteCode;
-    int length = ec.byteCode.Size();
+    int length = ec.byteCode.size();
     ByteCodeRow row = null;
     for (int i = 0; i < length; i += 1) {
         row = byteCode[i];

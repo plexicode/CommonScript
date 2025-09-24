@@ -1,16 +1,16 @@
 string FloatToStringWorkaround(double val) {
-    string str = Core.FloatToString(val);
+    string str = Convert.floatToString(val);
     // This is a Pastel bug. .0 is being appended when '.' is not included.
-    str = str.ToLower();
-    if (str.Contains("e") && str.EndsWith(".0")) {
-        str = str.SubString(0, str.Size() - 2).Replace("e", ".0e");
+    str = str.toLower();
+    if (str.contains("e") && str.endsWith(".0")) {
+        str = str.subString(0, str.size() - 2).replace("e", ".0e");
     }
     return str;
 }
 
 string PadIntegerToSize(int n, int size) {
-    string o = Core.IntToString(n);
-    while (o.Size() < size) o = "0" + o;
+    string o = Convert.intToString(n);
+    while (o.size() < size) o = "0" + o;
     return o;
 }
 
@@ -22,30 +22,30 @@ Array<string> OrderStringsByDescendingFrequencyUsingLookup(
 
     int total = 0;
     int i = 0;
-    Array<string> values = frequencyLookupByKey.Keys();
-    for (i = 0; i < values.Size(); i += 1) {
+    Array<string> values = frequencyLookupByKey.keys();
+    for (i = 0; i < values.size(); i += 1) {
         total += frequencyLookupByKey[values[i]];
     }
 
-    int padSize = Core.IntToString(total).Size() + 1;
+    int padSize = Convert.intToString(total).size() + 1;
     Dictionary<string, string> valueByLexicalSortKey = new Dictionary<string, string>();
-    for (i = 0; i < values.Size(); i += 1) {
+    for (i = 0; i < values.size(); i += 1) {
         string value = values[i];
         string key = PadIntegerToSize(total - frequencyLookupByKey[value], padSize) + ":" + value;
         valueByLexicalSortKey[key] = value;
     }
 
-    Array<string> keys = Core.SortedCopyOfStringArray(valueByLexicalSortKey.Keys());
+    Array<string> keys = Sorting.getLexicalSortedCopy(valueByLexicalSortKey.keys());
     List<string> output = new List<string>();
-    for (i = 0; i < keys.Size(); i += 1) {
-        output.Add(valueByLexicalSortKey[keys[i]]);
+    for (i = 0; i < keys.size(); i += 1) {
+        output.add(valueByLexicalSortKey[keys[i]]);
     }
 
-    return Core.ListToArray(output);
+    return output.toArray();
 }
 
 Array<string> StringArraySlice(Array<string> arr, int skipStart, int skipEnd) {
-    int srcLen = arr.Size();
+    int srcLen = arr.size();
     int dstLen = srcLen - skipStart - skipEnd;
     Array<string> output = new Array<string>(dstLen);
     for (int i = 0; i < dstLen; i += 1) {
@@ -56,8 +56,8 @@ Array<string> StringArraySlice(Array<string> arr, int skipStart, int skipEnd) {
 
 List<string> StringArrayToList(Array<string> arr) {
     List<string> output = new List<string>();
-    for (int i = 0; i < arr.Size(); i += 1) {
-        output.Add(arr[i]);
+    for (int i = 0; i < arr.size(); i += 1) {
+        output.add(arr[i]);
     }
     return output;
 }

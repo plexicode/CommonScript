@@ -19,7 +19,7 @@ switch (value.type) {
 
     case Type.BYTEBUF:
         if (j == LENGTH_ID) {
-            sz = Core.ForceParens((Array<int>) value.internalValue).Size();
+            sz = ((Array<int>) value.internalValue).size();
             if (sz < INT_CACHE_RANGE) {
                 output = globalValues.posIntegers[sz];
             } else {
@@ -48,7 +48,7 @@ switch (value.type) {
     case Type.STRING:
 
         if (j == LENGTH_ID) {
-            sz = Core.ForceParens((StringImpl) value.internalValue).length;
+            sz = ((StringImpl) value.internalValue).length;
             if (sz < INT_CACHE_RANGE) {
                 output = globalValues.posIntegers[sz];
             } else {
@@ -77,7 +77,7 @@ switch (value.type) {
 
     case Type.LIST:
         if (j == LENGTH_ID) {
-            sz = Core.ForceParens((ListImpl) value.internalValue).length;
+            sz = ((ListImpl) value.internalValue).length;
             if (sz < INT_CACHE_RANGE) {
                 output = globalValues.posIntegers[sz];
             } else {
@@ -145,9 +145,9 @@ switch (value.type) {
 
     case Type.INSTANCE:
         instance1 = (Instance) value.internalValue;
-        if (!instance1.classDef.nameToOffset.Contains(name)) {
+        if (!instance1.classDef.nameToOffset.contains(name)) {
             errorId = ExceptionTypeId.FIELD_NOT_FOUND;
-            errorMsg = Core.StringConcatAll("The class '", instance1.classDef.name, "' does not contain a field named '.", name, "'.");
+            errorMsg = "The class '" + instance1.classDef.name + "' does not contain a field named '." + name + "'.";
             @import("macros/throw.pst");
         }
         int1 = instance1.classDef.nameToOffset[name];
@@ -170,8 +170,8 @@ switch (value.type) {
     case Type.CLASS:
 
         // TODO: all fields should be initialized to null by the metadata loader and the static constructor.
-        str2Val = Core.ForceParens((ClassInfo) value.internalValue).staticMembers;
-        if (!str2Val.Contains(name)) {
+        str2Val = ((ClassInfo) value.internalValue).staticMembers;
+        if (!str2Val.contains(name)) {
             @import("macros/saveframe.pst");
             return ExRes_HardCrash(task, "TODO: all static fields need to be initialized. This should eventually not happen.");
         }
@@ -185,7 +185,7 @@ switch (value.type) {
 
 if (output == null) {
     errorId = ExceptionTypeId.FIELD_NOT_FOUND;
-    errorMsg = Core.StringConcatAll("Field not found: .", row.stringArg);
+    errorMsg = "Field not found: ." + row.stringArg;
     if (value.type == Type.NULL) {
         errorId = ExceptionTypeId.NULL_REFERENCE;
         errorMsg = "Cannot access fields on null.";

@@ -31,7 +31,7 @@ string GetStringFromConstantExpression(Expression expr) {
     }
     
     if (expr.type == ExpressionType.INTEGER_CONST) {
-        return Core.IntToString(expr.intVal);
+        return Convert.intToString(expr.intVal);
     }
     
     if (expr.type == ExpressionType.BOOL_CONST) {
@@ -49,12 +49,12 @@ string GetStringFromConstantExpression(Expression expr) {
 
     if (expr.type == ExpressionType.FLOAT_CONST) {
         string val = FloatToStringWorkaround(expr.floatVal);
-        if (val.ToLower().Contains("e"))
+        if (val.toLower().contains("e"))
         {
             fail("Not implemented");
         }
-        if (val.Contains(",")) val = val.Replace(",", ".");
-        if (!val.Contains(".")) val += ".0";
+        if (val.contains(",")) val = val.replace(",", ".");
+        if (!val.contains(".")) val += ".0";
         return val;
     }
 

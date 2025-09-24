@@ -12,15 +12,15 @@ EnumEntity EnumEntity_new(Token enumToken, Token nameToken, Array<Token> memberN
     e.baseData.nameToken = nameToken;
     e.baseData.simpleName = nameToken.Value;
     
-    if (memberNames.Size() == 0) {
+    if (memberNames.size() == 0) {
         Errors_Throw(enumToken, "This enum definition is empty.");
     }
 
     Dictionary<string, bool> collisionCheck = new Dictionary<string, bool>();
     bool isImplicit = memberValues[0] == null;
-    for (int i = 0; i < memberNames.Size(); i += 1) {
+    for (int i = 0; i < memberNames.size(); i += 1) {
         Token name = memberNames[i];
-        if (collisionCheck.Contains(name.Value)) {
+        if (collisionCheck.contains(name.Value)) {
             Errors_Throw(name, "This enum value name collides with a previous definition.");
         }
 

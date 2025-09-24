@@ -18,11 +18,11 @@ FunctionEntity FunctionEntity_new(
     List<Statement> code) {
 
     FunctionEntity fn = new FunctionEntity(
-        Core.ListToArray(argNames),
-        Core.ListToArray(argDefaultValues),
+        argNames.toArray(),
+        argDefaultValues.toArray(),
         null,
         null,
-        Core.ListToArray(code),
+        code.toArray(),
         null,
         -1
     );
@@ -93,7 +93,7 @@ FunctionEntity FunctionEntity_BuildConstructor(
     }
 
     if (baseArgs != null) {
-        fle.baseCtorArgValues = Core.ListToArray(baseArgs);
+        fle.baseCtorArgValues = baseArgs.toArray();
     }
 
     fle.baseData.isStatic = isStatic;

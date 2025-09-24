@@ -38,7 +38,7 @@ switch (fp.funcType) {
         classDef = fp.func.classParent;
 
         valueArr = classDef.initialValues;
-        sz = valueArr.Size();
+        sz = valueArr.size();
         values = new Array<Value>(sz);
 
         for (i = 0; i < sz; i += 1) {
@@ -80,7 +80,7 @@ switch (fp.funcType) {
                 fp = (FunctionPointer) fp.ctx.internalValue;
                 value = fp.ctx;
                 overrideReturnValueWithContext = false;
-                if (args.Size() < fp.argcMin || args.Size() > fp.argcMax) {
+                if (args.size() < fp.argcMin || args.size() > fp.argcMax) {
                     // Do the check again now that the args are different.
                     errorId = ExceptionTypeId.INVOCATION;
                     errorMsg = "Incorrect number of arguments.";

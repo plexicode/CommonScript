@@ -1,5 +1,5 @@
 
-if (row.args.Size() == 1) {
+if (row.args.size() == 1) {
     i = row.firstArg;
     if (i >= 0 && i <= 4) {
         value = globalValues.floatsBy4x[i];
@@ -7,7 +7,7 @@ if (row.args.Size() == 1) {
         value = buildFloat(i * 0.25);
     }
 } else {
-    value = buildFloat(Core.ParseFloatUnsafe(row.stringArg));
+    value = buildFloat(Convert.parseFloatUnsafe(row.stringArg));
 }
 
 row.valueCache = value;

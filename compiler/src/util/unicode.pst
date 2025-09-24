@@ -1,8 +1,8 @@
 // TODO: move this into Pastel as a direct platform method.
 Array<int> StringToUnicodeArray(string strVal) {
-    Array<int> bytes = strVal.ToUtf8Bytes();
-    Array<int> output = new Array<int>(bytes.Size());
-    int length = bytes.Size();
+    Array<int> bytes = strVal.toUtf8Bytes();
+    Array<int> output = new Array<int>(bytes.size());
+    int length = bytes.size();
     int c = 0;
     int i = 0;
     int j = 0;
@@ -39,14 +39,14 @@ Array<int> StringToUnicodeArray(string strVal) {
 }
 
 string UnicodeArrayToString(Array<int> chars) {
-    return UnicodeArrayToString_slice(chars, 0, chars.Size());
+    return UnicodeArrayToString_slice(chars, 0, chars.size());
 }
 
 string UnicodeArrayToString_slice(Array<int> chars, int start, int length) {
     List<string> sb = new List<string>();
     int end = start + length;
     for (int i = start; i < end; i += 1) {
-        sb.Add(Core.StringFromCharCode(chars[i]));
+        sb.add(Convert.charCodeToString(chars[i]));
     }
-    return sb.Join("");
+    return sb.join("");
 }

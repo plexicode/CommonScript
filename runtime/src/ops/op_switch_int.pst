@@ -6,7 +6,7 @@ valueStackSize -= 1;
 value = valueStack[valueStackSize];
 i = (int) value.internalValue;
 switchIntLookup = ec.switchIntLookupsByPc[pc];
-if (switchIntLookup.Contains(i)) {
+if (switchIntLookup.contains(i)) {
     pc += switchIntLookup[i];
 } else {
     pc += row.firstArg;

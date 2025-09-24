@@ -50,7 +50,7 @@ Value stringUtil_trim(Value str, bool front, bool back) {
     for (int i = 0; i < length; i += 1) {
         newChars[i] = uchars[i + start];
     }
-    StringImpl o = new StringImpl(length, false, newChars, strimpl.nativeStr.SubString(start, length), null, null);
+    StringImpl o = new StringImpl(length, false, newChars, strimpl.nativeStr.subString(start, length), null, null);
     return new Value(Type.STRING, o);
 }
 
@@ -61,16 +61,16 @@ Value stringUtil_changeCase(Value orig, bool isUpper) {
     string s = si.nativeStr;
     string s2 = null;
     if (isUpper) {
-        s2 = s.ToUpper();
+        s2 = s.toUpper();
     } else {
-        s2 = s.ToLower();
+        s2 = s.toLower();
     }
     if (s2 == s) return orig;
     return new Value(Type.STRING, buildAsciiStringImpl(s2));
 }
 
 Value createStringFromUnicodeArraySegment(GlobalValues g, Array<int> buffer, int start, int length) {
-    if (length == buffer.Size()) {
+    if (length == buffer.size()) {
         return createStringFromUnicodeArray(g, buffer, true);
     }
 
@@ -83,10 +83,10 @@ Value createStringFromUnicodeArraySegment(GlobalValues g, Array<int> buffer, int
 
 Value createStringFromUnicodeArray(GlobalValues g, Array<int> buffer, bool copyBuffer) {
     Array<int> uchars = buffer;
-    int sz = buffer.Size();
+    int sz = buffer.size();
     if (sz < 2) {
         if (sz == 0) return g.emptyString;
-        string singleChar = Core.CharToString(Core.Chr(buffer[0]));
+        string singleChar = Convert.charCodeToString(buffer[0]);
         return buildString(g, singleChar, true);
     }
 
@@ -100,10 +100,10 @@ Value createStringFromUnicodeArray(GlobalValues g, Array<int> buffer, bool copyB
     // TODO: this is WRONG and needs to be part of the proper unicode/surrogate pair rework
     List<string> sb = new List<string>();
     for (int j = 0; j < sz; j += 1) {
-        sb.Add(Core.CharToString(Core.Chr(uchars[j])));
+        sb.add(Convert.charCodeToString(uchars[j]));
     }
-    string finalString = sb.Join("");
-    if (g.commonStrings.Contains(finalString)) return g.commonStrings[finalString];
+    string finalString = sb.join("");
+    if (g.commonStrings.contains(finalString)) return g.commonStrings[finalString];
 
     return new Value(
         Type.STRING,

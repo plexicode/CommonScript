@@ -1,34 +1,34 @@
-// This should be implemented natively in Pastel so I'm not going to worry too much 
+// This should be implemented natively in Pastel so I'm not going to worry too much
 // about efficiency.
 string buildBase64String(Array<int> rawBytes) {
     List<int> pairs = new List<int>();
-    int sz = rawBytes.Size();
+    int sz = rawBytes.size();
     int n = 0;
     for (int i = 0; i < sz; i += 1) {
         n = rawBytes[i];
-        pairs.Add(Core.ForceParens(n >> 6) & 3);
-        pairs.Add(Core.ForceParens(n >> 4) & 3);
-        pairs.Add(Core.ForceParens(n >> 2) & 3);
-        pairs.Add(n & 3);
+        pairs.add((n >> 6) & 3);
+        pairs.add((n >> 4) & 3);
+        pairs.add((n >> 2) & 3);
+        pairs.add(n & 3);
     }
 
     Array<string> chars = new Array<string>(64);
     for (int j = 0; j < 26; j += 1) {
-        chars[j] = Core.CharToString(Core.Chr(Core.Ord('A') + j));
-        chars[j + 26] = Core.CharToString(Core.Chr(Core.Ord('a') + j));
-        if (j < 10) chars[j + 52] = Core.CharToString(Core.Chr(Core.Ord('0') + j));
+        chars[j] = Convert.charCodeToString(Convert.charToCharCode('A') + j);
+        chars[j + 26] = Convert.charCodeToString(Convert.charToCharCode('a') + j);
+        if (j < 10) chars[j + 52] = Convert.charCodeToString(Convert.charToCharCode('0') + j);
     }
     chars[62] = "+";
     chars[63] = "/";
 
-    int pairSize = pairs.Size();
-    pairs.Add(0);
-    pairs.Add(0);
+    int pairSize = pairs.size();
+    pairs.add(0);
+    pairs.add(0);
     List<string> sb = new List<string>();
     for (int k = 0; k < pairSize; k += 3) {
-        n = Core.ForceParens(pairs[k] << 4) | Core.ForceParens(pairs[k + 1] << 2) | pairs[k + 2];
-        sb.Add(chars[n]);
+        n = (pairs[k] << 4) | (pairs[k + 1] << 2) | pairs[k + 2];
+        sb.add(chars[n]);
     }
-    while (sb.Size() % 4 != 0) sb.Add("=");
-    return sb.Join("");
+    while (sb.size() % 4 != 0) sb.add("=");
+    return sb.join("");
 }

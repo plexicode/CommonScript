@@ -1,6 +1,6 @@
 
 string ParseRawData(Array<int> rawBytes, ExecutionContext ec) {
-    RawDataParser rdp = new RawDataParser(rawBytes, 0, rawBytes.Size(), 0);
+    RawDataParser rdp = new RawDataParser(rawBytes, 0, rawBytes.size(), 0);
     if (ParseRaw_popFixedLenString(rdp, 4) != "PXCS") return null;
     if (ParseRaw_popSingleByte(rdp, -1) != 0) return null;
 
@@ -46,11 +46,11 @@ string ParseRawData(Array<int> rawBytes, ExecutionContext ec) {
 
     if (mtd == null || stringById == null || ent == null) return null;
 
-    ec.functions = Core.ListToArray(ent.functionsById);
-    ec.lambdas = Core.ListToArray(ent.lambdasById);
-    ec.enums = Core.ListToArray(ent.enumsById);
-    ec.classes = Core.ListToArray(ent.classesById);
-    ec.byteCode = Core.ListToArray(byteCodeAcc);
+    ec.functions = ent.functionsById.toArray();
+    ec.lambdas = ent.lambdasById.toArray();
+    ec.enums = ent.enumsById.toArray();
+    ec.classes = ent.classesById.toArray();
+    ec.byteCode = byteCodeAcc.toArray();
     ec.tokensById = tokensById;
     ec.stringsById = stringById;
 
@@ -75,7 +75,7 @@ string ParseRawData(Array<int> rawBytes, ExecutionContext ec) {
 
 void generateTryDescriptors(ExecutionContext ec) {
     Array<ByteCodeRow> bc = ec.byteCode;
-    int sz = bc.Size();
+    int sz = bc.size();
     ec.tryDescriptors = new Array<TryDescriptor>(sz);
     for (int i = 0; i < sz; i += 1) {
         ec.tryDescriptors[i] = null; // OP_TRY_INFO always points to previous rows.

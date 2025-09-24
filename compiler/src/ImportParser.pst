@@ -1,6 +1,6 @@
 ImportStatement ImportParser_createBuiltinImport(TokenStream tokens) {
     List<Token> builtinName = new List<Token>();
-    builtinName.Add(createFakeToken(tokens, TokenType.NAME, "{BUILTIN}", 0, 0));
+    builtinName.add(createFakeToken(tokens, TokenType.NAME, "{BUILTIN}", 0, 0));
 
     return ImportStatement_new(
         createFakeToken(tokens, TokenType.KEYWORD, "import", 0, 0),
@@ -11,15 +11,15 @@ ImportStatement ImportParser_createBuiltinImport(TokenStream tokens) {
 
 Array<ImportStatement> ImportParser_AdvanceThroughImports(TokenStream tokens, bool isCoreBuiltin) {
     List<ImportStatement> output = new List<ImportStatement>();
-    if (!isCoreBuiltin) output.Add(ImportParser_createBuiltinImport(tokens));
+    if (!isCoreBuiltin) output.add(ImportParser_createBuiltinImport(tokens));
 
     while (Tokens_hasMore(tokens) && Tokens_isNext(tokens, "import")) {
         Token importToken = Tokens_popKeyword(tokens, "import");
         List<Token> tokenChain = new List<Token>();
-        tokenChain.Add(Tokens_popName(tokens, "module name"));
+        tokenChain.add(Tokens_popName(tokens, "module name"));
 
         while (Tokens_popIfPresent(tokens, ".")) {
-            tokenChain.Add(Tokens_popName(tokens, "module name"));
+            tokenChain.add(Tokens_popName(tokens, "module name"));
         }
 
         Token importTargetName = null;
@@ -33,8 +33,8 @@ Array<ImportStatement> ImportParser_AdvanceThroughImports(TokenStream tokens, bo
 
         Tokens_popExpected(tokens, ";");
 
-        output.Add(ImportStatement_new(importToken, tokenChain, importTargetName));
+        output.add(ImportStatement_new(importToken, tokenChain, importTargetName));
     }
 
-    return Core.ListToArray(output);
+    return output.toArray();
 }

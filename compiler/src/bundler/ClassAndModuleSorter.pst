@@ -7,9 +7,9 @@ Array<ClassEntity> ClassSorter_SortClassesInDeterministicDependencyOrder(Array<C
     Dictionary<string, ClassEntity> classByLexicalKey = new Dictionary<string, ClassEntity>();
     ClassEntity cls = null;
 
-    int padSize = Core.IntToString(unorderedClasses.Size()).Size() + 1;
+    int padSize = Convert.intToString(unorderedClasses.size()).size() + 1;
 
-    for (i = 0; i < unorderedClasses.Size(); i += 1) {
+    for (i = 0; i < unorderedClasses.size(); i += 1) {
         cls = unorderedClasses[i];
         int depth = 1;
         if (considerBaseClasses) depth = ClassSorter_calcDepth(cls, classDepthByFqName);
@@ -17,9 +17,9 @@ Array<ClassEntity> ClassSorter_SortClassesInDeterministicDependencyOrder(Array<C
         classByLexicalKey[key] = cls;
     }
 
-    Array<string> keys = Core.SortedCopyOfStringArray(classByLexicalKey.Keys());
-    Array<ClassEntity> output = new Array<ClassEntity>(keys.Size());
-    for (i = 0; i < keys.Size(); i += 1) {
+    Array<string> keys = Sorting.getLexicalSortedCopy(classByLexicalKey.keys());
+    Array<ClassEntity> output = new Array<ClassEntity>(keys.size());
+    for (i = 0; i < keys.size(); i += 1) {
         output[i] = classByLexicalKey[keys[i]];
     }
     return output;
@@ -27,7 +27,7 @@ Array<ClassEntity> ClassSorter_SortClassesInDeterministicDependencyOrder(Array<C
 
 int ClassSorter_calcDepth(ClassEntity cls, Dictionary<string, int> depthByName) {
     string fqName = cls.baseData.fqName;
-    if (depthByName.Contains(fqName)) return depthByName[fqName];
+    if (depthByName.contains(fqName)) return depthByName[fqName];
     if (cls.baseClassEntity == null) {
         depthByName[fqName] = 1;
         return 1;
@@ -41,14 +41,14 @@ int ClassSorter_calcDepth(ClassEntity cls, Dictionary<string, int> depthByName) 
 Array<CompiledModule> getDeterministOrderOfModules(Array<CompiledModule> modules) {
     int i = 0;
     Dictionary<string, CompiledModule> lookup = new Dictionary<string, CompiledModule>();
-    for (i = 0; i < modules.Size(); i += 1) {
+    for (i = 0; i < modules.size(); i += 1) {
         lookup[modules[i].id] = modules[i];
     }
 
-    Array<string> keys = Core.SortedCopyOfStringArray(lookup.Keys());
+    Array<string> keys = Sorting.getLexicalSortedCopy(lookup.keys());
     List<CompiledModule> output = new List<CompiledModule>();
-    for (i = 0; i < keys.Size(); i += 1) {
-        output.Add(lookup[keys[i]]);
+    for (i = 0; i < keys.size(); i += 1) {
+        output.add(lookup[keys[i]]);
     }
-    return Core.ListToArray(output);
+    return output.toArray();
 }

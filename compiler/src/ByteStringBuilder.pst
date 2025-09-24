@@ -14,8 +14,8 @@ ByteStringBuilder bsbFromLenString(string value) {
 
 
 ByteStringBuilder bsbFromUtf8String(string value) {
-    Array<int> bytes = value.ToUtf8Bytes();
-    return new ByteStringBuilder(true, bytes.Size(), bytes, null, null);
+    Array<int> bytes = value.toUtf8Bytes();
+    return new ByteStringBuilder(true, bytes.size(), bytes, null, null);
 }
 
 ByteStringBuilder bsbFrom4Bytes(int a, int b, int c, int d) {
@@ -28,7 +28,7 @@ ByteStringBuilder bsbFrom4Bytes(int a, int b, int c, int d) {
 }
 
 ByteStringBuilder bsbFromBytes(Array<int> bytes) {
-    return new ByteStringBuilder(true, bytes.Size(), bytes, null, null);
+    return new ByteStringBuilder(true, bytes.size(), bytes, null, null);
 }
 
 ByteStringBuilder bsbJoin2(ByteStringBuilder a, ByteStringBuilder b) {
@@ -145,27 +145,27 @@ ByteStringBuilder bsbFromInt(int value) {
         }
     }
 
-    return new ByteStringBuilder(true, buf.Size(), buf, null, null);
+    return new ByteStringBuilder(true, buf.size(), buf, null, null);
 }
 
 Array<int> bsbFlatten(ByteStringBuilder sbs) {
     List<ByteStringBuilder> q = new List<ByteStringBuilder>();
-    q.Add(sbs);
+    q.add(sbs);
     List<int> output = new List<int>();
-    while (q.Size() > 0) {
-        int lastIndex = q.Size() - 1;
+    while (q.size() > 0) {
+        int lastIndex = q.size() - 1;
         ByteStringBuilder current = q[lastIndex];
-        q.RemoveAt(lastIndex);
+        q.removeAt(lastIndex);
         if (current.isLeaf) {
             Array<int> currentBytes = current.bytes;
-            int length = currentBytes.Size();
+            int length = currentBytes.size();
             for (int i = 0; i < length; i += 1) {
-                output.Add(currentBytes[i]);
+                output.add(currentBytes[i]);
             }
         } else {
-            q.Add(current.right);
-            q.Add(current.left);
+            q.add(current.right);
+            q.add(current.left);
         }
     }
-    return Core.ListToArray(output);
+    return output.toArray();
 }

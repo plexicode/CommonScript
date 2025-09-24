@@ -2,7 +2,7 @@ valueStackSize -= 2;
 left = valueStack[valueStackSize];
 right = valueStack[valueStackSize + 1];
 
-switch (Core.ForceParens(left.type * BinaryOp.MAX + row.firstArg) * Type.MAX + right.type) {
+switch ((left.type * BinaryOp.MAX + row.firstArg) * Type.MAX + right.type) {
 
     case (Type.INTEGER * BinaryOp.MAX + BinaryOp.EXPONENT) * Type.MAX + Type.INTEGER:
         value = doExponent(globalValues, 0.0 + (int) left.internalValue, 0.0 + (int) right.internalValue);
@@ -53,7 +53,7 @@ switch (Core.ForceParens(left.type * BinaryOp.MAX + row.firstArg) * Type.MAX + r
             errorMsg = "Cannot divide by zero";
             @import("macros/throw.pst");
         }
-        value = buildInteger(globalValues, Core.IntegerDivision(int1, int2));
+        value = buildInteger(globalValues, int1 / int2);
         break;
 
     case (Type.FLOAT * BinaryOp.MAX + BinaryOp.DIVIDE) * Type.MAX + Type.INTEGER:
@@ -63,7 +63,7 @@ switch (Core.ForceParens(left.type * BinaryOp.MAX + row.firstArg) * Type.MAX + r
             errorMsg = "Cannot divide by zero";
             @import("macros/throw.pst");
         }
-        value = new Value(Type.FLOAT, Core.FloatDivision(float1, (int) right.internalValue));
+        value = new Value(Type.FLOAT, float1 / (int) right.internalValue);
         break;
 
     case (Type.INTEGER * BinaryOp.MAX + BinaryOp.DIVIDE) * Type.MAX + Type.FLOAT:
@@ -73,7 +73,7 @@ switch (Core.ForceParens(left.type * BinaryOp.MAX + row.firstArg) * Type.MAX + r
             errorMsg = "Cannot divide by zero";
             @import("macros/throw.pst");
         }
-        value = new Value(Type.FLOAT, Core.FloatDivision(int1, (double) right.internalValue));
+        value = new Value(Type.FLOAT, int1 / (double) right.internalValue);
         break;
 
     case (Type.FLOAT * BinaryOp.MAX + BinaryOp.DIVIDE) * Type.MAX + Type.FLOAT:
@@ -83,7 +83,7 @@ switch (Core.ForceParens(left.type * BinaryOp.MAX + row.firstArg) * Type.MAX + r
             errorMsg = "Cannot divide by zero";
             @import("macros/throw.pst");
         }
-        value = new Value(Type.FLOAT, Core.FloatDivision(float1, (double) right.internalValue));
+        value = new Value(Type.FLOAT, float1 / (double) right.internalValue);
         break;
 
     case (Type.INTEGER * BinaryOp.MAX + BinaryOp.MODULO) * Type.MAX + Type.INTEGER:

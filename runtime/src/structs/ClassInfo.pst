@@ -38,7 +38,7 @@ ClassInfo createClassInfo(
             ctor,
             null));
 
-    int fieldCount = newFields.Size();
+    int fieldCount = newFields.size();
     ClassInfo info = new ClassInfo(
         id,
         parentId,

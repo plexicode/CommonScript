@@ -116,11 +116,11 @@ void ParseOutEntities(
         }
 
         if (entity != null) {
-            entity.isStatic = entity.annotations != null && entity.annotations.Contains("static");
+            entity.isStatic = entity.annotations != null && entity.annotations.contains("static");
             AttachEntityToParseTree(entity, nestParent, file, namespacePrefix, currentEntityBucket, annotationTokens);
         }
 
-        if (entity == null && annotationTokens.Size() > 0) {
+        if (entity == null && annotationTokens.size() > 0) {
             Errors_Throw(firstToken, "This annotation is not attached to any entity.");
         }
 
@@ -133,13 +133,13 @@ void ParseOutEntities(
 void ParseArgDefinitionList(TokenStream tokens, List<Token> tokensOut, List<Expression> defaultValuesOut) {
     Tokens_popExpected(tokens, OPEN_PAREN);
     while (!Tokens_popIfPresent(tokens, CLOSE_PAREN)) {
-        if (tokensOut.Size() > 0) Tokens_popExpected(tokens, ",");
-        tokensOut.Add(Tokens_popName(tokens, "argument name"));
+        if (tokensOut.size() > 0) Tokens_popExpected(tokens, ",");
+        tokensOut.add(Tokens_popName(tokens, "argument name"));
         Expression argValue = null;
         if (Tokens_popIfPresent(tokens, "=")) {
             argValue = ParseExpression(tokens);
         }
-        defaultValuesOut.Add(argValue);
+        defaultValuesOut.add(argValue);
     }
 }
 
@@ -155,13 +155,13 @@ ClassEntity ParseClass(
     if (Tokens_popIfPresent(tokens, ":")) {
         string errMsg = "base class or interface name";
         List<Token> parent = new List<Token>();
-        parent.Add(Tokens_popName(tokens, errMsg));
+        parent.add(Tokens_popName(tokens, errMsg));
 
         while (Tokens_isNext(tokens, ".")) {
-            parent.Add(Tokens_pop(tokens));
-            parent.Add(Tokens_popName(tokens, errMsg));
+            parent.add(Tokens_pop(tokens));
+            parent.add(Tokens_popName(tokens, errMsg));
         }
-        baseClassTokens = Core.ListToArray(parent);
+        baseClassTokens = parent.toArray();
     }
 
     string classFqName = classNameToken.Value;
@@ -176,7 +176,7 @@ ClassEntity ParseClass(
     Tokens_popExpected(tokens, CLOSE_CURLY_BRACE);
 
     // inject a fake do-nothing constructor if one was not declared.
-    if (!classDef.classMembers.Contains("@ctor")) {
+    if (!classDef.classMembers.contains("@ctor")) {
         List<Expression> baseArgs = null;
         if (classDef.baseClassTokens != null) {
             baseArgs = new List<Expression>();
@@ -224,8 +224,8 @@ AbstractEntity ParseConstructor(TokenStream tokens, Dictionary<string, Token> an
         baseArgs = new List<Expression>();
         Tokens_popExpected(tokens, "(");
         while (!Tokens_popIfPresent(tokens, ")")) {
-            if (baseArgs.Size() > 0) Tokens_popExpected(tokens, ",");
-            baseArgs.Add(ParseExpression(tokens));
+            if (baseArgs.size() > 0) Tokens_popExpected(tokens, ",");
+            baseArgs.add(ParseExpression(tokens));
         }
     }
 
@@ -237,7 +237,7 @@ AbstractEntity ParseConstructor(TokenStream tokens, Dictionary<string, Token> an
         argValues,
         baseArgs,
         code,
-        annotations.Contains("static")).baseData;
+        annotations.contains("static")).baseData;
 
     ctor.annotations = annotations;
     return ctor;
@@ -251,18 +251,18 @@ AbstractEntity ParseEnum(TokenStream tokens) {
     List<Token> names = new List<Token>();
     List<Expression> values = new List<Expression>();
     while (nextAllowed && !Tokens_isNext(tokens, CLOSE_CURLY_BRACE)) {
-        names.Add(Tokens_popName(tokens, "enum member name"));
+        names.add(Tokens_popName(tokens, "enum member name"));
         Expression value = null;
         if (Tokens_popIfPresent(tokens, "=")) {
             value = ParseExpression(tokens);
         }
-        values.Add(value);
+        values.add(value);
         nextAllowed = Tokens_popIfPresent(tokens, ",");
     }
 
     Tokens_popExpected(tokens, CLOSE_CURLY_BRACE);
 
-    return EnumEntity_new(enumKeyword, nameToken, Core.ListToArray(names), Core.ListToArray(values)).baseData;
+    return EnumEntity_new(enumKeyword, nameToken, names.toArray(), values.toArray()).baseData;
 }
 
 AbstractEntity ParseField(TokenStream tokens, Dictionary<string, Token> annotations) {
@@ -287,7 +287,7 @@ AbstractEntity ParseFunctionDefinition(
 
     Token functionKeyword = Tokens_popKeyword(tokens, "function");
     Token nameToken = Tokens_popName(tokens, "function name");
-    bool isStatic = annotations.Contains("@static");
+    bool isStatic = annotations.contains("@static");
     List<Token> args = new List<Token>();
     List<Expression> argValues = new List<Expression>();
     ParseArgDefinitionList(tokens, args, argValues);
@@ -307,9 +307,9 @@ AbstractEntity ParseNamespace(
     TokenStream tokens = file.tokens;
     Token nsToken = Tokens_popKeyword(tokens, "namespace");
     List<string> namespaceChain = new List<string>();
-    if (namespacePrefix != "") namespaceChain.Add(namespacePrefix);
+    if (namespacePrefix != "") namespaceChain.add(namespacePrefix);
     Token nsFirst = Tokens_popName(tokens, "namespace name");
-    namespaceChain.Add(nsFirst.Value);
+    namespaceChain.add(nsFirst.Value);
     Dictionary<string, AbstractEntity> entityBucket = new Dictionary<string, AbstractEntity>();
     while (Tokens_popIfPresent(tokens, "."))
     {
@@ -317,7 +317,7 @@ AbstractEntity ParseNamespace(
     }
     NamespaceEntity nsEntity = NamespaceEntity_new(nsToken, nsFirst, namespacePrefix);
     Tokens_popExpected(tokens, OPEN_CURLY_BRACE);
-    namespacePrefix = namespaceChain.Join(".");
+    namespacePrefix = namespaceChain.join(".");
     ParseOutEntities(ctx, file, nsEntity.nestedMembers, nsEntity.baseData, namespacePrefix);
     Tokens_popExpected(tokens, CLOSE_CURLY_BRACE);
     return nsEntity.baseData;
@@ -341,7 +341,7 @@ void AttachEntityToParseTree(
     child.fqName = fqName;
     child.nestParent = parent;
 
-    bool isStatic = annotationTokens.Contains("static");
+    bool isStatic = annotationTokens.contains("static");
     bool isAttachingToClass = parent != null && parent.type == EntityType.CLASS;
     bool isClass = child.type == EntityType.CLASS;
     bool isCtor = child.type == EntityType.CONSTRUCTOR;
@@ -355,7 +355,7 @@ void AttachEntityToParseTree(
         Errors_Throw(child.firstToken, "@static is not applicable to this type of entity.");
     }
 
-    if (activeEntityBucket.Contains(child.simpleName)) {
+    if (activeEntityBucket.contains(child.simpleName)) {
         Errors_Throw(
             child.firstToken,
             "There are multiple entities named " + child.fqName + ".");
@@ -368,8 +368,8 @@ Dictionary<string, Token> ParseAnnotations(CompilerContext compCtx, TokenStream 
     Dictionary<string, Token> output = new Dictionary<string, Token>();
     while (Tokens_peekType(tokens) == TokenType.ANNOTATION) {
         Token token = Tokens_pop(tokens);
-        string annotationName = token.Value.SubString(1, token.Value.Size() - 1);
-        if (output.Contains(annotationName)) {
+        string annotationName = token.Value.subString(1, token.Value.size() - 1);
+        if (output.contains(annotationName)) {
             Errors_Throw(token, "Multiplie redundant annotations.");
         }
 

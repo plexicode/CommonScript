@@ -37,7 +37,7 @@ bool ParseRaw_popInt(RawDataParser rdp) {
     }
 
     int sign = 1;
-    if (Core.ForceParens(b & 0x10) != 0) sign = -1;
+    if ((b & 0x10) != 0) sign = -1;
 
     int byteCount = b & 0xF;
 
@@ -61,7 +61,7 @@ string ParseRaw_popFixedLenString(RawDataParser rdp, int expectedSize) {
     }
     rdp.index += expectedSize;
 
-    string value = Core.Utf8BytesToString(strBytes);
+    string value = Convert.utf8BytesToString(strBytes);
     return value;
 }
 

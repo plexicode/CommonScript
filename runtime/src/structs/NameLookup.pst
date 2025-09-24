@@ -8,13 +8,13 @@ void generateNameLookup(ExecutionContext ec) {
 
     Dictionary<string, int> stringsToId = new Dictionary<string, int>();
     int i = 1;
-    int sz = ec.stringsById.Size();
+    int sz = ec.stringsById.size();
     while (i < sz) {
         stringsToId[ec.stringsById[i]] = i;
         i += 1;
     }
 
-    if (stringsToId.Contains("length")) lookup.lengthId = stringsToId["length"];
+    if (stringsToId.contains("length")) lookup.lengthId = stringsToId["length"];
 
     Array<FunctionPointer> deadArray = new Array<FunctionPointer>(Type.MAX);
 
@@ -81,7 +81,7 @@ void generateNameLookup(ExecutionContext ec) {
 }
 
 int tryGetNameId(Dictionary<string, int> names, string s) {
-    if (names.Contains(s)) return names[s];
+    if (names.contains(s)) return names[s];
     return -1;
 }
 

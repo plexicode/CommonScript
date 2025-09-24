@@ -10,7 +10,7 @@ struct CatchChunk {
 
 CatchChunk CatchChunk_new(Array<Statement> catchCode, List<Array<Token>> exceptionClassNamesRaw, Token exceptionVarToken) {
     return new CatchChunk(
-        Core.ListToArray(exceptionClassNamesRaw), 
+        exceptionClassNamesRaw.toArray(), 
         null, 
         exceptionVarToken, 
         catchCode, 

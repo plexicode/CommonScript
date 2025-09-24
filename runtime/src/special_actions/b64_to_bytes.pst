@@ -6,7 +6,7 @@ if (value.type != Type.STRING) {
     @import("macros/throw.pst");
 }
 
-intArray1 = Core.Base64ToBytes(stringUtil_getFlatValue(value));
+intArray1 = Base64.toBytes(stringUtil_getFlatValue(value));
 if (intArray1 == null) {
     errorId = ExceptionTypeId.INVALID_ARGUMENT;
     errorMsg = "String contains non-base64 characters.";

@@ -62,14 +62,14 @@ bool exceptionCatcherRouteException(Value exceptionInstance, Array<int> args, Ar
     int exClassId = inst.classDef.id;
 
     int groupStartIndex = 1;
-    while (groupStartIndex < args.Size()) {
+    while (groupStartIndex < args.size()) {
 
         int groupJumpPc = args[groupStartIndex];
         int totalExceptionsChecked = 0;
-        for (int i = groupStartIndex + 1; i < args.Size(); i += 1) {
+        for (int i = groupStartIndex + 1; i < args.size(); i += 1) {
             groupStartIndex = i + 1;
             if (args[i] == 0) {
-                i += args.Size(); // break
+                i += args.size(); // break
             } else {
                 totalExceptionsChecked += 1;
                 // TODO: check if exception inherits from this rather than exact matching.
@@ -94,21 +94,21 @@ string getExceptionMessage(Value exceptionInstance, bool includeStackTrace) {
     Instance inst = (Instance) exceptionInstance.internalValue;
     Value msgField = inst.members[inst.classDef.nameToOffset["message"]];
     List<string> lines = new List<string>();
-    lines.Add(valueToHumanString(msgField));
+    lines.add(valueToHumanString(msgField));
     if (includeStackTrace) {
 
         Value stackTrace = inst.members[inst.classDef.nameToOffset["trace"]];
         if (stackTrace.type == Type.LIST) {
             ListImpl trace = (ListImpl) stackTrace.internalValue;
-            lines.Add("Stack trace:");
+            lines.add("Stack trace:");
             for (int i = 0; i < trace.length; i += 1) {
-                lines.Add("  at " + valueToHumanString(trace.items[i]));
+                lines.add("  at " + valueToHumanString(trace.items[i]));
             }
         } else {
-            lines.Add("(no stack trace available)");
+            lines.add("(no stack trace available)");
         }
     }
-    return lines.Join("\n");
+    return lines.join("\n");
 }
 
 Value generateStackTrace(ExecutionTask task) {
@@ -118,24 +118,24 @@ Value generateStackTrace(ExecutionTask task) {
     while (frame != null) {
         Token invokeToken = ec.byteCode[frame.pc].token;
         if (invokeToken != null) {
-            string info = Core.StringConcatAll(
-                invokeToken.filename,
-                " Line ",
-                Core.IntToString(invokeToken.line),
-                " Col ",
-                Core.IntToString(invokeToken.col));
-            trace.Add(info);
+            string info = 
+                invokeToken.filename +
+                " Line " +
+                Convert.intToString(invokeToken.line) +
+                " Col " +
+                Convert.intToString(invokeToken.col);
+            trace.add(info);
         } else {
-            trace.Add(Core.StringConcatAll("PC:", Core.IntToString(frame.pc)));
+            trace.add("PC:" + Convert.intToString(frame.pc));
         }
         frame = frame.previous;
     }
 
-    int sz = trace.Size();
+    int sz = trace.size();
     Array<Value> traceArr = new Array<Value>(sz);
     for (int i = 0; i < sz; i += 1) {
         traceArr[i] = buildString(ec.globalValues, trace[i], false);
     }
 
-    return buildList(ec, traceArr, false, traceArr.Size());
+    return buildList(ec, traceArr, false, traceArr.size());
 }

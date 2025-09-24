@@ -39,7 +39,7 @@ object PUBLIC_createTaskForFunction(object ecCtx, object fpValueNoArgs) {
 }
 
 object PUBLIC_createTaskForFunctionWithWrappedArgs(object ecCtx, object fpValue, Array<object> wrappedArgs) {
-    int argc = wrappedArgs.Size();
+    int argc = wrappedArgs.size();
     Array<Value> args = new Array<Value>(argc);
     for (int i = 0; i < argc; i += 1) {
         args[i] = (Value) wrappedArgs[i];
@@ -52,14 +52,14 @@ Array<string> PUBLIC_getTaskResultError(object resObj, bool includeStackTrace) {
     List<string> o = new List<string>();
     if (result.type != ExecutionResultType.HARD_CRASH) return null;
 
-    o.Add(result.errorMessage);
+    o.add(result.errorMessage);
     List<string> tr = result.stackTrace;
     if (tr != null) {
-        for (int i = 0; i < tr.Size(); i += 1) {
-            o.Add(tr[i]);
+        for (int i = 0; i < tr.size(); i += 1) {
+            o.add(tr[i]);
         }
     }
-    return Core.ListToArray(o);
+    return o.toArray();
 }
 
 string PUBLIC_valueToString(object valueObj) {
@@ -71,7 +71,7 @@ object PUBLIC_wrapNativeHandle(object val) {
 }
 
 GlobalValues getGlobalsFromTask(object taskObj) {
-    return Core.ForceParens((ExecutionTask) taskObj).execCtx.globalValues;
+    return ((ExecutionTask) taskObj).execCtx.globalValues;
 }
 
 Value PUBLIC_wrapBoolean(object taskObj, bool val) {
@@ -91,7 +91,7 @@ Value PUBLIC_wrapString(object taskObj, string val, bool isCommon) {
 }
 
 int PUBLIC_unwrapInteger(object val) {
-    return (int) Core.ForceParens((Value) val).internalValue;
+    return (int) ((Value) val).internalValue;
 }
 
 double PUBLIC_unwrapFloat(object val) {
@@ -99,11 +99,11 @@ double PUBLIC_unwrapFloat(object val) {
 }
 
 object PUBLIC_unwrapNativeHandle(object val) {
-    return Core.ForceParens((Value) val).internalValue;
+    return ((Value) val).internalValue;
 }
 
 void PUBLIC_listValueAdd(object listObj, object wrappedValue) {
-    ListImpl list = (ListImpl) Core.ForceParens((Value) listObj).internalValue;
+    ListImpl list = (ListImpl) ((Value) listObj).internalValue;
     List_add(list, (Value) wrappedValue);
 }
 
@@ -116,7 +116,7 @@ void PUBLIC_listSet(object listObj, int i, object valObj) {
 }
 
 int PUBLIC_listLength(object listObj) {
-    return ((ListImpl)((Value) listObj).internalValue).items.Size();
+    return ((ListImpl)((Value) listObj).internalValue).items.size();
 }
 
 void PUBLIC_requestTaskSuspension(object taskObj, bool withSleep, int sleepMillis) {

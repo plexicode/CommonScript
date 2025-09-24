@@ -49,13 +49,13 @@ Statement StatementResolver_ResolveStatementSecondPass(Resolver resolver, Statem
 ////// HELPERS 
 
 void StatementResolver_ResolveStatementArrayFirstPass(Resolver resolver, Array<Statement> arr) {
-    for (int i = 0; i < arr.Size(); i += 1) {
+    for (int i = 0; i < arr.size(); i += 1) {
         arr[i] = StatementResolver_ResolveStatementFirstPass(resolver, arr[i]);
     }
 }
 
 void StatementResolver_ResolveStatementArraySecondPass(Resolver resolver, Array<Statement> arr) {
-    for (int i = 0; i < arr.Size(); i += 1) {
+    for (int i = 0; i < arr.size(); i += 1) {
         arr[i] = StatementResolver_ResolveStatementSecondPass(resolver, arr[i]);
     }
 }
@@ -137,16 +137,16 @@ Statement StatementResolver_FirstPass_SwitchStatement(Resolver resolver, Stateme
     Statement oldBreakContext = resolver.breakContext;
     resolver.breakContext = switchStmnt;
     switchStmnt.condition = ExpressionResolver_ResolveExpressionFirstPass(resolver, switchStmnt.condition);
-    for (int i = 0; i < switchStmnt.switchChunks.Size(); i += 1) {
+    for (int i = 0; i < switchStmnt.switchChunks.size(); i += 1) {
         SwitchChunk chunk = switchStmnt.switchChunks[i];
-        for (j = 0; j < chunk.Cases.Size(); j += 1) {
+        for (j = 0; j < chunk.Cases.size(); j += 1) {
             Expression expr = chunk.Cases[j];
             if (expr != null) {
                 chunk.Cases[j] = ExpressionResolver_ResolveExpressionFirstPass(resolver, expr);
             }
         }
 
-        for (j = 0; j < chunk.Code.Size(); j += 1) {
+        for (j = 0; j < chunk.Code.size(); j += 1) {
             chunk.Code[j] = StatementResolver_ResolveStatementFirstPass(resolver, chunk.Code[j]);
         }
     }
@@ -158,13 +158,13 @@ Statement StatementResolver_FirstPass_Try(Resolver resolver, Statement tryStatem
     Statement oldBreakContext = resolver.breakContext;
     resolver.breakContext = tryStatement;
     StatementResolver_ResolveStatementArrayFirstPass(resolver, tryStatement.code);
-    for (int i = 0; i < tryStatement.catchChunks.Size(); i += 1) {
+    for (int i = 0; i < tryStatement.catchChunks.size(); i += 1) {
         CatchChunk cc = tryStatement.catchChunks[i];
         if (cc.exceptionVarName != null) {
             ((FunctionEntity)resolver.activeEntity.specificData).variableScope[cc.exceptionVarName.Value] = true;
         }
 
-        if (cc.ExceptionNames.Size() > 0) {
+        if (cc.ExceptionNames.size() > 0) {
             // TODO: the code for resolving a dotted name for a class (particularly in the base class resolution) needs 
             // to be refactored and used here as well.
             fail("Not implemented");
@@ -286,9 +286,9 @@ Statement StatementResolver_SecondPass_SwitchStatement(Resolver resolver, Statem
     Dictionary<int, bool> intCollisions = new Dictionary<int, bool>();
     int j = 0;
 
-    for (int i = 0; i < switchStmnt.switchChunks.Size(); i += 1) {
+    for (int i = 0; i < switchStmnt.switchChunks.size(); i += 1) {
         SwitchChunk chunk = switchStmnt.switchChunks[i];
-        for (j = 0; j < chunk.Cases.Size(); j += 1) {
+        for (j = 0; j < chunk.Cases.size(); j += 1) {
             Expression expr = chunk.Cases[j];
             if (expr != null) {
                 expr = ExpressionResolver_ResolveExpressionSecondPass(resolver, expr);
@@ -300,11 +300,11 @@ Statement StatementResolver_SecondPass_SwitchStatement(Resolver resolver, Statem
                 bool hadCollision = false;
                 if (expr.type == ExpressionType.INTEGER_CONST) {
                     currentType = 1;
-                    hadCollision = intCollisions.Contains(expr.intVal);
+                    hadCollision = intCollisions.contains(expr.intVal);
                     intCollisions[expr.intVal] = true;
                 } else if (expr.type == ExpressionType.STRING_CONST) {
                     currentType = 2;
-                    hadCollision = strCollisions.Contains(expr.strVal);
+                    hadCollision = strCollisions.contains(expr.strVal);
                     strCollisions[expr.strVal] = true;
                 } else {
                     Errors_Throw(expr.firstToken, "Only integer and string constants are allowed to be used as switch statement cases.");
@@ -315,11 +315,11 @@ Statement StatementResolver_SecondPass_SwitchStatement(Resolver resolver, Statem
             }
         }
 
-        for (j = 0; j < chunk.Code.Size(); j += 1) {
+        for (j = 0; j < chunk.Code.size(); j += 1) {
             chunk.Code[j] = StatementResolver_ResolveStatementSecondPass(resolver, chunk.Code[j]);
         }
 
-        switch (chunk.Code[chunk.Code.Size() - 1].type) {
+        switch (chunk.Code[chunk.Code.size() - 1].type) {
             case StatementType.BREAK:
             case StatementType.RETURN:
             case StatementType.THROW:
@@ -327,7 +327,7 @@ Statement StatementResolver_SecondPass_SwitchStatement(Resolver resolver, Statem
                 break;
 
             default:
-                Errors_Throw(chunk.CaseTokens[chunk.CaseTokens.Size() - 1], "This switch statement case has a fall-through.");
+                Errors_Throw(chunk.CaseTokens[chunk.CaseTokens.size() - 1], "This switch statement case has a fall-through.");
                 break;
         }
     }
@@ -347,7 +347,7 @@ Statement StatementResolver_SecondPass_TryStatement(Resolver resolver, Statement
     Statement oldBreakContext = resolver.breakContext;
     resolver.breakContext = tryStmnt;
     StatementResolver_ResolveStatementArraySecondPass(resolver, tryStmnt.code);
-    for (int i = 0; i < tryStmnt.catchChunks.Size(); i += 1) {
+    for (int i = 0; i < tryStmnt.catchChunks.size(); i += 1) {
         CatchChunk cc = tryStmnt.catchChunks[i];
         StatementResolver_ResolveStatementArraySecondPass(resolver, cc.Code);
     }

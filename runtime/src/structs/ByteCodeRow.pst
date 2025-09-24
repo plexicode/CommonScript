@@ -15,8 +15,8 @@ struct ByteCodeRow {
 ByteCodeRow new_ByteCodeRow(int op, Array<int> args, int stringId, int tokenId) {
     int arg1 = 0;
     int arg2 = 0;
-    if (args.Size() > 0) arg1 = args[0];
-    if (args.Size() > 1) arg2 = args[1];
+    if (args.size() > 0) arg1 = args[0];
+    if (args.size() > 1) arg2 = args[1];
     return new ByteCodeRow(
         op,
         args,

@@ -23,33 +23,33 @@ void EntityResolver_DetermineMemberOffsets(ClassEntity classDef) {
     List<string> staticMethodNames = new List<string>();
 
     if (parent != null) {
-        Array<string> parentKeys = parent.flattenedMemberOffsetLookup.Keys();
-        for (i = 0; i < parentKeys.Size(); i += 1) {
+        Array<string> parentKeys = parent.flattenedMemberOffsetLookup.keys();
+        for (i = 0; i < parentKeys.size(); i += 1) {
             string parentKey = parentKeys[i];
             classDef.flattenedMemberOffsetLookup[parentKey] = parent.flattenedMemberOffsetLookup[parentKey];
         }
     }
 
-    int nextOffset = classDef.flattenedMemberOffsetLookup.Size();
-    Array<string> memberNames = Core.SortedCopyOfStringArray(classDef.classMembers.Keys());
-    for (i = 0; i < memberNames.Size(); i += 1) {
+    int nextOffset = classDef.flattenedMemberOffsetLookup.size();
+    Array<string> memberNames = Sorting.getLexicalSortedCopy(classDef.classMembers.keys());
+    for (i = 0; i < memberNames.size(); i += 1) {
         string memberName = memberNames[i];
         AbstractEntity member = classDef.classMembers[memberName];
 
         if (!member.isStatic &&
             (member.type == EntityType.FIELD || member.type == EntityType.FUNCTION)) {
             int offset = 0;
-            if (!classDef.flattenedMemberOffsetLookup.Contains(memberName)) {
+            if (!classDef.flattenedMemberOffsetLookup.contains(memberName)) {
                 offset = nextOffset;
                 nextOffset += 1;
-                newDirectMembers.Add(memberName);
+                newDirectMembers.add(memberName);
                 classDef.directMemberToOffset[memberName] = offset;
                 classDef.flattenedMemberOffsetLookup[memberName] = offset;
             }
         }
     }
 
-    classDef.newDirectMemberOffsets = Core.ListToArray(newDirectMembers);
+    classDef.newDirectMemberOffsets = newDirectMembers.toArray();
 }
 
 Statement EntityResolver_ConvertFieldDefaultValueIntoSetter(FieldEntity fld) {
@@ -79,9 +79,9 @@ void EntityResolver_ResolveFunctionFirstPass(Resolver resolver, FunctionEntity f
     resolver.activeEntity = funcDef.baseData;
     resolver.breakContext = null;
 
-    for (i = 0; i < funcDef.argTokens.Size(); i += 1) {
+    for (i = 0; i < funcDef.argTokens.size(); i += 1) {
         Token arg = funcDef.argTokens[i];
-        if (funcDef.variableScope.Contains(arg.Value)) {
+        if (funcDef.variableScope.contains(arg.Value)) {
             Errors_Throw(arg, "There are multiple arguments named '" + arg.Value + "'.");
         }
         funcDef.variableScope[arg.Value] = true;
@@ -108,25 +108,25 @@ void EntityResolver_ResolveFunctionFirstPass(Resolver resolver, FunctionEntity f
         // TODO: simple constant initial values should be conveyed in the metadata and direct-copied from a template.
         // Ctrl+F for initialValues in the runtime.
         List<FieldEntity> fields = new List<FieldEntity>();
-        Array<string> fieldKeys = Core.SortedCopyOfStringArray(siblings.Keys());
-        for (i = 0; i < fieldKeys.Size(); i += 1) {
+        Array<string> fieldKeys = Sorting.getLexicalSortedCopy(siblings.keys());
+        for (i = 0; i < fieldKeys.size(); i += 1) {
             AbstractEntity sibling = siblings[fieldKeys[i]];
             if (sibling.type == EntityType.FIELD && sibling.isStatic == ctorEnt.baseData.isStatic) {
                 FieldEntity fe = (FieldEntity) sibling.specificData;
                 if (fe.defaultValue != null) {
-                    fields.Add(fe);
+                    fields.add(fe);
                 }
             }
         }
         
-        for (i = 0; i < fields.Size(); i += 1) {
+        for (i = 0; i < fields.size(); i += 1) {
             FieldEntity fld = fields[i];
             fld.defaultValue = ExpressionResolver_ResolveExpressionFirstPass(resolver, fld.defaultValue);
             Statement setter = EntityResolver_ConvertFieldDefaultValueIntoSetter(fld);
             if (IsExpressionConstant(fld.defaultValue)) {
-                preBaseFieldInit.Add(setter);
+                preBaseFieldInit.add(setter);
             } else {
-                postBaseFieldInit.Add(setter);
+                postBaseFieldInit.add(setter);
             }
         }
     }
@@ -141,26 +141,26 @@ void EntityResolver_ResolveFunctionFirstPass(Resolver resolver, FunctionEntity f
         Expression baseCtorInvoke = Expression_createFunctionInvocation(baseCtorRef, baseCtorParen, ctorEnt.baseCtorArgValues);
         Statement baseCtorStmnt = Statement_createExpressionAsStatement(baseCtorInvoke);
         baseCtorStmnt = StatementResolver_ResolveStatementFirstPass(resolver, baseCtorStmnt);
-        baseCtorInvocation.Add(baseCtorStmnt);
+        baseCtorInvocation.add(baseCtorStmnt);
     }
 
     StatementResolver_ResolveStatementArrayFirstPass(resolver, funcDef.code);
 
     List<Statement> flattened = new List<Statement>();
-    for (i = 0; i < preBaseFieldInit.Size(); i+= 1) flattened.Add(preBaseFieldInit[i]);
-    for (i = 0; i < baseCtorInvocation.Size(); i += 1) flattened.Add(baseCtorInvocation[i]);
-    for (i = 0; i < postBaseFieldInit.Size(); i += 1) flattened.Add(postBaseFieldInit[i]);
-    for (i = 0; i < funcDef.code.Size(); i += 1) flattened.Add(funcDef.code[i]);
+    for (i = 0; i < preBaseFieldInit.size(); i+= 1) flattened.add(preBaseFieldInit[i]);
+    for (i = 0; i < baseCtorInvocation.size(); i += 1) flattened.add(baseCtorInvocation[i]);
+    for (i = 0; i < postBaseFieldInit.size(); i += 1) flattened.add(postBaseFieldInit[i]);
+    for (i = 0; i < funcDef.code.size(); i += 1) flattened.add(funcDef.code[i]);
 
     Statement lastStatement = null;
-    if (flattened.Size() > 0) lastStatement = flattened[flattened.Size() - 1];
+    if (flattened.size() > 0) lastStatement = flattened[flattened.size() - 1];
     
     bool autoReturnNeeded = lastStatement == null ||
         (lastStatement.type != StatementType.RETURN && lastStatement.type != StatementType.THROW);
     if (autoReturnNeeded) {
-        flattened.Add(Statement_createReturn(null, Expression_createNullConstant(null)));
+        flattened.add(Statement_createReturn(null, Expression_createNullConstant(null)));
     }
-    funcDef.code = Core.ListToArray(flattened);
+    funcDef.code = flattened.toArray();
 
     resolver.activeEntity = null;
     resolver.breakContext = null;
@@ -172,7 +172,7 @@ void EntityResolver_ResolveFunctionSecondPass(Resolver resolver, FunctionEntity 
     resolver.activeEntity = funcDef.baseData;
     resolver.breakContext = null;
 
-    for (i = 0; i < funcDef.argDefaultValues.Size(); i += 1) {
+    for (i = 0; i < funcDef.argDefaultValues.size(); i += 1) {
         Expression defVal = funcDef.argDefaultValues[i];
         if (defVal != null) {
             funcDef.argDefaultValues[i] = ExpressionResolver_ResolveExpressionSecondPass(resolver, defVal);
@@ -181,12 +181,12 @@ void EntityResolver_ResolveFunctionSecondPass(Resolver resolver, FunctionEntity 
 
     StatementResolver_ResolveStatementArraySecondPass(resolver, funcDef.code);
 
-    if (funcDef.code.Size() == 0 || funcDef.code[funcDef.code.Size() - 1].type != StatementType.RETURN) {
+    if (funcDef.code.size() == 0 || funcDef.code[funcDef.code.size() - 1].type != StatementType.RETURN) {
         List<Statement> newCode = new List<Statement>();
-        for (i = 0; i < funcDef.code.Size(); i += 1) newCode.Add(funcDef.code[i]);
+        for (i = 0; i < funcDef.code.size(); i += 1) newCode.add(funcDef.code[i]);
 
-        newCode.Add(Statement_createReturn(null, Expression_createNullConstant(null)));
-        funcDef.code = Core.ListToArray(newCode);
+        newCode.add(Statement_createReturn(null, Expression_createNullConstant(null)));
+        funcDef.code = newCode.toArray();
     }
 
     resolver.activeEntity = null;
@@ -195,7 +195,7 @@ void EntityResolver_ResolveFunctionSecondPass(Resolver resolver, FunctionEntity 
 
 void PerformFullResolutionPassOnConstAndEnums(Resolver resolver, Array<string> resOrder) {
     for (int passNum = 1; passNum <= 2; passNum += 1) {
-        for (int i = 0; i < resOrder.Size(); i += 1) {
+        for (int i = 0; i < resOrder.size(); i += 1) {
             AbstractEntity entity = resolver.flattenedEntitiesAndEnumValues[resOrder[i]];
             resolver.activeEntity = entity;
             if (entity.type == EntityType.ENUM) {
@@ -242,30 +242,30 @@ Array<ClassEntity> ResolveBaseClassesAndEstablishClassOrder(
     
     // TODO: add external module resolving as a separate feature.
 
-    Array<ClassEntity> deterministicOrder = ClassSorter_SortClassesInDeterministicDependencyOrder(Core.ListToArray(classes), false);
+    Array<ClassEntity> deterministicOrder = ClassSorter_SortClassesInDeterministicDependencyOrder(classes.toArray(), false);
     
     List<ClassEntity> finalOrder = new List<ClassEntity>();
     List<ClassEntity> baseClassRequired = new List<ClassEntity>();
-    for (i = 0; i < deterministicOrder.Size(); i += 1) {
+    for (i = 0; i < deterministicOrder.size(); i += 1) {
         ClassEntity e = deterministicOrder[i];
         if (e.baseClassTokens != null) {
-            baseClassRequired.Add(e);
+            baseClassRequired.add(e);
         } else {
-            finalOrder.Add(e);
+            finalOrder.add(e);
         }
     }
     
-    for (i = 0; i < baseClassRequired.Size(); i += 1) {
+    for (i = 0; i < baseClassRequired.size(); i += 1) {
         ClassEntity bc = baseClassRequired[i];
         resolver.activeEntity = bc.baseData;
         Token baseClassToken = bc.baseClassTokens[0];
         AbstractEntity bcEntity = LookupUtil_DoLookupForName(resolver, baseClassToken, baseClassToken.Value);
         if (bcEntity != null) {
-            for (j = 2; j < bc.baseClassTokens.Size(); j += 2) {
+            for (j = 2; j < bc.baseClassTokens.size(); j += 2) {
                 string next = bc.baseClassTokens[j].Value;
                 if (bcEntity != null) {
                     Dictionary<string, AbstractEntity> lookup = Entity_getMemberLookup(resolver.staticCtx, bcEntity);
-                    if (lookup.Contains(next)) {
+                    if (lookup.contains(next)) {
                         bcEntity = lookup[next];
                     } else {
                         bcEntity = null;
@@ -286,36 +286,36 @@ Array<ClassEntity> ResolveBaseClassesAndEstablishClassOrder(
     }
 
     Dictionary<string, bool> includedInOrder = new Dictionary<string, bool>();
-    for (i = 0; i < baseClassRequired.Size(); i += 1) {
+    for (i = 0; i < baseClassRequired.size(); i += 1) {
         ClassEntity bc = baseClassRequired[i];
         includedInOrder[bc.baseData.fqName] = false;
     }
     
-    for (i = 0; i < baseClassRequired.Size(); i += 1) {
+    for (i = 0; i < baseClassRequired.size(); i += 1) {
         ClassEntity bc = baseClassRequired[i];
         ClassEntity walker = bc;
         List<ClassEntity> order = new List<ClassEntity>();
         while (walker != null) {
             // If it's external or already included, stop.
-            if (!includedInOrder.Contains(walker.baseData.fqName) ||
+            if (!includedInOrder.contains(walker.baseData.fqName) ||
                 includedInOrder[walker.baseData.fqName]) {
                 walker = null;
             } else {
-                order.Add(walker);
+                order.add(walker);
                 includedInOrder[walker.baseData.fqName] = true;
                 walker = walker.baseClassEntity;
             }
 
-            if (order.Size() > deterministicOrder.Size()) {
+            if (order.size() > deterministicOrder.size()) {
                 Errors_Throw(bc.baseData.firstToken, "This class has a cycle in its base class chain.");
             }
         }
 
-        order.Reverse();
-        for (j = 0; j < order.Size(); j += 1) {
-            finalOrder.Add(order[j]);
+        order.reverse();
+        for (j = 0; j < order.size(); j += 1) {
+            finalOrder.add(order[j]);
         }
     }
 
-    return Core.ListToArray(finalOrder);
+    return finalOrder.toArray();
 }
