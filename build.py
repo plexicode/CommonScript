@@ -1,6 +1,8 @@
 
 import plexibuild
 from plexibuild import fileio
+from plexibuild import pastel
+from plexibuild import textpreprocessor 
 
 VERSION_DOTTED = fileio.file_read_text("./current-version.txt").strip().split('\n').pop()
 VERSION_UNDERSCORE = VERSION_DOTTED.replace('.', '_')
@@ -89,7 +91,25 @@ def copy_builtins():
   fileio.file_write_text('./compiler/src/builtins/gen_builtins.pst', '\n'.join(gen_builtins) + '\n')
 
 def main():
+  fileio.ensure_directory('./dist')
+
   copy_builtins()
+
+  pastel.compile('./compiler/src/compiler.json', 'javascript')
+  pastel.compile('./runtime/src/runtime.json', 'javascript')
+
+  js_ver_file = 'const VER = [' + VERSION_DOTTED.replace('.', ', ') + '];\n'
+  fileio.file_write_text('./compiler/src-intermediate/GEN-version.js', js_ver_file)
+  fileio.file_write_text('./runtime/src-intermediate/GEN-version.js', js_ver_file)
+
+  # TODO: change the build script to export here directly.
+  fileio.copy_file('./compiler/templates/gen.js', './compiler/src-intermediate/GEN-pastel.js')
+  fileio.copy_file('./runtime/templates/gen.js', './runtime/src-intermediate/GEN-pastel.js')
+
+  fileio.file_write_text('./dist/compiler-lib.js', textpreprocessor.load_javascript_file('./compiler/src-intermediate/lib.js'))
+  fileio.file_write_text('./dist/runtime-lib.js', textpreprocessor.load_javascript_file('./runtime/src-intermediate/lib.js'))
+
+
   build_js_compiler()
   build_js_runtime()
 
