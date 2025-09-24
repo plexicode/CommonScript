@@ -2,7 +2,10 @@
 import plexibuild
 from plexibuild import fileio
 from plexibuild import pastel
-from plexibuild import textpreprocessor 
+from plexibuild import textpreprocessor
+from plexibuild import javascript
+
+import json
 
 VERSION_DOTTED = fileio.file_read_text("./current-version.txt").strip().split('\n').pop()
 VERSION_UNDERSCORE = VERSION_DOTTED.replace('.', '_')
@@ -90,6 +93,18 @@ def copy_builtins():
     gen_builtins.append('string GEN_BUILTINS_' + key + '() { return "' + escaped_code + '"; }')
   fileio.file_write_text('./compiler/src/builtins/gen_builtins.pst', '\n'.join(gen_builtins) + '\n')
 
+def get_test_cases_as_json():
+  all_files_in_tests = fileio.list_files_recursive('./tests')
+  config_files = filter(lambda t: t.endswith('.config') and len(t.split('/')) == 2, all_files_in_tests)
+  test_dirs = list(map(lambda t: t.split('/')[0], config_files))
+  copy_dirs = set(list(test_dirs) + ['testlib'])
+
+  output = []
+  for path in all_files_in_tests:
+    if path.split('/')[0] in copy_dirs:
+      output.append({ 'path': path, 'content': fileio.file_read_text('./tests/' + path)})
+  return { 'files': output, 'testCases': test_dirs }
+
 def main():
   fileio.ensure_directory('./dist')
 
@@ -106,9 +121,29 @@ def main():
   fileio.copy_file('./compiler/templates/gen.js', './compiler/src-intermediate/GEN-pastel.js')
   fileio.copy_file('./runtime/templates/gen.js', './runtime/src-intermediate/GEN-pastel.js')
 
-  fileio.file_write_text('./dist/compiler-lib.js', textpreprocessor.load_javascript_file('./compiler/src-intermediate/lib.js'))
-  fileio.file_write_text('./dist/runtime-lib.js', textpreprocessor.load_javascript_file('./runtime/src-intermediate/lib.js'))
+  for is_debug in (True, False):
+    debug_vars = { 'IS_DEBUG': is_debug }
+    suffix = '.debug.js' if is_debug else '.js'
+    fileio.file_write_text('./dist/compiler-lib' + suffix, textpreprocessor.load_javascript_file('./compiler/src-intermediate/lib.js', debug_vars))
+    fileio.file_write_text('./dist/runtime-lib' + suffix, textpreprocessor.load_javascript_file('./runtime/src-intermediate/lib.js', debug_vars))
 
+  vars_for_node = {}
+  # vars_for_node['IS_DEBUG'] = True
+
+  fileio.batch_write_to_dir('./dist', {
+    'compiler-lib.min.js': javascript.minify('./dist/compiler-lib.js'),
+    'runtime-lib.min.js': javascript.minify('./dist/runtime-lib.js'),
+    'compiler-lib.node.js': textpreprocessor.load_javascript_file('./compiler/src-intermediate/lib-node.js', vars_for_node),
+    'runtime-lib.node.js': textpreprocessor.load_javascript_file('./runtime/src-intermediate/lib-node.js', vars_for_node),
+  })
+
+  fileio.copy_file('./dist/compiler-lib.node.js', './tests/harnesses/node/testscript/GEN-compiler.js')
+  fileio.copy_file('./dist/runtime-lib.node.js', './tests/harnesses/node/testscript/GEN-runtime.js')
+
+  fileio.file_write_text(
+    './tests/harnesses/node/testdata/GEN-cases.js',
+    'let data = ' + json.dumps(json.dumps(get_test_cases_as_json())) + ';\n' +
+    'export function getTestData() { return JSON.parse(data); };\n')
 
   build_js_compiler()
   build_js_runtime()

@@ -4012,6 +4012,8 @@ let $ParseStatement = function($tokens, $isForLoop) {
 	let $nextToken = $Tokens_peek($tokens);
 	if (!$isForLoop && ($nextToken != null && $nextToken[2] == 1)) {
 		switch ($StatementParser_IdentifyKeywordType($nextToken[0])) {
+			case 99:
+				break;
 			case 1:
 				return $ParseBreakContinue($tokens);
 			case 2:
@@ -5683,6 +5685,9 @@ let $Statement_new = function($firstToken, $type) {
 let $StatementParser_IdentifyKeywordType = function($kw) {
 	switch ($kw.charAt(0)) {
 		case "b":
+			if ($kw == "base") {
+				return 99;
+			}
 			if ($kw == "break") {
 				return 1;
 			}
@@ -5723,6 +5728,9 @@ let $StatementParser_IdentifyKeywordType = function($kw) {
 			}
 			if ($kw == "try") {
 				return 9;
+			}
+			if ($kw == "this") {
+				return 99;
 			}
 			break;
 		case "w":

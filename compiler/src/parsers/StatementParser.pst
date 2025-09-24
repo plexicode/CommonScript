@@ -1,14 +1,19 @@
 
 Statement ParseStatement(TokenStream tokens, bool isForLoop) {
     Token nextToken = Tokens_peek(tokens);
-    if (!isForLoop && 
-        nextToken != null && 
+    if (!isForLoop &&
+        nextToken != null &&
         nextToken.Type == TokenType.KEYWORD) {
         switch (StatementParser_IdentifyKeywordType(nextToken.Value)) {
+            case StatementKeyword.NON_STATEMENT:
+                // null, this, true, etc.
+                // These should fall through to the expression as statement parser.
+                break;
+
             case StatementKeyword.BREAK:
-            case StatementKeyword.CONTINUE: 
+            case StatementKeyword.CONTINUE:
                 return ParseBreakContinue(tokens);
-            
+
             case StatementKeyword.DO: return ParseDoWhileLoop(tokens);
             case StatementKeyword.FOR: return ParseAnyForLoop(tokens);
             case StatementKeyword.IF: return ParseIfStatement(tokens);
@@ -17,10 +22,11 @@ Statement ParseStatement(TokenStream tokens, bool isForLoop) {
             case StatementKeyword.THROW: return ParseThrow(tokens);
             case StatementKeyword.TRY: return ParseTry(tokens);
             case StatementKeyword.WHILE: return ParseWhileLoop(tokens);
+
             case StatementKeyword.YIELD:
                 fail("Not implemented");
                 return null;
-            
+
             default:
                 fail(""); // should not happen.
                 break;
@@ -124,11 +130,14 @@ enum StatementKeyword {
     TRY = 9,
     WHILE = 10,
     YIELD = 11,
+
+    NON_STATEMENT = 99,
 }
 
 int StatementParser_IdentifyKeywordType(string kw) {
     switch (kw[0]) {
         case 'b':
+            if (kw == "base") return StatementKeyword.NON_STATEMENT;
             if (kw == "break") return StatementKeyword.BREAK;
             break;
         case 'c':
@@ -152,6 +161,7 @@ int StatementParser_IdentifyKeywordType(string kw) {
         case 't':
             if (kw == "throw") return StatementKeyword.THROW;
             if (kw == "try") return StatementKeyword.TRY;
+            if (kw == "this") return StatementKeyword.NON_STATEMENT;
             break;
         case 'w':
             if (kw == "while") return StatementKeyword.WHILE;

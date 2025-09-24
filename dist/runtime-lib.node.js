@@ -5422,3 +5422,6 @@ let newEngineContextBuilder = (name, ver) => {
     }),
   });
 })();
+
+
+export default CommonScriptRuntime;

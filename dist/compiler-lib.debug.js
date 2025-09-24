@@ -6857,13 +6857,7 @@ const createCommonScritpCompilationEngine = (() => {
       let provideFilesImpl = (nextModId, filesLookup, isBuiltIn) => {
         if (nextModId !== nextModuleIdCache) throw new Error('');
 
-        try {
-          PST.PUBLIC_SupplyFilesForModule(compiler, nextModId, { ...filesLookup }, false, false);
-        } catch (ex) {
-          isDone = true;
-          errorOverride = ex.message;
-          return;
-        }
+        PST.PUBLIC_SupplyFilesForModule(compiler, nextModId, { ...filesLookup }, false, false);
 
         updateNext();
       };
@@ -6883,11 +6877,7 @@ const createCommonScritpCompilationEngine = (() => {
         provideFilesForUserModuleCompilation: (nextModId, filesLookup) => provideFilesImpl(nextModId, filesLookup, false),
         provideFilesForBuiltinLibraryModuleCompilation: (nextModId, filesLookup) => provideFilesImpl(nextModId, filesLookup, true),
         getCompilation: () => {
-          try {
-            return getCompilation();
-          } catch (ex) {
-            return { errorMessage: ex.message };
-          }
+          return getCompilation();
         },
       });
     };
@@ -6905,12 +6895,8 @@ const createCommonScritpCompilationEngine = (() => {
           let files = sources[s][nextModId];
           if (files) {
             moduleFound = true;
-            try {
-              if (isUserCode) adcomp.provideFilesForUserModuleCompilation(nextModId, files);
-              else adcomp.provideFilesForBuiltinLibraryModuleCompilation(nextModId, files);
-            } catch (ex) {
-              return { errorMessage: ex.message };
-            }
+            if (isUserCode) adcomp.provideFilesForUserModuleCompilation(nextModId, files);
+            else adcomp.provideFilesForBuiltinLibraryModuleCompilation(nextModId, files);
           }
         }
       }
