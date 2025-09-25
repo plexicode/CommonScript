@@ -1,15 +1,65 @@
 Value json_util_parse(ExecutionContext ec, string rawValue, Array<int> errOut) {
     errOut[0] = 0;
-    errOut[1] = 0;
-    errOut[2] = 0;
 
-    Array<object> args = new Array<object>(3);
-    args[0] = ec;
-    args[1] = rawValue;
-    args[2] = errOut;
-    object resultObj = Pastel.invokeExtension("jsonParse", args);
-    if (errOut[0] == 1) return null;
-    return (Value) resultObj;
+    List<object> bufferOut = new List<object>();
+    object[] args = new object[2];
+    args[0] = rawValue;
+    args[1] = bufferOut;
+    Pastel.invokeExtension("jsonParse", args);
+    if (!(bool) bufferOut[0]) {
+        errOut[0] = 1;
+        errOut[1] = (int) bufferOut[1];
+        errOut[2] = (int) bufferOut[2];
+        return ec.globalValues.nullValue;
+    }
+    int[] index = new int[1];
+    index[0] = 1;
+    return json_util_parseFromBuf(ec, index, bufferOut);
+}
+
+Value json_util_parseFromBuf(ExecutionContext ec, int[] index, List<object> buf) {
+    int i = index[0];
+    switch ((int) buf[i]) {
+        case 0: // null
+            index[0] = i + 1;
+            return ec.globalValues.nullValue;
+        case 1: // bool
+            index[0] = i + 2;
+            if ((bool)buf[i + 1]) return ec.globalValues.trueValue;
+            return ec.globalValues.falseValue;
+        case 2: // integer
+            index[0] = i + 2;
+            return buildInteger(ec.globalValues, (int) buf[i + 1]);
+        case 3: // float
+            index[0] = i + 2;
+            return buildFloat((double) buf[i + 1]);
+        case 4: // string
+            index[0] = i + 2;
+            return buildString(ec.globalValues, (string) buf[i + 1], false);
+        case 5: // list
+            int len = (int) buf[i + 1];
+            index[0] = i + 2;
+            Value[] listItems = new Value[len];
+            for (int j = 0; j < len; j += 1) {
+                listItems[j] = json_util_parseFromBuf(ec, index, buf);
+            }
+            return buildList(ec, listItems, false, len);
+        case 6: // dictionary
+            int sz = (int) buf[i + 1];
+            index[0] = i + 2;
+            Value[] keys = new Value[sz];
+            Value[] values = new Value[sz];
+            for (int k = 0; k < sz; k += 1) {
+                // TODO: create a lookup of string keys to Values scoped to the entire parse call
+                // as repeating keys are very likely.
+                keys[k] = buildString(ec.globalValues, (string) buf[index[0]], false);
+                index[0] = index[0] + 1;
+                values[k] = json_util_parseFromBuf(ec, index, buf);
+            }
+            return buildStringDictionary(ec, keys, values);
+    }
+    fail("");
+    return null;
 }
 
 string json_util_serialize(GlobalValues g, Value root, bool useIndent, ListImpl errOut) {

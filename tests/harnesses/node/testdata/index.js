@@ -1,10 +1,6 @@
 import * as CASES from './GEN-cases.js';
 
 let ignoredTests = new Set([
-
-    // TODO: There are still some regressions with this.
-    'builtinlibs',
-
     // TODO: Investigate
     'xml',
 ]);

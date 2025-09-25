@@ -92,6 +92,8 @@ function jsonTest() {
     // round-and-a-half trip?
     expectedNoSpace = expected.replace('\n', '').replace(' ', '');
     assertStrEqual(json.jsonSerialize(roundtrip), expectedNoSpace);
+
+    // TODO: JSON negative testing
 }
 
 function textEncodingTest() {

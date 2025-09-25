@@ -4,12 +4,11 @@ const CommonScriptRuntime = (() => {
   // #INCLUDE ./GEN-pastel.js
   PASTEL_regCallback('hardCrash', args => { throw new Error(args[0]); });
 
-  PASTEL_regCallback('jsonSerialize', args => {
-    debugger;
-    console.log(args);
-    let [obj, useIndent] = args;
-    
-    throw new Error('waaaat');
+  // #INCLUDE-INDENT ./jsonUtil.js
+  PASTEL_regCallback('jsonParse', args => {
+    let [str, bufOut] = args;
+    jsonUtil_parseToArray(str, bufOut);
+    return null;
   });
 
   // #INCLUDE ./newEngineContextBuilder.js
