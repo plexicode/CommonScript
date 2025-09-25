@@ -145,8 +145,8 @@ def main():
     'let data = ' + json.dumps(json.dumps(get_test_cases_as_json())) + ';\n' +
     'export function getTestData() { return JSON.parse(data); };\n')
 
-  build_js_compiler()
-  build_js_runtime()
+  # build_js_compiler()
+  # build_js_runtime()
 
   plexibuild.display_completion_message()
 
