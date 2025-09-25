@@ -54,7 +54,7 @@ function base64Test() {
     msg = base64.base64ToBytes(msgB64);
     assertStrEqual('1 2 3 4 5 6 7 253 254 255', msg.join(' '));
 
-    // TOOD: needs to be fixed in the Pastel layer to accept web-safe base64.
+    // TODO: needs to be fixed in the Pastel layer to accept web-safe base64.
     // msg = base64.base64ToBytes(webB64);
     // assertStrEqual('1 2 3 4 5 6 7 253 254 255', msg.join(' '));
 }

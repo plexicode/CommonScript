@@ -1,11 +1,11 @@
 // TODO: remove some of the minifier artifacts from this code and create a true minifier.
 
-@public class JsonParseException : Exception { 
-    constructor(l, c) : base('JSON parse error on line ' + l + ', col ' + c) {} 
+@public class JsonParseException : Exception {
+    constructor(l, c) : base('JSON parse error on line ' + l + ', col ' + c) {}
 }
 
-@public class JsonSerializationException : Exception { 
-    constructor() : base('Value contained un-serialiazable value.') {} 
+@public class JsonSerializationException : Exception {
+    constructor(msg) : base(msg + '') {}
 }
 
 @public function jsonParse(str) { return parseImpl(str, true); }
@@ -21,7 +21,9 @@ function parseImpl(str, f) {
 
 @public function jsonSerialize(obj, pretty = false, tab = 2) {
     p = pretty == true;
-    s = $json_serialize(obj, p);
-    if (s == null) throw new JsonSerializationException();
+    errOut = [''];
+    s = $json_serialize(obj, p, errOut);
+    e = errOut[0];
+    if (e != '') throw new JsonSerializationException(e);
     return (p && tab != '\t') ? s.replace('\t', ' ' * tab) : s;
 }

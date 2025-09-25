@@ -12,9 +12,158 @@ Value json_util_parse(ExecutionContext ec, string rawValue, Array<int> errOut) {
     return (Value) resultObj;
 }
 
-string json_util_serialize(Value obj, bool useIndent) {
-    Array<object> args = new Array<object>(2);
-    args[0] = obj;
-    args[1] = useIndent;
-    return (string) Pastel.invokeExtension("jsonSerialize", args);
+string json_util_serialize(GlobalValues g, Value root, bool useIndent, ListImpl errOut) {
+    List<string> stringBuilder = new List<string>();
+    List<int> objectIds = new List<int>();
+    List<string> tabs = new List<string>();
+    tabs.add("");
+    string err = json_util_serialize_impl_any(root, useIndent, 0, tabs, stringBuilder, new List<int>());
+    if (err != null) {
+        List_set(errOut, 0, buildString(g, err, false));
+        return "";
+    }
+    return stringBuilder.join("");
+}
+
+bool json_util_cycle_check_push(List<int> refIds, int refId) {
+    int sz = refIds.size();
+    for (int i = 0; i < sz; i += 1) {
+        if (refIds[i] == refId) return true;
+    }
+    refIds.add(refId);
+    return false;
+}
+
+string json_util_serialize_dict(
+    Value value,
+    bool useIndent,
+    int currentDepth,
+    List<string> tabs,
+    List<string> sb,
+    List<int> refCycleCheck) {
+
+    DictImpl dict = (DictImpl) value.internalValue;
+    int sz = dict.size;
+    if (sz == 0) {
+        sb.add("{}");
+        return null;
+    }
+    if (json_util_cycle_check_push(refCycleCheck, dict.id)) return "JSON serialization encountered a reference cycle.";
+    Value[] keys = dict.keys;
+    Value[] values = dict.values;
+
+    int newDepth = currentDepth + 1;
+    if (useIndent) tabs.add(tabs[tabs.size() - 1] + "\t");
+
+    sb.add("{" /* } */);
+    if (useIndent) sb.add("\n");
+
+    for (int i = 0; i < sz; i += 1) {
+        Value k = keys[i];
+        Value v = values[i];
+        if (useIndent) sb.add(tabs[newDepth]);
+
+        json_util_serialize_impl_any(k, useIndent, newDepth, tabs, sb, refCycleCheck);
+
+        if (useIndent) sb.add(": ");
+        else sb.add(":");
+
+        string err = json_util_serialize_impl_any(v, useIndent, newDepth, tabs, sb, refCycleCheck);
+        if (err != null) return err;
+
+        if (i < sz - 1) sb.add(",");
+
+        if (useIndent) sb.add("\n");
+    }
+
+    if (useIndent) sb.add(tabs[currentDepth]);
+    sb.add(/* { */ "}");
+
+    refCycleCheck.pop();
+    return null;
+}
+
+string json_util_serialize_list(
+    Value value,
+    bool useIndent,
+    int currentDepth,
+    List<string> tabs,
+    List<string> sb,
+    List<int> refCycleCheck) {
+
+    ListImpl list = (ListImpl) value.internalValue;
+    int sz = list.length;
+    if (sz == 0) {
+        sb.add("[]");
+        return null;
+    }
+    if (json_util_cycle_check_push(refCycleCheck, list.id)) return "JSON serialization encountered a reference cycle.";
+    int newDepth = currentDepth + 1;
+    if (useIndent) tabs.add(tabs[tabs.size() - 1] + "\t");
+
+    sb.add("[" /* ] */);
+    if (useIndent) sb.add("\n");
+
+    for (int i = 0; i < sz; i += 1) {
+        Value item = list.items[i];
+
+        if (useIndent) sb.add(tabs[newDepth]);
+
+        string err = json_util_serialize_impl_any(item, useIndent, newDepth, tabs, sb, refCycleCheck);
+        if (err != null) return err;
+
+        if (i < sz - 1) sb.add(",");
+
+        if (useIndent) sb.add("\n");
+    }
+
+    if (useIndent) sb.add(tabs[currentDepth]);
+    sb.add(/* [ */ "]");
+
+    refCycleCheck.pop();
+    return null;
+}
+
+string json_util_serialize_impl_any(
+    Value value,
+    bool useIndent,
+    int currentDepth,
+    List<string> tabs,
+    List<string> sb,
+    List<int> refCycleCheck) {
+
+    switch (value.type) {
+        case Type.DICTIONARY: return json_util_serialize_dict(value, useIndent, currentDepth, tabs, sb, refCycleCheck);
+        case Type.LIST: return json_util_serialize_list(value, useIndent, currentDepth, tabs, sb, refCycleCheck);
+
+        case Type.NULL:
+            sb.add("null");
+            return null;
+
+        case Type.BOOLEAN:
+            if ((bool)value.internalValue) {
+                sb.add("true");
+            } else {
+                sb.add("false");
+            }
+            return null;
+
+        case Type.INTEGER:
+            // TODO: test for large integers.
+            sb.add(Convert.intToString((int) value.internalValue));
+            return null;
+
+        case Type.FLOAT:
+            sb.add(Convert.floatToString((double) value.internalValue));
+            return null;
+
+        case Type.STRING:
+            StringImpl strImpl = (StringImpl) value.internalValue;
+            if (strImpl.nativeStr == null) stringFlatten(strImpl);
+            sb.add(Json.serializeString(strImpl.nativeStr));
+            return null;
+
+        default:
+            return "Invalid JSON serialization type";
+    }
 }

@@ -3062,7 +3062,7 @@ const createCommonScritpCompilationEngine = (() => {
     };
 
     let $GEN_BUILTINS_json = function() {
-    	return "@3JsonParse@6 {\nconstructor(l, c) : base('JSON parse error on line ' + l + ', col ' + c) {}\n}\n@3JsonSerialization@6 {\nconstructor() : base('Value contained un-serialiazable value.') {}\n}\n@5jsonParse(str) { @4parseImpl(str, true); }\n@5tryJsonParse(str) { @4parseImpl(str, false); }\n@1parseImpl(str, f) {\ne = [0, 0, 0];\nv = $json_parse(str + '', e);\nif (e[0] < 1) @4v;\nif (f) throw new JsonParseException(e[1], e[2]);\n@4null;\n}\n@5jsonSerialize(obj, pretty = false, tab = 2) {\np = pretty == true;\ns = $json_serialize(obj, p);\nif (s == null) throw new JsonSerializationException();\n@4(p && tab != '\\t') ? s.replace('\\t', ' ' * tab) : s;\n}";
+    	return "@3JsonParse@6 {\nconstructor(l, c) : base('JSON parse error on line ' + l + ', col ' + c) {}\n}\n@3JsonSerialization@6 {\nconstructor(msg) : base(msg + '') {}\n}\n@5jsonParse(str) { @4parseImpl(str, true); }\n@5tryJsonParse(str) { @4parseImpl(str, false); }\n@1parseImpl(str, f) {\ne = [0, 0, 0];\nv = $json_parse(str + '', e);\nif (e[0] < 1) @4v;\nif (f) throw new JsonParseException(e[1], e[2]);\n@4null;\n}\n@5jsonSerialize(obj, pretty = false, tab = 2) {\np = pretty == true;\nerrOut = [''];\ns = $json_serialize(obj, p, errOut);\ne = errOut[0];\nif (e != '') throw new JsonSerializationException(e);\n@4(p && tab != '\\t') ? s.replace('\\t', ' ' * tab) : s;\n}";
     };
 
     let $GEN_BUILTINS_math = function() {
@@ -5564,7 +5564,7 @@ const createCommonScritpCompilationEngine = (() => {
     	$argcByName["b64_to_bytes"] = 1;
     	$argcByName["cmp"] = 2;
     	$argcByName["json_parse"] = 2;
-    	$argcByName["json_serialize"] = 2;
+    	$argcByName["json_serialize"] = 3;
     	$argcByName["math_arccos"] = 1;
     	$argcByName["math_arcsin"] = 1;
     	$argcByName["math_arctan"] = 2;

@@ -4,6 +4,14 @@ const CommonScriptRuntime = (() => {
   // #INCLUDE ./GEN-pastel.js
   PASTEL_regCallback('hardCrash', args => { throw new Error(args[0]); });
 
+  PASTEL_regCallback('jsonSerialize', args => {
+    debugger;
+    console.log(args);
+    let [obj, useIndent] = args;
+    
+    throw new Error('waaaat');
+  });
+
   // #INCLUDE ./newEngineContextBuilder.js
 
   return Object.freeze({

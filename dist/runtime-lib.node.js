@@ -2,13 +2,18 @@ const CommonScriptRuntime = (() => {
 const VER = [0, 1, 0];
 
 
-const [PASTEL_regCallback, bubbleException, buildAsciiStringImpl, buildBase64String, buildFloat, buildFunctionFromInfo, buildInteger, buildIntegerListValue, buildList, buildString, buildStringDictionary, convertListToByteArray, convertToStringImpl, createClassInfo, createMainTask, createNewTask, createStringFromUnicodeArray, createStringFromUnicodeArraySegment, decToInt, DictImpl_clone, DictImpl_ensureCapacity, dictionaryRemove, doExponent, exceptionCatcherRouteException, ExRes_Done, ExRes_HardCrash, ExRes_Suspend, finalizeExecutionContext, FunctionPointer_cloneWithNewType, generateNameLookup, generateStackTrace, generateTryDescriptors, getExceptionMessage, getGlobalsFromTask, hexToInt, increaseValueStackCapacity, injectNameLookup, isValueEqual, json_util_parse, json_util_serialize, List_add, List_expandCapacity, List_get, List_insert, List_join, List_pop, List_removeAt, List_set, new_ByteCodeRow, new_ExecutionContext, new_ExecutionResult, new_GlobalValues, ParseRaw_entitiesSection_classMemberResolver, ParseRaw_entitiesSection_parseClasses, ParseRaw_entitiesSection_parseEnums, ParseRaw_entitiesSection_parseFunctions, ParseRaw_parseEntityData, ParseRaw_parseMetadata, ParseRaw_parseStringData, ParseRaw_parseTokenData, ParseRaw_popByteCodeRows, ParseRaw_popBytes, ParseRaw_popFixedLenString, ParseRaw_popInt, ParseRaw_popLenString, ParseRaw_popSingleByte, ParseRawData, PUBLIC_createTaskForFunction, PUBLIC_createTaskForFunctionWithWrappedArgs, PUBLIC_getApplicationContextFromTask, PUBLIC_getExecutionContextError, PUBLIC_getExecutionContextFromTask, PUBLIC_getTaskResultError, PUBLIC_getTaskResultSleepAmount, PUBLIC_getTaskResultStatus, PUBLIC_initializeExecutionContext, PUBLIC_listGet, PUBLIC_listLength, PUBLIC_listSet, PUBLIC_listValueAdd, PUBLIC_requestTaskSuspension, PUBLIC_resumeTask, PUBLIC_startMainTask, PUBLIC_unwrapFloat, PUBLIC_unwrapInteger, PUBLIC_unwrapNativeHandle, PUBLIC_valueToString, PUBLIC_wrapBoolean, PUBLIC_wrapInteger, PUBLIC_wrapNativeHandle, PUBLIC_wrapString, RunInterpreter, RunInterpreterImpl, Sort_buildTaskList, Sort_end, Sort_getNextCmp, Sort_proceedWithCmpResult, Sort_start, stringFlatten, stringUtil_changeCase, stringUtil_getFlatValue, stringUtil_split, stringUtil_trim, ThrowError, ThrowErrorImpl, tryGetNameId, valueArrayIncreaseCapacity, valueToHumanString, xml_convertCharsToString, xml_ensureMore, xml_getEntity, xml_hasMore, xml_isValidNameChar, xml_peekChar, xml_performEntitySwaps, xml_popChar, xml_popCloseTag, xml_popElement, xml_popQuotedValue, xml_popTextValue, xml_popWord, xml_setError, xml_skipVersionHeaderIfPresent, xml_skipWhitespace, xml_tryPopCloseTagFor, xmlUtil_parse] = (() => {
+const [PASTEL_regCallback, bubbleException, buildAsciiStringImpl, buildBase64String, buildFloat, buildFunctionFromInfo, buildInteger, buildIntegerListValue, buildList, buildString, buildStringDictionary, convertListToByteArray, convertToStringImpl, createClassInfo, createMainTask, createNewTask, createStringFromUnicodeArray, createStringFromUnicodeArraySegment, decToInt, DictImpl_clone, DictImpl_ensureCapacity, dictionaryRemove, doExponent, exceptionCatcherRouteException, ExRes_Done, ExRes_HardCrash, ExRes_Suspend, fail, finalizeExecutionContext, FunctionPointer_cloneWithNewType, generateNameLookup, generateStackTrace, generateTryDescriptors, getExceptionMessage, getGlobalsFromTask, hexToInt, increaseValueStackCapacity, injectNameLookup, isValueEqual, json_util_cycle_check_push, json_util_parse, json_util_serialize, json_util_serialize_dict, json_util_serialize_impl_any, json_util_serialize_list, List_add, List_expandCapacity, List_get, List_insert, List_join, List_pop, List_removeAt, List_set, new_ByteCodeRow, new_ExecutionContext, new_ExecutionResult, new_GlobalValues, ParseRaw_entitiesSection_classMemberResolver, ParseRaw_entitiesSection_parseClasses, ParseRaw_entitiesSection_parseEnums, ParseRaw_entitiesSection_parseFunctions, ParseRaw_parseEntityData, ParseRaw_parseMetadata, ParseRaw_parseStringData, ParseRaw_parseTokenData, ParseRaw_popByteCodeRows, ParseRaw_popBytes, ParseRaw_popFixedLenString, ParseRaw_popInt, ParseRaw_popLenString, ParseRaw_popSingleByte, ParseRawData, PUBLIC_createTaskForFunction, PUBLIC_createTaskForFunctionWithWrappedArgs, PUBLIC_getApplicationContextFromTask, PUBLIC_getExecutionContextError, PUBLIC_getExecutionContextFromTask, PUBLIC_getTaskResultError, PUBLIC_getTaskResultSleepAmount, PUBLIC_getTaskResultStatus, PUBLIC_initializeExecutionContext, PUBLIC_listGet, PUBLIC_listLength, PUBLIC_listSet, PUBLIC_listValueAdd, PUBLIC_requestTaskSuspension, PUBLIC_resumeTask, PUBLIC_startMainTask, PUBLIC_unwrapFloat, PUBLIC_unwrapInteger, PUBLIC_unwrapNativeHandle, PUBLIC_valueToString, PUBLIC_wrapBoolean, PUBLIC_wrapInteger, PUBLIC_wrapNativeHandle, PUBLIC_wrapString, RunInterpreter, RunInterpreterImpl, Sort_buildTaskList, Sort_end, Sort_getNextCmp, Sort_proceedWithCmpResult, Sort_start, stringFlatten, stringUtil_changeCase, stringUtil_getFlatValue, stringUtil_split, stringUtil_trim, ThrowError, ThrowErrorImpl, tryGetNameId, valueArrayIncreaseCapacity, valueToHumanString, xml_convertCharsToString, xml_ensureMore, xml_getEntity, xml_hasMore, xml_isValidNameChar, xml_peekChar, xml_performEntitySwaps, xml_popChar, xml_popCloseTag, xml_popElement, xml_popQuotedValue, xml_popTextValue, xml_popWord, xml_setError, xml_skipVersionHeaderIfPresent, xml_skipWhitespace, xml_tryPopCloseTagFor, xmlUtil_parse] = (() => {
 let PST$stringToUtf8Bytes = s => Array.from(new TextEncoder().encode(s));
 
 let PST$createNewArray = (s, val) => {
 	let o = [];
 	while (s --> 0) o.push(val);
 	return o;
+};
+
+let PST$floatToStr = f => {
+    let s = f + '';
+    return s.includes('.') ? s : (s + '.0');
 };
 
 let PST$b64Alpha = (() => {
@@ -44,11 +49,6 @@ let PST$floatParseHelper = (o, s) => {
 	if (isNaN(t) || !isFinite(t)) return;
 	o[0] = 1;
 	o[1] = t;
-};
-
-let PST$floatToStr = f => {
-    let s = f + '';
-    return s.includes('.') ? s : (s + '.0');
 };
 
 let PST$extCallbacks = {};
@@ -574,6 +574,12 @@ let $ExRes_Suspend = function($task, $useSleep, $sleepMillis) {
 	return $res;
 };
 
+let $fail = function($msg) {
+	let $failArgs = PST$createNewArray(1, null);
+	$failArgs[0] = $msg;
+	return PST$extCallbacks["hardCrash"]($failArgs);
+};
+
 let $finalizeExecutionContext = function($ec) {
 	let $byteCode = $ec[11];
 	let $length = $ec[11].length;
@@ -834,6 +840,19 @@ let $isValueEqual = function($a, $b) {
 	}
 };
 
+let $json_util_cycle_check_push = function($refIds, $refId) {
+	let $sz = $refIds.length;
+	let $i = 0;
+	while ($i < $sz) {
+		if ($refIds[$i] == $refId) {
+			return true;
+		}
+		$i += 1;
+	}
+	$refIds.push($refId);
+	return false;
+};
+
 let $json_util_parse = function($ec, $rawValue, $errOut) {
 	$errOut[0] = 0;
 	$errOut[1] = 0;
@@ -849,11 +868,148 @@ let $json_util_parse = function($ec, $rawValue, $errOut) {
 	return $resultObj;
 };
 
-let $json_util_serialize = function($obj, $useIndent) {
-	let $args = PST$createNewArray(2, null);
-	$args[0] = $obj;
-	$args[1] = $useIndent;
-	return PST$extCallbacks["jsonSerialize"]($args);
+let $json_util_serialize = function($g, $root, $useIndent, $errOut) {
+	let $stringBuilder = [];
+	let $objectIds = [];
+	let $tabs = [];
+	$tabs.push("");
+	let $err = $json_util_serialize_impl_any($root, $useIndent, 0, $tabs, $stringBuilder, []);
+	if ($err != null) {
+		$List_set($errOut, 0, $buildString($g, $err, false));
+		return "";
+	}
+	return $stringBuilder.join("");
+};
+
+let $json_util_serialize_dict = function($value, $useIndent, $currentDepth, $tabs, $sb, $refCycleCheck) {
+	let $dict = $value[1];
+	let $sz = $dict[2];
+	if ($sz == 0) {
+		$sb.push("{}");
+		return null;
+	}
+	if ($json_util_cycle_check_push($refCycleCheck, $dict[0])) {
+		return "JSON serialization encountered a reference cycle.";
+	}
+	let $keys = $dict[4];
+	let $values = $dict[5];
+	let $newDepth = $currentDepth + 1;
+	if ($useIndent) {
+		$tabs.push($tabs[$tabs.length - 1] + "\t");
+	}
+	$sb.push("{");
+	if ($useIndent) {
+		$sb.push("\n");
+	}
+	let $i = 0;
+	while ($i < $sz) {
+		let $k = $keys[$i];
+		let $v = $values[$i];
+		if ($useIndent) {
+			$sb.push($tabs[$newDepth]);
+		}
+		$json_util_serialize_impl_any($k, $useIndent, $newDepth, $tabs, $sb, $refCycleCheck);
+		if ($useIndent) {
+			$sb.push(": ");
+		} else {
+			$sb.push(":");
+		}
+		let $err = $json_util_serialize_impl_any($v, $useIndent, $newDepth, $tabs, $sb, $refCycleCheck);
+		if ($err != null) {
+			return $err;
+		}
+		if ($i < $sz - 1) {
+			$sb.push(",");
+		}
+		if ($useIndent) {
+			$sb.push("\n");
+		}
+		$i += 1;
+	}
+	if ($useIndent) {
+		$sb.push($tabs[$currentDepth]);
+	}
+	$sb.push("}");
+	$refCycleCheck.pop();
+	return null;
+};
+
+let $json_util_serialize_impl_any = function($value, $useIndent, $currentDepth, $tabs, $sb, $refCycleCheck) {
+	switch ($value[0]) {
+		case 10:
+			return $json_util_serialize_dict($value, $useIndent, $currentDepth, $tabs, $sb, $refCycleCheck);
+		case 9:
+			return $json_util_serialize_list($value, $useIndent, $currentDepth, $tabs, $sb, $refCycleCheck);
+		case 1:
+			$sb.push("null");
+			return null;
+		case 2:
+			if ($value[1]) {
+				$sb.push("true");
+			} else {
+				$sb.push("false");
+			}
+			return null;
+		case 3:
+			$sb.push($value[1] + '');
+			return null;
+		case 4:
+			$sb.push(PST$floatToStr($value[1]));
+			return null;
+		case 5:
+			let $strImpl = $value[1];
+			if ($strImpl[3] == null) {
+				$stringFlatten($strImpl);
+			}
+			$sb.push(JSON.stringify($strImpl[3]));
+			return null;
+		default:
+			return "Invalid JSON serialization type";
+	}
+};
+
+let $json_util_serialize_list = function($value, $useIndent, $currentDepth, $tabs, $sb, $refCycleCheck) {
+	let $list = $value[1];
+	let $sz = $list[1];
+	if ($sz == 0) {
+		$sb.push("[]");
+		return null;
+	}
+	if ($json_util_cycle_check_push($refCycleCheck, $list[0])) {
+		return "JSON serialization encountered a reference cycle.";
+	}
+	let $newDepth = $currentDepth + 1;
+	if ($useIndent) {
+		$tabs.push($tabs[$tabs.length - 1] + "\t");
+	}
+	$sb.push("[");
+	if ($useIndent) {
+		$sb.push("\n");
+	}
+	let $i = 0;
+	while ($i < $sz) {
+		let $item = $list[3][$i];
+		if ($useIndent) {
+			$sb.push($tabs[$newDepth]);
+		}
+		let $err = $json_util_serialize_impl_any($item, $useIndent, $newDepth, $tabs, $sb, $refCycleCheck);
+		if ($err != null) {
+			return $err;
+		}
+		if ($i < $sz - 1) {
+			$sb.push(",");
+		}
+		if ($useIndent) {
+			$sb.push("\n");
+		}
+		$i += 1;
+	}
+	if ($useIndent) {
+		$sb.push($tabs[$currentDepth]);
+	}
+	$sb.push("]");
+	$refCycleCheck.pop();
+	return null;
 };
 
 let $List_add = function($o, $v) {
@@ -4011,10 +4167,8 @@ let $RunInterpreterImpl = function($task) {
 						}
 						break;
 					case 21:
-						$valueStackSize -= 2;
-						$value = $valueStack[$valueStackSize];
-						$bool1 = $valueStack[$valueStackSize + 1][1];
-						$str1 = $json_util_serialize($value, $bool1);
+						$valueStackSize -= 3;
+						$str1 = $json_util_serialize($globalValues, $valueStack[$valueStackSize], $valueStack[$valueStackSize + 1][1], $valueStack[$valueStackSize + 2][1]);
 						$output = $buildString($globalValues, $str1, false);
 						break;
 					case 8:
@@ -5316,10 +5470,18 @@ let $xmlUtil_parse = function($ec, $chars, $dataOut) {
 	}
 	return 0;
 };
-return [PST$registerExtensibleCallback, $bubbleException, $buildAsciiStringImpl, $buildBase64String, $buildFloat, $buildFunctionFromInfo, $buildInteger, $buildIntegerListValue, $buildList, $buildString, $buildStringDictionary, $convertListToByteArray, $convertToStringImpl, $createClassInfo, $createMainTask, $createNewTask, $createStringFromUnicodeArray, $createStringFromUnicodeArraySegment, $decToInt, $DictImpl_clone, $DictImpl_ensureCapacity, $dictionaryRemove, $doExponent, $exceptionCatcherRouteException, $ExRes_Done, $ExRes_HardCrash, $ExRes_Suspend, $finalizeExecutionContext, $FunctionPointer_cloneWithNewType, $generateNameLookup, $generateStackTrace, $generateTryDescriptors, $getExceptionMessage, $getGlobalsFromTask, $hexToInt, $increaseValueStackCapacity, $injectNameLookup, $isValueEqual, $json_util_parse, $json_util_serialize, $List_add, $List_expandCapacity, $List_get, $List_insert, $List_join, $List_pop, $List_removeAt, $List_set, $new_ByteCodeRow, $new_ExecutionContext, $new_ExecutionResult, $new_GlobalValues, $ParseRaw_entitiesSection_classMemberResolver, $ParseRaw_entitiesSection_parseClasses, $ParseRaw_entitiesSection_parseEnums, $ParseRaw_entitiesSection_parseFunctions, $ParseRaw_parseEntityData, $ParseRaw_parseMetadata, $ParseRaw_parseStringData, $ParseRaw_parseTokenData, $ParseRaw_popByteCodeRows, $ParseRaw_popBytes, $ParseRaw_popFixedLenString, $ParseRaw_popInt, $ParseRaw_popLenString, $ParseRaw_popSingleByte, $ParseRawData, $PUBLIC_createTaskForFunction, $PUBLIC_createTaskForFunctionWithWrappedArgs, $PUBLIC_getApplicationContextFromTask, $PUBLIC_getExecutionContextError, $PUBLIC_getExecutionContextFromTask, $PUBLIC_getTaskResultError, $PUBLIC_getTaskResultSleepAmount, $PUBLIC_getTaskResultStatus, $PUBLIC_initializeExecutionContext, $PUBLIC_listGet, $PUBLIC_listLength, $PUBLIC_listSet, $PUBLIC_listValueAdd, $PUBLIC_requestTaskSuspension, $PUBLIC_resumeTask, $PUBLIC_startMainTask, $PUBLIC_unwrapFloat, $PUBLIC_unwrapInteger, $PUBLIC_unwrapNativeHandle, $PUBLIC_valueToString, $PUBLIC_wrapBoolean, $PUBLIC_wrapInteger, $PUBLIC_wrapNativeHandle, $PUBLIC_wrapString, $RunInterpreter, $RunInterpreterImpl, $Sort_buildTaskList, $Sort_end, $Sort_getNextCmp, $Sort_proceedWithCmpResult, $Sort_start, $stringFlatten, $stringUtil_changeCase, $stringUtil_getFlatValue, $stringUtil_split, $stringUtil_trim, $ThrowError, $ThrowErrorImpl, $tryGetNameId, $valueArrayIncreaseCapacity, $valueToHumanString, $xml_convertCharsToString, $xml_ensureMore, $xml_getEntity, $xml_hasMore, $xml_isValidNameChar, $xml_peekChar, $xml_performEntitySwaps, $xml_popChar, $xml_popCloseTag, $xml_popElement, $xml_popQuotedValue, $xml_popTextValue, $xml_popWord, $xml_setError, $xml_skipVersionHeaderIfPresent, $xml_skipWhitespace, $xml_tryPopCloseTagFor, $xmlUtil_parse];
+return [PST$registerExtensibleCallback, $bubbleException, $buildAsciiStringImpl, $buildBase64String, $buildFloat, $buildFunctionFromInfo, $buildInteger, $buildIntegerListValue, $buildList, $buildString, $buildStringDictionary, $convertListToByteArray, $convertToStringImpl, $createClassInfo, $createMainTask, $createNewTask, $createStringFromUnicodeArray, $createStringFromUnicodeArraySegment, $decToInt, $DictImpl_clone, $DictImpl_ensureCapacity, $dictionaryRemove, $doExponent, $exceptionCatcherRouteException, $ExRes_Done, $ExRes_HardCrash, $ExRes_Suspend, $fail, $finalizeExecutionContext, $FunctionPointer_cloneWithNewType, $generateNameLookup, $generateStackTrace, $generateTryDescriptors, $getExceptionMessage, $getGlobalsFromTask, $hexToInt, $increaseValueStackCapacity, $injectNameLookup, $isValueEqual, $json_util_cycle_check_push, $json_util_parse, $json_util_serialize, $json_util_serialize_dict, $json_util_serialize_impl_any, $json_util_serialize_list, $List_add, $List_expandCapacity, $List_get, $List_insert, $List_join, $List_pop, $List_removeAt, $List_set, $new_ByteCodeRow, $new_ExecutionContext, $new_ExecutionResult, $new_GlobalValues, $ParseRaw_entitiesSection_classMemberResolver, $ParseRaw_entitiesSection_parseClasses, $ParseRaw_entitiesSection_parseEnums, $ParseRaw_entitiesSection_parseFunctions, $ParseRaw_parseEntityData, $ParseRaw_parseMetadata, $ParseRaw_parseStringData, $ParseRaw_parseTokenData, $ParseRaw_popByteCodeRows, $ParseRaw_popBytes, $ParseRaw_popFixedLenString, $ParseRaw_popInt, $ParseRaw_popLenString, $ParseRaw_popSingleByte, $ParseRawData, $PUBLIC_createTaskForFunction, $PUBLIC_createTaskForFunctionWithWrappedArgs, $PUBLIC_getApplicationContextFromTask, $PUBLIC_getExecutionContextError, $PUBLIC_getExecutionContextFromTask, $PUBLIC_getTaskResultError, $PUBLIC_getTaskResultSleepAmount, $PUBLIC_getTaskResultStatus, $PUBLIC_initializeExecutionContext, $PUBLIC_listGet, $PUBLIC_listLength, $PUBLIC_listSet, $PUBLIC_listValueAdd, $PUBLIC_requestTaskSuspension, $PUBLIC_resumeTask, $PUBLIC_startMainTask, $PUBLIC_unwrapFloat, $PUBLIC_unwrapInteger, $PUBLIC_unwrapNativeHandle, $PUBLIC_valueToString, $PUBLIC_wrapBoolean, $PUBLIC_wrapInteger, $PUBLIC_wrapNativeHandle, $PUBLIC_wrapString, $RunInterpreter, $RunInterpreterImpl, $Sort_buildTaskList, $Sort_end, $Sort_getNextCmp, $Sort_proceedWithCmpResult, $Sort_start, $stringFlatten, $stringUtil_changeCase, $stringUtil_getFlatValue, $stringUtil_split, $stringUtil_trim, $ThrowError, $ThrowErrorImpl, $tryGetNameId, $valueArrayIncreaseCapacity, $valueToHumanString, $xml_convertCharsToString, $xml_ensureMore, $xml_getEntity, $xml_hasMore, $xml_isValidNameChar, $xml_peekChar, $xml_performEntitySwaps, $xml_popChar, $xml_popCloseTag, $xml_popElement, $xml_popQuotedValue, $xml_popTextValue, $xml_popWord, $xml_setError, $xml_skipVersionHeaderIfPresent, $xml_skipWhitespace, $xml_tryPopCloseTagFor, $xmlUtil_parse];
 })();
 
   PASTEL_regCallback('hardCrash', args => { throw new Error(args[0]); });
+
+  PASTEL_regCallback('jsonSerialize', args => {
+    debugger;
+    console.log(args);
+    let [obj, useIndent] = args;
+
+    throw new Error('waaaat');
+  });
 
 let newEngineContextBuilder = (name, ver) => {
   let extensions = {};

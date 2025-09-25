@@ -2,14 +2,10 @@ import * as CASES from './GEN-cases.js';
 
 let ignoredTests = new Set([
 
-    // JSON: The parser/serializer is done as a platform-specific extension and is only done for C#.
-    // For the parser this makes some sense. However, the serializer should be 100% pastel.
-    'json',
-
-    // Uses JSON (see above)
+    // TODO: There are still some regressions with this.
     'builtinlibs',
 
-    // I am so tired.
+    // TODO: Investigate
     'xml',
 ]);
 

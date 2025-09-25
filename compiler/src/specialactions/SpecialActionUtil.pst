@@ -39,7 +39,7 @@ SpecialActionUtil SpecialActionUtil_new() {
     argcByName["b64_to_bytes"] = 1;
     argcByName["cmp"] = 2;
     argcByName["json_parse"] = 2;
-    argcByName["json_serialize"] = 2;
+    argcByName["json_serialize"] = 3;
     argcByName["math_arccos"] = 1;
     argcByName["math_arcsin"] = 1;
     argcByName["math_arctan"] = 2;

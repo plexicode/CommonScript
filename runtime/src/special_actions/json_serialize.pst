@@ -1,7 +1,14 @@
-valueStackSize -= 2;
-value = valueStack[valueStackSize];
-bool1 = (bool) valueStack[valueStackSize + 1].internalValue;
-str1 = json_util_serialize(value, bool1);
+/*
+    args[0] = (any) object to serialize
+    args[1] = (bool) use pretty print
+    args[2] = (list) set item 0 to the error message, if one occurred.
+*/
+valueStackSize -= 3;
+str1 = json_util_serialize(
+    globalValues,
+    valueStack[valueStackSize],
+    (bool) valueStack[valueStackSize + 1].internalValue,
+    (ListImpl) valueStack[valueStackSize + 2].internalValue);
 
 output = buildString(globalValues, str1, false);
 
