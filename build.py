@@ -117,10 +117,6 @@ def main():
   fileio.file_write_text('./compiler/src-intermediate/GEN-version.js', js_ver_file)
   fileio.file_write_text('./runtime/src-intermediate/GEN-version.js', js_ver_file)
 
-  # TODO: change the build script to export here directly.
-  fileio.copy_file('./compiler/templates/gen.js', './compiler/src-intermediate/GEN-pastel.js')
-  fileio.copy_file('./runtime/templates/gen.js', './runtime/src-intermediate/GEN-pastel.js')
-
   for is_debug in (True, False):
     debug_vars = { 'IS_DEBUG': is_debug }
     suffix = '.debug.js' if is_debug else '.js'

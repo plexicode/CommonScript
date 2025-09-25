@@ -27,7 +27,7 @@
       "name": "javascript",
       "language": "javascript",
       "output": {
-        "functions-path": "../templates/gen.js"
+        "functions-path": "../src-intermediate/GEN-pastel.js"
       }
     }
   ]
