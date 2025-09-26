@@ -6,7 +6,7 @@ Strings represent text content and are logical sequences of characters.
 
 String literals can be created by using either single quotation marks or double quotation marks.
 
-```csharp
+```javascript
 string1 = "This is a string.";
 string2 = 'This is also a string.';
 ```
@@ -18,7 +18,7 @@ Both of these syntaxes are equivalent.
 Like many languages, strings are immutable. When operations are performed on a string
 that "change" it, a new string instance is created.
 
-```csharp
+```javascript
 msg1 = "hello";
 msg2 = msg1.upper();
 print(msg2); // Result: HELLO
@@ -32,7 +32,7 @@ print(msg1); // Result: hello!
 
 Strings can be joined together using the `+` operator or multiplied with the `*` operator.
 
-```csharp
+```javascript
 original = "x";
 duplicated = original + 'y'; // result: "xy"
 longChain = original * 10; // result: "xxxxxxxxxx"
@@ -41,7 +41,7 @@ longChain = original * 10; // result: "xxxxxxxxxx"
 When a non-string value is combined with a string using the `+` operator, the other
 value is automatically converted to a string.
 
-```csharp
+```javascript
 num = 42;
 msg = "The answer is " + num; // Result: "The answer is 42"
 ```
@@ -54,7 +54,7 @@ a character access is another string of length 0.
 As with most programming languages, all character access is 0-indexed.
 That is, the first character is 0, not 1.
 
-```csharp
+```javascript
 msg = "Hello, World!";
 chr = msg[4];
 print(chr); // Result: o
@@ -70,7 +70,7 @@ To include a character in a string that would cause disruption to the string syn
 precede the character with a backslash `\`. The collection of escape sequences is
 fairly consistent with most common programming languages:
 
-```csharp
+```javascript
 msg = 'How\'s it going?';
 response = "I am doing \"well\".\nHow about \"you\"?";
 ```
@@ -85,6 +85,20 @@ response = "I am doing \"well\".\nHow about \"you\"?";
 | `\t` | Tab |
 | `\0` | Null terminator |
 
+## Slicing
+
+You can extract substrings from a string instance using slice syntax, similar to Python.
+This negates the need for an explicit subString method.
+
+```javascript
+alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+print("I know my " + alphabet[:3] + "'s!"); // Result: I know my ABC's!
+print(alphabet[::-1] + ", officer"); // Result: ZYXWVUTSRQPONMLKJIHGFEDCBA, officer
+print("I thought " + alphabet[11:16] + " was one letter"); // I thought LMNOP was one letter
+```
+
+Read more about how to use [slicing](../slicing).
+
 ## Character internal encoding
 
 Each string character represents a single unicode character. This is functionally
@@ -93,7 +107,8 @@ byte-based representations common in other languages). This ensures that arbitra
 character access is _mostly_ safe.
 
 **Examples from various languages:**
-```csharp
+
+```javascript
 // CommonScript: true Unicode
 msg = "🐝";
 print(msg.length); // Result: 1
@@ -119,10 +134,10 @@ caution still needs to be used for compound unicode sequences as glyphs and
 ligatures are dependent on the font and rendering environment that you're viewing the
 output in and are not represented in unicode.
 
-```csharp
+```javascript
 msg = '🧑‍🚒';
-print(msg.subString(0, 2)); // Result: 🧑
-print(msg.subString(3, 2)); // Result: 🚒
+print(msg[0:2]); // Result: 🧑
+print(msg[3:]); // Result: 🚒
 
 msg = '🇫🇷';
 print(msg[0]); // Result: <country code: F>
@@ -135,7 +150,7 @@ Internally, string instances are represented in one of two ways and can toggle
 between these two modes.
 
 - An array of unicode characters
-- String builder (A binary tree node of two joined strings)
+- String builder (A binary tree node of two strings combined together)
 
 When strings are used in a way that incurs a time-complexity performance penalty in
 one mode but not the other, the string is converted.
@@ -143,9 +158,9 @@ one mode but not the other, the string is converted.
 For example, when adding suffixes to the end of a string inside a loop, this
 usually incurs a performance penalty in most languages:
 
-```csharp
+```javascript
 lyrics = '';
-for (i = 99; i >= 1; i++) {
+for (i = 99; i >= 1; i--) {
     verse = i + " bottles of beer on the wall, " + i + " bottles of beer!\n"
         + "Take one down, pass it around, " + (i - 1) + " bottles of beer on the wall.\n";
     lyrics += verse;
@@ -176,7 +191,7 @@ a logical codepoint as an integer type and therefore has no endian-ness.
 Note that the internal character encoding is unicode character sequences and therefore partial
 character or surrogates are not a concern.
 
-```csharp
+```javascript
 msg = "Hello";
 print(msg.getCodePoint(1)); // 102 (ASCII code for 'e')
 msg = "Hello 😀";
@@ -190,7 +205,7 @@ print(msg.getCodePoint(lastCharIndex)); // 128512
 
 Returns a new string that is a lower-case version of the original string.
 
-```csharp
+```javascript
 msg = "Hello, World!";
 print(msg.lower()); // hello, world!
 ```
@@ -205,7 +220,7 @@ The complexity of this method is O(string length * (strToFind + strToReplace))
 
 This operation is case-sensitive.
 
-```csharp
+```javascript
 msg = "Cat Dog Bird";
 newMsg = msg.replace("d", "b");
 print(msg); // Cat Dog Birb <-- Note that the D in Dog was not replaced.
@@ -218,7 +233,7 @@ print(msg); // Cat Dog Birb <-- Note that the D in Dog was not replaced.
 Creates a new list instance containing the strings that were delimited by
 the given separator.
 
-```csharp
+```javascript
 msg = "Flopsy, Mopsy, Cottontail";
 rabbits = msg.split(', ');
 print(rabbits); // ["Fopsy", "Mopsy", "Cottontail"]
@@ -233,7 +248,7 @@ must be provided.
 
 Creates a new list instance containing all the unicode character points of the string.
 
-```csharp
+```javascript
 msg = "Hello 😀";
 print(msg.toUnicodePoints()); // Result: [72, 102, 108, 108, 111, 32, 128512]
 ```
@@ -245,7 +260,7 @@ print(msg.toUnicodePoints()); // Result: [72, 102, 108, 108, 111, 32, 128512]
 Creates a string with the whitespace characters at the beginning and end of the string
 removed.
 
-```csharp
+```javascript
 msg = "  \tTo whom it may concern... \n";
 trimmed = msg.trim();
 edges = "|" + trimmed + "|";
@@ -258,7 +273,7 @@ print(edges); // Result: |To whom it may concern...|
 
 Returns a new string that is an upper-case version of the original string.
 
-```csharp
+```javascript
 msg = "Hello, World!";
 print(msg.lower()); // HELLO, WORLD!
 ```
