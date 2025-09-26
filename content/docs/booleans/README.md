@@ -1,3 +1,3 @@
-# Lists
+# Booleans
 
 TODO: fill this in

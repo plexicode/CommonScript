@@ -14,6 +14,8 @@
 
 ## Built-in Types
 
+- [Booleans](./booleans)
+- [Numbers](./numbers) (integers & floats)
 - [Strings](./strings)
 - [Lists](./lists)
 - [Dictionaries](./dictionaries)

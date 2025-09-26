@@ -1,3 +1,3 @@
-# Lists
+# Functions
 
 TODO: fill this in

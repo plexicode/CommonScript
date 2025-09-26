@@ -97,7 +97,7 @@ print(alphabet[::-1] + ", officer"); // Result: ZYXWVUTSRQPONMLKJIHGFEDCBA, offi
 print("I thought " + alphabet[11:16] + " was one letter"); // I thought LMNOP was one letter
 ```
 
-Read more about how to use [slicing](../slicing).
+Read more about how to use [slicing](../lang-slicing).
 
 ## Character internal encoding
 
