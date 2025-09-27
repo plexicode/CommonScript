@@ -14,6 +14,7 @@
 
 ## Built-in Types
 
+- [Built-in functions and classes](./builtins)
 - [Booleans](./booleans)
 - [Numbers](./numbers) (integers & floats)
 - [Strings](./strings)
