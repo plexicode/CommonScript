@@ -59,7 +59,7 @@ ExecutionResult RunInterpreter(ExecutionTask task) {
     }
 
     if (result.type != ExecutionResultType.SUSPEND && result.type != ExecutionResultType.SLEEP) {
-        task.execCtx.tasks.remove(task.taskId);
+        removeFinishedTaskFromExecContext(task);
     }
 
     return result;

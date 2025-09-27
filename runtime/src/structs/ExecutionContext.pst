@@ -21,12 +21,14 @@ struct ExecutionContext {
     int nextRefId;
     Dictionary<int, ExecutionTask> tasks;
     object appCtx;
+    Func<object, object> onLastTaskComplete;
 }
 
 ExecutionContext new_ExecutionContext(
     Array<int> rawBytes,
     Dictionary<string, Func<object, object, Array<object>>> extensions,
-    object appCtx
+    object appCtx,
+    Func<object, object> onLastTaskComplete
 ) {
     ExecutionContext ec = new ExecutionContext(
         null,
@@ -50,7 +52,8 @@ ExecutionContext new_ExecutionContext(
         1, // nextTaskId
         1, // nextRefId
         new Dictionary<int, ExecutionTask>(), // tasks
-        appCtx
+        appCtx,
+        onLastTaskComplete
     );
 
     string err = ParseRawData(rawBytes, ec);
@@ -102,5 +105,12 @@ void finalizeExecutionContext(ExecutionContext ec) {
         if (row.tokenId != 0) {
             row.token = ec.tokensById[row.tokenId];
         }
+    }
+}
+
+void removeFinishedTaskFromExecContext(ExecutionTask task) {
+    task.execCtx.tasks.remove(task.taskId);
+    if (task.execCtx.tasks.size() == 0) {
+        task.execCtx.onLastTaskComplete((object) null);
     }
 }

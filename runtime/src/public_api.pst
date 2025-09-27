@@ -1,9 +1,10 @@
 object PUBLIC_initializeExecutionContext(
     Array<int> rawBytes,
     Dictionary<string, Func<object, object, Array<object>>> extensions,
-    object appCtx) {
+    object appCtx,
+    Func<object, object> onLastTaskComplete) {
 
-    return new_ExecutionContext(rawBytes, extensions, appCtx);
+    return new_ExecutionContext(rawBytes, extensions, appCtx, onLastTaskComplete);
 }
 
 string PUBLIC_getExecutionContextError(object ecObj) {

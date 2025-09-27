@@ -1,3 +1,3 @@
 // #INCLUDE ./lib.js
 
-export default CommonScriptRuntime;
+export default createNewCommonScriptRuntimeFactory;
