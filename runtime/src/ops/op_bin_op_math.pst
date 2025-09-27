@@ -57,33 +57,33 @@ switch ((left.type * BinaryOp.MAX + row.firstArg) * Type.MAX + right.type) {
         break;
 
     case (Type.FLOAT * BinaryOp.MAX + BinaryOp.DIVIDE) * Type.MAX + Type.INTEGER:
-        float1 = (double) left.internalValue;
-        if (float1 == 0) {
-            errorId = ExceptionTypeId.ZERO_DIVISOR;
-            errorMsg = "Cannot divide by zero";
-            @import("macros/throw.pst");
-        }
-        value = new Value(Type.FLOAT, float1 / (int) right.internalValue);
-        break;
-
-    case (Type.INTEGER * BinaryOp.MAX + BinaryOp.DIVIDE) * Type.MAX + Type.FLOAT:
-        int1 = (int) left.internalValue;
+        int1 = (int) right.internalValue;
         if (int1 == 0) {
             errorId = ExceptionTypeId.ZERO_DIVISOR;
             errorMsg = "Cannot divide by zero";
             @import("macros/throw.pst");
         }
-        value = new Value(Type.FLOAT, int1 / (double) right.internalValue);
+        value = new Value(Type.FLOAT, ((double) left.internalValue) / int1);
         break;
 
-    case (Type.FLOAT * BinaryOp.MAX + BinaryOp.DIVIDE) * Type.MAX + Type.FLOAT:
-        float1 = (double) left.internalValue;
+    case (Type.INTEGER * BinaryOp.MAX + BinaryOp.DIVIDE) * Type.MAX + Type.FLOAT:
+        float1 = (double) right.internalValue;
         if (float1 == 0) {
             errorId = ExceptionTypeId.ZERO_DIVISOR;
             errorMsg = "Cannot divide by zero";
             @import("macros/throw.pst");
         }
-        value = new Value(Type.FLOAT, float1 / (double) right.internalValue);
+        value = new Value(Type.FLOAT, ((int) left.internalValue) / float1);
+        break;
+
+    case (Type.FLOAT * BinaryOp.MAX + BinaryOp.DIVIDE) * Type.MAX + Type.FLOAT:
+        float1 = (double) right.internalValue;
+        if (float1 == 0) {
+            errorId = ExceptionTypeId.ZERO_DIVISOR;
+            errorMsg = "Cannot divide by zero";
+            @import("macros/throw.pst");
+        }
+        value = new Value(Type.FLOAT, ((double) left.internalValue) / float1);
         break;
 
     case (Type.INTEGER * BinaryOp.MAX + BinaryOp.MODULO) * Type.MAX + Type.INTEGER:
@@ -143,10 +143,10 @@ switch ((left.type * BinaryOp.MAX + row.firstArg) * Type.MAX + right.type) {
             stringImpl2 = stringImpl1;
             for (i = 1; i < sz; i += 1) {
                 stringImpl2 = new StringImpl(
-                    stringImpl1.length + stringImpl2.length, 
-                    true, 
-                    null, 
-                    null, 
+                    stringImpl1.length + stringImpl2.length,
+                    true,
+                    null,
+                    null,
                     stringImpl1,
                     stringImpl2);
             }
