@@ -184,7 +184,7 @@ is generally the same order as they were added, but not always.
 
 ## mapKvp
 
-`dictionary.mapKvp(fn)`
+`dictionary.map(fn)`
 
 The provided function will be invoked on each key-value-pair in the dictionary.
 
@@ -203,20 +203,9 @@ function main(args) {
     "Moldova": 33850,
     "Burundi": 27830,
   };
-  report = countrySize.kvpMap(howManyDelawares);
+  report = countrySize.map(howManyDelawares);
   print(report.join('\n'));
 }
-
-...
-
-countrySize = {
-    "Singapore": 735.7,
-    "Russia": 17125191,
-    "Moldova": 33850,
-    "Burundi": 27830,
-};
-report = countrySize.mapKvp(howManyDelwares);
-print(report.join('\n'));
 ```
 
 Result:
