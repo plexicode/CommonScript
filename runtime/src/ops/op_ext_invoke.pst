@@ -20,8 +20,9 @@ if (ec.extensions.contains(name)) {
 
     if (task.suspendRequested) {
         // won't increment the PC before returning, so do it now.
-        frame.pc += 2;
+        frame.pc = pc + 1;
         task.suspendRequested = false;
+        frame.valueStackSize = valueStackSize;
         return ExRes_Suspend(task, task.sleepMillis >= 0, task.sleepMillis);
     }
 } else {
