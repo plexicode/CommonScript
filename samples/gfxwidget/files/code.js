@@ -57,8 +57,7 @@ function main(args) {
         [128, 128, 128], // gray
         [255, 255, 255], // white
     ];
-    shuffleList(colors);
-
+    random.shuffle(colors);
     bgColor = colors.pop();
     dotColor = colors.pop();
 
@@ -68,17 +67,9 @@ function main(args) {
         x = floor(centerX + math.cos(angle) * radius);
         y = floor(centerY + math.sin(angle) * radius);
         gfx.drawCircle(
-          x, y, dotRadius, 
+          x, y, dotRadius,
           dotColor[0], dotColor[1], dotColor[2]);
     }
 }
 
-function shuffleList(items) {
-    for (i = 0; i < items.length; i++) {
-        j = random.randomInt(items.length);
-        t = items[i];
-        items[i] = items[j];
-        items[j] = t;
-    }
-}
 `.trim();

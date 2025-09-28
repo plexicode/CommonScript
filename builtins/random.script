@@ -13,3 +13,12 @@
     return a + $math_floor($random_float() * d);
 }
 
+@public function shuffle(list) {
+    sz = list.length;
+    for (i = 0; i < sz; i++) {
+        j = $math_floor($random_float() * sz);
+        t = list[j];
+        list[j] = list[i];
+        list[i] = t;
+    }
+}
