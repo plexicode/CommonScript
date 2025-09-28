@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="/dist/web-embed.js"></script>
+        <script src="/code.js"></script>
+        <script src="/init.js"></script>
+        <style>
+            .editor-wrapper div {
+                box-sizing: border-box;
+            }
+            .gfx-widget {
+                border: 1px solid #888;
+                padding: 8px;
+            }
+
+            .gfx-widget-side-by-side {
+                display: flex;
+                flex-direction: row;
+                height: 400px;
+            }
+
+            .gfx-widget-side-by-side > div {
+                flex: 1;
+                width: 50%;
+            }
+
+            .display-wrapper {
+                background-color: #eee;
+            }
+
+            .gfx-widget textarea {
+                width: 100%;
+                height: 100%;
+                position: relative;
+                box-sizing: border-box;
+                margin: 0;
+                padding: 8px;
+                resize: none;
+            }
+
+            .text-out-wrapper {
+                background-color: #ccc;
+                padding: 8px;
+            }
+            .text-out-rows {
+                background-color: #eee;
+                margin: 8px;
+                height: 200px;
+                overflow-y: auto;
+            }
+
+            .text-out-rows > div {
+                border: 1px solid #555;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Web Page widget demo</h1>
+
+        <div class="gfx-widget">
+            <div class="gfx-widget-side-by-side">
+                <div class="editor-wrapper">
+                    <textarea id="editor"></textarea>
+                </div>
+                <div class="display-wrapper">
+                    <canvas id="display-out"></canvas>
+                </div>
+            </div>
+            <div class="btn-panel">
+                <button id="run-btn">Run</button>
+                <button id="reset-btn">Reset</button>
+            </div>
+            <div class="text-out-wrapper">
+                <div>Output:</div>
+                <div class="text-out-rows" id="text-out"></div>
+            </div>
+        </div>
+
+        <p>This is more text on a web page.</p>
+    </body>
+</html>
