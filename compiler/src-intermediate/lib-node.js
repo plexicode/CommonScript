@@ -1,3 +1,3 @@
 // #INCLUDE ./lib.js
 
-export default createCommonScritpCompilationEngine;
+export default createCommonScriptCompilationEngine;

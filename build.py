@@ -131,6 +131,8 @@ def main():
     'runtime-lib.min.js': javascript.minify('./dist/runtime-lib.js'),
     'compiler-lib.node.js': textpreprocessor.load_javascript_file('./compiler/src-intermediate/lib-node.js', vars_for_node),
     'runtime-lib.node.js': textpreprocessor.load_javascript_file('./runtime/src-intermediate/lib-node.js', vars_for_node),
+    'web-bgworker.js': textpreprocessor.load_javascript_file('./shared/src-intermediate/web/index-bg.js'),
+    'web-embed.js': textpreprocessor.load_javascript_file('./shared/src-intermediate/web/index-main.js'),
   })
 
   fileio.copy_file('./dist/compiler-lib.node.js', './tests/harnesses/node/testscript/GEN-compiler.js')

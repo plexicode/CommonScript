@@ -118,6 +118,13 @@ const createNewCommonScriptRuntimeFactory = (() => {
               let newTask = PUBLIC_createTaskForFunctionWithWrappedArgs(execCtx, fn, wrappedArgs);
               return runTaskAsync(newTask);
             },
+            resumeTask: task => {
+              PUBLIC_resumeTask(task);
+              return null;
+            },
+            setStackTop: (task, valueWrapped) => {
+              PUBLIC_setTaskStackTopValue(task, valueWrapped);
+            },
           }),
         };
 

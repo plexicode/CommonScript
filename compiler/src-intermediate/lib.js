@@ -1,4 +1,4 @@
-const createCommonScritpCompilationEngine = (() => {
+const createCommonScriptCompilationEngine = (() => {
   // #INCLUDE-INDENT ./GEN-version.js
 
   const PST = (() => {

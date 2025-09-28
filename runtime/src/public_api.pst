@@ -63,6 +63,14 @@ Array<string> PUBLIC_getTaskResultError(object resObj, bool includeStackTrace) {
     return o.toArray();
 }
 
+void PUBLIC_setTaskStackTopValue(object taskObj, Value newValue) {
+    ExecutionTask task = (ExecutionTask) taskObj;
+    int valueStackSize = task.stack.valueStackSize;
+    if (valueStackSize > 0) {
+        task.valueStack[valueStackSize - 1] = newValue;
+    }
+}
+
 string PUBLIC_valueToString(object valueObj) {
     return valueToHumanString((Value) valueObj);
 }
