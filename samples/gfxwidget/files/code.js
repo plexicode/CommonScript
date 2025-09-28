@@ -7,6 +7,14 @@ function drawPixel(x, y, r, g, b) {
     $draw_rectangle([x, y, 2, 2, r, g, b].join(','));
 }
 
+function drawCircle(centerX, centerY, rad, r, g, b) {
+    $draw_ellipse([centerX - rad, centerY - rad, rad * 2, rad * 2, r, g, b].join(','));
+}
+
+function drawEllipse(left, top, width, height, r, g, b) {
+    $draw_ellipse([left, top, width, height, r, g, b].join(','));
+}
+
 function fill(r, g, b) {
     s = [0, 0, $screen_width(), $screen_height(), r, g, b].join(',');
     $draw_rectangle(s);
@@ -38,7 +46,7 @@ function main(args) {
         angle = 2 * 3.14159 * i / pointCount;
         x = floor(centerX + math.cos(angle) * radius);
         y = floor(centerY + math.sin(angle) * radius);
-        gfx.drawPixel(x, y, 255, 255, 255);
+        gfx.drawCircle(x, y, 4, 255, 255, 255);
     }
 }
 `.trim();

@@ -27,6 +27,14 @@ window.addEventListener('load', () => {
             canvasCtx.fillRect(parseInt(x), parseInt(y), parseInt(w), parseInt(h));
             return '';
         })
+        .addMainThreadExtension('draw_ellipse', args => {
+            let [x, y, w, h, r, g, b] = args.split(',').map(n => parseFloat(n));
+            canvasCtx.fillStyle = 'rgb(' + r + ',' + g + ',' + b + ')';
+            canvasCtx.beginPath();
+            canvasCtx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
+            canvasCtx.fill();
+            return '';
+        })
         .addModule('gfx', {
             'gfx.script': BUILTIN_GFX_LIB,
         })
