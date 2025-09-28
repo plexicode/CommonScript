@@ -77,21 +77,21 @@ const createCommonScriptWebEnvironment = (langName, langVer) => {
               break;
 
             case 'REQ':
+            case 'MSG':
               let ext = localExtensions[extId];
               if (!ext) throw new Error("Unrecognized extension invocation: " + extId);
               let result = ext(payload);
-              let responsePrefix = MSG_PREFIX + 'RES,' + msgId + ':';
-              if (result instanceof Promise) {
-                result.then(resultAwaited => {
-                  worker.postMessage(responsePrefix + resultAwaited);
-                });
-              } else {
-                worker.postMessage(responsePrefix + result);
+              if (msgType === 'REQ') {
+                let responsePrefix = MSG_PREFIX + 'RES,' + msgId + ':';
+                if (result instanceof Promise) {
+                  result.then(resultAwaited => {
+                    worker.postMessage(responsePrefix + resultAwaited);
+                  });
+                } else {
+                  worker.postMessage(responsePrefix + result);
+                }
               }
               break;
-
-            case 'MSG':
-              throw new Error();
 
             case 'STDOUT':
               stdOutHandlers.forEach(fn => {

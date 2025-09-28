@@ -35,6 +35,8 @@ import math;
 import random;
 
 function main(args) {
+    print("Hello!");
+
     width = gfx.getScreenWidth();
     height = gfx.getScreenHeight();
     centerX = width / 2;
@@ -42,28 +44,32 @@ function main(args) {
     radius = (width < height ? width : height) * 0.4;
     dotCount = random.randomInt(3, 50);
     dotRadius = 100 / dotCount;
+    print("There will be " + dotCount + " dots.");
 
     colors = [
-        [255, 0, 0], // red
-        [255, 128, 0], // orange
-        [255, 255, 0], // yellow
-        [0, 255, 0], // lime
-        [0, 128, 0], // gren
-        [0, 128, 255], // light blue
-        [0, 0, 255], // blue
-        [128, 0, 128], // purple
-        [255, 0, 255], // magenta
-        [0, 0, 0], // black
-        [128, 128, 128], // gray
-        [255, 255, 255], // white
+        [255, 0, 0, "red"],
+        [255, 128, 0, "orange"],
+        [255, 255, 0, "yellow"],
+        [0, 255, 0, "lime"],
+        [0, 128, 0, "green"],
+        [0, 128, 255, "light blue"],
+        [0, 0, 255, 'blue'],
+        [128, 0, 128, "purple"],
+        [255, 0, 255, "magenta"],
+        [0, 0, 0, "black"],
+        [128, 128, 128, "gray"],
+        [255, 255, 255, "white"],
     ];
     random.shuffle(colors);
     bgColor = colors.pop();
     dotColor = colors.pop();
+    print("I have randomly chosen the following colors:");
+    print("Background: " + bgColor[3]);
+    print("Dots: " + dotColor[3]);
 
     gfx.fill(bgColor[0], bgColor[1], bgColor[2]);
     for (i = 0; i < dotCount; i++) {
-        angle = 2 * 3.14159 * i / dotCount;
+        angle = 2 * 3.1415926535 * i / dotCount;
         x = floor(centerX + math.cos(angle) * radius);
         y = floor(centerY + math.sin(angle) * radius);
         gfx.drawCircle(

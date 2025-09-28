@@ -17,7 +17,9 @@ const CommonScriptBgRunner = (langName, langVer) => {
   let onRoundtripStart = async (mainThreadArgs) => {
 
     let builder = createNewCommonScriptRuntimeFactory(langName, langVer)
-      .addOnStdOutHandler(line => {});
+      .addOnStdOutHandler(line => {
+        postMessage(MSG_PREFIX + 'STDOUT:' + line);
+      });
 
     Object.keys(extensions).forEach(extId => {
       builder.registerExtension(extId, inlineExtensions[extId]);

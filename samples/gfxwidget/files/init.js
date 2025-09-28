@@ -46,7 +46,7 @@ window.addEventListener('load', () => {
             'gfx.script': BUILTIN_GFX_LIB,
         })
         .onStdOut(line => {
-            output.append(makeElement('div', line));
+            printStdOut(line, false);
         })
         .build();
 
@@ -58,10 +58,10 @@ window.addEventListener('load', () => {
     };
 
     ui.runBtn.addEventListener('click', async () => {
+        clear(ui.textOut);
         let code = editor.value;
         let result = engine.compile('main', { main: { 'main.script': code } });
         if (!result.ok) {
-            clear(ui.textOut);
             printStdOut(result.errorMessage, true);
             return;
         }
