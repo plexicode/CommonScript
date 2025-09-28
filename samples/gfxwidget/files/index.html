@@ -7,11 +7,16 @@
         <script src="/code.js"></script>
         <script src="/init.js"></script>
         <style>
+            body {
+                font-family: "Arial", sans-serif;
+                background-color: #000;
+                color: #fff;
+            }
             .editor-wrapper div {
                 box-sizing: border-box;
             }
             .gfx-widget {
-                border: 1px solid #888;
+                border: 1px solid #121d2c;
                 padding: 8px;
             }
 
@@ -27,7 +32,14 @@
             }
 
             .display-wrapper {
-                background-color: #eee;
+                margin-left: 8px;
+                background-color: #292c33;
+            }
+
+            .display-wrapper canvas {
+                position: relative;
+                width: 100%;
+                height: 100%;
             }
 
             .gfx-widget textarea {
@@ -38,31 +50,60 @@
                 margin: 0;
                 padding: 8px;
                 resize: none;
+                white-space: pre;
+                overflow-x: scroll;
+                overflow-wrap: normal;
+                background-color: #363a3f;
+                color: #fff;
+                font-size: 9pt;
+                font-family: "Consolas", monospace;
             }
 
             .text-out-wrapper {
-                background-color: #ccc;
+                background-color: #28313a;
+                color: #fff;
                 padding: 8px;
             }
             .text-out-rows {
-                background-color: #eee;
+                background-color: #2c3741;
                 margin: 8px;
-                height: 200px;
+                height: 150px;
                 overflow-y: auto;
             }
 
             .text-out-rows > div {
                 border: 1px solid #555;
             }
+
+            .btn-panel button {
+                margin-right: 8px;
+                background-color: #296558;
+                border: 1px solid #183c34;
+                border-top: 1px solid #388b79;
+                border-left: 1px solid #388b79;
+                color: rgb(52, 222, 182);
+                font-weight: bold;
+                padding: 8px;
+                margin: 12px;
+                margin-left: 0;
+                border-radius: 8px;
+            }
+            .btn-panel button:active {
+                background-color: #1c463d;
+
+                border: 1px solid #388b79;
+                border-top: 1px solid #183c34;
+                border-left: 1px solid #183c34;
+            }
         </style>
     </head>
     <body>
-        <h1>Web Page widget demo</h1>
+        <h1>Web Embedded Widget Demo</h1>
 
         <div class="gfx-widget">
             <div class="gfx-widget-side-by-side">
                 <div class="editor-wrapper">
-                    <textarea id="editor"></textarea>
+                    <textarea id="editor" spellcheck="false"></textarea>
                 </div>
                 <div class="display-wrapper">
                     <canvas id="display-out"></canvas>
@@ -77,7 +118,5 @@
                 <div class="text-out-rows" id="text-out"></div>
             </div>
         </div>
-
-        <p>This is more text on a web page.</p>
     </body>
 </html>

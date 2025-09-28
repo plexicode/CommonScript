@@ -32,6 +32,7 @@ function getScreenHeight() {
 const ORIGINAL_CODE = `
 import gfx;
 import math;
+import random;
 
 function main(args) {
     width = gfx.getScreenWidth();
@@ -39,14 +40,45 @@ function main(args) {
     centerX = width / 2;
     centerY = height / 2;
     radius = (width < height ? width : height) * 0.4;
-    pointCount = 20;
+    dotCount = random.randomInt(3, 50);
+    dotRadius = 100 / dotCount;
 
-    gfx.fill(0, 0, 0);
-    for (i = 0; i < pointCount; i++) {
-        angle = 2 * 3.14159 * i / pointCount;
+    colors = [
+        [255, 0, 0], // red
+        [255, 128, 0], // orange
+        [255, 255, 0], // yellow
+        [0, 255, 0], // lime
+        [0, 128, 0], // gren
+        [0, 128, 255], // light blue
+        [0, 0, 255], // blue
+        [128, 0, 128], // purple
+        [255, 0, 255], // magenta
+        [0, 0, 0], // black
+        [128, 128, 128], // gray
+        [255, 255, 255], // white
+    ];
+    shuffleList(colors);
+
+    bgColor = colors.pop();
+    dotColor = colors.pop();
+
+    gfx.fill(bgColor[0], bgColor[1], bgColor[2]);
+    for (i = 0; i < dotCount; i++) {
+        angle = 2 * 3.14159 * i / dotCount;
         x = floor(centerX + math.cos(angle) * radius);
         y = floor(centerY + math.sin(angle) * radius);
-        gfx.drawCircle(x, y, 4, 255, 255, 255);
+        gfx.drawCircle(
+          x, y, dotRadius, 
+          dotColor[0], dotColor[1], dotColor[2]);
+    }
+}
+
+function shuffleList(items) {
+    for (i = 0; i < items.length; i++) {
+        j = random.randomInt(items.length);
+        t = items[i];
+        items[i] = items[j];
+        items[j] = t;
     }
 }
 `.trim();

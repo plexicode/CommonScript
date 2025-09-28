@@ -8,6 +8,13 @@ window.addEventListener('load', () => {
         editor: document.getElementById('editor'),
     };
 
+    let updateCanvasSize = () => {
+        let { width, height } = ui.display.getBoundingClientRect();
+        ui.display.width = width;
+        ui.display.height = height;
+    };
+    updateCanvasSize();
+
     ui.editor.value = ORIGINAL_CODE;
     let canvasCtx = ui.display.getContext('2d');
 
@@ -58,6 +65,7 @@ window.addEventListener('load', () => {
             printStdOut(result.errorMessage, true);
             return;
         }
+        updateCanvasSize();
         ui.runBtn.disabled = true;
         await engine.run(result);
         ui.runBtn.disabled = false;
