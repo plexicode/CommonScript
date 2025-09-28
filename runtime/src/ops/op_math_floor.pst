@@ -2,7 +2,7 @@
 value = valueStack[valueStackSize - 1];
 if (value.type == Type.FLOAT) {
     float1 = (double) value.internalValue;
-    int1 = (int) float1;
+    int1 = Math.floor(float1);
     if (int1 > float1) {
         int1 -= 1;
     }
