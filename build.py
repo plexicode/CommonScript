@@ -127,13 +127,17 @@ def main():
   # debug_mode_toggle['IS_DEBUG'] = True
 
   fileio.batch_write_to_dir('./dist', {
-    'compiler-lib.min.js': javascript.minify('./dist/compiler-lib.js'),
-    'runtime-lib.min.js': javascript.minify('./dist/runtime-lib.js'),
     'compiler-lib.node.js': textpreprocessor.load_javascript_file('./compiler/src-intermediate/lib-node.js', debug_mode_toggle),
     'runtime-lib.node.js': textpreprocessor.load_javascript_file('./runtime/src-intermediate/lib-node.js', debug_mode_toggle),
     'web-bgworker.js': textpreprocessor.load_javascript_file('./shared/src-intermediate/web/index-bg.js'),
     'web-embed.js': textpreprocessor.load_javascript_file('./shared/src-intermediate/web/index-main.js'),
     'domscript.js': textpreprocessor.load_javascript_file('./shared/src-intermediate/domscript/index.js', debug_mode_toggle),
+  })
+
+  fileio.batch_write_to_dir('./dist', {
+    'compiler-lib.min.js': javascript.minify('./dist/compiler-lib.js'),
+    'runtime-lib.min.js': javascript.minify('./dist/runtime-lib.js'),
+    'domscript.min.js': javascript.minify_plus('./dist/domscript.js'),
   })
 
   dom_script_builtins = {}

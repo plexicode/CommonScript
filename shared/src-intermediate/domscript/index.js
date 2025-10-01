@@ -1,4 +1,4 @@
-const DomScript = (() => {
+(() => {
 
     // #COMMENT As the compiler and runtime are bundled together, bound their versions together
     // #INCLUDE-INDENT ../../../compiler/src-intermediate/GEN-version.js
