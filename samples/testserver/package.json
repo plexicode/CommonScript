@@ -1,14 +1,14 @@
 {
-  "name": "gfxwidget",
+  "name": "testserver",
   "version": "1.0.0",
-  "description": "A simple widget that can be embedded on a web page for drawing rectangels onto a canvas.",
-  "main": "server.js",
+  "main": "index.js",
   "type": "module",
   "scripts": {
     "start": "node server.js"
   },
   "author": "",
   "license": "ISC",
+  "description": "",
   "dependencies": {
     "express": "^5.1.0"
   }

@@ -25,7 +25,26 @@ app.use('/web-bgworker.js', async (req, res) => {
     res.send(code);
 });
 app.use('/dist', express.static('../../dist'));
-app.use('/', express.static('./files'));
+app.use('/gfxwidget', express.static('../gfxwidget'));
+app.get('/', (req, res) => {
+    res.send([
+        '<!DOCTYPE html>',
+        '<html>',
+        '<head>',
+        '<meta charset="utf-8">',
+        '<title>Demos</title>',
+        '</head>',
+        '<body>',
+        '<h1>CommonScript Web-based Demos</h1>',
+        ...[
+            { name: "GFX Widget", link: '/gfxwidget' },
+        ].map(info => {
+            return '<div><a href="' + info.link + '">' + info.name + '</a></div>';
+        }),
+        '</body>',
+        '</html>',
+    ].join('\n'));
+});
 
 app.listen(PORT, () => {
     console.log("GfxWidget server running on port " + PORT);
