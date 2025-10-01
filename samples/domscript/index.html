@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>DomScript demo</title>
+        <script src="../../dist/DOMScript.js" type="text/javascript"></script>
+        <script src="./code.script" type="text/domscript"></script>
+        <script type="text/domscript">
+            import dom;
+            function main(args) {
+                print("Hello, World!");
+                print("3 + 4 is " + add4(3));
+                demoArea = dom.getElementById('demo-area');
+                divTag = dom.createElement('div');
+                dom.setStyleAttribute(divTag, 'backgroundColor', 'yellow');
+                dom.append(divTag, "A proper Hello World on the screen!");
+                dom.append(demoArea, divTag);
+            }
+        </script>
+    </head>
+    <body>
+        <h1>DomScript Demo</h1>
+
+        <p>This is a demo of DomScript</p>
+
+        <p>It utilizes the &lt;script&gt; tag with the type="text/domscript" attribute.</p>
+
+        <div id="demo-area"></div>
+
+
+    </body>
+</html>

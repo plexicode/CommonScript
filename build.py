@@ -123,17 +123,28 @@ def main():
     fileio.file_write_text('./dist/compiler-lib' + suffix, textpreprocessor.load_javascript_file('./compiler/src-intermediate/lib.js', debug_vars))
     fileio.file_write_text('./dist/runtime-lib' + suffix, textpreprocessor.load_javascript_file('./runtime/src-intermediate/lib.js', debug_vars))
 
-  vars_for_node = {}
-  # vars_for_node['IS_DEBUG'] = True
+  debug_mode_toggle = {}
+  # debug_mode_toggle['IS_DEBUG'] = True
 
   fileio.batch_write_to_dir('./dist', {
     'compiler-lib.min.js': javascript.minify('./dist/compiler-lib.js'),
     'runtime-lib.min.js': javascript.minify('./dist/runtime-lib.js'),
-    'compiler-lib.node.js': textpreprocessor.load_javascript_file('./compiler/src-intermediate/lib-node.js', vars_for_node),
-    'runtime-lib.node.js': textpreprocessor.load_javascript_file('./runtime/src-intermediate/lib-node.js', vars_for_node),
+    'compiler-lib.node.js': textpreprocessor.load_javascript_file('./compiler/src-intermediate/lib-node.js', debug_mode_toggle),
+    'runtime-lib.node.js': textpreprocessor.load_javascript_file('./runtime/src-intermediate/lib-node.js', debug_mode_toggle),
     'web-bgworker.js': textpreprocessor.load_javascript_file('./shared/src-intermediate/web/index-bg.js'),
     'web-embed.js': textpreprocessor.load_javascript_file('./shared/src-intermediate/web/index-main.js'),
+    'domscript.js': textpreprocessor.load_javascript_file('./shared/src-intermediate/domscript/index.js', debug_mode_toggle),
   })
+
+  dom_script_builtins = {}
+  dom_dir = './shared/src-intermediate/domscript/dom-module'
+  for file in fileio.list_files(dom_dir):
+    if not file.endswith('.script'): continue
+    # TODO: CommonScript minifier
+    dom_script_builtins[file] = fileio.file_read_text(dom_dir + '/' + file).strip()
+  fileio.file_write_text(
+    './shared/src-intermediate/domscript/GEN-dom-module.js',
+    'const DOM_MODULE = ' + json.dumps(dom_script_builtins))
 
   fileio.copy_file('./dist/compiler-lib.node.js', './tests/harnesses/node/testscript/GEN-compiler.js')
   fileio.copy_file('./dist/runtime-lib.node.js', './tests/harnesses/node/testscript/GEN-runtime.js')

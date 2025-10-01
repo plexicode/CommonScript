@@ -26,6 +26,8 @@ app.use('/web-bgworker.js', async (req, res) => {
 });
 app.use('/dist', express.static('../../dist'));
 app.use('/gfxwidget', express.static('../gfxwidget'));
+app.use('/domscript', express.static('../domscript'));
+
 app.get('/', (req, res) => {
     res.send([
         '<!DOCTYPE html>',
@@ -38,6 +40,7 @@ app.get('/', (req, res) => {
         '<h1>CommonScript Web-based Demos</h1>',
         ...[
             { name: "GFX Widget", link: '/gfxwidget' },
+            { name: "DOM Script", link: '/domscript' },
         ].map(info => {
             return '<div><a href="' + info.link + '">' + info.name + '</a></div>';
         }),

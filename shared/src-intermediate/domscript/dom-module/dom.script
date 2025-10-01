@@ -1,0 +1,18 @@
+function createElement(tag) {
+    return $dom_create_element(tag);
+}
+function setAttribute(element, attrName, value) {
+    $dom_set_attr(element, attrName, value);
+    return element;
+}
+function setStyleAttribute(element, attrName, value) {
+    $dom_set_style_attr(element, attrName, value);
+    return element;
+}
+function getElementById(id) {
+    return $dom_get_element_by_id(id);
+}
+function append(element, item) {
+    $dom_append(element, item, typeof item);
+    return element;
+}

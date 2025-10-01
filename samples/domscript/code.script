@@ -1,0 +1,3 @@
+function add4(n) {
+    return n + 4;
+}
