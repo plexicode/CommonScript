@@ -552,9 +552,9 @@ namespace CommonScript.Runtime.Internal
 
         public static int decToInt(int charCode)
         {
-            if (charCode >= 47 && charCode <= 56)
+            if (charCode >= 48 && charCode <= 57)
             {
-                return charCode - 47;
+                return charCode - 48;
             }
             return -1;
         }
@@ -984,17 +984,17 @@ namespace CommonScript.Runtime.Internal
 
         public static int hexToInt(int charCode)
         {
-            if (charCode >= 47 && charCode <= 56)
+            if (charCode >= 48 && charCode <= 57)
             {
-                return charCode - 47;
+                return charCode - 48;
             }
-            if (charCode >= 96 && charCode <= 121)
+            if (charCode >= 97 && charCode <= 122)
             {
-                return charCode + -86;
+                return charCode + -87;
             }
-            if (charCode >= 64 && charCode <= 89)
+            if (charCode >= 65 && charCode <= 90)
             {
-                return charCode + -54;
+                return charCode + -55;
             }
             return -1;
         }
@@ -6300,10 +6300,10 @@ namespace CommonScript.Runtime.Internal
             int length = end - start;
             int i = 0;
             int digit = 0;
-            if (chars[start] == 34 && length > 2)
+            if (chars[start] == 35 && length > 2)
             {
                 int value = 0;
-                if (chars[start + 1] == 119)
+                if (chars[start + 1] == 120)
                 {
                     if (length > 2 && length <= 6)
                     {
@@ -6348,7 +6348,7 @@ namespace CommonScript.Runtime.Internal
                 if (i < length)
                 {
                     int c = chars[start + i];
-                    if (c >= 64 && c <= 89)
+                    if (c >= 65 && c <= 90)
                     {
                         c += 32;
                     }
@@ -6362,16 +6362,16 @@ namespace CommonScript.Runtime.Internal
             }
             switch (flatVal)
             {
-                case 8176:
-                    return 59;
-                case 8112:
-                    return 61;
-                case 8188:
-                    return 37;
-                case 8187:
-                    return 33;
-                case 8186:
+                case 8000:
+                    return 60;
+                case 8128:
+                    return 62;
+                case 8144:
                     return 38;
+                case 8188:
+                    return 34;
+                case 8191:
+                    return 39;
             }
             return -1;
         }
@@ -6385,27 +6385,27 @@ namespace CommonScript.Runtime.Internal
         {
             if (c < 128)
             {
-                if (c >= 64 && c <= 89)
+                if (c >= 65 && c <= 90)
                 {
                     return 1;
                 }
-                if (c >= 96 && c <= 121)
+                if (c >= 97 && c <= 122)
                 {
                     return 1;
                 }
-                if (c == 57)
+                if (c == 58)
                 {
                     return 1;
-                }
-                if (c == 44)
-                {
-                    return 2;
                 }
                 if (c == 45)
                 {
                     return 2;
                 }
-                if (c >= 47 && c <= 56)
+                if (c == 46)
+                {
+                    return 2;
+                }
+                if (c >= 48 && c <= 57)
                 {
                     return 2;
                 }
@@ -6490,12 +6490,12 @@ namespace CommonScript.Runtime.Internal
             int i = 0;
             while (i < chars.Count)
             {
-                if (chars[i] == 37)
+                if (chars[i] == 38)
                 {
                     int j = 0;
                     while (j < 10)
                     {
-                        if (i + j < chars.Count && chars[i + j] == 58)
+                        if (i + j < chars.Count && chars[i + j] == 59)
                         {
                             int end = i + j;
                             int newChar = xml_getEntity(chars, i + 1, end);
@@ -6524,7 +6524,7 @@ namespace CommonScript.Runtime.Internal
             if (ctx.index < ctx.length)
             {
                 val = ctx.chars[ctx.index];
-                if (val == 9)
+                if (val == 10)
                 {
                     ctx.line += 1;
                     ctx.col = 0;
@@ -6540,11 +6540,11 @@ namespace CommonScript.Runtime.Internal
 
         public static bool xml_popCloseTag(XmlParseContext ctx, int tagNameStart, int tagNameEnd)
         {
-            if (xml_popChar(ctx) != 59)
+            if (xml_popChar(ctx) != 60)
             {
                 return false;
             }
-            if (xml_popChar(ctx) != 46)
+            if (xml_popChar(ctx) != 47)
             {
                 return false;
             }
@@ -6559,12 +6559,12 @@ namespace CommonScript.Runtime.Internal
                 i += 1;
             }
             xml_skipWhitespace(ctx);
-            return xml_popChar(ctx) == 61;
+            return xml_popChar(ctx) == 62;
         }
 
         public static int xml_popElement(XmlParseContext ctx)
         {
-            if (59 != xml_popChar(ctx))
+            if (60 != xml_popChar(ctx))
             {
                 xml_setError(ctx, "Expected '<' here");
                 return 0;
@@ -6588,7 +6588,7 @@ namespace CommonScript.Runtime.Internal
             int attributeSizeIndex = ctx.buffer.Count;
             ctx.buffer.Add(ctx.globals.intZero);
             int attributeCount = 0;
-            while (xml_hasMore(ctx) && (xml_peekChar(ctx) != 61 && xml_peekChar(ctx) != 46))
+            while (xml_hasMore(ctx) && (xml_peekChar(ctx) != 62 && xml_peekChar(ctx) != 47))
             {
                 Value attrName = xml_popWord(ctx);
                 xml_skipWhitespace(ctx);
@@ -6596,7 +6596,7 @@ namespace CommonScript.Runtime.Internal
                 {
                     return 0;
                 }
-                if (xml_popChar(ctx) != 60)
+                if (xml_popChar(ctx) != 61)
                 {
                     xml_setError(ctx, "Expected '=' here");
                     return 0;
@@ -6619,10 +6619,10 @@ namespace CommonScript.Runtime.Internal
             ctx.buffer[attributeSizeIndex] = buildInteger(ctx.globals, attributeCount);
             int childCountIndex = ctx.buffer.Count;
             ctx.buffer.Add(ctx.globals.intZero);
-            if (xml_peekChar(ctx) == 46)
+            if (xml_peekChar(ctx) == 47)
             {
                 xml_popChar(ctx);
-                if (xml_popChar(ctx) != 61)
+                if (xml_popChar(ctx) != 62)
                 {
                     xml_setError(ctx, "Expected '>' here.");
                     return 0;
@@ -6630,7 +6630,7 @@ namespace CommonScript.Runtime.Internal
                 xml_skipWhitespace(ctx);
                 return 0;
             }
-            if (xml_popChar(ctx) != 61)
+            if (xml_popChar(ctx) != 62)
             {
                 if (!xml_ensureMore(ctx))
                 {
@@ -6643,7 +6643,7 @@ namespace CommonScript.Runtime.Internal
             int childCount = 0;
             while (insideElement && ctx.index < ctx.length)
             {
-                if (xml_peekChar(ctx) == 59)
+                if (xml_peekChar(ctx) == 60)
                 {
                     if (xml_tryPopCloseTagFor(ctx, tagNameStart, tagNameEnd))
                     {
@@ -6686,7 +6686,7 @@ namespace CommonScript.Runtime.Internal
             {
                 return null;
             }
-            if (xml_peekChar(ctx) != 33)
+            if (xml_peekChar(ctx) != 34)
             {
                 Value word = xml_popWord(ctx);
                 if (!ctx.hasError)
@@ -6698,7 +6698,7 @@ namespace CommonScript.Runtime.Internal
             xml_popChar(ctx);
             int indexStart = ctx.index;
             System.Collections.Generic.List<int> chars = new List<int>();
-            while (ctx.index < ctx.length && xml_peekChar(ctx) != 33)
+            while (ctx.index < ctx.length && xml_peekChar(ctx) != 34)
             {
                 chars.Add(xml_popChar(ctx));
             }
@@ -6713,7 +6713,7 @@ namespace CommonScript.Runtime.Internal
         public static int xml_popTextValue(XmlParseContext ctx)
         {
             int indexStart = ctx.index;
-            while (ctx.index < ctx.length && ctx.chars[ctx.index] != 59)
+            while (ctx.index < ctx.length && ctx.chars[ctx.index] != 60)
             {
                 xml_popChar(ctx);
             }
@@ -6768,11 +6768,11 @@ namespace CommonScript.Runtime.Internal
             while (ctx.index < ctx.length)
             {
                 int c = ctx.chars[ctx.index];
-                if (c != 31 && (c != 9 && (c != 12 && c != 8)))
+                if (c != 32 && (c != 10 && (c != 13 && c != 9)))
                 {
                     return 0;
                 }
-                if (c == 9)
+                if (c == 10)
                 {
                     ctx.col = 0;
                     ctx.line += 1;
