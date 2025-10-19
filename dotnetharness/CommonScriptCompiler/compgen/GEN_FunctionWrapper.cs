@@ -71,7 +71,7 @@ namespace CommonScript.Compiler.Internal
             {
                 args[1] = s1;
             }
-            return PST_ExtCallbacks.ContainsKey("throwParserException") ? PST_ExtCallbacks["throwParserException"].Invoke(args) : null;
+            return PST_ExtCallbacks["throwParserException"].Invoke(args);
         }
 
         public static AbstractEntity AbstractEntity_new(Token firstToken, int type, object specificData)
@@ -227,7 +227,7 @@ namespace CommonScript.Compiler.Internal
             {
                 Errors_Throw(child.firstToken, "Cannot place a constructor here. Constructors can only be added to classes.");
             }
-            if (isStatic && !isClass && !isAttachingToClass)
+            if (isStatic && (!isClass && !isAttachingToClass))
             {
                 Errors_Throw(child.firstToken, "@static is not applicable to this type of entity.");
             }
@@ -759,7 +759,7 @@ namespace CommonScript.Compiler.Internal
             if (last.opCode == 4)
             {
                 string op = last.stringArg;
-                if (op == "||" || op == "&&" || op == "==" || op == "!=" || op == "<" || op == ">" || op == "<=" || op == ">=")
+                if (op == "||" || (op == "&&" || (op == "==" || (op == "!=" || (op == "<" || (op == ">" || (op == "<=" || op == ">=")))))))
                 {
                     return buf;
                 }
@@ -1376,7 +1376,7 @@ namespace CommonScript.Compiler.Internal
                     i += 1;
                 }
             }
-            if (isCtor && funcDef.baseData.nestParent.type == 1 && ((ClassEntity)funcDef.baseData.nestParent.specificData).baseClassEntity != null)
+            if (isCtor && (funcDef.baseData.nestParent.type == 1 && ((ClassEntity)funcDef.baseData.nestParent.specificData).baseClassEntity != null))
             {
                 Token baseCtor = funcDef.baseData.firstToken;
                 Token baseCtorParen = funcDef.baseData.firstToken;
@@ -3563,7 +3563,7 @@ namespace CommonScript.Compiler.Internal
         {
             object[] failArgs = new object[1];
             failArgs[0] = msg;
-            return PST_ExtCallbacks.ContainsKey("hardCrash") ? PST_ExtCallbacks["hardCrash"].Invoke(failArgs) : null;
+            return PST_ExtCallbacks["hardCrash"].Invoke(failArgs);
         }
 
         public static FieldEntity FieldEntity_new(Token fieldToken, Token nameToken, Token equalToken, Expression defaultValueOrNull)
@@ -3675,7 +3675,7 @@ namespace CommonScript.Compiler.Internal
         {
             int i = 0;
             string opType = ops[0].Value;
-            bool isShortCircuit = opType == "??" || opType == "&&" || opType == "||";
+            bool isShortCircuit = opType == "??" || (opType == "&&" || opType == "||");
             Expression acc = null;
             int length = expressions.Count;
             if (isShortCircuit)
@@ -3813,7 +3813,7 @@ namespace CommonScript.Compiler.Internal
 
         public static string GEN_BUILTINS_json()
         {
-            return "@3JsonParse@6 {\nconstructor(l, c) : base('JSON parse error on line ' + l + ', col ' + c) {}\n}\n@3JsonSerialization@6 {\nconstructor() : base('Value contained un-serialiazable value.') {}\n}\n@5jsonParse(str) { @4parseImpl(str, true); }\n@5tryJsonParse(str) { @4parseImpl(str, false); }\n@1parseImpl(str, f) {\ne = [0, 0, 0];\nv = $json_parse(str + '', e);\nif (e[0] < 1) @4v;\nif (f) throw new JsonParseException(e[1], e[2]);\n@4null;\n}\n@5jsonSerialize(obj, pretty = false, tab = 2) {\np = pretty == true;\ns = $json_serialize(obj, p);\nif (s == null) throw new JsonSerializationException();\n@4(p && tab != '\\t') ? s.replace('\\t', ' ' * tab) : s;\n}";
+            return "@3JsonParse@6 {\nconstructor(l, c) : base('JSON parse error on line ' + l + ', col ' + c) {}\n}\n@3JsonSerialization@6 {\nconstructor(msg) : base(msg + '') {}\n}\n@5jsonParse(str) { @4parseImpl(str, true); }\n@5tryJsonParse(str) { @4parseImpl(str, false); }\n@1parseImpl(str, f) {\ne = [0, 0, 0];\nv = $json_parse(str + '', e);\nif (e[0] < 1) @4v;\nif (f) throw new JsonParseException(e[1], e[2]);\n@4null;\n}\n@5jsonSerialize(obj, pretty = false, tab = 2) {\np = pretty == true;\nerrOut = [''];\ns = $json_serialize(obj, p, errOut);\ne = errOut[0];\nif (e != '') throw new JsonSerializationException(e);\n@4(p && tab != '\\t') ? s.replace('\\t', ' ' * tab) : s;\n}";
         }
 
         public static string GEN_BUILTINS_math()
@@ -3823,7 +3823,7 @@ namespace CommonScript.Compiler.Internal
 
         public static string GEN_BUILTINS_random()
         {
-            return "@5randomFloat() { @4$random_float(); }\n@5randomBool() { @4$random_float() < .5; }\n@5randomInt(a, b = null) {\nif (b == null) {\nb = a;\na = 0;\n}\nd = b - a;\nif (d <= 0) throw new InvalidArgumentException(\"Range must be a positive number.\");\n@4a + $math_floor($random_float() * d);\n}";
+            return "@5randomFloat() { @4$random_float(); }\n@5randomBool() { @4$random_float() < .5; }\n@5randomInt(a, b = null) {\nif (b == null) {\nb = a;\na = 0;\n}\nd = b - a;\nif (d <= 0) throw new InvalidArgumentException(\"Range must be a positive number.\");\n@4a + $math_floor($random_float() * d);\n}\n@5shuffle(list) {\nsz = list.length;\nfor (i = 0; i < sz; i++) {\nj = $math_floor($random_float() * sz);\nt = list[j];\nlist[j] = list[i];\nlist[i] = t;\n}\n}";
         }
 
         public static string GEN_BUILTINS_textencoding()
@@ -4038,7 +4038,7 @@ namespace CommonScript.Compiler.Internal
         public static bool IsExpressionNumericConstant(Expression expr)
         {
             int t = expr.type;
-            return t == 22 || t == 16 || t == 12;
+            return t == 22 || (t == 16 || t == 12);
         }
 
         public static ByteCodeBuffer join2(ByteCodeBuffer a, ByteCodeBuffer b)
@@ -4272,7 +4272,7 @@ namespace CommonScript.Compiler.Internal
             Token openParen = Tokens_peekAhead(tokens, 1);
             Token varName = Tokens_peekAhead(tokens, 2);
             Token colon = Tokens_peekAhead(tokens, 3);
-            if (colon != null && openParen.Value == "(" && varName.Type == 2 && colon.Value == ":")
+            if (colon != null && (openParen.Value == "(" && (varName.Type == 2 && colon.Value == ":")))
             {
                 return ParseForEachLoop(tokens);
             }
@@ -4957,10 +4957,12 @@ namespace CommonScript.Compiler.Internal
         public static Statement ParseStatement(TokenStream tokens, bool isForLoop)
         {
             Token nextToken = Tokens_peek(tokens);
-            if (!isForLoop && nextToken != null && nextToken.Type == 1)
+            if (!isForLoop && (nextToken != null && nextToken.Type == 1))
             {
                 switch (StatementParser_IdentifyKeywordType(nextToken.Value))
                 {
+                    case 99:
+                        break;
                     case 1:
                         return ParseBreakContinue(tokens);
                     case 2:
@@ -5044,7 +5046,7 @@ namespace CommonScript.Compiler.Internal
                     }
                     Tokens_popExpected(tokens, ":");
                 }
-                while (!Tokens_isNext(tokens, "case") && !Tokens_isNext(tokens, "default") && !Tokens_isNext(tokens, "}") && Tokens_hasMore(tokens))
+                while (!Tokens_isNext(tokens, "case") && (!Tokens_isNext(tokens, "default") && (!Tokens_isNext(tokens, "}") && Tokens_hasMore(tokens))))
                 {
                     activeChunk.Code.Add(ParseStatement(tokens, false));
                 }
@@ -6846,7 +6848,7 @@ namespace CommonScript.Compiler.Internal
             argcByName["b64_to_bytes"] = 1;
             argcByName["cmp"] = 2;
             argcByName["json_parse"] = 2;
-            argcByName["json_serialize"] = 2;
+            argcByName["json_serialize"] = 3;
             argcByName["math_arccos"] = 1;
             argcByName["math_arcsin"] = 1;
             argcByName["math_arctan"] = 2;
@@ -6983,6 +6985,10 @@ namespace CommonScript.Compiler.Internal
             switch (kw[0])
             {
                 case 'b':
+                    if (kw == "base")
+                    {
+                        return 99;
+                    }
                     if (kw == "break")
                     {
                         return 1;
@@ -7032,6 +7038,10 @@ namespace CommonScript.Compiler.Internal
                     if (kw == "try")
                     {
                         return 9;
+                    }
+                    if (kw == "this")
+                    {
+                        return 99;
                     }
                     break;
                 case 'w':
@@ -7715,7 +7725,7 @@ namespace CommonScript.Compiler.Internal
                         else
                         {
                             tokenVal = null;
-                            if (c == 62 && chars[i + 1] == c && chars[i + 2] == c && chars[i + 3] == 61)
+                            if (c == 62 && (chars[i + 1] == c && (chars[i + 2] == c && chars[i + 3] == 61)))
                             {
                                 tokenVal = ">>>=";
                             }
@@ -7747,7 +7757,7 @@ namespace CommonScript.Compiler.Internal
                             }
                             if (tokenVal == null)
                             {
-                                tokenVal = (char)c + "";
+                                tokenVal = ((char)c).ToString();
                             }
                             tokens.Add(Token_new(tokenVal, 3, file, lines[i], cols[i]));
                             i += tokenVal.Length - 1;
@@ -7762,7 +7772,7 @@ namespace CommonScript.Compiler.Internal
                             int tokenType = 2;
                             if (tokenizerCtx.numerics.ContainsKey(firstChar))
                             {
-                                if (firstChar == 48 && tokenLen > 2 && (chars[tokenStart + 1] == 120 || chars[tokenStart + 1] == 88))
+                                if (firstChar == 48 && (tokenLen > 2 && (chars[tokenStart + 1] == 120 || chars[tokenStart + 1] == 88)))
                                 {
                                     tokenType = 6;
                                 }
@@ -7785,7 +7795,7 @@ namespace CommonScript.Compiler.Internal
                         {
                             mode = 1;
                         }
-                        else if (c == 42 && tokenSubtype == c && chars[i + 1] == 47)
+                        else if (c == 42 && (tokenSubtype == c && chars[i + 1] == 47))
                         {
                             mode = 1;
                             i += 1;
@@ -7840,7 +7850,7 @@ namespace CommonScript.Compiler.Internal
                     {
                         right = null;
                     }
-                    if (current.Value == "@" && right != null && (right.Type == 2 || right.Type == 1))
+                    if (current.Value == "@" && (right != null && (right.Type == 2 || right.Type == 1)))
                     {
                         current.Value += right.Value;
                         current.Type = 8;
@@ -7933,7 +7943,7 @@ namespace CommonScript.Compiler.Internal
         public static bool Tokens_doesNextInclude5(TokenStream tokens, string val1, string val2, string val3, string val4, string val5)
         {
             string next = Tokens_peekValue(tokens);
-            return next == val1 || next == val2 || next == val3 || next == val4 || next == val5;
+            return next == val1 || (next == val2 || (next == val3 || (next == val4 || next == val5)));
         }
 
         public static bool Tokens_doesNextInclulde2(TokenStream tokens, string val1, string val2)
@@ -7949,7 +7959,7 @@ namespace CommonScript.Compiler.Internal
         public static bool Tokens_doesNextInclulde4(TokenStream tokens, string val1, string val2, string val3, string val4)
         {
             string next = Tokens_peekValue(tokens);
-            return next == val1 || next == val2 || next == val3 || next == val4;
+            return next == val1 || (next == val2 || (next == val3 || next == val4));
         }
 
         public static void Tokens_ensureMore(TokenStream tokens)
@@ -7982,19 +7992,19 @@ namespace CommonScript.Compiler.Internal
 
         public static bool Tokens_isSequenceNext4(TokenStream tokens, string val1, string val2, string val3, string val4)
         {
-            if (val1 != null && tokens.index < tokens.length && tokens.tokens[tokens.index].Value != val1)
+            if (val1 != null && (tokens.index < tokens.length && tokens.tokens[tokens.index].Value != val1))
             {
                 return false;
             }
-            if (val2 != null && tokens.index + 1 < tokens.length && tokens.tokens[tokens.index + 1].Value != val2)
+            if (val2 != null && (tokens.index + 1 < tokens.length && tokens.tokens[tokens.index + 1].Value != val2))
             {
                 return false;
             }
-            if (val3 != null && tokens.index + 2 < tokens.length && tokens.tokens[tokens.index + 2].Value != val3)
+            if (val3 != null && (tokens.index + 2 < tokens.length && tokens.tokens[tokens.index + 2].Value != val3))
             {
                 return false;
             }
-            if (val4 != null && tokens.index + 3 < tokens.length && tokens.tokens[tokens.index + 3].Value != val4)
+            if (val4 != null && (tokens.index + 3 < tokens.length && tokens.tokens[tokens.index + 3].Value != val4))
             {
                 return false;
             }
@@ -8188,7 +8198,7 @@ namespace CommonScript.Compiler.Internal
                 {
                     digitVal = d - 48;
                 }
-                else if (isHex && d >= 97 && d <= 102)
+                else if (isHex && (d >= 97 && d <= 102))
                 {
                     digitVal = d - 97 + 10;
                 }
@@ -8231,7 +8241,7 @@ namespace CommonScript.Compiler.Internal
                     {
                         c = "\r";
                     }
-                    else if (c == "'" || c == "\"" || c == "\\")
+                    else if (c == "'" || (c == "\"" || c == "\\"))
                     {
                     }
                     else if (c == "t")

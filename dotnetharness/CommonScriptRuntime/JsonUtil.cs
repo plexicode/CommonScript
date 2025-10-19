@@ -131,74 +131,101 @@ namespace CommonScript.Runtime
             }
         }
 
-        public static Value Parse(ExecutionContext ec, string rawStr, int[] errOut)
+        public static Value Parse(string rawStr, List<object> bufOut)
         {
             JsonDocument doc;
             try
             {
                 doc = JsonDocument.Parse(rawStr);
-                errOut[0] = 0;
             }
             catch (JsonException jsonex)
             {
-                errOut[0] = 1;
-                errOut[1] = (int)(jsonex.LineNumber ?? 0);
-                errOut[2] = (int)(jsonex.BytePositionInLine ?? 0);
+                bufOut.Add(false);
+                bufOut.Add((int)(jsonex.LineNumber ?? 0));
+                bufOut.Add((int)(jsonex.BytePositionInLine ?? 0));
                 return null;
             }
 
-            Dictionary<string, Value> strings = new Dictionary<string, Value>();
-            return ConvertValue(ec, doc.RootElement, strings);
+            bufOut.Add(true);
+            ConvertValue(doc.RootElement, bufOut);
+            return null;
         }
 
-        private static Value ConvertString(ExecutionContext ec, string strVal, Dictionary<string, Value> stringCache)
-        {
-            Value output;
-            if (!stringCache.TryGetValue(strVal, out output))
-            {
-                output = FunctionWrapper.buildString(ec.globalValues, strVal, false);
-                stringCache[strVal] = output;
-            }
-            return output;
-        }
-
-        private static Value ConvertValue(ExecutionContext ec, JsonElement el, Dictionary<string, Value> stringCache)
+        private static void ConvertValue(JsonElement el, List<object> bufOut)
         {
             switch (el.ValueKind)
             {
-                case JsonValueKind.True: return ec.globalValues.trueValue;
-                case JsonValueKind.False: return ec.globalValues.falseValue;
-                case JsonValueKind.Null: return ec.globalValues.nullValue;
-                case JsonValueKind.String: return ConvertString(ec, el.GetString(), stringCache);
+                case JsonValueKind.Null:
+                    bufOut.Add(0);
+                    return;
 
-                case JsonValueKind.Object:
-                    List<Value> objKeys = [];
-                    List<Value> objValues = [];
-                    foreach (JsonProperty prop in el.EnumerateObject())
-                    {
-                        objKeys.Add(ConvertString(ec, prop.Name, stringCache));
-                        objValues.Add(ConvertValue(ec, prop.Value, stringCache));
-                    }
-                    return FunctionWrapper.buildStringDictionary(ec, [.. objKeys], [.. objValues]);
+                case JsonValueKind.True:
+                    bufOut.Add(1);
+                    bufOut.Add(true);
+                    return;
 
-                case JsonValueKind.Array:
-                    List<Value> items = [];
-                    foreach (JsonElement item in el.EnumerateArray())
-                    {
-                        items.Add(ConvertValue(ec, item, stringCache));
-                    }
-                    return FunctionWrapper.buildList(ec, [.. items], false, items.Count);
+                case JsonValueKind.False:
+                    bufOut.Add(1);
+                    bufOut.Add(false);
+                    return;
 
                 case JsonValueKind.Number:
                     if (el.TryGetInt32(out int intVal))
                     {
-                        return FunctionWrapper.buildInteger(ec.globalValues, intVal);
+                        bufOut.Add(2);
+                        bufOut.Add(intVal);
+                        return;
                     }
+
+                    if (el.TryGetDecimal(out decimal decVal))
+                    {
+                        bufOut.Add(3);
+                        double doubleVal = (double)decVal;
+                        bufOut.Add(doubleVal);
+                        return;
+                    }
+                    
                     if (el.TryGetDouble(out double floatVal))
                     {
-                        return FunctionWrapper.buildFloat(floatVal);
+                        bufOut.Add(3);
+                        bufOut.Add(floatVal);
                     }
+
                     throw new NotImplementedException();
+
+                case JsonValueKind.String:
+                    bufOut.Add(4);
+                    bufOut.Add(el.GetString());
+                    return;
+
+                case JsonValueKind.Object:
+                    bufOut.Add(6);
+                    int objSizeIndex = bufOut.Count;
+                    bufOut.Add(-1);
+                    int objSize = 0;
+                    foreach (JsonProperty prop in el.EnumerateObject())
+                    {
+                        objSize++;
+                        bufOut.Add(prop.Name);
+                        ConvertValue(prop.Value, bufOut);
+                    }
+
+                    bufOut[objSizeIndex] = objSize;
+                    return;
+
+                case JsonValueKind.Array:
+                    bufOut.Add(5);
+                    int arrayLengthIndex = bufOut.Count;
+                    bufOut.Add(-1);
+                    int itemCount = 0;
+                    foreach (JsonElement item in el.EnumerateArray())
+                    {
+                        itemCount++;
+                        ConvertValue(item, bufOut);
+                    }
+
+                    bufOut[arrayLengthIndex] = itemCount;
+                    return;
 
                 default:
                     throw new InvalidOperationException();

@@ -16,8 +16,10 @@ namespace CommonScript.Runtime
 
             FunctionWrapper.PST_RegisterExtensibleCallback("jsonParse", (object[] args) =>
             {
-                int[] errOut = (int[])args[2];
-                return JsonUtil.Parse((ExecutionContext)args[0], args[1].ToString(), errOut);
+                string rawValue = args[0].ToString();
+                List<object> bufOut = (List<object>)args[1];
+                JsonUtil.Parse(rawValue, bufOut);
+                return null;
             });
 
             FunctionWrapper.PST_RegisterExtensibleCallback("jsonSerialize", (object[] args) =>
@@ -43,7 +45,8 @@ namespace CommonScript.Runtime
             this.execContext = FunctionWrapper.PUBLIC_initializeExecutionContext(
                 byteInts,
                 new Dictionary<string, System.Func<object, object[], object>>(extensions),
-                null);
+                null, 
+                o => null);
 
             string initError = FunctionWrapper.PUBLIC_getExecutionContextError(this.execContext);
             // TODO: this may not be a RuntimeError
