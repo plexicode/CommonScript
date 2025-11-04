@@ -9,6 +9,7 @@ import json
 
 VERSION_DOTTED = fileio.file_read_text("./current-version.txt").strip().split('\n').pop()
 VERSION_UNDERSCORE = VERSION_DOTTED.replace('.', '_')
+VERSION_COMMAS = VERSION_DOTTED.replace('.', ', ')
 VERSION = tuple(map(lambda s: int(s), VERSION_DOTTED.split('.')))
 
 def build_js_runtime():
@@ -107,6 +108,8 @@ def get_test_cases_as_json():
 
 def main():
   fileio.ensure_directory('./dist')
+
+  fileio.file_write_text('./dist/version.txt', VERSION_COMMAS + '\n')
 
   copy_builtins()
 
