@@ -69,15 +69,27 @@ const createNewCommonScriptRuntimeFactory = (() => {
         while (true) {
           let resultRaw = PUBLIC_resumeTask(taskObjRaw);
           switch (PUBLIC_getTaskResultStatus(resultRaw)) {
+
+            // Success
             case 1: return { ok: true  };
+
+            // Error
             case 2: return { ok: false, error: PUBLIC_getTaskResultError(resultRaw) };
-            case 3: return new Promise(res => {
-              throw new Error("Need to store a promise/resolver on the raw task and return it here.");
-            });
+
+            // Manual suspension
+            case 3:
+              // resuming a manually-suspended task will resolves this promise.
+              await PUBLIC_getTaskAsyncHandle(taskObjRaw).promise;
+              break;
+
+            // Sleep
             case 4:
               await pause(PUBLIC_getTaskResultSleepAmount(resultRaw));
               break;
-            default: throw new Error();
+
+            // Unknown
+            default:
+              throw new Error();
           }
         }
       };
@@ -113,13 +125,21 @@ const createNewCommonScriptRuntimeFactory = (() => {
             listSet: PUBLIC_listSet,
           }),
           task: Object.freeze({
-            requestTaskSuspension: task => { PUBLIC_requestTaskSuspension(task, false, 0); return null; },
+            requestTaskSuspension: task => {
+              PUBLIC_requestTaskSuspension(task, false, 0);
+              let resolver;
+              let promise = new Promise(r => { resolver = r; });
+              PUBLIC_setTaskAsyncHandle(task, { promise, resolver });
+              return null;
+            },
             launchFunctionAsTask: async (fn, wrappedArgs) => {
               let newTask = PUBLIC_createTaskForFunctionWithWrappedArgs(execCtx, fn, wrappedArgs);
               return runTaskAsync(newTask);
             },
             resumeTask: task => {
-              PUBLIC_resumeTask(task);
+              let o = PUBLIC_getTaskAsyncHandle(task);
+              if (!o) throw new Error(); // task resumed without suspension
+              o.resolver(0); // this will unlock the await in the runTaskAsync loop.
               return null;
             },
             setStackTop: (task, valueWrapped) => {

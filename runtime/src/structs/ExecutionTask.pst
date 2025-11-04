@@ -6,6 +6,10 @@ struct ExecutionTask {
     int sleepMillis;
     Array<Value> valueStack;
     StackFrame framePool;
+
+    // when running the task asynchronously from the native platform invocation,
+    // you can store promises/resolvers on this field.
+    object nativeAsyncHandle;
 }
 
 ExecutionTask createNewTask(ExecutionContext ec, Value fpValue, Array<Value> args) {
@@ -55,7 +59,8 @@ ExecutionTask createNewTask(ExecutionContext ec, Value fpValue, Array<Value> arg
         false
     );
 
-    ExecutionTask task = new ExecutionTask(ec.nextTaskId, ec, frame, false, 0, new Array<Value>(1), null);
+    ExecutionTask task = new ExecutionTask(
+        ec.nextTaskId, ec, frame, false, 0, new Array<Value>(1), null, null);
     ec.nextTaskId += 1;
     ec.tasks[task.taskId] = task;
     return task;

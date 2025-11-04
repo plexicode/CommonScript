@@ -63,6 +63,14 @@ Array<string> PUBLIC_getTaskResultError(object resObj, bool includeStackTrace) {
     return o.toArray();
 }
 
+object PUBLIC_getTaskAsyncHandle(object taskObj) {
+    return ((ExecutionTask)taskObj).nativeAsyncHandle;
+}
+
+void PUBLIC_setTaskAsyncHandle(object taskObj, object handle) {
+    ((ExecutionTask)taskObj).nativeAsyncHandle = handle;
+}
+
 void PUBLIC_setTaskStackTopValue(object taskObj, Value newValue) {
     ExecutionTask task = (ExecutionTask) taskObj;
     int valueStackSize = task.stack.valueStackSize;
