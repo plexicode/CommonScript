@@ -64,7 +64,7 @@ namespace CommonScript.Compiler
             }
             catch (ParserException ex)
             {
-                return new CompilationResult(null, ex.Message);
+                return new CompilationResult(null, ex.Message, null);
             }
         }
 
@@ -74,7 +74,8 @@ namespace CommonScript.Compiler
             FunctionWrapper.PUBLIC_EnsureDependenciesFulfilled(this.genCompiler);
             int[] output = FunctionWrapper.PUBLIC_CompleteCompilation(this.genCompiler);
             byte[] outputBytes = output.Select(i => (byte)i).ToArray();
-            return new CompilationResult(outputBytes, null);
+            string modDeps = FunctionWrapper.PUBLIC_getModuleDependencyInfo(this.genCompiler);
+            return new CompilationResult(outputBytes, null, modDeps);
         }
     }
 }

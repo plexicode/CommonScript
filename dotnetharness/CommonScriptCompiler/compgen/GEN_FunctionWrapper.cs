@@ -53,6 +53,22 @@ namespace CommonScript.Compiler.Internal
             PST_ExtCallbacks[name] = func;
         }
 
+        public static string[] _CompileContext_filterModuleList(string[] arr)
+        {
+            System.Collections.Generic.List<string> output = new List<string>();
+            int i = 0;
+            while (i < arr.Length)
+            {
+                string modId = arr[i];
+                if (modId != "{BUILTIN}")
+                {
+                    output.Add(modId);
+                }
+                i += 1;
+            }
+            return output.ToArray().OrderBy<string, string>(_PST_GEN_arg => _PST_GEN_arg).ToArray();
+        }
+
         public static object _Errors_ThrowImpl(int type, Token t, string s1, string s2)
         {
             object[] args = new object[3];
@@ -5403,6 +5419,22 @@ namespace CommonScript.Compiler.Internal
             {
                 fail("Not all dependencies are fulfilled.");
             }
+        }
+
+        public static string PUBLIC_getModuleDependencyInfo(object compObj)
+        {
+            CompilerContext compCtx = (CompilerContext)compObj;
+            string[] moduleIds = _CompileContext_filterModuleList(compCtx.depIdsByModuleId.Keys.ToArray());
+            System.Collections.Generic.List<string> output = new List<string>();
+            int i = 0;
+            while (i < moduleIds.Length)
+            {
+                string modId = moduleIds[i];
+                string[] depIds = _CompileContext_filterModuleList(compCtx.depIdsByModuleId[modId].ToArray());
+                output.Add(string.Join("", new string[] { modId, ": ", string.Join(", ", depIds) }));
+                i += 1;
+            }
+            return string.Join("\n", output);
         }
 
         public static string PUBLIC_GetNextRequiredModuleId(object compObj)

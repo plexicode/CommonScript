@@ -225,3 +225,28 @@ CompiledModule CompilerContext_CompileModule(CompilerContext compiler, string mo
 
     return m;
 }
+
+string[] _CompileContext_filterModuleList(string[] arr) {
+    List<string> output = new List<string>();
+    for (int i = 0; i < arr.size(); i += 1) {
+        string modId = arr[i];
+        if (modId != "{BUILTIN}") {
+            output.add(modId);
+        }
+    }
+    return Sorting.getLexicalSortedCopy(output.toArray());
+}
+
+string PUBLIC_getModuleDependencyInfo(object compObj) {
+    CompilerContext compCtx = (CompilerContext) compObj;
+    string[] moduleIds = _CompileContext_filterModuleList(compCtx.depIdsByModuleId.keys());
+
+    List<string> output = new List<string>();
+    for (int i = 0; i < moduleIds.size(); i += 1) {
+        string modId = moduleIds[i];
+        string[] depIds = _CompileContext_filterModuleList(compCtx.depIdsByModuleId[modId].toArray());
+        output.add(modId + ": " + depIds.join(", "));
+    }
+
+    return output.join("\n");
+}

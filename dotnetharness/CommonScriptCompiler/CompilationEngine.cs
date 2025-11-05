@@ -70,7 +70,7 @@ namespace CommonScript.Compiler
                             }
                             catch (ParserException ex)
                             {
-                                return new CompilationResult(null, ex.Message);
+                                return new CompilationResult(null, ex.Message, null);
                             }
                         }
                     }
@@ -78,7 +78,7 @@ namespace CommonScript.Compiler
 
                 if (!found)
                 {
-                    return new CompilationResult(null, "The module '" + moduleId + "' could not be loaded.");
+                    return new CompilationResult(null, "The module '" + moduleId + "' could not be loaded.", null);
                 }
             }
 

@@ -490,7 +490,7 @@ namespace CommonScript.Runtime.Internal
                 i += 1;
             }
             StackFrame frame = new StackFrame(null, pc, argsClone, argc, 0, 0, new Dictionary<string, Value>(), context, false, null, false);
-            ExecutionTask task = new ExecutionTask(ec.nextTaskId, ec, frame, false, 0, new Value[1], null);
+            ExecutionTask task = new ExecutionTask(ec.nextTaskId, ec, frame, false, 0, new Value[1], null, null);
             ec.nextTaskId += 1;
             ec.tasks[task.taskId] = task;
             return task;
@@ -1591,7 +1591,6 @@ namespace CommonScript.Runtime.Internal
 
         public static bool ParseRaw_entitiesSection_classMemberResolver(System.Collections.Generic.List<ClassInfo> classes, GlobalValues globalValues)
         {
-            int j = 0;
             int id = 1;
             while (id < classes.Count)
             {
@@ -2310,6 +2309,11 @@ namespace CommonScript.Runtime.Internal
             return ((ExecutionTask)taskObj).execCtx;
         }
 
+        public static object PUBLIC_getTaskAsyncHandle(object taskObj)
+        {
+            return ((ExecutionTask)taskObj).nativeAsyncHandle;
+        }
+
         public static string[] PUBLIC_getTaskResultError(object resObj, bool includeStackTrace)
         {
             ExecutionResult result = (ExecutionResult)resObj;
@@ -2391,6 +2395,11 @@ namespace CommonScript.Runtime.Internal
         public static object PUBLIC_resumeTask(object taskObj)
         {
             return RunInterpreter((ExecutionTask)taskObj);
+        }
+
+        public static void PUBLIC_setTaskAsyncHandle(object taskObj, object handle)
+        {
+            ((ExecutionTask)taskObj).nativeAsyncHandle = handle;
         }
 
         public static void PUBLIC_setTaskStackTopValue(object taskObj, Value newValue)

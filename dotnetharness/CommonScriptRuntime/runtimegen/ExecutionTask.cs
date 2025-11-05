@@ -11,8 +11,9 @@ namespace CommonScript.Runtime.Internal
         public int sleepMillis;
         public Value[] valueStack;
         public StackFrame framePool;
+        public object nativeAsyncHandle;
 
-        public ExecutionTask(int taskId, ExecutionContext execCtx, StackFrame stack, bool suspendRequested, int sleepMillis, Value[] valueStack, StackFrame framePool)
+        public ExecutionTask(int taskId, ExecutionContext execCtx, StackFrame stack, bool suspendRequested, int sleepMillis, Value[] valueStack, StackFrame framePool, object nativeAsyncHandle)
         {
             this.taskId = taskId;
             this.execCtx = execCtx;
@@ -21,6 +22,7 @@ namespace CommonScript.Runtime.Internal
             this.sleepMillis = sleepMillis;
             this.valueStack = valueStack;
             this.framePool = framePool;
+            this.nativeAsyncHandle = nativeAsyncHandle;
         }
     }
 }
