@@ -207,8 +207,6 @@ bool ParseRaw_entitiesSection_classMemberResolver(
     List<ClassInfo> classes,
     GlobalValues globalValues) {
 
-    int j = 0;
-
     for (int id = 1; id < classes.size(); id += 1) {
         ClassInfo cd = classes[id];
 
