@@ -15,8 +15,9 @@ namespace CommonScript.Runtime.Internal
         public bool useContextAsReturnValue;
         public Value bubblingValue;
         public bool bubblingValueUncaught;
+        public FunctionInfo functionInfo;
 
-        public StackFrame(StackFrame previous, int pc, Value[] args, int argc, int valueStackSize, int valueStackBaseSize, System.Collections.Generic.Dictionary<string, Value> locals, Value context, bool useContextAsReturnValue, Value bubblingValue, bool bubblingValueUncaught)
+        public StackFrame(StackFrame previous, int pc, Value[] args, int argc, int valueStackSize, int valueStackBaseSize, System.Collections.Generic.Dictionary<string, Value> locals, Value context, bool useContextAsReturnValue, Value bubblingValue, bool bubblingValueUncaught, FunctionInfo functionInfo)
         {
             this.previous = previous;
             this.pc = pc;
@@ -29,6 +30,7 @@ namespace CommonScript.Runtime.Internal
             this.useContextAsReturnValue = useContextAsReturnValue;
             this.bubblingValue = bubblingValue;
             this.bubblingValueUncaught = bubblingValueUncaught;
+            this.functionInfo = functionInfo;
         }
     }
 }

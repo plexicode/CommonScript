@@ -1,3 +1,4 @@
 valueStackSize -= 1;
 output = VALUE_NULL;
-Pastel.emitComment("OOGA BOOGA");
+
+Pastel.emitComment("res_list");

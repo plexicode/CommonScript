@@ -20,7 +20,7 @@ class ResourceException : Exception {
 // t(ype) can be one of the following: T: text, B: bytes, Y: tYpe, I: image
 function _baseRead(m, p, t) {
     b = [];
-    e = $res_read(m._h, p, t, b);
+    e = $res_read(m._h, '' + p, t, b);
     if (e != null) throw new ResourceException(e);
     return b;
 }

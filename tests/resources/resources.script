@@ -4,7 +4,7 @@ import resources;
 function main(args) {
 
     mod = resources.getCurrentResourceModule();
-    t = resources.readTextResourceAsString(mod, './textfile1.txt');
+    t = resources.readTextResourceAsString(mod, 'textfile1.txt');
     assertStrEqual(t.trim(), "I am a text file.");
 
     print("ALL DONE");

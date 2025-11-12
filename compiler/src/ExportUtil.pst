@@ -58,10 +58,20 @@ Array<int> ExportUtil_exportBundle(string flavorId, string extVersionId, Compila
     }
 
     ByteStringBuilder entityAcc = null;
+    ByteStringBuilder modBsb = null;
+    string activeModuleId = null;
 
     for (i = 1; i < bundle.functionById.size(); i += 1) {
         BundleFunctionInfo fn = bundle.functionById[i];
-        entityAcc = bsbJoin2(entityAcc, bsbJoin5(
+        if (fn.moduleId != activeModuleId) {
+            activeModuleId = fn.moduleId;
+            modBsb = bsbFromLenString(activeModuleId);
+        } else {
+            modBsb = bsbFromLenString("");
+        }
+
+        entityAcc = bsbJoin2(entityAcc, bsbJoin6(
+            modBsb,
             bsbFromInt(fn.argcMin),
             bsbFromInt(fn.argcMax),
             bsbFromLenString(fn.name),
@@ -69,10 +79,19 @@ Array<int> ExportUtil_exportBundle(string flavorId, string extVersionId, Compila
             ExportUtil_exportCode(fn.code))
         );
     }
-
+    
+    activeModuleId = null;
     for (i = 1; i < bundle.lambdaById.size(); i += 1) {
         BundleFunctionInfo fn = bundle.lambdaById[i];
-        entityAcc = bsbJoin2(entityAcc, bsbJoin4(
+        if (fn.moduleId != activeModuleId) {
+            activeModuleId = fn.moduleId;
+            modBsb = bsbFromLenString(activeModuleId);
+        } else {
+            modBsb = bsbFromLenString("");
+        }
+
+        entityAcc = bsbJoin2(entityAcc, bsbJoin5(
+            modBsb,
             bsbFromInt(fn.argcMin),
             bsbFromInt(fn.argcMax),
             bsbFromInt(fn.code.size()),

@@ -148,7 +148,7 @@ if (doInvoke) {
     if (nextFrame != null) {
         task.framePool = nextFrame.previous;
     } else {
-        nextFrame = new StackFrame(null, 0, null, 0, 0, 0, null, null, false, null, false);
+        nextFrame = new StackFrame(null, 0, null, 0, 0, 0, null, null, false, null, false, null);
     }
     nextFrame.previous = frame;
     nextFrame.pc = fn.pc - 1;
@@ -160,6 +160,7 @@ if (doInvoke) {
     nextFrame.context = value;
     nextFrame.useContextAsReturnValue = overrideReturnValueWithContext;
     nextFrame.bubblingValue = null;
+    nextFrame.functionInfo = fn;
     // no need to set bubblingValueUncaught since it's only read when bubblingValue is set.
 
     frame = nextFrame;

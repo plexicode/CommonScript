@@ -40,7 +40,6 @@ namespace CommonScript.Runtime
             Dictionary<string, System.Func<object, object[], object>> extensions,
             IList<string> cliArgs)
         {
-
             int[] byteInts = executableBytes.Select(b => 0xFF & (int)b).ToArray();
             this.execContext = FunctionWrapper.PUBLIC_initializeExecutionContext(
                 byteInts,

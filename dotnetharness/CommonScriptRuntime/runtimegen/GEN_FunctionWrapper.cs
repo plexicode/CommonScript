@@ -489,7 +489,7 @@ namespace CommonScript.Runtime.Internal
                 argsClone[i] = args[i];
                 i += 1;
             }
-            StackFrame frame = new StackFrame(null, pc, argsClone, argc, 0, 0, new Dictionary<string, Value>(), context, false, null, false);
+            StackFrame frame = new StackFrame(null, pc, argsClone, argc, 0, 0, new Dictionary<string, Value>(), context, false, null, false, fp.func);
             ExecutionTask task = new ExecutionTask(ec.nextTaskId, ec, frame, false, 0, new Value[1], null, null);
             ec.nextTaskId += 1;
             ec.tasks[task.taskId] = task;
@@ -1813,11 +1813,21 @@ namespace CommonScript.Runtime.Internal
 
         public static System.Collections.Generic.List<FunctionInfo> ParseRaw_entitiesSection_parseFunctions(RawDataParser rdp, int fnCount, System.Collections.Generic.List<ByteCodeRow> byteCodeOut, bool isLambda)
         {
+            string activeModuleId = null;
             System.Collections.Generic.List<FunctionInfo> functions = new List<FunctionInfo>();
             functions.Add(null);
             int i = 0;
             while (i < fnCount)
             {
+                string moduleId = ParseRaw_popLenString(rdp);
+                if (moduleId == null)
+                {
+                    return null;
+                }
+                if (moduleId.Length > 0)
+                {
+                    activeModuleId = moduleId;
+                }
                 if (!ParseRaw_popInt(rdp))
                 {
                     return null;
@@ -1852,7 +1862,7 @@ namespace CommonScript.Runtime.Internal
                     return null;
                 }
                 int pc = byteCodeOut.Count;
-                FunctionInfo fn = new FunctionInfo(argcMin, argcMax, pc, null, fnName);
+                FunctionInfo fn = new FunctionInfo(argcMin, argcMax, pc, null, fnName, activeModuleId);
                 int j = 0;
                 while (j < codeLen)
                 {
@@ -2613,6 +2623,7 @@ namespace CommonScript.Runtime.Internal
             string str1 = null;
             string str2 = null;
             string name = null;
+            string strOut = null;
             double float1 = 0.0;
             double float2 = 0.0;
             double float3 = 0.0;
@@ -2646,6 +2657,8 @@ namespace CommonScript.Runtime.Internal
             System.Collections.Generic.Dictionary<string, Value> str2Val = null;
             System.Collections.Generic.Dictionary<int, int> switchIntLookup = null;
             System.Collections.Generic.Dictionary<string, int> switchStrLookup = null;
+            System.Collections.Generic.Dictionary<string, EmbeddedResource> resourceLookup = null;
+            EmbeddedResource resource = null;
             System.Collections.Generic.List<int> intList = null;
             System.Collections.Generic.List<Value> valueList = null;
             Value VALUE_TRUE = globalValues.trueValue;
@@ -4490,7 +4503,7 @@ namespace CommonScript.Runtime.Internal
                             }
                             else
                             {
-                                nextFrame = new StackFrame(null, 0, null, 0, 0, 0, null, null, false, null, false);
+                                nextFrame = new StackFrame(null, 0, null, 0, 0, 0, null, null, false, null, false, null);
                             }
                             nextFrame.previous = frame;
                             nextFrame.pc = fn.pc - 1;
@@ -4502,6 +4515,7 @@ namespace CommonScript.Runtime.Internal
                             nextFrame.context = value;
                             nextFrame.useContextAsReturnValue = overrideReturnValueWithContext;
                             nextFrame.bubblingValue = null;
+                            nextFrame.functionInfo = fn;
                             frame = nextFrame;
                             task.stack = frame;
                             pc = frame.pc;
@@ -4842,8 +4856,9 @@ namespace CommonScript.Runtime.Internal
                                 frame.pc = pc;
                                 frame.valueStackSize = valueStackSize;
                                 task.stack = frame;
-                                pc = ec.functions[classDef.staticCtorFuncId].pc - 1;
-                                frame = new StackFrame(frame, pc, new Value[0], 0, valueStackSize, valueStackSize, new Dictionary<string, Value>(), classDef.classRef, true, null, false);
+                                fn = ec.functions[classDef.staticCtorFuncId];
+                                pc = fn.pc - 1;
+                                frame = new StackFrame(frame, pc, new Value[0], 0, valueStackSize, valueStackSize, new Dictionary<string, Value>(), classDef.classRef, true, null, false, fn);
                                 locals = frame.locals;
                                 task.stack = frame;
                             }
@@ -5524,13 +5539,91 @@ namespace CommonScript.Runtime.Internal
                             case 27:
                                 valueStackSize -= 1;
                                 output = VALUE_NULL;
-                                // OOGA BOOGA;
+                                // res_list;
                                 break;
                             case 28:
-                                output = VALUE_NULL;
+                                str1 = frame.previous.functionInfo.moduleId;
+                                if (ec.embeddedResources.ContainsKey(str1))
+                                {
+                                    output = new Value(14, ec.embeddedResources[str1]);
+                                }
+                                else
+                                {
+                                    output = new Value(14, new Dictionary<string, EmbeddedResource>());
+                                }
                                 break;
                             case 29:
-                                output = VALUE_NULL;
+                                // res_read;
+                                valueStackSize -= 4;
+                                resourceLookup = (System.Collections.Generic.Dictionary<string, EmbeddedResource>)valueStack[valueStackSize].internalValue;
+                                str1 = stringUtil_getFlatValue(valueStack[valueStackSize + 1]);
+                                str2 = stringUtil_getFlatValue(valueStack[valueStackSize + 2]);
+                                listImpl1 = (ListImpl)valueStack[valueStackSize + 3].internalValue;
+                                if (!resourceLookup.ContainsKey(str1))
+                                {
+                                    output = buildString(globalValues, "Resource not found: " + str1, false);
+                                }
+                                else
+                                {
+                                    resource = resourceLookup[str1];
+                                    if (str2 == "Y")
+                                    {
+                                        strOut = null;
+                                        if (resource.type == 1)
+                                        {
+                                            strOut = "TEXT";
+                                        }
+                                        if (resource.type == 3)
+                                        {
+                                            strOut = "IMAGE";
+                                        }
+                                        if (resource.type == 2)
+                                        {
+                                            strOut = "BINARY";
+                                        }
+                                        List_add(listImpl1, buildString(globalValues, strOut, true));
+                                        output = VALUE_NULL;
+                                    }
+                                    else if (str2 == "T")
+                                    {
+                                        if (resource.type == 1)
+                                        {
+                                            List_add(listImpl1, buildString(globalValues, (string)resource.payload, false));
+                                            output = VALUE_NULL;
+                                        }
+                                        else
+                                        {
+                                            output = buildString(globalValues, "Resource is not a text file: " + str1, false);
+                                        }
+                                    }
+                                    else if (str2 == "B")
+                                    {
+                                        if (resource.type == 2)
+                                        {
+                                            intArray1 = (int[])resource.payload;
+                                            sz = intArray1.Length;
+                                            i = 0;
+                                            while (i < sz)
+                                            {
+                                                List_add(listImpl1, globalValues.posIntegers[intArray1[i]]);
+                                                i += 1;
+                                            }
+                                            output = VALUE_NULL;
+                                        }
+                                        else if (resource.type == 3)
+                                        {
+                                            output = buildString(globalValues, "Resource is an image and is not available as raw binary data: " + str1, false);
+                                        }
+                                    }
+                                    else if (str2 == "I")
+                                    {
+                                        output = buildString(globalValues, "NOT IMPLEMENTED: image resource loading: " + str1, false);
+                                    }
+                                    else
+                                    {
+                                        output = buildString(globalValues, "ERR", false);
+                                    }
+                                }
                                 break;
                             case 3:
                                 valueStackSize -= 1;
@@ -6296,7 +6389,7 @@ namespace CommonScript.Runtime.Internal
             Value[] args = new Value[2];
             args[0] = buildInteger(g, errId);
             args[1] = buildString(g, msg, false);
-            task.stack = new StackFrame(frame, throwFunc.pc, args, 2, frame.valueStackSize, frame.valueStackSize, new Dictionary<string, Value>(), null, false, null, false);
+            task.stack = new StackFrame(frame, throwFunc.pc, args, 2, frame.valueStackSize, frame.valueStackSize, new Dictionary<string, Value>(), null, false, null, false, throwFunc);
             return new ExecutionResult(5, task, 0, null, null);
         }
 

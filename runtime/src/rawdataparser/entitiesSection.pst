@@ -33,9 +33,13 @@ List<FunctionInfo> ParseRaw_entitiesSection_parseFunctions(
     List<ByteCodeRow> byteCodeOut,
     bool isLambda) {
 
+    string activeModuleId = null;
     List<FunctionInfo> functions = new List<FunctionInfo>();
     functions.add(null);
     for (int i = 0; i < fnCount; i += 1) {
+        string moduleId = ParseRaw_popLenString(rdp);
+        if (moduleId == null) return null;
+        if (moduleId.size() > 0) activeModuleId = moduleId;
         if (!ParseRaw_popInt(rdp)) return null;
         int argcMin = rdp.intOut;
         if (!ParseRaw_popInt(rdp)) return null;
@@ -53,7 +57,7 @@ List<FunctionInfo> ParseRaw_entitiesSection_parseFunctions(
         Array<ByteCodeRow> byteCode = ParseRaw_popByteCodeRows(rdp, codeLen);
         if (byteCode == null) return null;
         int pc = byteCodeOut.size();
-        FunctionInfo fn = new FunctionInfo(argcMin, argcMax, pc, null, fnName);
+        FunctionInfo fn = new FunctionInfo(argcMin, argcMax, pc, null, fnName, activeModuleId);
         for (int j = 0; j < codeLen; j += 1) {
             byteCodeOut.add(byteCode[j]);
         }

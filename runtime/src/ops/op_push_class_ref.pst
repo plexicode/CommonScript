@@ -11,7 +11,8 @@ if (classDef.staticInitialized) {
         // will push the class reference upon return, so you don't want to run 
         // this instruction again the first time you encounter the static constructor.
         @import("macros/saveframe.pst");
-        pc = ec.functions[classDef.staticCtorFuncId].pc - 1;
+        fn = ec.functions[classDef.staticCtorFuncId];
+        pc = fn.pc - 1;
         frame = new StackFrame(
             frame,
             pc,
@@ -23,8 +24,8 @@ if (classDef.staticInitialized) {
             classDef.classRef,
             true,
             null,
-            false
-        );
+            false, 
+            fn);
         locals = frame.locals;
         task.stack = frame;
     } else {

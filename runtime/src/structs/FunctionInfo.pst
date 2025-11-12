@@ -4,4 +4,5 @@ struct FunctionInfo {
     int pc;
     ClassInfo classParent;
     string name;
+    string moduleId;
 }

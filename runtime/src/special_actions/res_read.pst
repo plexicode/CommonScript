@@ -1,2 +1,45 @@
-// valueStackSize -= 4;
-output = VALUE_NULL;
+// TODO: move the bulk of this into a helper function as this has incurred a few
+// new local variables in the main interpreter function.
+
+Pastel.emitComment("res_read");
+valueStackSize -= 4;
+resourceLookup = (Dictionary<string, EmbeddedResource>) valueStack[valueStackSize].internalValue;
+str1 = stringUtil_getFlatValue(valueStack[valueStackSize + 1]);
+str2 = stringUtil_getFlatValue(valueStack[valueStackSize + 2]);
+listImpl1 = (ListImpl) valueStack[valueStackSize + 3].internalValue;
+
+if (!resourceLookup.contains(str1)) {
+    output = buildString(globalValues, "Resource not found: " + str1, false);
+} else {
+    resource = resourceLookup[str1];
+    if (str2 == "Y") {
+        strOut = null;
+        if (resource.type == EmbeddedResourceType.TEXT) strOut = "TEXT";
+        if (resource.type == EmbeddedResourceType.IMAGE) strOut = "IMAGE";
+        if (resource.type == EmbeddedResourceType.BINARY) strOut = "BINARY";
+        List_add(listImpl1, buildString(globalValues, strOut, true));
+        output = VALUE_NULL;
+    } else if (str2 == "T") {
+        if (resource.type == EmbeddedResourceType.TEXT) {
+            List_add(listImpl1, buildString(globalValues, (string) resource.payload, false));
+            output = VALUE_NULL;
+        } else {
+            output = buildString(globalValues, "Resource is not a text file: " + str1, false);
+        }
+    } else if (str2 == "B") {
+        if (resource.type == EmbeddedResourceType.BINARY) {
+            intArray1 = (int[]) resource.payload;
+            sz = intArray1.size();
+            for (i = 0; i < sz; i += 1) {
+                List_add(listImpl1, globalValues.posIntegers[intArray1[i]]);
+            }
+            output = VALUE_NULL;
+        } else if (resource.type == EmbeddedResourceType.IMAGE) {
+            output = buildString(globalValues, "Resource is an image and is not available as raw binary data: " + str1, false);
+        }
+    } else if (str2 == "I") {
+        output = buildString(globalValues, "NOT IMPLEMENTED: image resource loading: " + str1, false);
+    } else {
+        output = buildString(globalValues, "ERR", false);
+    }
+}

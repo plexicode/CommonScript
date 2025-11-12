@@ -56,7 +56,8 @@ ExecutionTask createNewTask(ExecutionContext ec, Value fpValue, Array<Value> arg
         context,
         false,
         null,
-        false
+        false, 
+        fp.func
     );
 
     ExecutionTask task = new ExecutionTask(

@@ -16,12 +16,15 @@ CompilationBundle bundleCompilation(StaticContext staticCtx, string rootId, Arra
     List<FieldEntity> fields = new List<FieldEntity>();
     List<FunctionEntity> lambdas = new List<FunctionEntity>();
     FunctionEntity mainFunc = null;
-    
+
     for (i = 0; i < deterministicOrder.size(); i += 1) {
         CompiledModule m = deterministicOrder[i];
 
         bundle.embeddedResources[m.id] = m.embeddedResources;
 
+        // TODO: Sort primarily by module ID, THEN by arbitrary deterministic (lexical) order.
+        // The serializer will now include which module the function is located in if
+        // it's different than the previous function in the bundle.
         Array<string> deterministicKeyOrder = Sorting.getLexicalSortedCopy(m.flattenedEntities.keys());
 
         // If deferring main to an included module, that would go here.
@@ -146,8 +149,6 @@ CompilationBundle bundleCompilation(StaticContext staticCtx, string rootId, Arra
 
     bundle.mainFunctionId = mainFunc.baseData.serializationIndex;
     bundle.builtInCount = coreBuiltInFunctions.size();
-    
-    
 
     return bundle;
 }

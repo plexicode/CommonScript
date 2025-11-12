@@ -1,2 +1,7 @@
-// valueStackSize -= 0;
-output = VALUE_NULL;
+str1 = frame.previous.functionInfo.moduleId;
+if (ec.embeddedResources.contains(str1)) {
+    output = new Value(Type.NATIVE_HANDLE, ec.embeddedResources[str1]);
+} else {
+    output = new Value(Type.NATIVE_HANDLE, new Dictionary<string, EmbeddedResource>());
+}
+

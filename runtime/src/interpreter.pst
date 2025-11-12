@@ -25,7 +25,8 @@ ExecutionResult ThrowErrorImpl(ExecutionTask task, int errId, string msg) {
         null,
         false,
         null,
-        false);
+        false, 
+        throwFunc);
 
     return new ExecutionResult(
         ExecutionResultType.THROW_REINVOKE,
@@ -105,6 +106,7 @@ ExecutionResult RunInterpreterImpl(ExecutionTask task) {
     string str1 = null;
     string str2 = null;
     string name = null;
+    string strOut = null;
     double float1 = 0.0;
     double float2 = 0.0;
     double float3 = 0.0;
@@ -142,6 +144,8 @@ ExecutionResult RunInterpreterImpl(ExecutionTask task) {
     Dictionary<string, Value> str2Val = null;
     Dictionary<int, int> switchIntLookup = null;
     Dictionary<string, int> switchStrLookup = null;
+    Dictionary<string, EmbeddedResource> resourceLookup = null;
+    EmbeddedResource resource = null;
     List<int> intList = null;
     List<Value> valueList = null;
 
