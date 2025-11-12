@@ -1,7 +1,9 @@
 // TODO: remove some of the minifier artifacts from this code and create a true minifier.
 
 class ResourceModule {
+    // @internal
     field _h;
+
     // @private 
     constructor(h) {
         this._h = h;
@@ -38,7 +40,7 @@ function _baseRead(m, p, t) {
 }
 
 @public function listAllResources(module) {
-    return $res_list(module);
+    return $res_list(module._h);
 }
 
 @public function getResourceType(module, path) {

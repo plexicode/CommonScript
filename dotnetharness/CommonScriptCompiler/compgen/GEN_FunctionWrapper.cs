@@ -3928,7 +3928,7 @@ namespace CommonScript.Compiler.Internal
 
         public static string GEN_BUILTINS_resources()
         {
-            return "class ResourceModule {\nfield _h;\nconstructor(h) {\nthis._h = h;\n}\n}\nclass Resource@6 {\nconstructor(m) : base(m) { }\n}\n@5getCurrentResourceModule() {\nh = $res_mod_parent();\n@4new ResourceModule(h);\n}\n@1_baseRead(m, p, t) {\nb = [];\ne = $res_read(m._h, '' + p, t, b);\nif (e != null) throw new ResourceException(e);\n@4b;\n}\n@5readTextResourceAsString(module, path) {\n@4_baseRead(module, path, 'T')[0];\n}\n@5readBinaryResourceAsBytes(module, path) {\n@4_baseRead(module, path, 'B');\n}\n@5readImageResource(module, path) {\nthrow new NotImplementedException();\n}\n@5listAllResources(module) {\n@4$res_list(module);\n}\n@5getResourceType(module, path) {\n@4_baseRead(module, path, 'Y')[0];\n}";
+            return "class ResourceModule {\nfield _h;\nconstructor(h) {\nthis._h = h;\n}\n}\nclass Resource@6 {\nconstructor(m) : base(m) { }\n}\n@5getCurrentResourceModule() {\nh = $res_mod_parent();\n@4new ResourceModule(h);\n}\n@1_baseRead(m, p, t) {\nb = [];\ne = $res_read(m._h, '' + p, t, b);\nif (e != null) throw new ResourceException(e);\n@4b;\n}\n@5readTextResourceAsString(module, path) {\n@4_baseRead(module, path, 'T')[0];\n}\n@5readBinaryResourceAsBytes(module, path) {\n@4_baseRead(module, path, 'B');\n}\n@5readImageResource(module, path) {\nthrow new NotImplementedException();\n}\n@5listAllResources(module) {\n@4$res_list(module._h);\n}\n@5getResourceType(module, path) {\n@4_baseRead(module, path, 'Y')[0];\n}";
         }
 
         public static string GEN_BUILTINS_textencoding()

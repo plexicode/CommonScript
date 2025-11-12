@@ -1,4 +1,4 @@
-valueStackSize -= 1;
-output = VALUE_NULL;
-
 Pastel.emitComment("res_list");
+valueStackSize -= 1;
+resourceLookup = (Dictionary<string, EmbeddedResource>) valueStack[valueStackSize].internalValue;
+output = buildListFromStringArray(ec, Sorting.getLexicalSortedCopy(resourceLookup.keys()));

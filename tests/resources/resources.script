@@ -7,5 +7,10 @@ function main(args) {
     t = resources.readTextResourceAsString(mod, 'textfile1.txt');
     assertStrEqual(t.trim(), "I am a text file.");
 
+    arr = resources.listAllResources(mod);
+    assertStrEqual(
+        arr.join("|"), 
+        "files/testfile2.txt|resources.config|textfile1.txt");
+
     print("ALL DONE");
 }

@@ -324,6 +324,18 @@ namespace CommonScript.Runtime.Internal
             return new Value(9, new ListImpl(id, size, size, values));
         }
 
+        public static Value buildListFromStringArray(ExecutionContext ec, string[] arr)
+        {
+            Value[] valArr = new Value[arr.Length];
+            int i = 0;
+            while (i < arr.Length)
+            {
+                valArr[i] = buildString(ec.globalValues, arr[i], false);
+                i += 1;
+            }
+            return buildList(ec, valArr, false, -1);
+        }
+
         public static Value buildString(GlobalValues g, string rawValue, bool isCommon)
         {
             if (g.commonStrings.ContainsKey(rawValue))
@@ -5537,9 +5549,10 @@ namespace CommonScript.Runtime.Internal
                                 output = buildFloat(PST_Random.NextDouble());
                                 break;
                             case 27:
-                                valueStackSize -= 1;
-                                output = VALUE_NULL;
                                 // res_list;
+                                valueStackSize -= 1;
+                                resourceLookup = (System.Collections.Generic.Dictionary<string, EmbeddedResource>)valueStack[valueStackSize].internalValue;
+                                output = buildListFromStringArray(ec, resourceLookup.Keys.ToArray().OrderBy<string, string>(_PST_GEN_arg => _PST_GEN_arg).ToArray());
                                 break;
                             case 28:
                                 str1 = frame.previous.functionInfo.moduleId;

@@ -152,6 +152,14 @@ void stringFlatten(StringImpl s) {
     s.uChars = ucharsBuilder;
 }
 
+Value buildListFromStringArray(ExecutionContext ec, string[] arr) {
+    Value[] valArr = new Value[arr.size()];
+    for (int i = 0; i < arr.size(); i += 1) {
+        valArr[i] = buildString(ec.globalValues, arr[i], false);
+    }
+    return buildList(ec, valArr, false, -1);
+}
+
 Array<Value> stringUtil_split(GlobalValues g, Value str, string sep) {
     StringImpl si = (StringImpl) str.internalValue;
     if (si.isBuilder) stringFlatten(si);
