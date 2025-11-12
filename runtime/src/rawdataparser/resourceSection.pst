@@ -1,0 +1,43 @@
+Dictionary<string, Dictionary<string, EmbeddedResource>> ParseRaw_parseResourceData(RawDataParser rdp) {
+    Dictionary<string, Dictionary<string, EmbeddedResource>> output = new Dictionary<string, Dictionary<string, EmbeddedResource>>();
+    if (!ParseRaw_popInt(rdp)) return null;
+    int moduleCount = rdp.intOut;
+    while (moduleCount > 0) {
+        moduleCount -= 1;
+        string moduleId = ParseRaw_popLenString(rdp);
+        output[moduleId] = new Dictionary<string, EmbeddedResource>();
+        if (moduleId == null) return null;
+        if (!ParseRaw_popInt(rdp)) return null;
+        int resCount = rdp.intOut;
+        while (resCount > 0) {
+            resCount -= 1;
+            string path = ParseRaw_popLenString(rdp);
+            int resType = ParseRaw_popSingleByte(rdp, -1);
+            EmbeddedResource res = new EmbeddedResource(moduleId, path, EmbeddedResourceType.UNKNOWN, null, EmbeddedResourceState.UNKNOWN);
+            if (resType == 1) {
+                string text = ParseRaw_popLenString(rdp);
+                if (text == null) return null;
+                res.payload = text;
+                res.type = EmbeddedResourceType.TEXT;
+                res.currentState = EmbeddedResourceState.READY;
+            } else if (resType == 2) {
+                if (!ParseRaw_popInt(rdp)) return null;
+                int byteLen = rdp.intOut;
+                int[] bytes = ParseRaw_popBytes(rdp, byteLen);
+                if (bytes == null) return null;
+                res.payload = bytes;
+                res.type = EmbeddedResourceType.BINARY;
+                res.currentState = EmbeddedResourceState.READY;
+            } else if (resType == 3) {
+                fail("TODO: image resources.");
+                res.payload = null;
+                res.type = EmbeddedResourceType.IMAGE;
+                res.currentState = EmbeddedResourceState.IMAGE_RAW_BYTES;
+            } else {
+                return null;
+            }
+            output[moduleId][path] = res;
+        }
+    }
+    return output;
+}

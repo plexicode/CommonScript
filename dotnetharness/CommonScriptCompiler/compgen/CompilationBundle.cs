@@ -13,8 +13,9 @@ namespace CommonScript.Compiler.Internal
         public Token[] tokensById;
         public int mainFunctionId;
         public int builtInCount;
+        public System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, ModuleResource>> embeddedResources;
 
-        public CompilationBundle(string[] stringById, System.Collections.Generic.List<ByteCodeRow[]> byteCodeById, System.Collections.Generic.List<BundleFunctionInfo> functionById, System.Collections.Generic.List<BundleFunctionInfo> lambdaById, System.Collections.Generic.List<BundleClassInfo> classById, System.Collections.Generic.List<BundleEnumInfo> enumById, Token[] tokensById, int mainFunctionId, int builtInCount)
+        public CompilationBundle(string[] stringById, System.Collections.Generic.List<ByteCodeRow[]> byteCodeById, System.Collections.Generic.List<BundleFunctionInfo> functionById, System.Collections.Generic.List<BundleFunctionInfo> lambdaById, System.Collections.Generic.List<BundleClassInfo> classById, System.Collections.Generic.List<BundleEnumInfo> enumById, Token[] tokensById, int mainFunctionId, int builtInCount, System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, ModuleResource>> embeddedResources)
         {
             this.stringById = stringById;
             this.byteCodeById = byteCodeById;
@@ -25,6 +26,7 @@ namespace CommonScript.Compiler.Internal
             this.tokensById = tokensById;
             this.mainFunctionId = mainFunctionId;
             this.builtInCount = builtInCount;
+            this.embeddedResources = embeddedResources;
         }
     }
 }

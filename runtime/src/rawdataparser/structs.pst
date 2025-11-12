@@ -16,3 +16,4 @@ struct RawData_Entities {
     List<EnumInfo> enumsById;
     List<ClassInfo> classesById;
 }
+

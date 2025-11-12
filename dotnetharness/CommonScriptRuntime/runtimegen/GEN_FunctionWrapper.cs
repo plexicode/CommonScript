@@ -1518,7 +1518,7 @@ namespace CommonScript.Runtime.Internal
 
         public static ExecutionContext new_ExecutionContext(int[] rawBytes, System.Collections.Generic.Dictionary<string, System.Func<object, object[], object>> extensions, object appCtx, System.Func<object, object> onLastTaskComplete)
         {
-            ExecutionContext ec = new ExecutionContext(null, new_GlobalValues(), extensions, new Dictionary<string, int>(), null, null, null, null, null, null, null, null, null, null, null, null, null, null, 1, 1, new Dictionary<int, ExecutionTask>(), appCtx, onLastTaskComplete);
+            ExecutionContext ec = new ExecutionContext(null, new_GlobalValues(), null, extensions, new Dictionary<string, int>(), null, null, null, null, null, null, null, null, null, null, null, null, null, null, 1, 1, new Dictionary<int, ExecutionTask>(), appCtx, onLastTaskComplete);
             string err = ParseRawData(rawBytes, ec);
             if (err == null)
             {
@@ -1930,6 +1930,78 @@ namespace CommonScript.Runtime.Internal
             return new RawData_Metadata(mainFn, builtinCount);
         }
 
+        public static System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, EmbeddedResource>> ParseRaw_parseResourceData(RawDataParser rdp)
+        {
+            System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, EmbeddedResource>> output = new Dictionary<string, System.Collections.Generic.Dictionary<string, EmbeddedResource>>();
+            if (!ParseRaw_popInt(rdp))
+            {
+                return null;
+            }
+            int moduleCount = rdp.intOut;
+            while (moduleCount > 0)
+            {
+                moduleCount -= 1;
+                string moduleId = ParseRaw_popLenString(rdp);
+                output[moduleId] = new Dictionary<string, EmbeddedResource>();
+                if (moduleId == null)
+                {
+                    return null;
+                }
+                if (!ParseRaw_popInt(rdp))
+                {
+                    return null;
+                }
+                int resCount = rdp.intOut;
+                while (resCount > 0)
+                {
+                    resCount -= 1;
+                    string path = ParseRaw_popLenString(rdp);
+                    int resType = ParseRaw_popSingleByte(rdp, -1);
+                    EmbeddedResource res = new EmbeddedResource(moduleId, path, 0, null, 0);
+                    if (resType == 1)
+                    {
+                        string text = ParseRaw_popLenString(rdp);
+                        if (text == null)
+                        {
+                            return null;
+                        }
+                        res.payload = text;
+                        res.type = 1;
+                        res.currentState = 1;
+                    }
+                    else if (resType == 2)
+                    {
+                        if (!ParseRaw_popInt(rdp))
+                        {
+                            return null;
+                        }
+                        int byteLen = rdp.intOut;
+                        int[] bytes = ParseRaw_popBytes(rdp, byteLen);
+                        if (bytes == null)
+                        {
+                            return null;
+                        }
+                        res.payload = bytes;
+                        res.type = 2;
+                        res.currentState = 1;
+                    }
+                    else if (resType == 3)
+                    {
+                        fail("TODO: image resources.");
+                        res.payload = null;
+                        res.type = 3;
+                        res.currentState = 2;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                    output[moduleId][path] = res;
+                }
+            }
+            return output;
+        }
+
         public static string[] ParseRaw_parseStringData(RawDataParser rdp)
         {
             if (!ParseRaw_popInt(rdp))
@@ -2187,6 +2259,7 @@ namespace CommonScript.Runtime.Internal
             string[] stringById = null;
             Token[] tokensById = null;
             RawData_Entities ent = null;
+            System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, EmbeddedResource>> resourcesByPathByModuleId = null;
             System.Collections.Generic.List<ByteCodeRow> byteCodeAcc = new List<ByteCodeRow>();
             while (rdp.index < rdp.length)
             {
@@ -2243,6 +2316,18 @@ namespace CommonScript.Runtime.Internal
                         return null;
                     }
                 }
+                else if (chunkType == "RSC")
+                {
+                    if (resourcesByPathByModuleId != null)
+                    {
+                        return null;
+                    }
+                    resourcesByPathByModuleId = ParseRaw_parseResourceData(rdp);
+                    if (resourcesByPathByModuleId == null)
+                    {
+                        return null;
+                    }
+                }
                 else
                 {
                     return null;
@@ -2259,6 +2344,7 @@ namespace CommonScript.Runtime.Internal
             ec.byteCode = byteCodeAcc.ToArray();
             ec.tokensById = tokensById;
             ec.stringsById = stringById;
+            ec.embeddedResources = resourcesByPathByModuleId;
             ec.significantFunctions["main"] = mtd.mainFunctionId;
             int i = 1;
             while (i <= mtd.builtinCount)
@@ -5438,6 +5524,7 @@ namespace CommonScript.Runtime.Internal
                             case 27:
                                 valueStackSize -= 1;
                                 output = VALUE_NULL;
+                                // OOGA BOOGA;
                                 break;
                             case 28:
                                 output = VALUE_NULL;

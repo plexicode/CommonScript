@@ -1,6 +1,7 @@
 struct ExecutionContext {
     string errMsg;
     GlobalValues globalValues;
+    Dictionary<string, Dictionary<string, EmbeddedResource>> embeddedResources;
     Dictionary<string, Func<object, object, Array<object>>> extensions;
     Dictionary<string, int> significantFunctions;
     Array<FunctionInfo> functions;
@@ -33,6 +34,7 @@ ExecutionContext new_ExecutionContext(
     ExecutionContext ec = new ExecutionContext(
         null,
         new_GlobalValues(),
+        null, // embedded resources
         extensions,
         new Dictionary<string, int>(),
         null, // functions

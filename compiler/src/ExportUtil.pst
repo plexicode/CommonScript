@@ -170,10 +170,51 @@ Array<int> ExportUtil_exportBundle(string flavorId, string extVersionId, Compila
 
     ByteStringBuilder entityData = bsbJoin2(entityHeader, entityAcc);
 
-    ByteStringBuilder full = bsbJoin5(
-        header, metadata, stringData, tokenData, entityData);
+    ByteStringBuilder resourceData = ExportUtil_exportEmbeddedResources(bundle.embeddedResources);
+
+    ByteStringBuilder full = bsbJoin6(
+        header, metadata, stringData, tokenData, entityData, resourceData);
 
     return bsbFlatten(full);
+}
+
+ByteStringBuilder ExportUtil_exportEmbeddedResources(Dictionary<string, Dictionary<string, ModuleResource>> resources) {
+
+    int i = 0;
+    int j = 0;
+
+    ByteStringBuilder resourceData = bsbJoin2(
+        bsbFromUtf8String("RSC"),
+        bsbFromInt(resources.size())
+    );
+    string[] moduleIds = resources.keys();
+    moduleIds = Sorting.getLexicalSortedCopy(moduleIds);
+    for (i = 0; i < moduleIds.size(); i += 1) {
+        string moduleId = moduleIds[i];
+        Dictionary<string, ModuleResource> moduleResources = resources[moduleId];
+        resourceData = bsbJoin3(resourceData, bsbFromLenString(moduleId), bsbFromInt(moduleResources.size()));
+        string[] resourcePaths = Sorting.getLexicalSortedCopy(moduleResources.keys());
+        for (j = 0; j < resourcePaths.size(); j += 1) {
+            string path = resourcePaths[j];
+            ModuleResource resource = moduleResources[path];
+            int resType = 0;
+            ByteStringBuilder resPayload = null;
+            if (resource.textPayload != null) {
+                resType = 1;
+                resPayload = bsbFromLenString(resource.textPayload);
+            } else if (resource.binaryPayload != null) {
+                resType = 2;
+                resPayload = bsbFromInt(resource.binaryPayload.size());
+                fail("TODO: push all bytes.");
+            } else if (resource.imagePayload != null) {
+                fail("TODO: images");
+            } else {
+                fail("Unknown resource type.");
+            }
+            resourceData = bsbJoin4(resourceData, bsbFromLenString(path), bsbFromSingleByte(resType), resPayload);
+        }
+    }
+    return resourceData;
 }
 
 ByteStringBuilder ExportUtil_exportCode(Array<ByteCodeRow> rows) {

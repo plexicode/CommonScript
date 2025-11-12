@@ -369,6 +369,13 @@ namespace CommonScript.Compiler.Internal
             return bsbJoin2(bsbFromInt(payload.length), payload);
         }
 
+        public static ByteStringBuilder bsbFromSingleByte(int val)
+        {
+            int[] arr = new int[1];
+            arr[0] = val;
+            return bsbFromBytes(arr);
+        }
+
         public static ByteStringBuilder bsbFromUtf8String(string value)
         {
             int[] bytes = PST_stringToUtf8Bytes(value);
@@ -401,6 +408,11 @@ namespace CommonScript.Compiler.Internal
         public static ByteStringBuilder bsbJoin5(ByteStringBuilder a, ByteStringBuilder b, ByteStringBuilder c, ByteStringBuilder d, ByteStringBuilder e)
         {
             return bsbJoin3(bsbJoin2(a, b), bsbJoin2(c, d), e);
+        }
+
+        public static ByteStringBuilder bsbJoin6(ByteStringBuilder a, ByteStringBuilder b, ByteStringBuilder c, ByteStringBuilder d, ByteStringBuilder e, ByteStringBuilder f)
+        {
+            return bsbJoin2(bsbJoin2(bsbJoin2(a, b), bsbJoin2(c, d)), bsbJoin2(e, f));
         }
 
         public static ByteStringBuilder bsbJoin8(ByteStringBuilder a, ByteStringBuilder b, ByteStringBuilder c, ByteStringBuilder d, ByteStringBuilder e, ByteStringBuilder f, ByteStringBuilder g, ByteStringBuilder h)
@@ -482,6 +494,7 @@ namespace CommonScript.Compiler.Internal
             while (i < deterministicOrder.Length)
             {
                 CompiledModule m = deterministicOrder[i];
+                bundle.embeddedResources[m.id] = m.embeddedResources;
                 string[] deterministicKeyOrder = m.flattenedEntities.Keys.ToArray().OrderBy<string, string>(_PST_GEN_arg => _PST_GEN_arg).ToArray();
                 bool checkForMain = m.id == rootId;
                 System.Collections.Generic.List<AbstractEntity> orderedEntities = new List<AbstractEntity>();
@@ -672,6 +685,7 @@ namespace CommonScript.Compiler.Internal
         public static void bundleFunction(StaticContext staticCtx, FunctionEntity entity, CompilationBundle bundle)
         {
             int i = 0;
+            string modId = entity.baseData.fileContext.compiledModule.id;
             bool isLambda = entity.baseData.type == 10;
             ByteCodeBuffer buffer = null;
             int argc = entity.argTokens.Length;
@@ -733,7 +747,7 @@ namespace CommonScript.Compiler.Internal
             {
                 fnName = entity.baseData.simpleName;
             }
-            BundleFunctionInfo fd = BundleFunctionInfo_new(byteCodeFinal, argcMin, argc, fnName);
+            BundleFunctionInfo fd = BundleFunctionInfo_new(byteCodeFinal, argcMin, argc, fnName, modId);
             if (isLambda)
             {
                 bundle.lambdaById.Add(fd);
@@ -744,9 +758,9 @@ namespace CommonScript.Compiler.Internal
             }
         }
 
-        public static BundleFunctionInfo BundleFunctionInfo_new(System.Collections.Generic.List<ByteCodeRow> code, int argcMin, int argcMax, string name)
+        public static BundleFunctionInfo BundleFunctionInfo_new(System.Collections.Generic.List<ByteCodeRow> code, int argcMin, int argcMax, string name, string moduleId)
         {
-            return new BundleFunctionInfo(code.ToArray(), argcMin, argcMax, name);
+            return new BundleFunctionInfo(code.ToArray(), argcMin, argcMax, name, moduleId);
         }
 
         public static ByteCodeBuffer ByteCodeBuffer_from2(ByteCodeBuffer left, ByteCodeBuffer right)
@@ -879,7 +893,7 @@ namespace CommonScript.Compiler.Internal
 
         public static CompilationBundle CompilationBundle_new()
         {
-            CompilationBundle b = new CompilationBundle(null, null, null, null, null, null, null, 0, 0);
+            CompilationBundle b = new CompilationBundle(null, null, null, null, null, null, null, 0, 0, new Dictionary<string, System.Collections.Generic.Dictionary<string, ModuleResource>>());
             b.byteCodeById = new List<ByteCodeRow[]>();
             b.byteCodeById.Add(null);
             b.functionById = new List<BundleFunctionInfo>();
@@ -936,7 +950,7 @@ namespace CommonScript.Compiler.Internal
 
         public static CompiledModule CompiledModule_new(string id)
         {
-            return new CompiledModule(id, new Dictionary<string, string>(), null, null, null, null);
+            return new CompiledModule(id, new Dictionary<string, string>(), null, null, null, null, new Dictionary<string, ModuleResource>());
         }
 
         public static AbstractEntity CompiledModuleEntityLookup(CompiledModule mod, string fqName)
@@ -1657,7 +1671,8 @@ namespace CommonScript.Compiler.Internal
             }
             ByteStringBuilder entityHeader = bsbJoin5(bsbFromUtf8String("ENT"), bsbFromInt(bundle.functionById.Count - 1), bsbFromInt(bundle.enumById.Count - 1), bsbFromInt(bundle.classById.Count - 1), bsbFromInt(bundle.lambdaById.Count - 1));
             ByteStringBuilder entityData = bsbJoin2(entityHeader, entityAcc);
-            ByteStringBuilder full = bsbJoin5(header, metadata, stringData, tokenData, entityData);
+            ByteStringBuilder resourceData = ExportUtil_exportEmbeddedResources(bundle.embeddedResources);
+            ByteStringBuilder full = bsbJoin6(header, metadata, stringData, tokenData, entityData, resourceData);
             return bsbFlatten(full);
         }
 
@@ -1694,6 +1709,54 @@ namespace CommonScript.Compiler.Internal
                 i += 1;
             }
             return bsb;
+        }
+
+        public static ByteStringBuilder ExportUtil_exportEmbeddedResources(System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, ModuleResource>> resources)
+        {
+            int i = 0;
+            int j = 0;
+            ByteStringBuilder resourceData = bsbJoin2(bsbFromUtf8String("RSC"), bsbFromInt(resources.Count));
+            string[] moduleIds = resources.Keys.ToArray();
+            moduleIds = moduleIds.OrderBy<string, string>(_PST_GEN_arg => _PST_GEN_arg).ToArray();
+            i = 0;
+            while (i < moduleIds.Length)
+            {
+                string moduleId = moduleIds[i];
+                System.Collections.Generic.Dictionary<string, ModuleResource> moduleResources = resources[moduleId];
+                resourceData = bsbJoin3(resourceData, bsbFromLenString(moduleId), bsbFromInt(moduleResources.Count));
+                string[] resourcePaths = moduleResources.Keys.ToArray().OrderBy<string, string>(_PST_GEN_arg => _PST_GEN_arg).ToArray();
+                j = 0;
+                while (j < resourcePaths.Length)
+                {
+                    string path = resourcePaths[j];
+                    ModuleResource resource = moduleResources[path];
+                    int resType = 0;
+                    ByteStringBuilder resPayload = null;
+                    if (resource.textPayload != null)
+                    {
+                        resType = 1;
+                        resPayload = bsbFromLenString(resource.textPayload);
+                    }
+                    else if (resource.binaryPayload != null)
+                    {
+                        resType = 2;
+                        resPayload = bsbFromInt(resource.binaryPayload.Length);
+                        fail("TODO: push all bytes.");
+                    }
+                    else if (resource.imagePayload != null)
+                    {
+                        fail("TODO: images");
+                    }
+                    else
+                    {
+                        fail("Unknown resource type.");
+                    }
+                    resourceData = bsbJoin4(resourceData, bsbFromLenString(path), bsbFromSingleByte(resType), resPayload);
+                    j += 1;
+                }
+                i += 1;
+            }
+            return resourceData;
         }
 
         public static Expression Expression_cloneWithNewToken(Token token, Expression expr)
@@ -5471,6 +5534,16 @@ namespace CommonScript.Compiler.Internal
                 string moduleId = moduleCompilationOrder[i];
                 CompiledModule module = CompilerContext_CompileModule(compiler, moduleId);
                 compiler.compiledModulesById[moduleId] = module;
+                System.Collections.Generic.Dictionary<string, ModuleResource> resLookup = new Dictionary<string, ModuleResource>();
+                System.Collections.Generic.List<ModuleResource> flatResourceList = compiler.resourcesByModuleId[moduleId];
+                int j = 0;
+                while (j < flatResourceList.Count)
+                {
+                    ModuleResource res = flatResourceList[j];
+                    resLookup[res.path] = res;
+                    j += 1;
+                }
+                module.embeddedResources = resLookup;
                 i += 1;
             }
             CompiledModule[] modules = compiler.compiledModulesById.Values.ToArray();

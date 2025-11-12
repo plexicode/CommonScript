@@ -1,6 +1,7 @@
 @import("structs/ByteCodeRow.pst");
 @import("structs/ClassInfo.pst");
 @import("structs/DictImpl.pst");
+@import("structs/EmbeddedResource.pst");
 @import("structs/ExecutionContext.pst");
 @import("structs/ExecutionResult.pst");
 @import("structs/ExecutionTask.pst");
@@ -24,6 +25,7 @@
 @import("rawdataparser/entitiesSection.pst");
 @import("rawdataparser/metadataSection.pst");
 @import("rawdataparser/parse.pst");
+@import("rawdataparser/resourceSection.pst");
 @import("rawdataparser/stringSection.pst");
 @import("rawdataparser/tokenSection.pst");
 

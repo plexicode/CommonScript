@@ -8,6 +8,7 @@ struct CompilationBundle {
     Array<Token> tokensById;
     int mainFunctionId;
     int builtInCount;
+    Dictionary<string, Dictionary<string, ModuleResource>> embeddedResources;
 }
 
 CompilationBundle CompilationBundle_new() {
@@ -21,7 +22,8 @@ CompilationBundle CompilationBundle_new() {
         null,
         null,
         0,
-        0);
+        0, 
+        new Dictionary<string, Dictionary<string, ModuleResource>>());
 
     b.byteCodeById = new List<Array<ByteCodeRow>>();
     b.byteCodeById.add(null);
@@ -54,14 +56,14 @@ struct BundleClassInfo {
 }
 
 BundleClassInfo BundleClassInfo_new(
-    int classId, 
+    int classId,
     int parentId,
-    string name, 
-    int ctorId, 
-    int staticCtorId, 
-    Dictionary<string, int> methodsToId, 
-    Array<string> newDirectMembersByNextOffsets, 
-    List<string> staticMethods, 
+    string name,
+    int ctorId,
+    int staticCtorId,
+    Dictionary<string, int> methodsToId,
+    Array<string> newDirectMembersByNextOffsets,
+    List<string> staticMethods,
     List<string> staticFields
 ) {
     return new BundleClassInfo(
@@ -81,10 +83,11 @@ struct BundleFunctionInfo {
     int argcMin;
     int argcMax;
     string name;
+    string moduleId;
 }
 
-BundleFunctionInfo BundleFunctionInfo_new(List<ByteCodeRow> code, int argcMin, int argcMax, string name) {
-    return new BundleFunctionInfo(code.toArray(), argcMin, argcMax, name);
+BundleFunctionInfo BundleFunctionInfo_new(List<ByteCodeRow> code, int argcMin, int argcMax, string name, string moduleId) {
+    return new BundleFunctionInfo(code.toArray(), argcMin, argcMax, name, moduleId);
 }
 
 struct BundleEnumInfo {

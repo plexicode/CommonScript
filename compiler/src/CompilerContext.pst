@@ -204,6 +204,14 @@ Array<int> PUBLIC_CompleteCompilation(object compObj) {
         string moduleId = moduleCompilationOrder[i];
         CompiledModule module = CompilerContext_CompileModule(compiler, moduleId);
         compiler.compiledModulesById[moduleId] = module;
+
+        Dictionary<string, ModuleResource> resLookup = new Dictionary<string, ModuleResource>();
+        List<ModuleResource> flatResourceList = compiler.resourcesByModuleId[moduleId];
+        for (int j = 0; j < flatResourceList.size(); j += 1) {
+            ModuleResource res = flatResourceList[j];
+            resLookup[res.path] = res;
+        }
+        module.embeddedResources = resLookup;
     }
 
     Array<CompiledModule> modules = compiler.compiledModulesById.values();

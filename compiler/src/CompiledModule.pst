@@ -5,6 +5,7 @@ struct CompiledModule {
     Dictionary<string, AbstractEntity> flattenedEntities;
     Dictionary<string, AbstractEntity> entitiesNoEnumParents;
     List<AbstractEntity> lambdaEntities;
+    Dictionary<string, ModuleResource> embeddedResources;
 }
 
 CompiledModule CompiledModule_new(string id) {
@@ -14,7 +15,8 @@ CompiledModule CompiledModule_new(string id) {
         null,
         null,
         null,
-        null
+        null, 
+        new Dictionary<string, ModuleResource>()
     );
 }
 

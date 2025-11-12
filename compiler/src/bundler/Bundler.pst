@@ -16,9 +16,12 @@ CompilationBundle bundleCompilation(StaticContext staticCtx, string rootId, Arra
     List<FieldEntity> fields = new List<FieldEntity>();
     List<FunctionEntity> lambdas = new List<FunctionEntity>();
     FunctionEntity mainFunc = null;
-
+    
     for (i = 0; i < deterministicOrder.size(); i += 1) {
         CompiledModule m = deterministicOrder[i];
+
+        bundle.embeddedResources[m.id] = m.embeddedResources;
+
         Array<string> deterministicKeyOrder = Sorting.getLexicalSortedCopy(m.flattenedEntities.keys());
 
         // If deferring main to an included module, that would go here.
@@ -143,6 +146,8 @@ CompilationBundle bundleCompilation(StaticContext staticCtx, string rootId, Arra
 
     bundle.mainFunctionId = mainFunc.baseData.serializationIndex;
     bundle.builtInCount = coreBuiltInFunctions.size();
+    
+    
 
     return bundle;
 }

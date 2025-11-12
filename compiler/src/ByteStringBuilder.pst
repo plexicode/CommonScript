@@ -18,6 +18,12 @@ ByteStringBuilder bsbFromUtf8String(string value) {
     return new ByteStringBuilder(true, bytes.size(), bytes, null, null);
 }
 
+ByteStringBuilder bsbFromSingleByte(int val) {
+    int[] arr = new int[1];
+    arr[0] = val;
+    return bsbFromBytes(arr);
+}
+
 ByteStringBuilder bsbFrom4Bytes(int a, int b, int c, int d) {
     Array<int> arr = new Array<int>(4);
     arr[0] = a;
@@ -62,6 +68,17 @@ ByteStringBuilder bsbJoin5(
     ByteStringBuilder e) {
 
     return bsbJoin3(bsbJoin2(a, b), bsbJoin2(c, d), e);
+}
+
+ByteStringBuilder bsbJoin6(
+    ByteStringBuilder a,
+    ByteStringBuilder b,
+    ByteStringBuilder c,
+    ByteStringBuilder d,
+    ByteStringBuilder e,
+    ByteStringBuilder f) {
+
+    return bsbJoin2(bsbJoin2(bsbJoin2(a, b), bsbJoin2(c, d)), bsbJoin2(e, f));
 }
 
 ByteStringBuilder bsbJoin8(

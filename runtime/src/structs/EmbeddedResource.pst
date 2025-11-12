@@ -1,0 +1,23 @@
+struct EmbeddedResource {
+    string moduleId;
+    string path;
+    int type;
+    object payload;
+    int currentState;
+}
+
+enum EmbeddedResourceType {
+    UNKNOWN = 0,
+    TEXT = 1,
+    BINARY = 2,
+    IMAGE = 3,
+}
+
+enum EmbeddedResourceState {
+    UNKNOWN = 0,
+    READY = 1,
+    IMAGE_RAW_BYTES = 2,
+    IMAGE_ATLAS_INFO = 3,
+    IMAGE_CANVAS = 4,
+}
+

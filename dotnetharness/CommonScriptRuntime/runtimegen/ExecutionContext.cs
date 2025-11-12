@@ -6,6 +6,7 @@ namespace CommonScript.Runtime.Internal
     {
         public string errMsg;
         public GlobalValues globalValues;
+        public System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, EmbeddedResource>> embeddedResources;
         public System.Collections.Generic.Dictionary<string, System.Func<object, object[], object>> extensions;
         public System.Collections.Generic.Dictionary<string, int> significantFunctions;
         public FunctionInfo[] functions;
@@ -28,10 +29,11 @@ namespace CommonScript.Runtime.Internal
         public object appCtx;
         public System.Func<object, object> onLastTaskComplete;
 
-        public ExecutionContext(string errMsg, GlobalValues globalValues, System.Collections.Generic.Dictionary<string, System.Func<object, object[], object>> extensions, System.Collections.Generic.Dictionary<string, int> significantFunctions, FunctionInfo[] functions, Value[] functionsAsValues, FunctionInfo[] lambdas, Value[] statelessLambdasAsValues, ClassInfo[] classes, Value[] classRefValues, EnumInfo[] enums, ByteCodeRow[] byteCode, TryDescriptor[] tryDescriptors, Token[] tokensById, string[] stringsById, System.Collections.Generic.Dictionary<int, int>[] switchIntLookupsByPc, System.Collections.Generic.Dictionary<string, int>[] switchStrLookupsByPc, NameLookup nameLookup, int nextTaskId, int nextRefId, System.Collections.Generic.Dictionary<int, ExecutionTask> tasks, object appCtx, System.Func<object, object> onLastTaskComplete)
+        public ExecutionContext(string errMsg, GlobalValues globalValues, System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, EmbeddedResource>> embeddedResources, System.Collections.Generic.Dictionary<string, System.Func<object, object[], object>> extensions, System.Collections.Generic.Dictionary<string, int> significantFunctions, FunctionInfo[] functions, Value[] functionsAsValues, FunctionInfo[] lambdas, Value[] statelessLambdasAsValues, ClassInfo[] classes, Value[] classRefValues, EnumInfo[] enums, ByteCodeRow[] byteCode, TryDescriptor[] tryDescriptors, Token[] tokensById, string[] stringsById, System.Collections.Generic.Dictionary<int, int>[] switchIntLookupsByPc, System.Collections.Generic.Dictionary<string, int>[] switchStrLookupsByPc, NameLookup nameLookup, int nextTaskId, int nextRefId, System.Collections.Generic.Dictionary<int, ExecutionTask> tasks, object appCtx, System.Func<object, object> onLastTaskComplete)
         {
             this.errMsg = errMsg;
             this.globalValues = globalValues;
+            this.embeddedResources = embeddedResources;
             this.extensions = extensions;
             this.significantFunctions = significantFunctions;
             this.functions = functions;

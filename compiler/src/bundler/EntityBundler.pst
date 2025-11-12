@@ -40,10 +40,10 @@ void bundleClass(ClassEntity classEntity, CompilationBundle bundle) {
     }
 
     Dictionary<string, AbstractEntity> mems = classEntity.classMembers;
-    
+
     int staticCtorId = 0;
     if (mems.contains("@cctor")) staticCtorId = mems["@cctor"].serializationIndex;
-    
+
     BundleClassInfo bci = BundleClassInfo_new(
         classEntity.baseData.serializationIndex,
         baseClassId,
@@ -64,14 +64,14 @@ void bundleClass(ClassEntity classEntity, CompilationBundle bundle) {
                 bci.methodsToId[memberName] = member.serializationIndex;
                 if (member.isStatic) bci.staticMethods.add(memberName);
                 break;
-            
+
             case EntityType.FIELD:
                 if (member.isStatic) bci.staticFields.add(memberName);
                 break;
-            
+
             case EntityType.CONSTRUCTOR:
                 break; // already handled.
-            
+
             default:
                 fail("Not implemented");
                 break;
@@ -88,7 +88,7 @@ void bundleEnum(EnumEntity enumEntity, CompilationBundle bundle) {
 
 void bundleFunction(StaticContext staticCtx, FunctionEntity entity, CompilationBundle bundle) {
     int i = 0;
-    
+    string modId = entity.baseData.fileContext.compiledModule.id;
     bool isLambda = entity.baseData.type == EntityType.LAMBDA_ENTITY;
     ByteCodeBuffer buffer = null;
     int argc = entity.argTokens.size();
@@ -117,7 +117,7 @@ void bundleFunction(StaticContext staticCtx, FunctionEntity entity, CompilationB
         Statement stmnt = entity.code[i];
         buffer = join2(buffer, serializeStatement(staticCtx, stmnt));
     }
-    
+
     Array<ByteCodeRow> flatByteCode = flatten(buffer);
     List<ByteCodeRow> byteCodeFinal = new List<ByteCodeRow>();
     for (i = 0; i < flatByteCode.size(); i += 1) {
@@ -138,11 +138,12 @@ void bundleFunction(StaticContext staticCtx, FunctionEntity entity, CompilationB
     string fnName = null;
     if (!isLambda) fnName = entity.baseData.simpleName;
     BundleFunctionInfo fd = BundleFunctionInfo_new(
-        byteCodeFinal, 
-        argcMin, 
-        argc, 
-        fnName);
-    
+        byteCodeFinal,
+        argcMin,
+        argc,
+        fnName,
+        modId);
+
     if (isLambda) {
         bundle.lambdaById.add(fd);
     } else {
