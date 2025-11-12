@@ -1,0 +1,8 @@
+import testlib -> *;
+
+function main(args) {
+
+    assertStrEqual('a', 'a');
+
+    print("ALL DONE");
+}
