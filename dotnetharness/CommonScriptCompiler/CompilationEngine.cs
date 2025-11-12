@@ -34,11 +34,30 @@ namespace CommonScript.Compiler
         public CompilationResult DoStaticCompilation(
             string rootModuleId,
             Dictionary<string, Dictionary<string, string>> userCodeFilesByModuleId,
-            Dictionary<string, Dictionary<string, string>> builtinCodeFilesByModuleId)
+            Dictionary<string, Dictionary<string, string>> builtinCodeFilesByModuleId, 
+            Dictionary<string, Dictionary<string, string>> textResourcesByModuleId, 
+            Dictionary<string, Dictionary<string, byte[]>> binaryResourcesByModuleId, 
+            Dictionary<string, Dictionary<string, object>> imageResourcesByModuleId)
         {
             AdaptiveCompilation comp = this.CreateAdaptiveCompilation(rootModuleId);
             userCodeFilesByModuleId = userCodeFilesByModuleId ?? new Dictionary<string, Dictionary<string, string>>();
             builtinCodeFilesByModuleId = builtinCodeFilesByModuleId ?? new Dictionary<string, Dictionary<string, string>>();
+            textResourcesByModuleId = textResourcesByModuleId ?? new Dictionary<string, Dictionary<string, string>>();
+            binaryResourcesByModuleId = binaryResourcesByModuleId ?? new Dictionary<string, Dictionary<string, byte[]>>();
+            imageResourcesByModuleId = imageResourcesByModuleId ?? new Dictionary<string, Dictionary<string, object>>();
+
+            string[] allModuleIds = [..userCodeFilesByModuleId.Keys, ..builtinCodeFilesByModuleId.Keys];
+            if (allModuleIds.Length != new HashSet<string>(allModuleIds).Count)
+            {
+                return new CompilationResult(null, "Builtin and user modules have a name conflict.", null);
+            }
+            
+            foreach (string moduleId in allModuleIds)
+            {
+                if (!textResourcesByModuleId.ContainsKey(moduleId)) textResourcesByModuleId[moduleId] = null;
+                if (!binaryResourcesByModuleId.ContainsKey(moduleId)) binaryResourcesByModuleId[moduleId] = null;
+                if (!imageResourcesByModuleId.ContainsKey(moduleId)) imageResourcesByModuleId[moduleId] = null;
+            }
 
             while (!comp.IsComplete)
             {
@@ -48,6 +67,9 @@ namespace CommonScript.Compiler
                     userCodeFilesByModuleId,
                     builtinCodeFilesByModuleId,
                 ];
+                Dictionary<string, string> textResources = textResourcesByModuleId[moduleId];
+                Dictionary<string, byte[]> binaryResources = binaryResourcesByModuleId[moduleId];
+                Dictionary<string, object> imageResources = imageResourcesByModuleId[moduleId];
 
                 bool found = false;
                 for (int i = 0; i < 2; i++)
@@ -58,15 +80,15 @@ namespace CommonScript.Compiler
                         found = true;
                         if (IS_DEBUG)
                         {
-                            if (isUserCode) comp.ProvideFilesForUserModuleCompilation(moduleId, sources[i][moduleId]);
-                            else comp.ProvideFilesForBuiltinLibraryModuleCompilation(moduleId, sources[i][moduleId]);
+                            if (isUserCode) comp.ProvideFilesForUserModuleCompilation(moduleId, sources[i][moduleId], textResources, binaryResources, imageResources);
+                            else comp.ProvideFilesForBuiltinLibraryModuleCompilation(moduleId, sources[i][moduleId], textResources, binaryResources, imageResources);
                         }
                         else
                         {
                             try
                             {
-                                if (isUserCode) comp.ProvideFilesForUserModuleCompilation(moduleId, sources[i][moduleId]);
-                                else comp.ProvideFilesForBuiltinLibraryModuleCompilation(moduleId, sources[i][moduleId]);
+                                if (isUserCode) comp.ProvideFilesForUserModuleCompilation(moduleId, sources[i][moduleId], textResources, binaryResources, imageResources);
+                                else comp.ProvideFilesForBuiltinLibraryModuleCompilation(moduleId, sources[i][moduleId], textResources, binaryResources, imageResources);
                             }
                             catch (ParserException ex)
                             {

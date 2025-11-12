@@ -3,6 +3,7 @@ struct CompilerContext {
     string rootId;
     Dictionary<string, List<string>> depIdsByModuleId;
     Dictionary<string, List<FileContext>> filesByModuleId;
+    Dictionary<string, List<ModuleResource>> resourcesByModuleId;
     List<string> finalCompilationOrder;
     Dictionary<string, bool> unfulfilledDependencies;
     Dictionary<string, CompiledModule> compiledModulesById;
@@ -18,6 +19,7 @@ CompilerContext CompilerContext_new(string rootId, string flavorId, string exten
         rootId,
         new Dictionary<string, List<string>>(), // depIdsByModuleId
         new Dictionary<string, List<FileContext>>(), // filesByModuleId
+        new Dictionary<string, List<ModuleResource>>(), // resourcesByModuleId
         null, // finalCompilationOrder
         new Dictionary<string, bool>(), // unfulfilledDependencies
         null, // compiledModulesById
@@ -35,7 +37,15 @@ CompilerContext CompilerContext_new(string rootId, string flavorId, string exten
     Dictionary<string, string> builtinFiles = new Dictionary<string, string>();
     builtinFiles["builtins.script"] = GetSourceForBuiltinModule("builtins");
 
-    PUBLIC_SupplyFilesForModule(ctx, "{BUILTIN}", builtinFiles, true, true);
+    PUBLIC_SupplyFilesForModule(
+        ctx,
+        "{BUILTIN}",
+        builtinFiles,
+        true,
+        true,
+        null,
+        null,
+        null);
 
     return ctx;
 }
@@ -45,7 +55,10 @@ void PUBLIC_SupplyFilesForModule(
     string moduleId,
     Dictionary<string, string> fileLookup,
     bool isCoreBuiltin,
-    bool isBuiltInLib)
+    bool isBuiltInLib,
+    Dictionary<string, string> optStringResources,
+    Dictionary<string, int[]> optBinaryResources,
+    Dictionary<string, object> optImageResources)
 {
     int i = 0;
     int j = 0;
@@ -53,6 +66,11 @@ void PUBLIC_SupplyFilesForModule(
     CompilerContext compiler = (CompilerContext) compObj;
 
     compiler.depIdsByModuleId[moduleId] = new List<string>();
+
+    compiler.resourcesByModuleId[moduleId] = getResourcesFromLookups(
+        optStringResources,
+        optBinaryResources,
+        optImageResources);
 
     List<FileContext> files = new List<FileContext>();
     Dictionary<string, ImportStatement> imports = new Dictionary<string, ImportStatement>();
@@ -117,7 +135,10 @@ string PUBLIC_GetNextRequiredModuleId(object compObj) {
             nextKey,
             builtinFiles,
             false,
-            true);
+            true,
+            null,
+            null,
+            null);
     }
 }
 

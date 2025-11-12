@@ -33,22 +33,55 @@ namespace CommonScript.Compiler
         public bool IsComplete { get { return this.isDone; } }
         public string NextRequiredModule { get { return this.nextModuleIdCache; } }
 
-        public void ProvideFilesForUserModuleCompilation(string moduleId, Dictionary<string, string> codeFiles)
+        public void ProvideFilesForUserModuleCompilation(
+            string moduleId,
+            Dictionary<string, string> codeFiles,
+            Dictionary<string, string> textResources,
+            Dictionary<string, byte[]> binaryResources,
+            Dictionary<string, object> imageResources)
         {
-            ProvideFilesForModuleCompilationImpl(moduleId, codeFiles, false);
+            ProvideFilesForModuleCompilationImpl(
+                moduleId, codeFiles, false, textResources, binaryResources, imageResources);
         }
 
-        public void ProvideFilesForBuiltinLibraryModuleCompilation(string moduleId, Dictionary<string, string> codeFiles)
+        public void ProvideFilesForBuiltinLibraryModuleCompilation(
+            string moduleId, 
+            Dictionary<string, string> codeFiles,
+            Dictionary<string, string> textResources, 
+            Dictionary<string, byte[]> binaryResources, 
+            Dictionary<string, object> imageResources)
         {
-            ProvideFilesForModuleCompilationImpl(moduleId, codeFiles, true);
+            ProvideFilesForModuleCompilationImpl(
+                moduleId, codeFiles, true, textResources, binaryResources, imageResources);
         }
 
-        private void ProvideFilesForModuleCompilationImpl(string moduleId, Dictionary<string, string> codeFiles, bool isBuiltin)
+        private void ProvideFilesForModuleCompilationImpl(
+            string moduleId, 
+            Dictionary<string, string> codeFiles, 
+            bool isBuiltin, 
+            Dictionary<string, string> textResources, 
+            Dictionary<string, byte[]> binaryResources, 
+            Dictionary<string, object> imageResources)
         {
             if (moduleId != this.NextRequiredModule) throw new InvalidOperationException();
-            FunctionWrapper.PUBLIC_SupplyFilesForModule(this.genCompiler, moduleId, codeFiles, false, false);
+            FunctionWrapper.PUBLIC_SupplyFilesForModule(this.genCompiler, moduleId, codeFiles, false, isBuiltin, textResources, ConvertByteArrayDictToIntArrayDict(binaryResources), imageResources);
             this.nextModuleIdCache = FunctionWrapper.PUBLIC_GetNextRequiredModuleId(this.genCompiler);
             this.isDone = this.nextModuleIdCache == null;
+        }
+
+        private static Dictionary<string, int[]> ConvertByteArrayDictToIntArrayDict(Dictionary<string, byte[]> original)
+        {
+            Dictionary<string, int[]> output = [];
+            foreach (string key in original.Keys)
+            {
+                byte[] arr = original[key];
+                int len = arr.Length;
+                int[] arrOut = new int[len];
+                for (int i = 0; i < len; i++) arrOut[i] = arr[i];
+                output[key] = arrOut;
+            }
+
+            return output;
         }
 
         public CompilationResult GetCompilation()

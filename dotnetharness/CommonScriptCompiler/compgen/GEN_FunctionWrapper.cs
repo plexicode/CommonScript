@@ -1061,7 +1061,7 @@ namespace CommonScript.Compiler.Internal
 
         public static CompilerContext CompilerContext_new(string rootId, string flavorId, string extensionVersionId, string[] extensionNames)
         {
-            CompilerContext ctx = new CompilerContext(StaticContext_new(), rootId, new Dictionary<string, System.Collections.Generic.List<string>>(), new Dictionary<string, System.Collections.Generic.List<FileContext>>(), null, new Dictionary<string, bool>(), null, extensionVersionId, flavorId, new List<string>());
+            CompilerContext ctx = new CompilerContext(StaticContext_new(), rootId, new Dictionary<string, System.Collections.Generic.List<string>>(), new Dictionary<string, System.Collections.Generic.List<FileContext>>(), new Dictionary<string, System.Collections.Generic.List<ModuleResource>>(), null, new Dictionary<string, bool>(), null, extensionVersionId, flavorId, new List<string>());
             int i = 0;
             while (i < extensionNames.Length)
             {
@@ -1071,7 +1071,7 @@ namespace CommonScript.Compiler.Internal
             ctx.unfulfilledDependencies[rootId] = true;
             System.Collections.Generic.Dictionary<string, string> builtinFiles = new Dictionary<string, string>();
             builtinFiles["builtins.script"] = GetSourceForBuiltinModule("builtins");
-            PUBLIC_SupplyFilesForModule(ctx, "{BUILTIN}", builtinFiles, true, true);
+            PUBLIC_SupplyFilesForModule(ctx, "{BUILTIN}", builtinFiles, true, true, null, null, null);
             return ctx;
         }
 
@@ -3924,6 +3924,48 @@ namespace CommonScript.Compiler.Internal
             return exprConst.intVal + 0.0;
         }
 
+        public static System.Collections.Generic.List<ModuleResource> getResourcesFromLookups(System.Collections.Generic.Dictionary<string, string> textResources, System.Collections.Generic.Dictionary<string, int[]> binaryResources, System.Collections.Generic.Dictionary<string, object> imageResources)
+        {
+            System.Collections.Generic.List<ModuleResource> o = new List<ModuleResource>();
+            string[] keys = null;
+            string key = null;
+            int i = 0;
+            if (textResources != null)
+            {
+                keys = textResources.Keys.ToArray();
+                i = 0;
+                while (i < keys.Length)
+                {
+                    key = keys[i];
+                    o.Add(newModuleTextResource(key, textResources[key]));
+                    i += 1;
+                }
+            }
+            if (binaryResources != null)
+            {
+                keys = binaryResources.Keys.ToArray();
+                i = 0;
+                while (i < keys.Length)
+                {
+                    key = keys[i];
+                    o.Add(newModuleBinaryResource(key, binaryResources[key]));
+                    i += 1;
+                }
+            }
+            if (imageResources != null)
+            {
+                keys = imageResources.Keys.ToArray();
+                i = 0;
+                while (i < keys.Length)
+                {
+                    key = keys[i];
+                    o.Add(newModuleImageResource(key, (ImageResource)imageResources[key]));
+                    i += 1;
+                }
+            }
+            return o;
+        }
+
         public static string GetSourceForBuiltinModule(string moduleName)
         {
             string code = GetBuiltinRawStoredString(moduleName);
@@ -4206,6 +4248,21 @@ namespace CommonScript.Compiler.Internal
             ns.baseData.simpleName = nameToken.Value;
             ns.baseData.fqName = fqName;
             return ns;
+        }
+
+        public static ModuleResource newModuleBinaryResource(string path, int[] data)
+        {
+            return new ModuleResource(path, 2, null, data, null);
+        }
+
+        public static ModuleResource newModuleImageResource(string path, ImageResource img)
+        {
+            return new ModuleResource(path, 3, null, null, img);
+        }
+
+        public static ModuleResource newModuleTextResource(string path, string text)
+        {
+            return new ModuleResource(path, 1, text, null, null);
         }
 
         public static string[] OrderStringsByDescendingFrequencyUsingLookup(System.Collections.Generic.Dictionary<string, int> frequencyLookupByKey)
@@ -5463,7 +5520,7 @@ namespace CommonScript.Compiler.Internal
                 }
                 System.Collections.Generic.Dictionary<string, string> builtinFiles = new Dictionary<string, string>();
                 builtinFiles[nextKey + ".script"] = GetSourceForBuiltinModule(nextKey);
-                PUBLIC_SupplyFilesForModule(compiler, nextKey, builtinFiles, false, true);
+                PUBLIC_SupplyFilesForModule(compiler, nextKey, builtinFiles, false, true, null, null, null);
             }
         }
 
@@ -5476,12 +5533,13 @@ namespace CommonScript.Compiler.Internal
             return string.Join("", new string[] { "[", tok.File, " Line ", tok.Line.ToString(), " Col ", tok.Col.ToString(), "] " });
         }
 
-        public static void PUBLIC_SupplyFilesForModule(object compObj, string moduleId, System.Collections.Generic.Dictionary<string, string> fileLookup, bool isCoreBuiltin, bool isBuiltInLib)
+        public static void PUBLIC_SupplyFilesForModule(object compObj, string moduleId, System.Collections.Generic.Dictionary<string, string> fileLookup, bool isCoreBuiltin, bool isBuiltInLib, System.Collections.Generic.Dictionary<string, string> optStringResources, System.Collections.Generic.Dictionary<string, int[]> optBinaryResources, System.Collections.Generic.Dictionary<string, object> optImageResources)
         {
             int i = 0;
             int j = 0;
             CompilerContext compiler = (CompilerContext)compObj;
             compiler.depIdsByModuleId[moduleId] = new List<string>();
+            compiler.resourcesByModuleId[moduleId] = getResourcesFromLookups(optStringResources, optBinaryResources, optImageResources);
             System.Collections.Generic.List<FileContext> files = new List<FileContext>();
             System.Collections.Generic.Dictionary<string, ImportStatement> imports = new Dictionary<string, ImportStatement>();
             string[] fileNamesOrdered = fileLookup.Keys.ToArray().OrderBy<string, string>(_PST_GEN_arg => _PST_GEN_arg).ToArray();

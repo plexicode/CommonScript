@@ -1,0 +1,67 @@
+
+enum ModuleResourceType {
+    TEXT = 1,
+    BINARY = 2,
+    IMAGE = 3,
+}
+
+struct ModuleResource {
+    string path;
+    int type;
+    string textPayload;
+    int[] binaryPayload;
+    ImageResource imagePayload;
+}
+
+struct ImageResource {
+    bool isJpeg;
+    int width;
+    int height;
+    object handle;
+}
+
+ModuleResource newModuleTextResource(string path, string text) {
+    return new ModuleResource(path, ModuleResourceType.TEXT, text, null, null);
+}
+ModuleResource newModuleBinaryResource(string path, int[] data) {
+    return new ModuleResource(path, ModuleResourceType.BINARY, null, data, null);
+}
+ModuleResource newModuleImageResource(string path, ImageResource img) {
+    return new ModuleResource(path, ModuleResourceType.IMAGE, null, null, img);
+}
+
+List<ModuleResource> getResourcesFromLookups(
+    Dictionary<string, string> textResources,
+    Dictionary<string, int[]> binaryResources,
+    Dictionary<string, object> imageResources) {
+
+    List<ModuleResource> o = new List<ModuleResource>();
+    string[] keys = null;
+    string key = null;
+    int i = 0;
+    if (textResources != null) {
+        keys = textResources.keys();
+        for (i = 0; i < keys.size(); i += 1) {
+            key = keys[i];
+            o.add(newModuleTextResource(key, textResources[key]));
+        }
+    }
+    
+    if (binaryResources != null) {
+        keys = binaryResources.keys();
+        for (i = 0; i < keys.size(); i += 1) {
+            key = keys[i];
+            o.add(newModuleBinaryResource(key, binaryResources[key]));
+        }
+    }
+
+    if (imageResources != null) {
+        keys = imageResources.keys();
+        for (i = 0; i < keys.size(); i += 1) {
+            key = keys[i];
+            o.add(newModuleImageResource(key, (ImageResource) imageResources[key]));
+        }
+    }
+
+    return o;
+}

@@ -19,6 +19,7 @@
 @import("ExportUtil.pst");
 @import("FileContext.pst");
 @import("ImportParser.pst");
+@import("ModuleResource.pst");
 @import("StaticContext.pst");
 @import("Token.pst");
 @import("Tokenizer.pst");
