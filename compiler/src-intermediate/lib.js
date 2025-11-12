@@ -46,14 +46,14 @@ const createCommonScriptCompilationEngine = (() => {
       updateNext();
 
       // TODO: why is isBuiltIn ignored?
-      let provideFilesImpl = (nextModId, filesLookup, isBuiltIn) => {
+      let provideFilesImpl = (nextModId, filesLookup, isBuiltIn, optTextResources, optBinResources, optImgResources) => {
         if (nextModId !== nextModuleIdCache) throw new Error('');
 
         // #IF IS_DEBUG
-        PST.PUBLIC_SupplyFilesForModule(compiler, nextModId, { ...filesLookup }, false, false);
+        PST.PUBLIC_SupplyFilesForModule(compiler, nextModId, { ...filesLookup }, false, false, optTextResources, optBinResources, optImgResources);
         // #ELSE
         try {
-          PST.PUBLIC_SupplyFilesForModule(compiler, nextModId, { ...filesLookup }, false, false);
+          PST.PUBLIC_SupplyFilesForModule(compiler, nextModId, { ...filesLookup }, false, false, optTextResources, optBinResources, optImgResources);
         } catch (ex) {
           isDone = true;
           errorOverride = ex.message;
@@ -76,8 +76,8 @@ const createCommonScriptCompilationEngine = (() => {
       return Object.freeze({
         isComplete: () => isDone,
         getNextRequiredModule: () => nextModuleIdCache,
-        provideFilesForUserModuleCompilation: (nextModId, filesLookup) => provideFilesImpl(nextModId, filesLookup, false),
-        provideFilesForBuiltinLibraryModuleCompilation: (nextModId, filesLookup) => provideFilesImpl(nextModId, filesLookup, true),
+        provideFilesForUserModuleCompilation: (nextModId, filesLookup, txtResLookup, binResLookup, imgResLookup) => provideFilesImpl(nextModId, filesLookup, false, txtResLookup || null, binResLookup || null, imgResLookup || null),
+        provideFilesForBuiltinLibraryModuleCompilation: (nextModId, filesLookup, txtResLookup, binResLookup, imgResLookup) => provideFilesImpl(nextModId, filesLookup, true, txtResLookup || null, binResLookup || null, imgResLookup || null),
         getCompilation: () => {
           // #IF IS_DEBUG
           return getCompilation();
@@ -92,10 +92,67 @@ const createCommonScriptCompilationEngine = (() => {
       });
     };
 
-    let doStaticCompilation = (moduleId, userCodeFilesByModuleId, builtinCodeFilesByModuleId) => {
+    let sortOutResources = (lookupByModId, allModIds) => {
+
+      let textLookupByModId = {};
+      let binLookupByModId = {};
+      let imgLookupByModId = {};
+
+      allModIds.forEach(modId => {
+        let txt = {};
+        let bin = {};
+        let img = {};
+        textLookupByModId[modId] = txt;
+        binLookupByModId[modId] = bin;
+        imgLookupByModId[modId] = img;
+        let resources = lookupByModId[modId] || {};
+        Object.keys(resources).forEach(path => {
+          let value = resources[path];
+          if (typeof value === 'string') {
+            txt[path] = value;
+            return;
+          }
+
+          if (value && typeof value === 'object') {
+            if (value instanceof HTMLCanvasElement) {
+              // This needs to be converted using the underlying pastel factory
+              // img[path] = value;
+              // return;
+              throw new Error("NOT IMPLEMENTED");
+            }
+
+            if (value instanceof Uint8Array) {
+              let arr = [];
+              let len = value.length;
+              for (let i = 0; i < len; i++) arr.push(value[i] | 0);
+              bin[path] = arr;
+              return;
+            }
+          }
+          throw new Error(
+            // #IF IS_DEBUG
+            `Invalid resource provided by implementing scripting language in module '${modId}': ${path}` +
+            // #ELSE
+            '' +
+            // #ENDIF
+            ''
+          );
+        });
+      });
+      return {
+        txtRes: textLookupByModId,
+        binRes: binLookupByModId,
+        imgRes: imgLookupByModId,
+      };
+    };
+
+    let doStaticCompilation = (moduleId, userCodeFilesByModuleId, builtinCodeFilesByModuleId, optResourceLookupByModuleId) => {
       let adcomp = createAdaptiveCompilation(moduleId);
       let userCode = userCodeFilesByModuleId || {};
       let builtinCode = builtinCodeFilesByModuleId || {};
+      let allModuleIds = [...new Set([...Object.keys(userCode), ...Object.keys(builtinCode)])];
+      let { txtRes, binRes, imgRes } = sortOutResources(optResourceLookupByModuleId || {}, allModuleIds);
+      debugger;
       while (!adcomp.isComplete()) {
         let nextModId = adcomp.getNextRequiredModule();
         let sources = [userCode, builtinCode];
@@ -106,12 +163,12 @@ const createCommonScriptCompilationEngine = (() => {
           if (files) {
             moduleFound = true;
             // #IF IS_DEBUG
-            if (isUserCode) adcomp.provideFilesForUserModuleCompilation(nextModId, files);
-            else adcomp.provideFilesForBuiltinLibraryModuleCompilation(nextModId, files);
+            if (isUserCode) adcomp.provideFilesForUserModuleCompilation(nextModId, files, txtRes, binRes, imgRes);
+            else adcomp.provideFilesForBuiltinLibraryModuleCompilation(nextModId, files, txtRes, binRes, imgRes);
             // #ELSE
             try {
-              if (isUserCode) adcomp.provideFilesForUserModuleCompilation(nextModId, files);
-              else adcomp.provideFilesForBuiltinLibraryModuleCompilation(nextModId, files);
+              if (isUserCode) adcomp.provideFilesForUserModuleCompilation(nextModId, files, txtRes, binRes, imgRes);
+              else adcomp.provideFilesForBuiltinLibraryModuleCompilation(nextModId, files, txtRes, binRes, imgRes);
             } catch (ex) {
               return { errorMessage: ex.message };
             }
