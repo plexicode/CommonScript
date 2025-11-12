@@ -3842,6 +3842,11 @@ namespace CommonScript.Compiler.Internal
             return "@5randomFloat() { @4$random_float(); }\n@5randomBool() { @4$random_float() < .5; }\n@5randomInt(a, b = null) {\nif (b == null) {\nb = a;\na = 0;\n}\nd = b - a;\nif (d <= 0) throw new InvalidArgumentException(\"Range must be a positive number.\");\n@4a + $math_floor($random_float() * d);\n}\n@5shuffle(list) {\nsz = list.length;\nfor (i = 0; i < sz; i++) {\nj = $math_floor($random_float() * sz);\nt = list[j];\nlist[j] = list[i];\nlist[i] = t;\n}\n}";
         }
 
+        public static string GEN_BUILTINS_resources()
+        {
+            return "class ResourceModule {\nfield _h;\nconstructor(h) {\nthis._h = h;\n}\n}\nclass Resource@6 {\nconstructor(m) : base(m) { }\n}\n@5getCurrentResourceModule() {\nh = $res_mod_parent();\n@4new ResourceModule(h);\n}\n@1_baseRead(m, p, t) {\nb = [];\ne = $res_read(m._h, p, t, b);\nif (e != null) throw new ResourceException(e);\n@4b;\n}\n@5readTextResourceAsString(module, path) {\n@4_baseRead(module, path, 'T')[0];\n}\n@5readBinaryResourceAsBytes(module, path) {\n@4_baseRead(module, path, 'B');\n}\n@5readImageResource(module, path) {\nthrow new NotImplementedException();\n}\n@5listAllResources(module) {\n@4$res_list(module);\n}\n@5getResourceType(module, path) {\n@4_baseRead(module, path, 'Y')[0];\n}";
+        }
+
         public static string GEN_BUILTINS_textencoding()
         {
             return "@3TextEncoding@6 {\nconstructor(m) : base(m) { }\n}\n@1validEnc(e) {\ne = (e ?? '') + '';\nt = e.lower().replace('-', '');\nif ($txt_is_valid_enc(t)) @4t;\nthrow new TextEncodingException(\"'\" + e + \"' is not a valid encoding.\");\n}\n@5bytesToText(arr, e='utf8') {\nn = validEnc(e);\ns = $txt_bytes_to_string(arr, n);\nif (s == null) throw new TextEncodingException(\"Invalid byte values for encoding: '\" + n + \"'\");\n@4s;\n}\n@5textToBytes(s, e = 'utf8') {\n@4$txt_string_to_bytes((s ?? '') + '', validEnc(e));\n}";
@@ -3873,6 +3878,10 @@ namespace CommonScript.Compiler.Internal
             if (m == "random")
             {
                 return GEN_BUILTINS_random();
+            }
+            if (m == "resources")
+            {
+                return GEN_BUILTINS_resources();
             }
             if (m == "textencoding")
             {
@@ -6866,6 +6875,9 @@ namespace CommonScript.Compiler.Internal
             idByName["parse_float"] = 25;
             idByName["parse_int"] = 15;
             idByName["random_float"] = 7;
+            idByName["res_list"] = 27;
+            idByName["res_mod_parent"] = 28;
+            idByName["res_read"] = 29;
             idByName["sort_end"] = 3;
             idByName["sort_get_next_cmp"] = 4;
             idByName["sort_proceed"] = 5;
@@ -6892,6 +6904,9 @@ namespace CommonScript.Compiler.Internal
             argcByName["parse_float"] = 1;
             argcByName["parse_int"] = 1;
             argcByName["random_float"] = 0;
+            argcByName["res_mod_parent"] = 0;
+            argcByName["res_list"] = 1;
+            argcByName["res_read"] = 4;
             argcByName["sort_end"] = 1;
             argcByName["sort_get_next_cmp"] = 2;
             argcByName["sort_proceed"] = 2;

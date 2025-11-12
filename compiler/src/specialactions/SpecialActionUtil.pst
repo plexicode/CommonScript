@@ -23,6 +23,9 @@ SpecialActionUtil SpecialActionUtil_new() {
     idByName["parse_float"] = SpecialActionCodes.PARSE_FLOAT;
     idByName["parse_int"] = SpecialActionCodes.PARSE_INT;
     idByName["random_float"] = SpecialActionCodes.RANDOM_FLOAT;
+    idByName["res_list"] = SpecialActionCodes.RES_LIST;
+    idByName["res_mod_parent"] = SpecialActionCodes.RES_MOD_PARENT;
+    idByName["res_read"] = SpecialActionCodes.RES_READ;
     idByName["sort_end"] = SpecialActionCodes.SORT_END;
     idByName["sort_get_next_cmp"] = SpecialActionCodes.SORT_GET_NEXT_CMP;
     idByName["sort_proceed"] = SpecialActionCodes.SORT_PROCEED;
@@ -51,6 +54,9 @@ SpecialActionUtil SpecialActionUtil_new() {
     argcByName["parse_float"] = 1;
     argcByName["parse_int"] = 1;
     argcByName["random_float"] = 0;
+    argcByName["res_mod_parent"] = 0;
+    argcByName["res_list"] = 1;
+    argcByName["res_read"] = 4;
     argcByName["sort_end"] = 1;
     argcByName["sort_get_next_cmp"] = 2;
     argcByName["sort_proceed"] = 2;

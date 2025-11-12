@@ -7,6 +7,7 @@ string GetBuiltinRawStoredString(string m) {
     if (m == "json") return GEN_BUILTINS_json();
     if (m == "math") return GEN_BUILTINS_math();
     if (m == "random") return GEN_BUILTINS_random();
+    if (m == "resources") return GEN_BUILTINS_resources();
     if (m == "textencoding") return GEN_BUILTINS_textencoding();
     if (m == "xml") return GEN_BUILTINS_xml();
 

@@ -1,0 +1,2 @@
+valueStackSize -= 1;
+output = VALUE_NULL;

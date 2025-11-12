@@ -1,3 +1,5 @@
+// TODO: this should be moved into (and replace) the constants in shared/constants_ops.pst
+
 enum SpecialActionCodes {
     B64_FROM_BYTES = 16,
     B64_TO_BYTES = 17,
@@ -14,6 +16,9 @@ enum SpecialActionCodes {
     PARSE_INT = 15,
     PARSE_FLOAT = 25,
     RANDOM_FLOAT = 7,
+    RES_LIST = 27,
+    RES_MOD_PARENT = 28,
+    RES_READ = 29,
     SORT_START = 2,
     SORT_END = 3,
     SORT_GET_NEXT_CMP = 4,
@@ -24,5 +29,5 @@ enum SpecialActionCodes {
     UNIX_TIME = 1,
     XML_PARSE = 26,
 
-    // Next ID: 27
+    // Next ID: 30
 }

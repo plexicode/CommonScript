@@ -1,0 +1,46 @@
+// TODO: remove some of the minifier artifacts from this code and create a true minifier.
+
+class ResourceModule {
+    field _h;
+    // @private 
+    constructor(h) {
+        this._h = h;
+    }
+}
+
+class ResourceException : Exception {
+    constructor(m) : base(m) { }
+}
+
+@public function getCurrentResourceModule() {
+    h = $res_mod_parent();
+    return new ResourceModule(h);
+}
+
+// t(ype) can be one of the following: T: text, B: bytes, Y: tYpe, I: image
+function _baseRead(m, p, t) {
+    b = [];
+    e = $res_read(m._h, p, t, b);
+    if (e != null) throw new ResourceException(e);
+    return b;
+}
+
+@public function readTextResourceAsString(module, path) {
+    return _baseRead(module, path, 'T')[0];
+}
+
+@public function readBinaryResourceAsBytes(module, path) {
+    return _baseRead(module, path, 'B');
+}
+
+@public function readImageResource(module, path) {
+    throw new NotImplementedException();
+}
+
+@public function listAllResources(module) {
+    return $res_list(module);
+}
+
+@public function getResourceType(module, path) {
+    return _baseRead(module, path, 'Y')[0];
+}

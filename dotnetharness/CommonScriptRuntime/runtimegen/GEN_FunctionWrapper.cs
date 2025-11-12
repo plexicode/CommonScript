@@ -5435,6 +5435,16 @@ namespace CommonScript.Runtime.Internal
                             case 7:
                                 output = buildFloat(PST_Random.NextDouble());
                                 break;
+                            case 27:
+                                valueStackSize -= 1;
+                                output = VALUE_NULL;
+                                break;
+                            case 28:
+                                output = VALUE_NULL;
+                                break;
+                            case 29:
+                                output = VALUE_NULL;
+                                break;
                             case 3:
                                 valueStackSize -= 1;
                                 output = Sort_end((SortState)valueStack[valueStackSize].internalValue);
