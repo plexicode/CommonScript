@@ -6,6 +6,7 @@ from plexibuild import textpreprocessor
 from plexibuild import javascript
 
 import json
+import base64
 
 VERSION_DOTTED = fileio.file_read_text("./current-version.txt").strip().split('\n').pop()
 VERSION_UNDERSCORE = VERSION_DOTTED.replace('.', '_')
@@ -103,7 +104,15 @@ def get_test_cases_as_json():
   output = []
   for path in all_files_in_tests:
     if path.split('/')[0] in copy_dirs:
-      output.append({ 'path': path, 'content': fileio.file_read_text('./tests/' + path)})
+      file = { 'path': path }
+      read_path = './tests/' + path
+      # TODO: not exactly a perfect check for non-text files
+      if path.endswith('.jpg') or path.endswith('.png'):
+        file['isBinary'] = True
+        file['content'] = base64.b64encode(fileio.file_read_bytes(read_path)).decode('utf-8')
+      else:
+        file['content'] = fileio.file_read_text(read_path)
+      output.append(file)
   return { 'files': output, 'testCases': test_dirs }
 
 def main():
