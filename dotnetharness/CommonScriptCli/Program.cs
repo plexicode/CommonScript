@@ -62,7 +62,7 @@ namespace CommonScriptCli
 
                 Dictionary<string, string> textResources = [];
                 Dictionary<string, byte[]> binaryResources = [];
-                Dictionary<string, object> imageResources = [];
+                Dictionary<string, ImageResource> imageResources = [];
 
                 foreach (string resourcePath in resources)
                 {
@@ -78,7 +78,8 @@ namespace CommonScriptCli
                             binaryResources[resourcePath] = data;
                             break;
                         case ResourceType.IMAGE:
-                            throw new NotImplementedException("Images are not supported yet.");
+                            imageResources[resourcePath] = new ImageResource(data);
+                            break;
                     }
                 }
                 

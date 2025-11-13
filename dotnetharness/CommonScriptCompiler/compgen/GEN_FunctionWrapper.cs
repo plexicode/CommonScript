@@ -1766,7 +1766,16 @@ namespace CommonScript.Compiler.Internal
                     }
                     else if (resource.imagePayload != null)
                     {
-                        fail("TODO: images");
+                        resType = 3;
+                        int formatFlag = 0;
+                        if (resource.imagePayload.isJpeg)
+                        {
+                            formatFlag = 1;
+                        }
+                        object[] args = new object[1];
+                        args[0] = resource.imagePayload.handle;
+                        int[] arr = (int[])PST_ExtCallbacks["imageHandleToIntArrayOfBytes"].Invoke(args);
+                        resPayload = bsbJoin5(bsbFromSingleByte(formatFlag), bsbFromInt(resource.imagePayload.width), bsbFromInt(resource.imagePayload.height), bsbFromInt(arr.Length), bsbFromBytes(arr));
                     }
                     else
                     {
@@ -5542,6 +5551,16 @@ namespace CommonScript.Compiler.Internal
                 }
                 passNum += 1;
             }
+        }
+
+        public static object PUBLIC_buildVerifiedImageResourceDescriptor(string format, int width, int height, object handle)
+        {
+            bool isJpeg = format == "JPEG";
+            if (!isJpeg && format != "PNG")
+            {
+                fail("format must be JPEG or PNG");
+            }
+            return new ImageResource(isJpeg, width, height, handle);
         }
 
         public static int[] PUBLIC_CompleteCompilation(object compObj)

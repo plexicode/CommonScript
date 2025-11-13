@@ -10,7 +10,7 @@ function main(args) {
     arr = resources.listAllResources(mod);
     assertStrEqual(
         arr.join("|"), 
-        "files/testfile2.txt|resources.config|textfile1.txt");
+        "files/flea.png|files/testfile2.txt|resources.config|textfile1.txt");
 
     print("ALL DONE");
 }

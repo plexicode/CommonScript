@@ -1979,7 +1979,7 @@ namespace CommonScript.Runtime.Internal
                     resCount -= 1;
                     string path = ParseRaw_popLenString(rdp);
                     int resType = ParseRaw_popSingleByte(rdp, -1);
-                    EmbeddedResource res = new EmbeddedResource(moduleId, path, 0, null, 0);
+                    EmbeddedResource res = new EmbeddedResource(moduleId, path, 0, null, 0, -1, -1);
                     if (resType == 1)
                     {
                         string text = ParseRaw_popLenString(rdp);
@@ -2009,8 +2009,32 @@ namespace CommonScript.Runtime.Internal
                     }
                     else if (resType == 3)
                     {
-                        fail("TODO: image resources.");
-                        res.payload = null;
+                        int formatFlag = ParseRaw_popSingleByte(rdp, -1);
+                        if (formatFlag < 0)
+                        {
+                            return null;
+                        }
+                        bool isJpeg = formatFlag == 1;
+                        if (!ParseRaw_popInt(rdp))
+                        {
+                            return null;
+                        }
+                        res.imageWidth = rdp.intOut;
+                        if (!ParseRaw_popInt(rdp))
+                        {
+                            return null;
+                        }
+                        res.imageHeight = rdp.intOut;
+                        if (!ParseRaw_popInt(rdp))
+                        {
+                            return null;
+                        }
+                        int fileSize = rdp.intOut;
+                        res.payload = ParseRaw_popBytes(rdp, fileSize);
+                        if (res.payload == null)
+                        {
+                            return null;
+                        }
                         res.type = 3;
                         res.currentState = 2;
                     }

@@ -61,7 +61,7 @@ internal static class ResourceUtil
         string ext = null;
         if (dot != -1)
         {
-            ext = name.Substring(dot).ToUpperInvariant();
+            ext = name.Substring(dot + 1).ToUpperInvariant();
         }
 
         if (IsValidUtf8(bytes)) return ResourceType.TEXT;

@@ -37,14 +37,14 @@ namespace CommonScript.Compiler
             Dictionary<string, Dictionary<string, string>> builtinCodeFilesByModuleId, 
             Dictionary<string, Dictionary<string, string>> textResourcesByModuleId, 
             Dictionary<string, Dictionary<string, byte[]>> binaryResourcesByModuleId, 
-            Dictionary<string, Dictionary<string, object>> imageResourcesByModuleId)
+            Dictionary<string, Dictionary<string, ImageResource>> imageResourcesByModuleId)
         {
             AdaptiveCompilation comp = this.CreateAdaptiveCompilation(rootModuleId);
             userCodeFilesByModuleId = userCodeFilesByModuleId ?? new Dictionary<string, Dictionary<string, string>>();
             builtinCodeFilesByModuleId = builtinCodeFilesByModuleId ?? new Dictionary<string, Dictionary<string, string>>();
             textResourcesByModuleId = textResourcesByModuleId ?? new Dictionary<string, Dictionary<string, string>>();
             binaryResourcesByModuleId = binaryResourcesByModuleId ?? new Dictionary<string, Dictionary<string, byte[]>>();
-            imageResourcesByModuleId = imageResourcesByModuleId ?? new Dictionary<string, Dictionary<string, object>>();
+            imageResourcesByModuleId = imageResourcesByModuleId ?? new Dictionary<string, Dictionary<string, ImageResource>>();
 
             string[] allModuleIds = [..userCodeFilesByModuleId.Keys, ..builtinCodeFilesByModuleId.Keys];
             if (allModuleIds.Length != new HashSet<string>(allModuleIds).Count)
@@ -69,7 +69,7 @@ namespace CommonScript.Compiler
                 ];
                 Dictionary<string, string> textResources = textResourcesByModuleId[moduleId];
                 Dictionary<string, byte[]> binaryResources = binaryResourcesByModuleId[moduleId];
-                Dictionary<string, object> imageResources = imageResourcesByModuleId[moduleId];
+                Dictionary<string, ImageResource> imageResources = imageResourcesByModuleId[moduleId];
 
                 bool found = false;
                 for (int i = 0; i < 2; i++)

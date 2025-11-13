@@ -79,7 +79,7 @@ Array<int> ExportUtil_exportBundle(string flavorId, string extVersionId, Compila
             ExportUtil_exportCode(fn.code))
         );
     }
-    
+
     activeModuleId = null;
     for (i = 1; i < bundle.lambdaById.size(); i += 1) {
         BundleFunctionInfo fn = bundle.lambdaById[i];
@@ -226,7 +226,18 @@ ByteStringBuilder ExportUtil_exportEmbeddedResources(Dictionary<string, Dictiona
                 resPayload = bsbFromInt(resource.binaryPayload.size());
                 fail("TODO: push all bytes.");
             } else if (resource.imagePayload != null) {
-                fail("TODO: images");
+                resType = 3;
+                int formatFlag = 0;
+                if (resource.imagePayload.isJpeg) formatFlag = 1;
+                object[] args = new object[1];
+                args[0] = resource.imagePayload.handle;
+                int[] arr = (int[]) Pastel.invokeExtension("imageHandleToIntArrayOfBytes", args);
+                resPayload = bsbJoin5(
+                    bsbFromSingleByte(formatFlag),
+                    bsbFromInt(resource.imagePayload.width),
+                    bsbFromInt(resource.imagePayload.height),
+                    bsbFromInt(arr.size()), 
+                    bsbFromBytes(arr));
             } else {
                 fail("Unknown resource type.");
             }

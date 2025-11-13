@@ -21,6 +21,24 @@ namespace CommonScript.Compiler
                 if (type == 3) throw new ParserException((string)args[1]);
                 throw new InvalidOperationException();
             });
+
+            FunctionWrapper.PST_RegisterExtensibleCallback("hardCrash", (args) =>
+            {
+                throw new Exception(args[0].ToString());
+            });
+
+            FunctionWrapper.PST_RegisterExtensibleCallback("imageHandleToIntArrayOfBytes", args =>
+            {
+                byte[] rawBytes = (byte[])args[0];
+                int length = rawBytes.Length;
+                int[] output = new int[length];
+                for (int i = 0; i < length; i++)
+                {
+                    output[i] = rawBytes[i];
+                }
+
+                return output;
+            });
         }
         
         internal AdaptiveCompilation(string langId, string ver, string rootModuleId, ICollection<string> extensionNames)
@@ -38,7 +56,7 @@ namespace CommonScript.Compiler
             Dictionary<string, string> codeFiles,
             Dictionary<string, string> textResources,
             Dictionary<string, byte[]> binaryResources,
-            Dictionary<string, object> imageResources)
+            Dictionary<string, ImageResource> imageResources)
         {
             ProvideFilesForModuleCompilationImpl(
                 moduleId, codeFiles, false, textResources, binaryResources, imageResources);
@@ -49,7 +67,7 @@ namespace CommonScript.Compiler
             Dictionary<string, string> codeFiles,
             Dictionary<string, string> textResources, 
             Dictionary<string, byte[]> binaryResources, 
-            Dictionary<string, object> imageResources)
+            Dictionary<string, ImageResource> imageResources)
         {
             ProvideFilesForModuleCompilationImpl(
                 moduleId, codeFiles, true, textResources, binaryResources, imageResources);
@@ -61,12 +79,26 @@ namespace CommonScript.Compiler
             bool isBuiltin, 
             Dictionary<string, string> textResources, 
             Dictionary<string, byte[]> binaryResources, 
-            Dictionary<string, object> imageResources)
+            Dictionary<string, ImageResource> imageResources)
         {
             if (moduleId != this.NextRequiredModule) throw new InvalidOperationException();
-            FunctionWrapper.PUBLIC_SupplyFilesForModule(this.genCompiler, moduleId, codeFiles, false, isBuiltin, textResources, ConvertByteArrayDictToIntArrayDict(binaryResources), imageResources);
+            Dictionary<string, object> internalImageResources = ConvertImageResourceLookup(imageResources);
+            FunctionWrapper.PUBLIC_SupplyFilesForModule(this.genCompiler, moduleId, codeFiles, false, isBuiltin, textResources, ConvertByteArrayDictToIntArrayDict(binaryResources), internalImageResources);
             this.nextModuleIdCache = FunctionWrapper.PUBLIC_GetNextRequiredModuleId(this.genCompiler);
             this.isDone = this.nextModuleIdCache == null;
+        }
+
+        private static Dictionary<string, object> ConvertImageResourceLookup(Dictionary<string, ImageResource> lookup)
+        {
+            Dictionary<string, object> output = new Dictionary<string, object>();
+            if (lookup == null) return output;
+
+            foreach (string key in lookup.Keys)
+            {
+                output[key] = lookup[key].ConvertToInternal();
+            }
+
+            return output;
         }
 
         private static Dictionary<string, int[]> ConvertByteArrayDictToIntArrayDict(Dictionary<string, byte[]> original)

@@ -4,6 +4,8 @@ struct EmbeddedResource {
     int type;
     object payload;
     int currentState;
+    int imageWidth;
+    int imageHeight;
 }
 
 enum EmbeddedResourceType {

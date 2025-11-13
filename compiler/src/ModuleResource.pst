@@ -20,6 +20,12 @@ struct ImageResource {
     object handle;
 }
 
+object PUBLIC_buildVerifiedImageResourceDescriptor(string format, int width, int height, object handle) {
+    bool isJpeg = format == "JPEG";
+    if (!isJpeg && format != "PNG") fail("format must be JPEG or PNG");
+    return new ImageResource(isJpeg, width, height, handle);
+}
+
 ModuleResource newModuleTextResource(string path, string text) {
     return new ModuleResource(path, ModuleResourceType.TEXT, text, null, null);
 }
@@ -46,7 +52,7 @@ List<ModuleResource> getResourcesFromLookups(
             o.add(newModuleTextResource(key, textResources[key]));
         }
     }
-    
+
     if (binaryResources != null) {
         keys = binaryResources.keys();
         for (i = 0; i < keys.size(); i += 1) {
