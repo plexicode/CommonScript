@@ -38,7 +38,18 @@ if (!resourceLookup.contains(str1)) {
             output = buildString(globalValues, "Resource is an image and is not available as raw binary data: " + str1, false);
         }
     } else if (str2 == "I") {
-        output = buildString(globalValues, "NOT IMPLEMENTED: image resource loading: " + str1, false);
+        if (resource.type == EmbeddedResourceType.IMAGE) {
+            output = VALUE_NULL;
+
+            // Push the whole embedded resource into the native handle as the state
+            // of the payload can change (and may do so lazily over time).
+            List_add(listImpl1, new Value(Type.NATIVE_HANDLE, resource));
+
+            List_add(listImpl1, buildInteger(globalValues, ((EmbeddedResource) resource).imageWidth));
+            List_add(listImpl1, buildInteger(globalValues, ((EmbeddedResource) resource).imageHeight));
+        } else {
+            output = buildString(globalValues, "Resource is not an image file: " + str1, false);
+        }
     } else {
         output = buildString(globalValues, "ERR", false);
     }

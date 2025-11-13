@@ -4,9 +4,29 @@ class ResourceModule {
     // @internal
     field _h;
 
-    // @private 
+    // @private
     constructor(h) {
         this._h = h;
+    }
+}
+
+@public class ImageResource {
+
+    field width;
+    field height;
+
+    // @private
+    field _data;
+
+    // @private
+    constructor(_data, _w, _h) {
+        this._data = _data;
+        this.width = _w;
+        this.height = _h;
+    }
+
+    function getDataHandle() {
+        return this._data;
     }
 }
 
@@ -36,7 +56,8 @@ function _baseRead(m, p, t) {
 }
 
 @public function readImageResource(module, path) {
-    throw new NotImplementedException();
+    b = _baseRead(module, path, 'I');
+    return new ImageResource(b[0], b[1], b[2]);
 }
 
 @public function listAllResources(module) {

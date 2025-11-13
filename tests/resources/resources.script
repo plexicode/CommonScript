@@ -9,8 +9,11 @@ function main(args) {
 
     arr = resources.listAllResources(mod);
     assertStrEqual(
-        arr.join("|"), 
+        arr.join("|"),
         "files/flea.png|files/testfile2.txt|resources.config|textfile1.txt");
+
+    img = resources.readImageResource(mod, 'files/flea.png');
+    assertStrEqual(img.width + ' x ' + img.height, '64 x 64');
 
     print("ALL DONE");
 }

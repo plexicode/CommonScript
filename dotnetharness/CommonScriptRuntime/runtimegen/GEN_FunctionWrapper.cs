@@ -5659,7 +5659,17 @@ namespace CommonScript.Runtime.Internal
                                     }
                                     else if (str2 == "I")
                                     {
-                                        output = buildString(globalValues, "NOT IMPLEMENTED: image resource loading: " + str1, false);
+                                        if (resource.type == 3)
+                                        {
+                                            output = VALUE_NULL;
+                                            List_add(listImpl1, new Value(14, resource));
+                                            List_add(listImpl1, buildInteger(globalValues, ((EmbeddedResource)resource).imageWidth));
+                                            List_add(listImpl1, buildInteger(globalValues, ((EmbeddedResource)resource).imageHeight));
+                                        }
+                                        else
+                                        {
+                                            output = buildString(globalValues, "Resource is not an image file: " + str1, false);
+                                        }
                                     }
                                     else
                                     {
