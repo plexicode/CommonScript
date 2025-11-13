@@ -2406,6 +2406,11 @@ namespace CommonScript.Runtime.Internal
             return "OK";
         }
 
+        public static int[] PUBLIC_base64ToBytes(string b64str)
+        {
+            return System.Convert.FromBase64String(b64str).Select(b => (int)b).ToArray();
+        }
+
         public static object PUBLIC_createTaskForFunction(object ecCtx, object fpValueNoArgs)
         {
             return PUBLIC_createTaskForFunctionWithWrappedArgs(ecCtx, fpValueNoArgs, new object[0]);

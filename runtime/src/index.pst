@@ -1,3 +1,6 @@
+@import("../../shared/src/constants_ops.pst");
+@import("../../shared/src/base64_hack.pst");
+
 @import("structs/ByteCodeRow.pst");
 @import("structs/ClassInfo.pst");
 @import("structs/DictImpl.pst");
@@ -30,7 +33,6 @@
 @import("rawdataparser/tokenSection.pst");
 
 @import("b64_util.pst");
-@import("../../shared/src/constants_ops.pst");
 @import("constants.pst");
 @import("exception_util.pst");
 @import("json_util.pst");

@@ -1768,12 +1768,14 @@ namespace CommonScript.Compiler.Internal
                     {
                         resType = 3;
                         int formatFlag = 0;
+                        object[] args = new object[2];
+                        args[0] = resource.imagePayload.handle;
+                        args[1] = "PNG";
                         if (resource.imagePayload.isJpeg)
                         {
                             formatFlag = 1;
+                            args[1] = "JPEG";
                         }
-                        object[] args = new object[1];
-                        args[0] = resource.imagePayload.handle;
                         int[] arr = (int[])PST_ExtCallbacks["imageHandleToIntArrayOfBytes"].Invoke(args);
                         resPayload = bsbJoin5(bsbFromSingleByte(formatFlag), bsbFromInt(resource.imagePayload.width), bsbFromInt(resource.imagePayload.height), bsbFromInt(arr.Length), bsbFromBytes(arr));
                     }
@@ -5551,6 +5553,11 @@ namespace CommonScript.Compiler.Internal
                 }
                 passNum += 1;
             }
+        }
+
+        public static int[] PUBLIC_base64ToBytes(string b64str)
+        {
+            return System.Convert.FromBase64String(b64str).Select(b => (int)b).ToArray();
         }
 
         public static object PUBLIC_buildVerifiedImageResourceDescriptor(string format, int width, int height, object handle)

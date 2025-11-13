@@ -1,0 +1,6 @@
+
+// In JavaScript base64 conversions are needed for resources and data URI processing in the wrapper code.
+// However JavaScript has no good built-in way to handle Base64 and the built-in Pastel implementation is handy. 
+int[] PUBLIC_base64ToBytes(string b64str) {
+    return Base64.toBytes(b64str);
+}

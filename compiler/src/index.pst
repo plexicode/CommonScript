@@ -1,4 +1,5 @@
 @import("../../shared/src/constants_ops.pst");
+@import("../../shared/src/base64_hack.pst");
 
 @import("bundler/index.pst");
 @import("builtins/index.pst");

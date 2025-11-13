@@ -228,15 +228,19 @@ ByteStringBuilder ExportUtil_exportEmbeddedResources(Dictionary<string, Dictiona
             } else if (resource.imagePayload != null) {
                 resType = 3;
                 int formatFlag = 0;
-                if (resource.imagePayload.isJpeg) formatFlag = 1;
-                object[] args = new object[1];
+                object[] args = new object[2];
                 args[0] = resource.imagePayload.handle;
+                args[1] = "PNG";
+                if (resource.imagePayload.isJpeg) {
+                    formatFlag = 1;
+                    args[1] = "JPEG";
+                }
                 int[] arr = (int[]) Pastel.invokeExtension("imageHandleToIntArrayOfBytes", args);
                 resPayload = bsbJoin5(
                     bsbFromSingleByte(formatFlag),
                     bsbFromInt(resource.imagePayload.width),
                     bsbFromInt(resource.imagePayload.height),
-                    bsbFromInt(arr.size()), 
+                    bsbFromInt(arr.size()),
                     bsbFromBytes(arr));
             } else {
                 fail("Unknown resource type.");

@@ -10,6 +10,8 @@ const createCommonScriptCompilationEngine = (() => {
       PUBLIC_EnsureDependenciesFulfilled,
       PUBLIC_CompleteCompilation,
       PUBLIC_getTokenErrPrefix,
+      PUBLIC_buildVerifiedImageResourceDescriptor,
+      PUBLIC_base64ToBytes,
       registerExt: PASTEL_regCallback,
     };
   })();
@@ -25,6 +27,14 @@ const createCommonScriptCompilationEngine = (() => {
 
   PST.registerExt('hardCrash', args => {
     throw new Error(args[0]);
+  });
+
+  PST.registerExt('imageHandleToIntArrayOfBytes', args => {
+    let canvas = args[0];
+    let format = args[1];
+    let b64 = canvas.toDataURL('image/' + (format === 'JPEG' ? 'jpeg' : 'png')).split(',').pop();
+    let byteArr = PST.PUBLIC_base64ToBytes(b64);
+    return byteArr;
   });
 
   let newCompilationEngine = (languageId, version, extensions) => {
@@ -114,11 +124,17 @@ const createCommonScriptCompilationEngine = (() => {
           }
 
           if (value && typeof value === 'object') {
+            // TODO: this needs to be made generic/extensible to work in non-browser environments.
+            // However the canvas approach should be default when such configuration is not explicitly set.
             if (value instanceof HTMLCanvasElement) {
-              // This needs to be converted using the underlying pastel factory
-              // img[path] = value;
-              // return;
-              throw new Error("NOT IMPLEMENTED");
+
+              // Since it's already a valid canvas, treat anything without a JPEG cue as a PNG
+              let t = path.split('/').pop().split('.');
+              let ext = t.length > 1 ? t.pop().toUpperCase() : '';
+              let format = ext === 'JPEG' || ext === 'JPG' ? 'JPEG' : 'PNG';
+
+              img[path] = PST.PUBLIC_buildVerifiedImageResourceDescriptor(format, value.width, value.height, value);
+              return;
             }
 
             if (value instanceof Uint8Array) {
@@ -152,7 +168,6 @@ const createCommonScriptCompilationEngine = (() => {
       let builtinCode = builtinCodeFilesByModuleId || {};
       let allModuleIds = [...new Set([...Object.keys(userCode), ...Object.keys(builtinCode)])];
       let { txtRes, binRes, imgRes } = sortOutResources(optResourceLookupByModuleId || {}, allModuleIds);
-      debugger;
       while (!adcomp.isComplete()) {
         let nextModId = adcomp.getNextRequiredModule();
         let sources = [userCode, builtinCode];
@@ -162,13 +177,17 @@ const createCommonScriptCompilationEngine = (() => {
           let files = sources[s][nextModId];
           if (files) {
             moduleFound = true;
+            let doComp = () => {
+              let comp = isUserCode
+                ? adcomp.provideFilesForUserModuleCompilation
+                : adcomp.provideFilesForBuiltinLibraryModuleCompilation;
+              comp(nextModId, files, txtRes[nextModId] || {}, binRes[nextModId] || {}, imgRes[nextModId] || {});
+            };
             // #IF IS_DEBUG
-            if (isUserCode) adcomp.provideFilesForUserModuleCompilation(nextModId, files, txtRes, binRes, imgRes);
-            else adcomp.provideFilesForBuiltinLibraryModuleCompilation(nextModId, files, txtRes, binRes, imgRes);
+            doComp();
             // #ELSE
             try {
-              if (isUserCode) adcomp.provideFilesForUserModuleCompilation(nextModId, files, txtRes, binRes, imgRes);
-              else adcomp.provideFilesForBuiltinLibraryModuleCompilation(nextModId, files, txtRes, binRes, imgRes);
+              doComp();
             } catch (ex) {
               return { errorMessage: ex.message };
             }
