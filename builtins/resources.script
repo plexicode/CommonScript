@@ -42,28 +42,28 @@ class ResourceException : Exception {
 // t(ype) can be one of the following: T: text, B: bytes, Y: tYpe, I: image
 function _baseRead(m, p, t) {
     b = [];
-    e = $res_read(m._h, '' + p, t, b);
+    e = $res_read(m, '' + p, t, b);
     if (e != null) throw new ResourceException(e);
     return b;
 }
 
-@public function readTextResourceAsString(module, path) {
-    return _baseRead(module, path, 'T')[0];
+@public function readTextResourceAsString(module = null, path) {
+    return _baseRead(module == null ? $res_mod_parent() : module._h, path, 'T')[0];
 }
 
 @public function readBinaryResourceAsBytes(module, path) {
-    return _baseRead(module, path, 'B');
+    return _baseRead(module == null ? $res_mod_parent() : module._h, path, 'B');
 }
 
 @public function readImageResource(module, path) {
-    b = _baseRead(module, path, 'I');
+    b = _baseRead(module == null ? $res_mod_parent() : module._h, path, 'I');
     return new ImageResource(b[0], b[1], b[2]);
 }
 
-@public function listAllResources(module) {
-    return $res_list(module._h);
+@public function listAllResources(module = null) {
+    return $res_list(module == null ? $res_mod_parent() : module._h);
 }
 
-@public function getResourceType(module, path) {
-    return _baseRead(module, path, 'Y')[0];
+@public function getResourceType(module = null, path) {
+    return _baseRead(module == null ? $res_mod_parent() : module._h, path, 'Y')[0];
 }
