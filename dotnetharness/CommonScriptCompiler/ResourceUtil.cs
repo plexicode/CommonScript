@@ -1,18 +1,18 @@
 using System.Linq;
 
-namespace CommonScriptCli;
+namespace CommonScript.Compiler;
 
-internal enum ResourceType
+public enum ResourceType
 {
     BINARY,
     TEXT,
     IMAGE,
 }
 
-internal static class ResourceUtil
+public static class ResourceUtil
 {
     private static byte[] PNG_PREFIX = [0x89, (byte)'P', (byte)'N', (byte)'G'];
-    private static byte[] JPEG_PREFIX = [];
+    private static byte[] JPEG_PREFIX = [0xFF, 0xD8];
     private static byte[] UTF8_PREFIX = [0xEF, 0xBB, 0xBF];
 
     private static bool IsPrefixMatch(byte[] payload, byte[] prefix)
