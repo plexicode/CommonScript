@@ -21,6 +21,7 @@ enum Type {
 
     MAX = 16,
 }
+int PUBLIC_getIntTypeId() { return Type.INTEGER; }
 
 enum BinaryOp {
     UNKNOWN = 0,

@@ -2446,6 +2446,11 @@ namespace CommonScript.Runtime.Internal
             return ((ExecutionTask)taskObj).execCtx;
         }
 
+        public static int PUBLIC_getIntTypeId()
+        {
+            return 3;
+        }
+
         public static object PUBLIC_getTaskAsyncHandle(object taskObj)
         {
             return ((ExecutionTask)taskObj).nativeAsyncHandle;
