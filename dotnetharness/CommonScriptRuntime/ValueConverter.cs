@@ -7,11 +7,18 @@ namespace CommonScript.Runtime
 {
     public class ValueConverter
     {
+        private static readonly int INT_TYPE = 3;
+
+        static ValueConverter()
+        {
+            if (FunctionWrapper.PUBLIC_getIntTypeId() != INT_TYPE) throw new InvalidOperationException();
+        }
+
         private static ExecutionContext CastExecCtx(object obj)
         {
             if (obj == null) throw new ArgumentException("Cannot pass null as execution context");
             return obj as ExecutionContext
-                ?? throw new ArgumentException("Did not pass an execution context object");
+                   ?? throw new ArgumentException("Did not pass an execution context object");
         }
 
         public static string RTValueToReadableString(object rtVal)
@@ -21,7 +28,18 @@ namespace CommonScript.Runtime
 
         public static double RTValueToFloat(object rtVal)
         {
-            return (double)((Value)rtVal).internalValue;
+            Value v = (Value)rtVal;
+            return v.type == 3 ? (int)v.internalValue : (double)v.internalValue;
+        }
+
+        public static int RTValueToInteger(object rtVal)
+        {
+            return (int)((Value)rtVal).internalValue;
+        }
+
+        public static object UnwrapRTHandle(object rtVal)
+        {
+            return ((Value)rtVal).internalValue;
         }
 
         public static object NativeValueToRTValue(object execCtxObj, object value)
@@ -38,8 +56,10 @@ namespace CommonScript.Runtime
                     if (strVal.Length == 0) return g.emptyString;
                     return FunctionWrapper.buildString(g, strVal, true);
                 }
+
                 return FunctionWrapper.buildString(g, strVal, false);
             }
+
             if (value is bool) return (bool)value ? g.trueValue : g.falseValue;
             if (value is int) return FunctionWrapper.buildInteger(g, (int)value);
             if (value is double) return FunctionWrapper.buildFloat((double)value);
