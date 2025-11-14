@@ -21,6 +21,12 @@ namespace CommonScript.Runtime
                    ?? throw new ArgumentException("Did not pass an execution context object");
         }
 
+        public static object GetRTBool(object ecCtxObj, bool value)
+        {
+            GlobalValues g = ((ExecutionContext)ecCtxObj).globalValues;
+            return value ? g.trueValue : g.falseValue;
+        }
+
         public static string RTValueToReadableString(object rtVal)
         {
             return FunctionWrapper.PUBLIC_valueToString(rtVal);
@@ -40,6 +46,11 @@ namespace CommonScript.Runtime
         public static object UnwrapRTHandle(object rtVal)
         {
             return ((Value)rtVal).internalValue;
+        }
+
+        public static object WrapNativeHandle(object value)
+        {
+            return FunctionWrapper.PUBLIC_wrapNativeHandle(value);
         }
 
         public static object NativeValueToRTValue(object execCtxObj, object value)
