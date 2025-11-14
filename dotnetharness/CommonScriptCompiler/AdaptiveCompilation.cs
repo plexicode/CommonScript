@@ -101,9 +101,11 @@ namespace CommonScript.Compiler
             return output;
         }
 
-        private static Dictionary<string, int[]> ConvertByteArrayDictToIntArrayDict(Dictionary<string, byte[]> original)
+        private static Dictionary<string, int[]> ConvertByteArrayDictToIntArrayDict(
+            Dictionary<string, byte[]>? original)
         {
             Dictionary<string, int[]> output = [];
+            if (original == null) return output;
             foreach (string key in original.Keys)
             {
                 byte[] arr = original[key];
