@@ -8,6 +8,15 @@ struct EmbeddedResource {
     int imageHeight;
 }
 
+object[] PUBLIC_EmbeddedResource_getImageData(object embeddedResObj) {
+    object[] o = new object[3];
+    EmbeddedResource res = (EmbeddedResource) embeddedResObj;
+    o[0] = res.payload;
+    o[1] = res.imageWidth;
+    o[2] = res.imageHeight;
+    return o;
+}
+
 enum EmbeddedResourceType {
     UNKNOWN = 0,
     TEXT = 1,

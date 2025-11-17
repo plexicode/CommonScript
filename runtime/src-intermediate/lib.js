@@ -117,6 +117,10 @@ const createNewCommonScriptRuntimeFactory = (() => {
             unwrapNativeHandle: PUBLIC_unwrapNativeHandle,
             unwrapInteger: PUBLIC_unwrapInteger,
             unwrapFloat: PUBLIC_unwrapFloat,
+            unwrapImageResource: embeddedResValue => {
+              let o = PUBLIC_EmbeddedResource_getImageData(PUBLIC_unwrapNativeHandle(embeddedResValue));
+              return { data: o[0], width: o[1], height: o[2] };
+            },
           }),
           collections: Object.freeze({
             listAdd: PUBLIC_listValueAdd,
@@ -145,6 +149,10 @@ const createNewCommonScriptRuntimeFactory = (() => {
             setStackTop: (task, valueWrapped) => {
               PUBLIC_setTaskStackTopValue(task, valueWrapped);
             },
+          }),
+          base64: Object.freeze({
+            toBytes: PUBLIC_base64ToBytes,
+            fromBytes: PUBLIC_base64FromBytes,
           }),
         };
 
