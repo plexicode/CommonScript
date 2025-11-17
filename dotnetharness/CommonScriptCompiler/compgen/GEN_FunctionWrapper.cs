@@ -41,6 +41,15 @@ namespace CommonScript.Compiler.Internal
             return output;
         }
 
+        private static string PST_BytesToBase64(int[] arr) {
+            int sz = arr.Length;
+            byte[] buf = new byte[sz];
+            for (int i = 0; i < sz; i++) {
+                buf[i] = (byte)(255 & arr[i]);
+            }
+            return System.Convert.ToBase64String(buf);
+        }
+
         public static void PST_ParseFloat(string strValue, double[] output)
         {
             double num = 0.0;
@@ -5553,6 +5562,11 @@ namespace CommonScript.Compiler.Internal
                 }
                 passNum += 1;
             }
+        }
+
+        public static string PUBLIC_base64FromBytes(int[] intArrOfBytes)
+        {
+            return PST_BytesToBase64(intArrOfBytes);
         }
 
         public static int[] PUBLIC_base64ToBytes(string b64str)

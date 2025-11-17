@@ -110,6 +110,15 @@ namespace CommonScript.Runtime.Internal
             return sb.ToString();
         }
 
+        private static string PST_BytesToBase64(int[] arr) {
+            int sz = arr.Length;
+            byte[] buf = new byte[sz];
+            for (int i = 0; i < sz; i++) {
+                buf[i] = (byte)(255 & arr[i]);
+            }
+            return System.Convert.ToBase64String(buf);
+        }
+
         private static readonly string[] PST_SplitSep = new string[1];
 
         private static string[] PST_StringSplit(string value, string sep)
@@ -2406,6 +2415,11 @@ namespace CommonScript.Runtime.Internal
             return "OK";
         }
 
+        public static string PUBLIC_base64FromBytes(int[] intArrOfBytes)
+        {
+            return PST_BytesToBase64(intArrOfBytes);
+        }
+
         public static int[] PUBLIC_base64ToBytes(string b64str)
         {
             return System.Convert.FromBase64String(b64str).Select(b => (int)b).ToArray();
@@ -2427,6 +2441,16 @@ namespace CommonScript.Runtime.Internal
                 i += 1;
             }
             return createNewTask((ExecutionContext)ecCtx, (Value)fpValue, args);
+        }
+
+        public static object[] PUBLIC_EmbeddedResource_getImageData(object embeddedResObj)
+        {
+            object[] o = new object[3];
+            EmbeddedResource res = (EmbeddedResource)embeddedResObj;
+            o[0] = res.payload;
+            o[1] = res.imageWidth;
+            o[2] = res.imageHeight;
+            return o;
         }
 
         public static object PUBLIC_getApplicationContextFromTask(object taskObj)
