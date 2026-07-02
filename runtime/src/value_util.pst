@@ -83,6 +83,9 @@ string valueToHumanString(Value value) {
         case Type.LIST:
             ListImpl list = (ListImpl) value.internalValue;
             return "List[size=" + Convert.intToString(list.length) + "]";
+        case Type.DICTIONARY:
+            DictImpl dict = (DictImpl) value.internalValue;
+            return "Dictionary[size=" + Convert.intToString(dict.size) + "]";
         default:
             break;
     }

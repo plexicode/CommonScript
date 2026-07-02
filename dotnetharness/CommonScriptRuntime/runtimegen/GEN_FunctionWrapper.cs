@@ -6536,6 +6536,9 @@ namespace CommonScript.Runtime.Internal
                 case 9:
                     ListImpl list = (ListImpl)value.internalValue;
                     return string.Join("", new string[] { "List[size=", list.length.ToString(), "]" });
+                case 10:
+                    DictImpl dict = (DictImpl)value.internalValue;
+                    return string.Join("", new string[] { "Dictionary[size=", dict.size.ToString(), "]" });
                 default:
                     break;
             }
