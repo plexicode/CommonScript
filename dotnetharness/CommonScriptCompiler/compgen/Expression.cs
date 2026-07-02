@@ -21,8 +21,9 @@ namespace CommonScript.Compiler.Internal
         public Expression[] values;
         public Token[] argNames;
         public Statement[] nestedCode;
+        public string optionalUsageHintForErrors;
 
-        public Expression(Token firstToken, int type, Expression root, Expression left, Expression right, Token opToken, bool boolVal, string strVal, int intVal, double floatVal, AbstractEntity entityPtr, ImportStatement importPtr, Expression[] args, Expression[] keys, Expression[] values, Token[] argNames, Statement[] nestedCode)
+        public Expression(Token firstToken, int type, Expression root, Expression left, Expression right, Token opToken, bool boolVal, string strVal, int intVal, double floatVal, AbstractEntity entityPtr, ImportStatement importPtr, Expression[] args, Expression[] keys, Expression[] values, Token[] argNames, Statement[] nestedCode, string optionalUsageHintForErrors)
         {
             this.firstToken = firstToken;
             this.type = type;
@@ -41,6 +42,7 @@ namespace CommonScript.Compiler.Internal
             this.values = values;
             this.argNames = argNames;
             this.nestedCode = nestedCode;
+            this.optionalUsageHintForErrors = optionalUsageHintForErrors;
         }
     }
 }

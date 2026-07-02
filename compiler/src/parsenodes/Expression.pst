@@ -55,6 +55,12 @@ struct Expression {
     Array<Expression> values;
     Array<Token> argNames;
     Array<Statement> nestedCode;
+
+    // This is occasionally set by a parent node to give instructions to
+    // more deeply nested nodes on what kind of error to throw. For example, if
+    // a variable is expected to resolve into a class reference but fails, it
+    // should give a class-not-found error, not a variable-not-defined error.
+    string optionalUsageHintForErrors;
 }
 
 Expression Expression_new(Token firstToken, int type) {
@@ -69,6 +75,7 @@ Expression Expression_new(Token firstToken, int type) {
         null,
         0,
         0.0,
+        null,
         null,
         null,
         null,
@@ -97,7 +104,8 @@ Expression Expression_cloneWithNewToken(Token token, Expression expr) {
         expr.keys,
         expr.values,
         expr.argNames,
-        expr.nestedCode
+        expr.nestedCode,
+        expr.optionalUsageHintForErrors
     );
 }
 

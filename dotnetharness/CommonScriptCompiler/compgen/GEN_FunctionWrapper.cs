@@ -1802,7 +1802,7 @@ namespace CommonScript.Compiler.Internal
 
         public static Expression Expression_cloneWithNewToken(Token token, Expression expr)
         {
-            return new Expression(token, expr.type, expr.root, expr.left, expr.right, expr.opToken, expr.boolVal, expr.strVal, expr.intVal, expr.floatVal, expr.entityPtr, expr.importPtr, expr.args, expr.keys, expr.values, expr.argNames, expr.nestedCode);
+            return new Expression(token, expr.type, expr.root, expr.left, expr.right, expr.opToken, expr.boolVal, expr.strVal, expr.intVal, expr.floatVal, expr.entityPtr, expr.importPtr, expr.args, expr.keys, expr.values, expr.argNames, expr.nestedCode, expr.optionalUsageHintForErrors);
         }
 
         public static Expression Expression_createBaseCtorReference(Token token)
@@ -2078,7 +2078,7 @@ namespace CommonScript.Compiler.Internal
 
         public static Expression Expression_new(Token firstToken, int type)
         {
-            return new Expression(firstToken, type, null, null, null, null, false, null, 0, 0.0, null, null, null, null, null, null, null);
+            return new Expression(firstToken, type, null, null, null, null, false, null, 0, 0.0, null, null, null, null, null, null, null, null);
         }
 
         public static AbstractEntity ExpressionResolver_FindLocallyReferencedEntity(StaticContext staticCtx, System.Collections.Generic.Dictionary<string, AbstractEntity> lookup, string name)
@@ -3273,6 +3273,7 @@ namespace CommonScript.Compiler.Internal
             if (isExpected)
             {
                 ctorRef.root.boolVal = true;
+                ctorRef.root.optionalUsageHintForErrors = "NEW_KEYWORD";
                 ctorRef.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, ctorRef.root);
                 if (ctorRef.root.type != 7)
                 {
@@ -3334,6 +3335,7 @@ namespace CommonScript.Compiler.Internal
             {
                 df.root.boolVal = true;
             }
+            df.root.optionalUsageHintForErrors = "DOT_ROOT";
             df.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, df.root);
             switch (df.root.type)
             {
@@ -3656,7 +3658,18 @@ namespace CommonScript.Compiler.Internal
             {
                 return varExpr;
             }
-            Errors_Throw(varExpr.firstToken, string.Join("", new string[] { "There is no variable by the name of '", varExpr.strVal, "'." }));
+            string err = "There is no variable";
+            string usage = varExpr.optionalUsageHintForErrors;
+            if (usage == "NEW_KEYWORD")
+            {
+                err = "There is no class";
+            }
+            else if (usage == "DOT_ROOT")
+            {
+                err = "There is no variable, class, or module";
+            }
+            err += string.Join("", new string[] { " by the name of '", varExpr.strVal, "'." });
+            Errors_Throw(varExpr.firstToken, err);
             return null;
         }
 

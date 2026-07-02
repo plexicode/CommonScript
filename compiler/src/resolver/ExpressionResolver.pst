@@ -74,7 +74,7 @@ Expression ExpressionResolver_ResolveExpressionSecondPass(Resolver resolver, Exp
     return expr;
 }
 
-////////////////// FIRST PASS 
+////////////////// FIRST PASS
 
 void ExpressionResolver_ResolveExpressionArrayFirstPass(Resolver resolver, Array<Expression> arr) {
     for (int i = 0; i < arr.size(); i += 1) {
@@ -104,7 +104,7 @@ Expression ExpressionResolver_FirstPass_BinaryOp(Resolver resolver, Expression b
         case '<': isBitwise = token == "<<"; break;
         case '>': isBitwise = token == ">>" || token == ">>>"; break;
     }
-    
+
     if (isBitwise) {
         binOp.left = ExpressionResolver_IntegerRequired(resolver, binOp.left);
         binOp.right = ExpressionResolver_IntegerRequired(resolver, binOp.right);
@@ -202,7 +202,7 @@ Expression ExpressionResolver_FirstPass_FunctionInvocation(Resolver resolver, Ex
         ExpressionResolver_ResolveExpressionArrayFirstPass(resolver, funcInvoke.args);
         return Expression_createExtensionInvocation(funcInvoke.firstToken, funcInvoke.root.strVal, funcInvoke.args);
     }
-    
+
     funcInvoke.root = ExpressionResolver_ResolveExpressionFirstPass(resolver, funcInvoke.root);
     ExpressionResolver_ResolveExpressionArrayFirstPass(resolver, funcInvoke.args);
 
@@ -409,22 +409,22 @@ Expression ExpressionResolver_SecondPass_BinaryOp(Resolver resolver, Expression 
                         if (resultInt < 0) resultInt += intRight;
                     }
                 } else if (op == "|") {
-                    resultInt = intLeft | intRight;   
+                    resultInt = intLeft | intRight;
                 } else if (op == "&") {
-                    resultInt = intLeft & intRight;   
+                    resultInt = intLeft & intRight;
                 } else if (op == "^") {
                     resultInt = intLeft ^ intRight;
                 } else if (op == "<<") {
                     resultInt = intLeft << intRight;
                 } else if (op == ">>") {
-                    resultInt = intLeft >> intRight;   
+                    resultInt = intLeft >> intRight;
                 } else if (op == ">>>") {
                     // resultInt = intLeft >>> intRight;
                     fail("Not implemented");
                 } else {
                     ThrowOpNotDefinedError(opToken, op, expr.left.type, expr.right.type);
                 }
-                
+
                 return Expression_createIntegerConstant(opToken, resultInt);
 
             case ExpressionType.FLOAT_CONST * ExpressionType.MAX_VALUE + ExpressionType.FLOAT_CONST:
@@ -436,13 +436,13 @@ Expression ExpressionResolver_SecondPass_BinaryOp(Resolver resolver, Expression 
                 floatRight = GetNumericValueOfConstantExpression(expr.right);
                 floatResult = 0.0;
                 if (op == "+") {
-                    floatResult = floatLeft + floatRight; 
+                    floatResult = floatLeft + floatRight;
                 } else if (op == "-") {
-                    floatResult = floatLeft - floatRight; 
+                    floatResult = floatLeft - floatRight;
                 } else if (op == "*") {
-                    floatResult = floatLeft * floatRight; 
+                    floatResult = floatLeft * floatRight;
                 } else if (op == "/") {
-                    floatResult = floatLeft / floatRight; 
+                    floatResult = floatLeft / floatRight;
                 } else if (op == "%") {
                     if (floatRight < 0) {
                         floatRight = -floatRight;
@@ -455,7 +455,7 @@ Expression ExpressionResolver_SecondPass_BinaryOp(Resolver resolver, Expression 
                 } else {
                     ThrowOpNotDefinedError(opToken, op, expr.left.type, expr.right.type);
                 }
-                
+
                 return Expression_createFloatConstant(opToken, floatResult);
 
             case ExpressionType.STRING_CONST * ExpressionType.MAX_VALUE + ExpressionType.INTEGER_CONST:
@@ -467,16 +467,16 @@ Expression ExpressionResolver_SecondPass_BinaryOp(Resolver resolver, Expression 
                         strExpr = expr.right;
                         intExpr = expr.left;
                     }
-                    
+
                     int size = intExpr.intVal;
                     string val = strExpr.strVal;
                     if (size == 0) return Expression_createStringConstant(expr.firstToken, "");
                     if (size == 1) return strExpr;
-                    
-                    // an arbitrary heuristic. If the new string is 12 characters or longer, leave it 
-                    // in its original expression form. You don't want something like "x" * 10000 adding 
+
+                    // an arbitrary heuristic. If the new string is 12 characters or longer, leave it
+                    // in its original expression form. You don't want something like "x" * 10000 adding
                     // a full 10 kilobytes to the output bundle.
-                    if (val.size() * size < 12) { 
+                    if (val.size() * size < 12) {
                         List<string> sb = new List<string>();
                         for (int i = 0; i < size; i += 1) {
                             sb.add(val);
@@ -493,7 +493,7 @@ Expression ExpressionResolver_SecondPass_BinaryOp(Resolver resolver, Expression 
                 ThrowOpNotDefinedError(opToken, op, expr.left.type, expr.right.type);
                 break;
         }
-        
+
         fail(""); // all code paths above cause an exit.
     }
 
@@ -538,7 +538,15 @@ Expression ExpressionResolver_SecondPass_ClassReference(Resolver resolver, Expre
 
 Expression ExpressionResolver_SecondPass_ConstructorReference(Resolver resolver, Expression ctorRef, bool isExpected) {
     if (isExpected) {
+
+
+        // flag as being used
         ctorRef.root.boolVal = true;
+
+        // gives the resolver a hint that the expression should be a class and will give better
+        // error message wording in the event of failure.
+        ctorRef.root.optionalUsageHintForErrors = "NEW_KEYWORD";
+
         ctorRef.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, ctorRef.root);
         if (ctorRef.root.type != ExpressionType.CLASS_REFERENCE) {
             Errors_Throw(ctorRef.root.firstToken, "This is not a valid class definition.");
@@ -590,6 +598,7 @@ Expression ExpressionResolver_SecondPass_DotField(Resolver resolver, Expression 
     // This is the only way to refer to a class reference.
     if (df.root.type == ExpressionType.CLASS_REFERENCE) df.root.boolVal = true;
 
+    df.root.optionalUsageHintForErrors = "DOT_ROOT";
     df.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, df.root);
     switch (df.root.type) {
         case ExpressionType.STRING_CONST:
@@ -657,15 +666,15 @@ Expression ExpressionResolver_SecondPass_FunctionInvocation(Resolver resolver, E
     if (funcInvoke.root.type == ExpressionType.CONSTRUCTOR_REFERENCE) {
         Expression ctorRef = ExpressionResolver_SecondPass_ConstructorReference(resolver, funcInvoke.root, true);
         if (ctorRef.type != ExpressionType.CONSTRUCTOR_REFERENCE) {
-            fail(""); // this shouldn't happen. 
+            fail(""); // this shouldn't happen.
         }
 
         ExpressionResolver_ResolveExpressionArraySecondPass(resolver, funcInvoke.args);
 
         return Expression_createConstructorInvocation(
-            funcInvoke.firstToken, 
-            (AbstractEntity)ctorRef.entityPtr, 
-            funcInvoke.opToken, 
+            funcInvoke.firstToken,
+            (AbstractEntity)ctorRef.entityPtr,
+            funcInvoke.opToken,
             funcInvoke.args);
     }
 
@@ -770,7 +779,7 @@ Expression ExpressionResolver_SecondPass_NegativeSign(Resolver resolver, Express
 Expression ExpressionResolver_SecondPass_NullConstant(Resolver resolver, Expression nullConst) {
     return nullConst;
 }
-    
+
 Expression ExpressionResolver_SecondPass_Slice(Resolver resolver, Expression slice) {
     slice.root = ExpressionResolver_ResolveExpressionSecondPass(resolver, slice.root);
     for (int i = 0; i < 3; i++) {
@@ -847,8 +856,16 @@ Expression ExpressionResolver_SecondPass_Variable(Resolver resolver, Expression 
     if (varExpr.strVal == "print") fail(""); // should not happen.
     if (((FunctionEntity)resolver.activeEntity.specificData).variableScope.contains(varExpr.strVal)) return varExpr;
 
-    // TODO: come up with a list of suggestions.
-    Errors_Throw(varExpr.firstToken, "There is no variable by the name of '" + varExpr.strVal + "'.");
+    string err = "There is no variable";
+    string usage = varExpr.optionalUsageHintForErrors;
+    if (usage == "NEW_KEYWORD") err = "There is no class";
+    else if (usage == "DOT_ROOT") err = "There is no variable, class, or module";
+
+    err += " by the name of '" + varExpr.strVal + "'.";
+
+    // TODO: come up with a list of suggestions of similar things from the current scope.
+
+    Errors_Throw(varExpr.firstToken, err);
     return null;
 }
 
