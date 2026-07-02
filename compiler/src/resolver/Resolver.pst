@@ -275,6 +275,12 @@ Expression Resolver_GetListOfUnresolvedConstReferencesImpl(Resolver resolver, Fi
             // This is fine
             return expr;
 
+        case ExpressionType.TERNARY:
+            expr.root = Resolver_GetListOfUnresolvedConstReferencesImpl(resolver, file, fqNamespace, expr.root, refs);
+            expr.left = Resolver_GetListOfUnresolvedConstReferencesImpl(resolver, file, fqNamespace, expr.left, refs);
+            expr.right = Resolver_GetListOfUnresolvedConstReferencesImpl(resolver, file, fqNamespace, expr.right, refs);
+            return expr;
+
         case ExpressionType.NEGATIVE_SIGN:
         case ExpressionType.BITWISE_NOT:
         case ExpressionType.BOOLEAN_NOT:

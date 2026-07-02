@@ -6106,6 +6106,11 @@ namespace CommonScript.Compiler.Internal
                     return expr;
                 case 28:
                     return expr;
+                case 29:
+                    expr.root = Resolver_GetListOfUnresolvedConstReferencesImpl(resolver, file, fqNamespace, expr.root, refs);
+                    expr.left = Resolver_GetListOfUnresolvedConstReferencesImpl(resolver, file, fqNamespace, expr.left, refs);
+                    expr.right = Resolver_GetListOfUnresolvedConstReferencesImpl(resolver, file, fqNamespace, expr.right, refs);
+                    return expr;
                 case 25:
                     expr.root = Resolver_GetListOfUnresolvedConstReferencesImpl(resolver, file, fqNamespace, expr.root, refs);
                     return expr;
