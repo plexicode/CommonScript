@@ -5722,6 +5722,52 @@ namespace CommonScript.Compiler.Internal
             }
         }
 
+        public static void PUBLIC_ThrowErrorOnNonExistentModule(object compObj, string modId)
+        {
+            CompilerContext compiler = (CompilerContext)compObj;
+            string[] modules = compiler.depIdsByModuleId.Keys.ToArray();
+            string offendingModuleSource = null;
+            int i = 0;
+            while (i < modules.Length)
+            {
+                string originModuleId = modules[i];
+                System.Collections.Generic.List<string> depIds = compiler.depIdsByModuleId[originModuleId];
+                int j = 0;
+                while (j < depIds.Count)
+                {
+                    if (depIds[j] == modId)
+                    {
+                        offendingModuleSource = originModuleId;
+                    }
+                    j += 1;
+                }
+                i += 1;
+            }
+            if (offendingModuleSource == null)
+            {
+                fail("import reference not found: " + modId);
+            }
+            System.Collections.Generic.List<FileContext> fileCtxs = compiler.filesByModuleId[offendingModuleSource];
+            int k = 0;
+            while (k < fileCtxs.Count)
+            {
+                ImportStatement[] imports = fileCtxs[k].imports;
+                int m = 0;
+                while (m < imports.Length)
+                {
+                    ImportStatement impStmnt = imports[m];
+                    if (impStmnt.flatName == modId)
+                    {
+                        Token offendingToken = impStmnt.importToken;
+                        Errors_Throw(offendingToken, string.Join("", new string[] { "Module not found '", impStmnt.flatName, "'" }));
+                    }
+                    m += 1;
+                }
+                k++;
+            }
+            fail(string.Join("", new string[] { "Import origin of module '", modId, "' not found." }));
+        }
+
         public static void Resolve(Resolver resolver)
         {
             int i = 0;

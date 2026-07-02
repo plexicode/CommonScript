@@ -88,6 +88,11 @@ namespace CommonScript.Compiler
             this.isDone = this.nextModuleIdCache == null;
         }
 
+        public void FlagModuleRequestAsErroneous(string moduleId)
+        {
+            FunctionWrapper.PUBLIC_ThrowErrorOnNonExistentModule(this.genCompiler, moduleId);
+        }
+
         private static Dictionary<string, object> ConvertImageResourceLookup(Dictionary<string, ImageResource> lookup)
         {
             Dictionary<string, object> output = new Dictionary<string, object>();

@@ -12,6 +12,7 @@ const createCommonScriptCompilationEngine = (() => {
       PUBLIC_getTokenErrPrefix,
       PUBLIC_buildVerifiedImageResourceDescriptor,
       PUBLIC_base64ToBytes,
+      PUBLIC_ThrowErrorOnNonExistentModule,
       registerExt: PASTEL_regCallback,
     };
   })();
@@ -88,6 +89,9 @@ const createCommonScriptCompilationEngine = (() => {
         getNextRequiredModule: () => nextModuleIdCache,
         provideFilesForUserModuleCompilation: (nextModId, filesLookup, txtResLookup, binResLookup, imgResLookup) => provideFilesImpl(nextModId, filesLookup, false, txtResLookup || null, binResLookup || null, imgResLookup || null),
         provideFilesForBuiltinLibraryModuleCompilation: (nextModId, filesLookup, txtResLookup, binResLookup, imgResLookup) => provideFilesImpl(nextModId, filesLookup, true, txtResLookup || null, binResLookup || null, imgResLookup || null),
+        flagModuleRequestAsErroneous: (moduleId) => {
+          PST.PUBLIC_ThrowErrorOnNonExistentModule(compiler, moduleId);
+        },
         getCompilation: () => {
           // #IF IS_DEBUG
           return getCompilation();
@@ -181,6 +185,7 @@ const createCommonScriptCompilationEngine = (() => {
               let comp = isUserCode
                 ? adcomp.provideFilesForUserModuleCompilation
                 : adcomp.provideFilesForBuiltinLibraryModuleCompilation;
+
               comp(nextModId, files, txtRes[nextModId] || {}, binRes[nextModId] || {}, imgRes[nextModId] || {});
             };
             // #IF IS_DEBUG
@@ -193,6 +198,18 @@ const createCommonScriptCompilationEngine = (() => {
             }
             // #ENDIF
           }
+        }
+
+        if (!moduleFound) {
+          // #IF IS_DEBUG
+          adcomp.flagModuleRequestAsErroneous(nextModId);
+          // #ELSE
+          try {
+            adcomp.flagModuleRequestAsErroneous(nextModId);
+          } catch (ex) {
+            return { errorMessage: ex.message };
+          }
+          // #ENDIF
         }
       }
       let result = adcomp.getCompilation();

@@ -115,6 +115,42 @@ void PUBLIC_EnsureDependenciesFulfilled(object compObj) {
     }
 }
 
+/*
+    If the host language doesn't have the module required by GetNextRequiredModuleId,
+    this function should be called to throw a proper error.
+*/
+void PUBLIC_ThrowErrorOnNonExistentModule(object compObj, string modId) {
+    CompilerContext compiler = (CompilerContext) compObj;
+    string[] modules = compiler.depIdsByModuleId.keys();
+    string offendingModuleSource = null;
+    for (int i = 0; i < modules.size(); i += 1) {
+        string originModuleId = modules[i];
+        List<string> depIds = compiler.depIdsByModuleId[originModuleId];
+        for (int j = 0; j < depIds.size(); j += 1) {
+            if (depIds[j] == modId) {
+                offendingModuleSource = originModuleId;
+            }
+        }
+    }
+    if (offendingModuleSource == null) {
+        fail("import reference not found: " + modId);
+    }
+
+    List<FileContext> fileCtxs = compiler.filesByModuleId[offendingModuleSource];
+    for (int k = 0; k < fileCtxs.size(); k++) {
+        ImportStatement[] imports = fileCtxs[k].imports;
+        for (int m = 0; m < imports.size(); m += 1) {
+            ImportStatement impStmnt = imports[m];
+            if (impStmnt.flatName == modId) {
+                Token offendingToken = impStmnt.importToken;
+                Errors_Throw(offendingToken, "Module not found '" + impStmnt.flatName + "'");
+            }
+        }
+    }
+
+    fail("Import origin of module '" + modId + "' not found.");
+}
+
 string PUBLIC_GetNextRequiredModuleId(object compObj) {
     CompilerContext compiler = (CompilerContext)compObj;
     while (true) {

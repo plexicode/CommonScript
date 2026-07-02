@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
+using CommonScript.Compiler.Internal;
 
 namespace CommonScript.Compiler
 {
@@ -62,6 +64,11 @@ namespace CommonScript.Compiler
             while (!comp.IsComplete)
             {
                 string moduleId = comp.NextRequiredModule;
+
+                if (!textResourcesByModuleId.ContainsKey(moduleId))
+                {
+                    comp.FlagModuleRequestAsErroneous(moduleId);
+                }
 
                 Dictionary<string, Dictionary<string, string>>[] sources = [
                     userCodeFilesByModuleId,
