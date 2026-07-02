@@ -1,6 +1,9 @@
 // TODO: remove some of the minifier artifacts from this code and create a true minifier.
 
-// Use n - 0 to force numeric validation. 
+const PI = 3.141592653589793238;
+const E = 2.718281828459045235;
+
+// Use n - 0 to force numeric validation.
 // TODO: better quick argument validation.
 @public function sin(r) { return $math_sin(r - 0); }
 @public function cos(r) { return $math_cos(r - 0); }
