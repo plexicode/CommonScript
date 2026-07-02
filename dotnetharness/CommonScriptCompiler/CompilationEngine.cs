@@ -15,7 +15,7 @@ namespace CommonScript.Compiler
         public string Version { get { return this.version; } }
 
 
-#if DEBUG 
+#if DEBUG
         internal static readonly bool IS_DEBUG = true;
 #else
         internal static readonly bool IS_DEBUG = false;
@@ -33,12 +33,49 @@ namespace CommonScript.Compiler
             return new AdaptiveCompilation(this.languageId, this.version, rootModuleId, this.extensions);
         }
 
-        public CompilationResult DoStaticCompilation(
+        public CompilationResult DoStaticCompilation(string rootModuleId,
+            Dictionary<string, Dictionary<string, string>> userCodeFilesByModuleId,
+            Dictionary<string, Dictionary<string, string>> builtinCodeFilesByModuleId,
+            Dictionary<string, Dictionary<string, string>> textResourcesByModuleId,
+            Dictionary<string, Dictionary<string, byte[]>> binaryResourcesByModuleId,
+            Dictionary<string, Dictionary<string, ImageResource>> imageResourcesByModuleId)
+        {
+            if (IS_DEBUG)
+            {
+                return DoStaticCompilationImpl(
+                    rootModuleId,
+                    userCodeFilesByModuleId,
+                    builtinCodeFilesByModuleId,
+                    textResourcesByModuleId,
+                    binaryResourcesByModuleId,
+                    imageResourcesByModuleId);
+            }
+            else
+            {
+                try
+                {
+
+                    return DoStaticCompilationImpl(
+                        rootModuleId,
+                        userCodeFilesByModuleId,
+                        builtinCodeFilesByModuleId,
+                        textResourcesByModuleId,
+                        binaryResourcesByModuleId,
+                        imageResourcesByModuleId);
+                }
+                catch (ParserException ex)
+                {
+                    return new CompilationResult(null, ex.Message, null);
+                }
+            }
+        }
+
+        public CompilationResult DoStaticCompilationImpl(
             string rootModuleId,
             Dictionary<string, Dictionary<string, string>> userCodeFilesByModuleId,
-            Dictionary<string, Dictionary<string, string>> builtinCodeFilesByModuleId, 
-            Dictionary<string, Dictionary<string, string>> textResourcesByModuleId, 
-            Dictionary<string, Dictionary<string, byte[]>> binaryResourcesByModuleId, 
+            Dictionary<string, Dictionary<string, string>> builtinCodeFilesByModuleId,
+            Dictionary<string, Dictionary<string, string>> textResourcesByModuleId,
+            Dictionary<string, Dictionary<string, byte[]>> binaryResourcesByModuleId,
             Dictionary<string, Dictionary<string, ImageResource>> imageResourcesByModuleId)
         {
             AdaptiveCompilation comp = this.CreateAdaptiveCompilation(rootModuleId);
@@ -53,7 +90,7 @@ namespace CommonScript.Compiler
             {
                 return new CompilationResult(null, "Builtin and user modules have a name conflict.", null);
             }
-            
+
             foreach (string moduleId in allModuleIds)
             {
                 if (!textResourcesByModuleId.ContainsKey(moduleId)) textResourcesByModuleId[moduleId] = null;
@@ -85,23 +122,9 @@ namespace CommonScript.Compiler
                     if (sources[i].ContainsKey(moduleId))
                     {
                         found = true;
-                        if (IS_DEBUG)
-                        {
-                            if (isUserCode) comp.ProvideFilesForUserModuleCompilation(moduleId, sources[i][moduleId], textResources, binaryResources, imageResources);
-                            else comp.ProvideFilesForBuiltinLibraryModuleCompilation(moduleId, sources[i][moduleId], textResources, binaryResources, imageResources);
-                        }
-                        else
-                        {
-                            try
-                            {
-                                if (isUserCode) comp.ProvideFilesForUserModuleCompilation(moduleId, sources[i][moduleId], textResources, binaryResources, imageResources);
-                                else comp.ProvideFilesForBuiltinLibraryModuleCompilation(moduleId, sources[i][moduleId], textResources, binaryResources, imageResources);
-                            }
-                            catch (ParserException ex)
-                            {
-                                return new CompilationResult(null, ex.Message, null);
-                            }
-                        }
+
+                        if (isUserCode) comp.ProvideFilesForUserModuleCompilation(moduleId, sources[i][moduleId], textResources, binaryResources, imageResources);
+                        else comp.ProvideFilesForBuiltinLibraryModuleCompilation(moduleId, sources[i][moduleId], textResources, binaryResources, imageResources);
                     }
                 }
 
