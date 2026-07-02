@@ -4697,7 +4697,7 @@ namespace CommonScript.Compiler.Internal
                     baseArgs = new List<Expression>();
                 }
                 AbstractEntity ctor = FunctionEntity_BuildConstructor(classToken, new List<Token>(), new List<Expression>(), baseArgs, new List<Statement>(), false).baseData;
-                AttachEntityToParseTree(ctor, classDef.baseData, classDef.baseData.fileContext, classDef.baseData.fqName, classDef.classMembers, new Dictionary<string, Token>());
+                AttachEntityToParseTree(ctor, classDef.baseData, file, classDef.baseData.fqName, classDef.classMembers, new Dictionary<string, Token>());
             }
             return classDef;
         }

@@ -193,7 +193,7 @@ ClassEntity ParseClass(
         AttachEntityToParseTree(
             ctor,
             classDef.baseData,
-            classDef.baseData.fileContext,
+            file,
             classDef.baseData.fqName,
             classDef.classMembers,
             new Dictionary<string, Token>());
