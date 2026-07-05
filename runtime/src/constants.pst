@@ -1,5 +1,3 @@
-const int IS_DEBUG = 1;
-
 enum Type {
     UNKNOWN = 0,
 

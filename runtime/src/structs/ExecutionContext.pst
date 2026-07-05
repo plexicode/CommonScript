@@ -23,13 +23,15 @@ struct ExecutionContext {
     Dictionary<int, ExecutionTask> tasks;
     object appCtx;
     Func<object, object> onLastTaskComplete;
+    bool isDebug;
 }
 
 ExecutionContext new_ExecutionContext(
     Array<int> rawBytes,
     Dictionary<string, Func<object, object, Array<object>>> extensions,
     object appCtx,
-    Func<object, object> onLastTaskComplete
+    Func<object, object> onLastTaskComplete,
+    bool isDebug
 ) {
     ExecutionContext ec = new ExecutionContext(
         null,
@@ -55,7 +57,8 @@ ExecutionContext new_ExecutionContext(
         1, // nextRefId
         new Dictionary<int, ExecutionTask>(), // tasks
         appCtx,
-        onLastTaskComplete
+        onLastTaskComplete,
+        isDebug
     );
 
     string err = ParseRawData(rawBytes, ec);

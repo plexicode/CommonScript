@@ -788,10 +788,10 @@ namespace CommonScript.Runtime.Internal
 
         public static ExecutionResult ExRes_HardCrash(ExecutionTask task, string message)
         {
-            int isDebug = 1;
+            bool isDebug = task.execCtx.isDebug;
             ExecutionResult res = new_ExecutionResult(2, task);
             res.errorMessage = message;
-            if (isDebug == 1)
+            if (isDebug)
             {
                 object[] failArgs = new object[1];
                 failArgs[0] = message;
@@ -1547,9 +1547,9 @@ namespace CommonScript.Runtime.Internal
             return new ByteCodeRow(op, args, arg1, arg2, stringId, null, tokenId, null, null, false, false);
         }
 
-        public static ExecutionContext new_ExecutionContext(int[] rawBytes, System.Collections.Generic.Dictionary<string, System.Func<object, object[], object>> extensions, object appCtx, System.Func<object, object> onLastTaskComplete)
+        public static ExecutionContext new_ExecutionContext(int[] rawBytes, System.Collections.Generic.Dictionary<string, System.Func<object, object[], object>> extensions, object appCtx, System.Func<object, object> onLastTaskComplete, bool isDebug)
         {
-            ExecutionContext ec = new ExecutionContext(null, new_GlobalValues(), null, extensions, new Dictionary<string, int>(), null, null, null, null, null, null, null, null, null, null, null, null, null, null, 1, 1, new Dictionary<int, ExecutionTask>(), appCtx, onLastTaskComplete);
+            ExecutionContext ec = new ExecutionContext(null, new_GlobalValues(), null, extensions, new Dictionary<string, int>(), null, null, null, null, null, null, null, null, null, null, null, null, null, null, 1, 1, new Dictionary<int, ExecutionTask>(), appCtx, onLastTaskComplete, isDebug);
             string err = ParseRawData(rawBytes, ec);
             if (err == null)
             {
@@ -2524,9 +2524,9 @@ namespace CommonScript.Runtime.Internal
             return result.type;
         }
 
-        public static object PUBLIC_initializeExecutionContext(int[] rawBytes, System.Collections.Generic.Dictionary<string, System.Func<object, object[], object>> extensions, object appCtx, System.Func<object, object> onLastTaskComplete)
+        public static object PUBLIC_initializeExecutionContext(int[] rawBytes, System.Collections.Generic.Dictionary<string, System.Func<object, object[], object>> extensions, object appCtx, System.Func<object, object> onLastTaskComplete, bool isDebug)
         {
-            return new_ExecutionContext(rawBytes, extensions, appCtx, onLastTaskComplete);
+            return new_ExecutionContext(rawBytes, extensions, appCtx, onLastTaskComplete, isDebug);
         }
 
         public static object PUBLIC_listGet(object listObj, int i)

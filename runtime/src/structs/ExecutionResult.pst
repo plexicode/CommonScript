@@ -11,10 +11,10 @@ ExecutionResult new_ExecutionResult(int type, ExecutionTask task) {
 }
 
 ExecutionResult ExRes_HardCrash(ExecutionTask task, string message) {
-    int isDebug = IS_DEBUG;
+    bool isDebug = task.execCtx.isDebug;
     ExecutionResult res = new_ExecutionResult(ExecutionResultType.HARD_CRASH, task);
     res.errorMessage = message;
-    if (isDebug == 1) {
+    if (isDebug) {
         Array<object> failArgs = new Array<object>(1);
         failArgs[0] = message;
         object ignore = Pastel.invokeExtension("hardCrash", failArgs);

@@ -45,7 +45,8 @@ namespace CommonScript.Runtime
                 byteInts,
                 new Dictionary<string, System.Func<object, object[], object>>(extensions),
                 null, 
-                o => null);
+                o => null, 
+                false);
 
             string initError = FunctionWrapper.PUBLIC_getExecutionContextError(this.execContext);
             // TODO: this may not be a RuntimeError
