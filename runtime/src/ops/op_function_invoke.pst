@@ -117,6 +117,7 @@ switch (fp.funcType) {
             case PrimitiveMethods.LIST_TO_BYTES: @import("builtinmethods/list_to_bytes.pst"); break;
 
             case PrimitiveMethods.STRING_GET_CODE_POINT: @import("builtinmethods/string_get_code_point.pst"); break;
+            case PrimitiveMethods.STRING_INDEX_OF: @import("builtinmethods/string_index_of.pst"); break;
             case PrimitiveMethods.STRING_LOWER: @import("builtinmethods/string_lower.pst"); break;
             case PrimitiveMethods.STRING_REPLACE: @import("builtinmethods/string_replace.pst"); break;
             case PrimitiveMethods.STRING_SPLIT: @import("builtinmethods/string_split.pst"); break;

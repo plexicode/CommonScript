@@ -61,6 +61,7 @@ void generateNameLookup(ExecutionContext ec) {
     injectNameLookup(fpMap, PrimitiveMethods.STRING_FIND, Type.STRING, tryGetNameId(stringsToId, "find"), 1, 3);
     injectNameLookup(fpMap, PrimitiveMethods.STRING_FIND_REVERSE, Type.STRING, tryGetNameId(stringsToId, "findReverse"), 1, 3);
     injectNameLookup(fpMap, PrimitiveMethods.STRING_GET_CODE_POINT, Type.STRING, tryGetNameId(stringsToId, "getCodePoint"), 1, 1);
+    injectNameLookup(fpMap, PrimitiveMethods.STRING_INDEX_OF, Type.STRING, tryGetNameId(stringsToId, "indexOf"), 1, 1);
     injectNameLookup(fpMap, PrimitiveMethods.STRING_LOWER, Type.STRING, tryGetNameId(stringsToId, "lower"), 0, 0);
     injectNameLookup(fpMap, PrimitiveMethods.STRING_REPLACE, Type.STRING, tryGetNameId(stringsToId, "replace"), 2, 3);
     injectNameLookup(fpMap, PrimitiveMethods.STRING_SPLIT, Type.STRING, tryGetNameId(stringsToId, "split"), 1, 1);

@@ -106,6 +106,7 @@ enum PrimitiveMethods {
     LIST_FILTER = 14,
     LIST_FIND = 15,
     LIST_FIND_REVERSE = 16,
+    LIST_INSERT = 45,
     LIST_JOIN = 17,
     LIST_MAP = 18,
     LIST_POP = 19,
@@ -121,6 +122,7 @@ enum PrimitiveMethods {
     STRING_FIND = 27,
     STRING_FIND_REVERSE = 28,
     STRING_GET_CODE_POINT = 29,
+    STRING_INDEX_OF = 46,
     STRING_LOWER = 30,
     STRING_REPLACE = 31,
     STRING_SPLIT = 32,
@@ -131,11 +133,15 @@ enum PrimitiveMethods {
     STRING_TRIM = 37,
     STRING_UPPER = 38,
 
-    // TODO: move these up and re-number once byte buffers are implemented
+    // TODO: implement byte buffers
     BYTEBUF_TO_BASE_64 = 40,
     BYTEBUF_GET_INT_BE = 41,
     BYTEBUF_GET_INT_LE = 42,
     BYTEBUF_TO_STRING = 43,
+
     FUNCTION_INVOKE = 44,
-    LIST_INSERT = 45,
+
+    // TODO: re-number this enum once the library has stabilized
+
+    // NEXT ID: 47
 }

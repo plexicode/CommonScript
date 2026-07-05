@@ -98,6 +98,7 @@ ExecutionResult RunInterpreterImpl(ExecutionTask task) {
     int int2 = 0;
     int int3 = 0;
     int sz = 0;
+    int sz2 = 0;
     int leftType = 0;
     int rightType = 0;
     bool bool1 = true;
@@ -133,6 +134,7 @@ ExecutionResult RunInterpreterImpl(ExecutionTask task) {
     Array<Value> args = null;
     Array<Value> valueArr = null;
     Array<int> intArray1 = null;
+    Array<int> intArray2 = null;
     Array<object> objArr = null;
     Array<Value> keys = null;
     Array<Value> values = null;

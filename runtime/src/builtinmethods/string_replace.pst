@@ -4,7 +4,7 @@ if (left.type != Type.STRING || right.type != Type.STRING) {
     return ThrowErrorImpl(
         task,
         ExceptionTypeId.INVALID_ARGUMENT,
-        "string.replace(searchVal, newValue) requires a string arguments");
+        "string.replace(searchVal, newValue) requires string arguments");
 }
 str1 = stringUtil_getFlatValue(fp.ctx);
 strArr = str1.split(stringUtil_getFlatValue(left));

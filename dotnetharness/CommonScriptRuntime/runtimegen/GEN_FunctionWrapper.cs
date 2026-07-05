@@ -890,6 +890,7 @@ namespace CommonScript.Runtime.Internal
             injectNameLookup(fpMap, 27, 5, tryGetNameId(stringsToId, "find"), 1, 3);
             injectNameLookup(fpMap, 28, 5, tryGetNameId(stringsToId, "findReverse"), 1, 3);
             injectNameLookup(fpMap, 29, 5, tryGetNameId(stringsToId, "getCodePoint"), 1, 1);
+            injectNameLookup(fpMap, 46, 5, tryGetNameId(stringsToId, "indexOf"), 1, 1);
             injectNameLookup(fpMap, 30, 5, tryGetNameId(stringsToId, "lower"), 0, 0);
             injectNameLookup(fpMap, 31, 5, tryGetNameId(stringsToId, "replace"), 2, 3);
             injectNameLookup(fpMap, 32, 5, tryGetNameId(stringsToId, "split"), 1, 1);
@@ -2685,6 +2686,7 @@ namespace CommonScript.Runtime.Internal
             int int2 = 0;
             int int3 = 0;
             int sz = 0;
+            int sz2 = 0;
             int leftType = 0;
             int rightType = 0;
             bool bool1 = true;
@@ -2717,6 +2719,7 @@ namespace CommonScript.Runtime.Internal
             Value[] args = null;
             Value[] valueArr = null;
             int[] intArray1 = null;
+            int[] intArray2 = null;
             object[] objArr = null;
             Value[] keys = null;
             Value[] values = null;
@@ -4482,6 +4485,72 @@ namespace CommonScript.Runtime.Internal
                                         }
                                         output = buildInteger(globalValues, stringImpl1.uChars[i]);
                                         break;
+                                    case 46:
+                                        value = args[0];
+                                        if (value.type != 5)
+                                        {
+                                            return ThrowErrorImpl(task, 4, "string.indexOf(value) requires a string argument");
+                                        }
+                                        stringImpl1 = (StringImpl)fp.ctx.internalValue;
+                                        stringImpl2 = (StringImpl)value.internalValue;
+                                        if (stringImpl1.isBuilder)
+                                        {
+                                            stringFlatten(stringImpl1);
+                                        }
+                                        if (stringImpl2.isBuilder)
+                                        {
+                                            stringFlatten(stringImpl2);
+                                        }
+                                        sz = stringImpl1.length;
+                                        sz2 = stringImpl2.length;
+                                        if (sz2 == 0)
+                                        {
+                                            output = globalValues.intZero;
+                                        }
+                                        else if (sz < sz2)
+                                        {
+                                            output = globalValues.negIntegers[1];
+                                        }
+                                        else
+                                        {
+                                            int2 = sz - sz2;
+                                            intArray1 = stringImpl1.uChars;
+                                            intArray2 = stringImpl2.uChars;
+                                            bool1 = false;
+                                            int3 = -1;
+                                            i = 0;
+                                            while (i <= int2 && !bool1)
+                                            {
+                                                if (intArray1[i] == intArray2[0] && intArray1[i + sz2 - 1] == intArray2[sz2 - 1])
+                                                {
+                                                    bool1 = true;
+                                                    int3 = i;
+                                                    j = 1;
+                                                    while (j < sz2)
+                                                    {
+                                                        if (intArray1[i + j] != intArray2[j])
+                                                        {
+                                                            bool1 = false;
+                                                            j += sz2;
+                                                        }
+                                                        j += 1;
+                                                    }
+                                                }
+                                                i += 1;
+                                            }
+                                            intArray1 = null;
+                                            intArray2 = null;
+                                            stringImpl2 = null;
+                                            if (bool1)
+                                            {
+                                                output = buildInteger(globalValues, int3);
+                                            }
+                                            else
+                                            {
+                                                output = globalValues.negIntegers[1];
+                                            }
+                                        }
+                                        break;
                                     case 30:
                                         output = stringUtil_changeCase(fp.ctx, false);
                                         break;
@@ -4490,7 +4559,7 @@ namespace CommonScript.Runtime.Internal
                                         right = args[1];
                                         if (left.type != 5 || right.type != 5)
                                         {
-                                            return ThrowErrorImpl(task, 4, "string.replace(searchVal, newValue) requires a string arguments");
+                                            return ThrowErrorImpl(task, 4, "string.replace(searchVal, newValue) requires string arguments");
                                         }
                                         str1 = stringUtil_getFlatValue(fp.ctx);
                                         strArr = PST_StringSplit(str1, stringUtil_getFlatValue(left));
