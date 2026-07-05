@@ -119,10 +119,11 @@ enum PrimitiveMethods {
     LIST_TO_DICTIONARY = 25,
 
     STRING_ENDS_WITH = 26,
-    STRING_FIND = 27,
-    STRING_FIND_REVERSE = 28,
+    // STRING_FIND = 27,
+    // STRING_FIND_REVERSE = 28,
     STRING_GET_CODE_POINT = 29,
     STRING_INDEX_OF = 46,
+    STRING_LAST_INDEX_OF = 47,
     STRING_LOWER = 30,
     STRING_REPLACE = 31,
     STRING_SPLIT = 32,
@@ -143,5 +144,5 @@ enum PrimitiveMethods {
 
     // TODO: re-number this enum once the library has stabilized
 
-    // NEXT ID: 47
+    // NEXT ID: 48
 }

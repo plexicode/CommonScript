@@ -887,10 +887,9 @@ namespace CommonScript.Runtime.Internal
             injectNameLookup(fpMap, 39, 9, tryGetNameId(stringsToId, "sortByKey"), 1, 1);
             injectNameLookup(fpMap, 24, 9, tryGetNameId(stringsToId, "toBytes"), 0, 0);
             injectNameLookup(fpMap, 26, 5, tryGetNameId(stringsToId, "endsWith"), 1, 1);
-            injectNameLookup(fpMap, 27, 5, tryGetNameId(stringsToId, "find"), 1, 3);
-            injectNameLookup(fpMap, 28, 5, tryGetNameId(stringsToId, "findReverse"), 1, 3);
             injectNameLookup(fpMap, 29, 5, tryGetNameId(stringsToId, "getCodePoint"), 1, 1);
             injectNameLookup(fpMap, 46, 5, tryGetNameId(stringsToId, "indexOf"), 1, 1);
+            injectNameLookup(fpMap, 47, 5, tryGetNameId(stringsToId, "lastIndexOf"), 1, 1);
             injectNameLookup(fpMap, 30, 5, tryGetNameId(stringsToId, "lower"), 0, 0);
             injectNameLookup(fpMap, 31, 5, tryGetNameId(stringsToId, "replace"), 2, 3);
             injectNameLookup(fpMap, 32, 5, tryGetNameId(stringsToId, "split"), 1, 1);
@@ -4462,6 +4461,22 @@ namespace CommonScript.Runtime.Internal
                                         output = new Value(8, intArray1);
                                         intArray1 = null;
                                         break;
+                                    case 26:
+                                        value = args[0];
+                                        if (value.type != 5)
+                                        {
+                                            return ThrowErrorImpl(task, 4, "string.endsWith(value) requires a string argument");
+                                        }
+                                        int1 = string_findIndexOfSubString((StringImpl)fp.ctx.internalValue, (StringImpl)value.internalValue, false, true);
+                                        if (int1 == -1)
+                                        {
+                                            output = VALUE_FALSE;
+                                        }
+                                        else
+                                        {
+                                            output = VALUE_TRUE;
+                                        }
+                                        break;
                                     case 29:
                                         value1 = args[0];
                                         if (value1.type != 3)
@@ -4491,65 +4506,17 @@ namespace CommonScript.Runtime.Internal
                                         {
                                             return ThrowErrorImpl(task, 4, "string.indexOf(value) requires a string argument");
                                         }
-                                        stringImpl1 = (StringImpl)fp.ctx.internalValue;
-                                        stringImpl2 = (StringImpl)value.internalValue;
-                                        if (stringImpl1.isBuilder)
+                                        int1 = string_findIndexOfSubString((StringImpl)fp.ctx.internalValue, (StringImpl)value.internalValue, true, false);
+                                        output = buildInteger(globalValues, int1);
+                                        break;
+                                    case 47:
+                                        value = args[0];
+                                        if (value.type != 5)
                                         {
-                                            stringFlatten(stringImpl1);
+                                            return ThrowErrorImpl(task, 4, "string.lastIndexOf(value) requires a string argument");
                                         }
-                                        if (stringImpl2.isBuilder)
-                                        {
-                                            stringFlatten(stringImpl2);
-                                        }
-                                        sz = stringImpl1.length;
-                                        sz2 = stringImpl2.length;
-                                        if (sz2 == 0)
-                                        {
-                                            output = globalValues.intZero;
-                                        }
-                                        else if (sz < sz2)
-                                        {
-                                            output = globalValues.negIntegers[1];
-                                        }
-                                        else
-                                        {
-                                            int2 = sz - sz2;
-                                            intArray1 = stringImpl1.uChars;
-                                            intArray2 = stringImpl2.uChars;
-                                            bool1 = false;
-                                            int3 = -1;
-                                            i = 0;
-                                            while (i <= int2 && !bool1)
-                                            {
-                                                if (intArray1[i] == intArray2[0] && intArray1[i + sz2 - 1] == intArray2[sz2 - 1])
-                                                {
-                                                    bool1 = true;
-                                                    int3 = i;
-                                                    j = 1;
-                                                    while (j < sz2)
-                                                    {
-                                                        if (intArray1[i + j] != intArray2[j])
-                                                        {
-                                                            bool1 = false;
-                                                            j += sz2;
-                                                        }
-                                                        j += 1;
-                                                    }
-                                                }
-                                                i += 1;
-                                            }
-                                            intArray1 = null;
-                                            intArray2 = null;
-                                            stringImpl2 = null;
-                                            if (bool1)
-                                            {
-                                                output = buildInteger(globalValues, int3);
-                                            }
-                                            else
-                                            {
-                                                output = globalValues.negIntegers[1];
-                                            }
-                                        }
+                                        int1 = string_findIndexOfSubString((StringImpl)fp.ctx.internalValue, (StringImpl)value.internalValue, false, false);
+                                        output = buildInteger(globalValues, int1);
                                         break;
                                     case 30:
                                         output = stringUtil_changeCase(fp.ctx, false);
@@ -4586,6 +4553,22 @@ namespace CommonScript.Runtime.Internal
                                         output = new Value(9, new ListImpl(ec.nextRefId, sz, sz, valueArr));
                                         valueArr = null;
                                         ec.nextRefId += 1;
+                                        break;
+                                    case 33:
+                                        value = args[0];
+                                        if (value.type != 5)
+                                        {
+                                            return ThrowErrorImpl(task, 4, "string.startsWith(value) requires a string argument");
+                                        }
+                                        int1 = string_findIndexOfSubString((StringImpl)fp.ctx.internalValue, (StringImpl)value.internalValue, true, true);
+                                        if (int1 == -1)
+                                        {
+                                            output = VALUE_FALSE;
+                                        }
+                                        else
+                                        {
+                                            output = VALUE_TRUE;
+                                        }
                                         break;
                                     case 36:
                                         stringImpl1 = (StringImpl)fp.ctx.internalValue;
@@ -6344,6 +6327,81 @@ namespace CommonScript.Runtime.Internal
                 o.taskQueue = tasks[0];
             }
             return new Value(14, o);
+        }
+
+        public static int string_findIndexOfSubString(StringImpl s1, StringImpl s2, bool forward, bool checkFirstOnly)
+        {
+            int sz1 = s1.length;
+            int sz2 = s2.length;
+            if (sz2 == 0)
+            {
+                if (forward)
+                {
+                    return 0;
+                }
+                return sz1;
+            }
+            if (sz1 < sz2)
+            {
+                return -1;
+            }
+            if (s1.isBuilder)
+            {
+                stringFlatten(s1);
+            }
+            if (s2.isBuilder)
+            {
+                stringFlatten(s2);
+            }
+            int sz2LastIndex = sz2 - 1;
+            int rightValidIndex = sz1 - sz2;
+            int step = -1;
+            if (forward)
+            {
+                step = 1;
+            }
+            int startIndex = rightValidIndex;
+            if (forward)
+            {
+                startIndex = 0;
+            }
+            int lastValidIndex = 0;
+            if (checkFirstOnly)
+            {
+                lastValidIndex = startIndex;
+            }
+            else if (forward)
+            {
+                lastValidIndex = rightValidIndex;
+            }
+            int end = lastValidIndex + step;
+            int[] chars1 = s1.uChars;
+            int[] chars2 = s2.uChars;
+            bool allMatch = false;
+            int i = startIndex;
+            while (i != end)
+            {
+                if (chars1[i] == chars2[0] && chars1[i + sz2LastIndex] == chars2[sz2LastIndex])
+                {
+                    allMatch = true;
+                    int j = 1;
+                    while (j < sz2LastIndex)
+                    {
+                        if (chars1[i + j] != chars2[j])
+                        {
+                            allMatch = false;
+                            j += sz2;
+                        }
+                        j += 1;
+                    }
+                    if (allMatch)
+                    {
+                        return i;
+                    }
+                }
+                i += step;
+            }
+            return -1;
         }
 
         public static void stringFlatten(StringImpl s)

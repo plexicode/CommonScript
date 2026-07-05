@@ -109,3 +109,51 @@ Value createStringFromUnicodeArray(GlobalValues g, Array<int> buffer, bool copyB
         Type.STRING,
         new StringImpl(sz, false, uchars, finalString, null, null));
 }
+
+int string_findIndexOfSubString(StringImpl s1, StringImpl s2, bool forward, bool checkFirstOnly) {
+    int sz1 = s1.length;
+    int sz2 = s2.length;
+
+    if (sz2 == 0) {
+        if (forward) return 0;
+        return sz1;
+    }
+
+    if (sz1 < sz2) return -1;
+
+    if (s1.isBuilder) stringFlatten(s1);
+    if (s2.isBuilder) stringFlatten(s2);
+
+    int sz2LastIndex = sz2 - 1;
+    int rightValidIndex = sz1 - sz2;
+
+    int step = -1;
+    if (forward) step = 1;
+
+    int startIndex = rightValidIndex;
+    if (forward) startIndex = 0;
+
+    int lastValidIndex = 0;
+    if (checkFirstOnly) lastValidIndex = startIndex;
+    else if (forward) lastValidIndex = rightValidIndex;
+
+    int end = lastValidIndex + step;
+
+    int[] chars1 = s1.uChars;
+    int[] chars2 = s2.uChars;
+    bool allMatch = false;
+
+    for (int i = startIndex; i != end; i += step) {
+        if (chars1[i] == chars2[0] && chars1[i + sz2LastIndex] == chars2[sz2LastIndex]) {
+            allMatch = true;
+            for (int j = 1; j < sz2LastIndex; j += 1) {
+                if (chars1[i + j] != chars2[j]) {
+                    allMatch = false;
+                    j += sz2; // break
+                }
+            }
+            if (allMatch) return i;
+        }
+    }
+    return -1;
+}

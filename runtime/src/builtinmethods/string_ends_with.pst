@@ -3,11 +3,14 @@ if (value.type != Type.STRING) {
     return ThrowErrorImpl(
         task,
         ExceptionTypeId.INVALID_ARGUMENT,
-        "string.indexOf(value) requires a string argument");
+        "string.endsWith(value) requires a string argument");
 }
 int1 = string_findIndexOfSubString(
     (StringImpl) fp.ctx.internalValue,
     (StringImpl) value.internalValue,
-    true, // forward
-    false); // check full string
-output = buildInteger(globalValues, int1);
+    false, // start from end
+    true); // do only one check and then give up instead of searching the whole string.
+
+if (int1 == -1) output = VALUE_FALSE;
+else output = VALUE_TRUE;
+

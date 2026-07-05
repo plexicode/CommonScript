@@ -116,11 +116,14 @@ switch (fp.funcType) {
             case PrimitiveMethods.LIST_SORT_BY_KEY: @import("builtinmethods/list_sort_by_key.pst"); break;
             case PrimitiveMethods.LIST_TO_BYTES: @import("builtinmethods/list_to_bytes.pst"); break;
 
+            case PrimitiveMethods.STRING_ENDS_WITH: @import("builtinmethods/string_ends_with.pst"); break;
             case PrimitiveMethods.STRING_GET_CODE_POINT: @import("builtinmethods/string_get_code_point.pst"); break;
             case PrimitiveMethods.STRING_INDEX_OF: @import("builtinmethods/string_index_of.pst"); break;
+            case PrimitiveMethods.STRING_LAST_INDEX_OF: @import("builtinmethods/string_last_index_of.pst"); break;
             case PrimitiveMethods.STRING_LOWER: @import("builtinmethods/string_lower.pst"); break;
             case PrimitiveMethods.STRING_REPLACE: @import("builtinmethods/string_replace.pst"); break;
             case PrimitiveMethods.STRING_SPLIT: @import("builtinmethods/string_split.pst"); break;
+            case PrimitiveMethods.STRING_STARTS_WITH: @import("builtinmethods/string_starts_with.pst"); break;
             case PrimitiveMethods.STRING_TO_UNICODE_POINTS: @import("builtinmethods/string_to_unicode_points.pst"); break;
             case PrimitiveMethods.STRING_TRIM: @import("builtinmethods/string_trim.pst"); break;
             case PrimitiveMethods.STRING_UPPER: @import("builtinmethods/string_upper.pst"); break;
