@@ -10,6 +10,12 @@
 @public function delayInvoke(fn, sec) { $delay_invoke(fn, 1.0*sec); }
 @public function sleep(sec) { $sleep(1.0*sec); }
 
+@public function allocList(sz, useIndex = false) {
+    o = [];
+    for (i = 0; i < sz; i++) o.add(useIndex ? i : null);
+    return o;
+}
+
 function map(a, f) {
     o = [];
     s = a.length;

@@ -4,9 +4,9 @@
 @public function randomBool() { return $random_float() < .5; }
 
 @public function randomInt(a, b = null) {
-    if (b == null) { 
-        b = a; 
-        a = 0; 
+    if (b == null) {
+        b = a;
+        a = 0;
     }
     d = b - a;
     if (d <= 0) throw new InvalidArgumentException("Range must be a positive number.");
@@ -21,4 +21,13 @@
         list[j] = list[i];
         list[i] = t;
     }
+}
+
+@public function pick(list) {
+    sz = list.length;
+    if (sz < 2) {
+        if (sz == 1) return list[0];
+        throw new InvalidArgumentException("Cannot pick from empty list.");
+    }
+    return list[randomInt(sz)];
 }
