@@ -4779,11 +4779,11 @@ namespace CommonScript.Runtime.Internal
                         {
                             case 3:
                                 i = -(int)value.internalValue;
-                                if (i < 1200 && -i > 1200)
+                                if (i < 1200 && i > -1200)
                                 {
                                     if (i < 0)
                                     {
-                                        value = globalValues.posIntegers[i];
+                                        value = globalValues.negIntegers[-i];
                                     }
                                     else
                                     {

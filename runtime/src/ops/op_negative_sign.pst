@@ -2,8 +2,8 @@ value = valueStack[valueStackSize - 1];
 switch (value.type) {
     case Type.INTEGER:
         i = -(int) value.internalValue;
-        if (i < INT_CACHE_RANGE && -i > INT_CACHE_RANGE) {
-            if (i < 0) value = globalValues.posIntegers[i];
+        if (i < INT_CACHE_RANGE && i > -INT_CACHE_RANGE) {
+            if (i < 0) value = globalValues.negIntegers[-i];
             else value = globalValues.posIntegers[i];
         } else {
             value = new Value(Type.INTEGER, i);
