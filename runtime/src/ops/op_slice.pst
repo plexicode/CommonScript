@@ -71,7 +71,7 @@ if (value.type == Type.STRING) {
 
 if (bool1) {
     if (int1 < 0) int1 += sz;
-    if (int1 < 0 || int1 >= sz) {
+    if (int1 < 0 || int1 > sz) {
         errorId = ExceptionTypeId.OUT_OF_RANGE;
         errorMsg = "Start index is out of range.";
         @import("macros/throw.pst");

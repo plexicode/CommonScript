@@ -3956,7 +3956,7 @@ namespace CommonScript.Compiler.Internal
 
         public static string GEN_BUILTINS_random()
         {
-            return "@5randomFloat() { @4$random_float(); }\n@5randomBool() { @4$random_float() < .5; }\n@5randomInt(a, b = null) {\nif (b == null) {\nb = a;\na = 0;\n}\nd = b - a;\nif (d <= 0) {\nif (d == 0) @4a;\nthrow new InvalidArgumentException(\"Range must be non-negative.\");\n}\n@4a + $math_floor($random_float() * d);\n}\n@5shuffle(list) {\nsz = list.length;\nfor (i = 0; i < sz; i++) {\nj = $math_floor($random_float() * sz);\nt = list[j];\nlist[j] = list[i];\nlist[i] = t;\n}\n}\n@5pick(list) {\nsz = list.length;\nif (sz < 2) {\nif (sz == 1) @4list[0];\nthrow new InvalidArgumentException(\"Cannot pick from empty list.\");\n}\n@4list[randomInt(sz)];\n}";
+            return "@5randomFloat() { @4$random_float(); }\n@5randomBool() { @4$random_float() < .5; }\n@5randomInt(a, b = null) {\nif (b == null) {\nb = a;\na = 0;\n}\nd = b - a;\nif (d <= 0) throw new InvalidArgumentException(\"Range must be a positive number.\");\n@4a + $math_floor($random_float() * d);\n}\n@5shuffle(list) {\nsz = list.length;\nfor (i = 0; i < sz; i++) {\nj = $math_floor($random_float() * sz);\nt = list[j];\nlist[j] = list[i];\nlist[i] = t;\n}\n}\n@5pick(list) {\nsz = list.length;\nif (sz < 2) {\nif (sz == 1) @4list[0];\nthrow new InvalidArgumentException(\"Cannot pick from empty list.\");\n}\n@4list[randomInt(sz)];\n}";
         }
 
         public static string GEN_BUILTINS_resources()

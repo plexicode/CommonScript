@@ -5187,7 +5187,7 @@ namespace CommonScript.Runtime.Internal
                             {
                                 int1 += sz;
                             }
-                            if (int1 < 0 || int1 >= sz)
+                            if (int1 < 0 || int1 > sz)
                             {
                                 errorId = 8;
                                 errorMsg = "Start index is out of range.";
