@@ -456,7 +456,17 @@ namespace CommonScript.Runtime.Internal
                 i += 1;
             }
             argList[0] = buildList(ec, argValues, false, -1);
-            return createNewTask(ec, mainFn, argList);
+            ExecutionTask mainTask = createNewTask(ec, mainFn, argList);
+            if (mainTask == null)
+            {
+                argList = new Value[0];
+                mainTask = createNewTask(ec, mainFn, argList);
+                if (mainTask == null)
+                {
+                    return null;
+                }
+            }
+            return mainTask;
         }
 
         public static ExecutionTask createNewTask(ExecutionContext ec, Value fpValue, Value[] args)

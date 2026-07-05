@@ -83,6 +83,12 @@ ExecutionTask createMainTask(ExecutionContext ec, Array<string> cliArgs) {
         argValues[i] = buildString(ec.globalValues, cliArgs[i], true);
     }
     argList[0] = buildList(ec, argValues, false, -1);
-
-    return createNewTask(ec, mainFn, argList);
+    ExecutionTask mainTask = createNewTask(ec, mainFn, argList);
+    if (mainTask == null) {
+        // Could not find a main(args) function. Try to see if we can get a main() function instead.
+        argList = new Value[0];
+        mainTask = createNewTask(ec, mainFn, argList);
+        if (mainTask == null) return null;
+    }
+    return mainTask;
 }

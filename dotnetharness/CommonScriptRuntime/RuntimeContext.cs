@@ -53,6 +53,10 @@ namespace CommonScript.Runtime
 
             // This needs to be in pastel-generated code.
             object mainTaskObj = FunctionWrapper.createMainTask((ExecutionContext)this.execContext, cliArgs.ToArray());
+            if (mainTaskObj == null)
+            {
+                throw new RuntimeException("Could not find a valid main() function to start execution.");
+            }
             this.MainTask = new RuntimeTask(mainTaskObj);
         }
 
